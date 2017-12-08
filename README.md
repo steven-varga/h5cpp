@@ -21,10 +21,12 @@
  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --->
 
+[H5CPP documentation and website](http://h5cpp.ca)
+==================================================
 
+an easy to use c++11 templates between ([std::vector](http://en.cppreference.com/w/cpp/container/vector) | [armadillo](http://arma.sourceforge.net) ) and [HDF5](https://support.hdfgroup.org/HDF5/doc/H5.intro.html) datasets 
+----------------------------------------------------------------------------
 
-easy to use c++11 templates between ([std::vector](http://en.cppreference.com/w/cpp/container/vector) | [armadillo](http://arma.sourceforge.net) ) and [HDF5](https://support.hdfgroup.org/HDF5/doc/H5.intro.html) datasets
-==============================================================================
 Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardised or custom binary/text objects.
 Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API](https://support.hdfgroup.org/HDF5/doc/RM/RM_H5Front.html) provided by HDF Group requires detailed understanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
 
