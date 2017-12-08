@@ -1,0 +1,9 @@
+
+
+installing HDF5 API v1.10  from source:
+
+./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110 --enable-hl
+
+make -j4
+sudo make install
+
