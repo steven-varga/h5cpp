@@ -98,10 +98,10 @@ templates:
 ```
 **read a dataset and return a reference of the created object**
 ```cpp
-	template<typename T> T read(hid_t fd, std::string path ); 
+	template<typename T> T read(hid_t fd, const std::string& path ); 
 	template<typename T> T read(hid_t ds ); 
 	template<typename T> T read(hid_t ds, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  ); 
-	template<typename T> T read(hid_t fd, std::string path, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  );
+	template<typename T> T read(hid_t fd, const std::string& path, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  );
 ```
 **write dataset into a specified location**
 ```cpp
@@ -114,15 +114,27 @@ templates:
 	template<typename T> void write( hid_t fd, const std::string& path, const T* ptr,
 			std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count)
 ```
+**append to extentable dataset**
+```cpp
+	template <class T> context<T>( hid_t ds);
+	template<class T> context<T>( hid_t fd, const std::string& path);
+	template<typename T> void append( h5::context<T>& ctx, const T& ref);
+```
+
 supported types:
 ---------------- 
 
-	T := ([unsigned] ( bool | char | short | int )) | ( float | double  )
+	T := ([unsigned] ( char | short | int | long long int )) | ( bool | float | double  )
 	S := T | c/c++ struct | std::string
-	object := std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> | eigen::Matrix<T>
+	object := std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> 
 	accept := object | T* 
 
 in addition to the standard data types offered by BLAS/LAPACK systems `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
+
+
+documentation and examples:
+---------------------------
+`make all` generates doxygen documention into docs\html and compiles `examples\*.cpp`
 
 TODO:
 -----
