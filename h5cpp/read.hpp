@@ -170,9 +170,7 @@ namespace h5 {
 			T data = h5::read<T>(ds,offset,count);
         H5Dclose(ds);
 		return data;
-
 	}
-
 	/** \ingroup io-read 
 	 * @brief partial reads HDF5 variable string dataset   
 	 * @param ds valid HDF5 dataset descriptor

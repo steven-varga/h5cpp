@@ -1,0 +1,7 @@
+
+Name: h5cpp
+Description: C++11 template library between STL|armadillo and HDF5 objects
+URL: h5cpp.ca
+Version: 1.0.0
+Requires: hdf5
+Cflags: -I/usr/local/include/h5cpp -std=c++11

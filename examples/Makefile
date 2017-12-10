@@ -18,7 +18,7 @@
 # IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-apps = raw stl arma arma-partial struct
+apps = raw stl arma arma-partial struct string
 
 CXX = h5c++
 CXXFLAGS = -I../h5cpp -std=c++14
@@ -39,14 +39,19 @@ arma-partial: arma-partial.o
 	$(CXX) $^ $(LIBS) -o $@
 struct: struct.o 
 	$(CXX) $^ $(LIBS) -o $@	
-
+string: string.o 
+	$(CXX) $^ $(LIBS) -o $@	
 
 test: $(apps)
-	@./base
+	@./raw
 	@./stl
 	@./arma
 	@./arma-partial
 	@./struct
+	@./string
+	h5dump -d string.mat string.h5
+
+
 
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)

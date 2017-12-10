@@ -18,10 +18,10 @@
 # IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-apps = struct-perf arma-perf stl-perf raw-perf
+apps = struct-perf arma-perf stl-perf
 
 CXX = h5c++
-CXXFLAGS = -I../../h5cpp -std=c++14
+CXXFLAGS = -I../h5cpp -std=c++14
 LIBS =  -lprofiler -lglog
 
 %.o : $(SRC_DIR)/%.cpp 
@@ -29,8 +29,6 @@ LIBS =  -lprofiler -lglog
 
 all: $(apps)
 
-raw-perf: raw-perf.o 
-	$(CXX) $^ $(LIBS) -o $@	
 stl-perf: stl-perf.o 
 	$(CXX) $^ $(LIBS) -o $@	
 arma-perf: arma-perf.o 
@@ -40,7 +38,6 @@ struct-perf: struct-perf.o
 
 
 test: $(apps)
-	@./raw-perf
 	@./stl-perf
 	@./arma-perf
 	@./struct-perf

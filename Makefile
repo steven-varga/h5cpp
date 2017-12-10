@@ -8,10 +8,11 @@
 #  _____________________________________________________________________________
 #
 
-DIRS =  examples doxy
+PREFIX = /usr/local
+
+DIRS =  tests profiling examples doxy
 
 BUILDDIRS = $(DIRS:%=build-%)
-INSTALLDIRS = $(DIRS:%=install-%)
 CLEANDIRS = $(DIRS:%=clean-%)
 TESTDIRS = $(DIRS:%=test-%)
 
@@ -20,9 +21,9 @@ $(DIRS): $(BUILDDIRS)
 $(BUILDDIRS):
 	$(MAKE) -C $(@:build-%=%)
 
-install: $(INSTALLDIRS) all
-$(INSTALLDIRS):
-	$(MAKE) -C $(@:install-%=%) install
+install: 
+	cp -rf h5cpp $(PREFIX)/include
+	cp h5cpp.pc  $(PREFIX)/lib/pkgconfig
 
 test: $(TESTDIRS) all
 $(TESTDIRS): 
@@ -34,9 +35,8 @@ $(CLEANDIRS):
 
 .PHONY: subdirs $(DIRS)
 .PHONY: subdirs $(BUILDDIRS)
-.PHONY: subdirs $(INSTALLDIRS)
 .PHONY: subdirs $(TESTDIRS)
 .PHONY: subdirs $(CLEANDIRS)
-.PHONY: all install clean test
+.PHONY: all install clean tests
 
 

@@ -59,9 +59,7 @@ int main(int argc, char **argv) {
 	}
 	ProfilerStop();
 
-	{ //READ
-		//auto data = read<std::vector<sn::tick> >( ds );
-	}
+
 
 	H5Dclose(ds);
 	h5::close(fd);

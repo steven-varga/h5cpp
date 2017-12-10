@@ -1,6 +1,7 @@
 
 #include <armadillo>
 #include <h5cpp>
+#include <mock.hpp>
 #include <gtest/gtest.h>
 #include <glog/logging.h>
 #include <iterator>
@@ -9,65 +10,7 @@
 #include <algorithm>
 
 
-
-template<typename T> struct TypeParseTraits;
-
-#define H5CPP_DEF_TYPE_NAME( X ) template <> struct TypeParseTraits<X> {   \
-					static const char* name; 								\
-} ; 																		\
-const char* TypeParseTraits<X>::name = #X 	 								\
-
-//template <> std::string get_type_name<NAME>(){ return std::string( NAME ); }
-
-H5CPP_DEF_TYPE_NAME(unsigned char); H5CPP_DEF_TYPE_NAME(char);
-H5CPP_DEF_TYPE_NAME(unsigned short); H5CPP_DEF_TYPE_NAME(short);
-
-H5CPP_DEF_TYPE_NAME(unsigned int); H5CPP_DEF_TYPE_NAME(int);
-H5CPP_DEF_TYPE_NAME(unsigned long long int); H5CPP_DEF_TYPE_NAME(long long int);
-H5CPP_DEF_TYPE_NAME(float); H5CPP_DEF_TYPE_NAME(double);
-H5CPP_DEF_TYPE_NAME(long double); H5CPP_DEF_TYPE_NAME(bool);
-H5CPP_DEF_TYPE_NAME(std::string);
-
-#undef H5CPP_DEF_TYPE_NAME
-
-template <typename T> std::vector<T> get_test_data( size_t n ){
-	std::random_device rd;
-    std::default_random_engine rng(rd());
-    std::uniform_int_distribution<> dist(0,n);
-
-	std::vector<T> data;
-	data.reserve(n);
-	std::generate_n(std::back_inserter(data), n, [&]() {
-							return dist(rng);
-						});
-	return data;
-}
-
-template <> std::vector<std::string> get_test_data( size_t n ){
-
-	std::vector<std::string> data;
-	data.reserve(n);
-
-	static const char alphabet[] = "abcdefghijklmnopqrstuvwxyz"
-        							"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	std::random_device rd;
-    std::default_random_engine rng(rd());
-    std::uniform_int_distribution<> dist(0,sizeof(alphabet)/sizeof(*alphabet)-2);
-    std::uniform_int_distribution<> string_length(5,30);
-
-	std::generate_n(std::back_inserter(data), data.capacity(),   [&] {
-			std::string str;
-			size_t N = string_length(rng);
-            str.reserve(N);
-            std::generate_n(std::back_inserter(str), N, [&]() {
-							return alphabet[dist(rng)];
-						});
-              return str;
-			  });
-	return data;
-}
-
-
+using namespace h5::mock;
 
 /** test harness to open/close HDF5 file 
  *

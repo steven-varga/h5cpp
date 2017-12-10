@@ -23,7 +23,7 @@ all: Doxyfile
 	@doxygen Doxyfile
 
 upload:
-	rsync -a ../docs/html/ osaka:h5cpp.ca
+	rsync -a ../docs/html/ osaka.vargaconsulting.ca:h5cpp.ca
 
 clean:
 	$(RM) -rf ../docs/html
