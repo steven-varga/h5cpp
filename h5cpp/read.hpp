@@ -31,6 +31,8 @@ namespace h5{ namespace impl{ // implementation details namespace
         hsize_t rank = H5Sget_simple_extent_ndims(file_space);
 		hid_t mem_type = utils::h5type<T>();
 		hid_t mem_space  = H5Screate_simple(rank,count,NULL);
+		H5Sselect_all(mem_space);
+
 
 		H5Sselect_hyperslab(file_space, H5S_SELECT_SET, offset, NULL, count, NULL);
 		H5Dread(ds, mem_type, mem_space, file_space, H5P_DEFAULT, ptr );
@@ -44,10 +46,12 @@ namespace h5{ namespace impl{ // implementation details namespace
 		hsize_t rank = H5Sget_simple_extent_ndims(file_space);
 		hid_t mem_space  = H5Screate_simple(rank,count,NULL);
 		hid_t mem_type = utils::h5type<std::string>();
+		H5Sselect_all(mem_space);
 
 		std::vector<std::string> data_set = utils::ctor<std::vector<std::string>>(rank, count );
+
 		// read
-		char ** ptr = static_cast<char **>( 
+		char ** ptr = static_cast<char **>(
 						malloc( data_set.size() * sizeof(char *)));
 
 		H5Sselect_hyperslab(file_space, H5S_SELECT_SET, offset, NULL, count, NULL);
@@ -56,9 +60,11 @@ namespace h5{ namespace impl{ // implementation details namespace
 		for(int i=0; i<data_set.size(); i++)
 			if( ptr[i] != NULL )
 				data_set[i] = std::string( ptr[i] );
-		H5Dvlen_reclaim (mem_type, file_space, H5P_DEFAULT, ptr);
+
+		H5Dvlen_reclaim (mem_type, mem_space, H5P_DEFAULT, ptr);
         free(ptr);
 		H5Sclose(file_space); H5Sclose(mem_space); H5Tclose(mem_type);
+
 		// end read	
 		return data_set;
 	}
@@ -189,6 +195,11 @@ namespace h5 {
 	 */
 	template<> std::vector<std::string> read<std::vector<std::string>,std::string>(
 		   	hid_t ds,std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  ){
+		hid_t file_space = H5Dget_space(ds);
+		//hsize_t offset[H5CPP_MAX_RANK]={}; // all zeros
+		//hsize_t count[H5CPP_MAX_RANK];
+		//hsize_t rank = H5Sget_simple_extent_dims(file_space, count, NULL);
+
 		return impl::read(ds, offset.begin(), count.begin() );
 	}
 }

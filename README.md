@@ -90,12 +90,14 @@ Either install the headers into your local path such as `/usr/local/includes` or
 
 templates:
 -----------
+
 **create dataset within an opened hdf5 file**
 ```cpp
 	template<typename T> hid_t create(  hid_t fd, const std::string& path, const T ref );
 	template <typename T> hid_t create(hid_t fd, const std::string& path,
 			std::initializer_list<hsize_t> max_dims, std::initializer_list<hsize_t> chunk_dims={}, const int32_t deflate = H5CPP_NO_COMPRESSION )
 ```
+
 **read a dataset and return a reference of the created object**
 ```cpp
 	template<typename T> T read(hid_t fd, const std::string& path ); 
@@ -103,6 +105,7 @@ templates:
 	template<typename T> T read(hid_t ds, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  ); 
 	template<typename T> T read(hid_t fd, const std::string& path, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  );
 ```
+
 **write dataset into a specified location**
 ```cpp
 	template<typename T> void write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count );
@@ -114,6 +117,7 @@ templates:
 	template<typename T> void write( hid_t fd, const std::string& path, const T* ptr,
 			std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count)
 ```
+
 **append to extentable dataset**
 ```cpp
 	template <class T> context<T>( hid_t ds);
@@ -124,7 +128,7 @@ templates:
 supported types:
 ---------------- 
 
-	T := ([unsigned] ( char | short | int | long long int )) | ( bool | float | double  )
+	T := ([unsigned] ( char | short | int | long long int )) | ( float | double  )
 	S := T | c/c++ struct | std::string
 	object := std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> 
 	accept := object | T* 
@@ -132,15 +136,19 @@ supported types:
 in addition to the standard data types offered by BLAS/LAPACK systems `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
 
 
-documentation and examples:
----------------------------
+documentation, examples, google-test:
+-------------------------------------
 `make all` generates doxygen documention into docs\html and compiles `examples\*.cpp`
+also see `tests` directory for test cases
+
+
 
 TODO:
 -----
-1. implement  complex numbers
+1. implement  complex numbers, `std::vector<bool>`
 2. sparse matrix support
 3. support for eigen3 matrix library
+4. add more test cases
 
 Currently  dense vectors/matrices/cubes are supported, however Sparse matrix support will be added later using either [Compressed Sparse Row](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29) or [Compressed Sparse Column](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29) format.
 

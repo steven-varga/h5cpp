@@ -20,7 +20,7 @@ namespace SomeNameSpace {
 namespace sn = SomeNameSpace;
 
 namespace h5{ namespace utils { 
-	// specialize template and create a compaund data type
+	// specialize template and create a compound data type
 	template<> hid_t h5type<sn::tick>(){
 			hid_t type = H5Tcreate(H5T_COMPOUND, sizeof (sn::tick));
 			// layout
@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
 	timer.tic();
 
 	ProfilerStart( (std::string(argv[0]) + std::string(".prof")).data() );
-	{
+	{ // APPEND
 		long long size = 20'000'000ll;
 		auto ctx = h5::context<sn::tick>(ds);
 		for(long long i=0; i<size; i++){ // literal needs c++14 !!!
@@ -58,6 +58,10 @@ int main(int argc, char **argv) {
 
 	}
 	ProfilerStop();
+
+	{ //READ
+		//auto data = read<std::vector<sn::tick> >( ds );
+	}
 
 	H5Dclose(ds);
 	h5::close(fd);

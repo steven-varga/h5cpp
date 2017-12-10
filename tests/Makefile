@@ -18,44 +18,32 @@
 # IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-apps = raw stl arma arma-partial struct
+### 
+# SEE README to instal GTEST !!!
 
 CXX = h5c++
-CXXFLAGS = -I../h5cpp -std=c++14
-LIBS =  -lprofiler -lglog
+CXXFLAGS =  -I../h5cpp -std=c++14
+LIBS = -lprofiler -lglog -lgtest -lgtest_main
+
+
+app = basic
+
+all: $(app)
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
 
-all: $(apps)
-
-raw: raw.o 
-	$(CXX) $^ $(LIBS) -o $@	
-stl: stl.o 
-	$(CXX) $^ $(LIBS) -o $@	
-arma: arma.o 
-	$(CXX) $^ $(LIBS) -o $@	
-arma-partial: arma-partial.o 
-	$(CXX) $^ $(LIBS) -o $@
-struct: struct.o 
+$(app): $(app).o 
 	$(CXX) $^ $(LIBS) -o $@	
 
+test: $(app)
+	@./$(app) --gtest_print_time=0 --gtest_color=auto 
 
-test: $(apps)
-	@./base
-	@./stl
-	@./arma
-	@./arma-partial
-	@./struct
+#--gtest_shuffle 
 
 clean:
-	@$(RM) *.o *.prof *.h5 $(apps)
+	@$(RM) *.o *.h5 $(app)
 
-struct-profile:
-	./struct
-	google-pprof --callgrind ./struct ./struct.prof >struct.callgrind
-	google-pprof --text struct struct.prof
-	kcachegrind struct.callgrind &>/dev/null
 
 .PHONY: test
 
