@@ -25,7 +25,7 @@
 
 namespace h5 { namespace utils {
 
-	template <typename T> std::vector<T> get_test_data( size_t n ){
+	template <typename T> inline  std::vector<T> get_test_data( size_t n ){
 		std::random_device rd;
 		std::default_random_engine rng(rd());
 		std::uniform_int_distribution<> dist(0,n);
@@ -38,7 +38,7 @@ namespace h5 { namespace utils {
 		return data;
 	}
 
-	template <> std::vector<std::string> get_test_data( size_t n ){
+	template <> inline std::vector<std::string> get_test_data( size_t n ){
 
 		std::vector<std::string> data;
 		data.reserve(n);

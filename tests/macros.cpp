@@ -48,7 +48,7 @@ public:
 		size = h5::utils::get_size( object );
 		auto dims = h5::utils::get_dims( object );
 		ptr = h5::utils::get_ptr( object );
-		type = std::string( TypeTraits<T>::name);
+		type = h5::utils::type_name<T>();
 		name = dir + "/" + type;
 	}
 

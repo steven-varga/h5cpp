@@ -38,6 +38,9 @@ struct-perf: struct-perf.o
 
 test: 
 
+profile: struct-profile arma-profile stl-profile 
+
+
 clean:
 	@$(RM) *.o *.h5 *.callgrind *.prof $(apps)
 

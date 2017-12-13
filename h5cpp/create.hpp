@@ -26,7 +26,7 @@
 
 
 namespace h5 { namespace impl {
-	hid_t create(hid_t fd, const std::string& path_,
+	inline hid_t create(hid_t fd, const std::string& path_,
 			size_t rank,  const hsize_t* max_dims,  const hsize_t* chunk_dims, int32_t deflate, hid_t type){
 
 		hsize_t current_dims[rank];
@@ -107,7 +107,7 @@ namespace h5 {
 	 * 		H5Dclose(ds); 																// closing descriptor
 	 * \endcode  
 	 */
-	template <typename T> hid_t create(hid_t fd, const std::string& path,
+	template <typename T> inline hid_t create(hid_t fd, const std::string& path,
 			std::initializer_list<hsize_t> max_dims, std::initializer_list<hsize_t> chunk_dims={},
 			const int32_t deflate = H5CPP_NO_COMPRESSION ){
 
@@ -125,7 +125,7 @@ namespace h5 {
 	 * example:
 	 * 	#include <hdf5.h>
 	 * 	#include <armadillo>
-	 * 	#include <h5cpp>
+	 * 	#include <h5cpp/all>
 	 *  
 	 *  int main(){
 	 * 		hid_t fd = h5::create("some_file.h5"); 		// create file
@@ -137,7 +137,7 @@ namespace h5 {
 	 * \endcode 
 	 */
 	template<typename T, typename BaseType = typename utils::base<T>::type, size_t Rank = utils::base<T>::rank >
-		hid_t create(  hid_t fd, const std::string& path, const T& ref ){
+		inline hid_t create(  hid_t fd, const std::string& path, const T& ref ){
 
 		std::array<hsize_t,Rank> max_dims = h5::utils::get_dims( ref );
 		std::array<hsize_t,Rank> chunk_dims={}; // initialize to zeros

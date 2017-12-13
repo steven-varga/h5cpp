@@ -76,7 +76,7 @@ template <typename T> class AbstractTest
 public:
 	void SetUp() {
 		dir = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-		type = std::string( TypeTraits<T>::name);
+		type = h5::utils::type_name<T>();
 		name = dir + "/" + type;
 		this->fd = h5::open("test.h5", H5F_ACC_RDWR );
 	}

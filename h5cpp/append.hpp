@@ -36,15 +36,8 @@ namespace h5 {
 	 * @param ref T type const reference to object appended
 	 * @tparam T dimensions must match the dimension of HDF5 space upto rank-1 
 	 */ 
-	template<typename T> void append( h5::context<T>& ctx, const T& ref){
+	template<typename T> inline void append( h5::context<T>& ctx, const T& ref){
 		ctx.append( ref );
-	}
-	/** \ingroup io-append
-	 * @param ctx context for data stream
-	 * @tparam T type of class/struct 
-	 */ 
-	template<typename T> void flush( h5::context<T>& ctx ){
-		//ctx.append( ctx );
 	}
 }
 

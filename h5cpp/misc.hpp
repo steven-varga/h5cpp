@@ -41,7 +41,7 @@ namespace h5{
 	 * 		h5::close(fd); 							// close file descriptor
 	 * \endcode
 	 */
-    hid_t create( const std::string& path ){
+    inline hid_t create( const std::string& path ){
 
         hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
         hid_t fd = H5Fcreate(path.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist);
@@ -54,7 +54,7 @@ namespace h5{
 	 * @param flags (H5F_ACC_RDWR[|H5F_ACC_SWMR_WRITE])| H5F_ACC_RDONLY 
 	 * @see <a href="https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Open">H5Fopen</a>
 	 */ 
-    hid_t open(const std::string& path,  unsigned flags ){
+    inline hid_t open(const std::string& path,  unsigned flags ){
 
         hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
         	hid_t fd =  H5Fopen(path.data(), flags,  plist);
@@ -68,7 +68,7 @@ namespace h5{
 	 * @param path the location of the file
 	 * @see <a href="https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Open">H5Fopen</a>
 	 */ 
-    hid_t open(hid_t fd, const std::string& path ){
+    inline hid_t open(hid_t fd, const std::string& path ){
      	return  H5Dopen(fd, path.data(), H5P_DEFAULT);
     };
 
@@ -77,7 +77,7 @@ namespace h5{
 	 * @param fd valid and opened file descriptor to an HDF5 file
 	 * @see <a href="https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Close">H5Fclose</a>
 	 */
-	void close(hid_t fd) {
+	inline void close(hid_t fd) {
 		H5Fclose(fd);
 	}
 }

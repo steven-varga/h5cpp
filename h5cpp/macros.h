@@ -30,22 +30,17 @@
 namespace h5 { namespace utils {
 
 	template<typename T> struct base;
-	template<typename T> struct TypeTraits;
-	template<typename T> T ctor(hsize_t rank, const hsize_t* dims ){}
-	template<typename T> hid_t h5type( ){}
-	template<> hid_t h5type<std::string>(){ // std::string is variable length
+	template<typename T> inline T ctor(hsize_t rank, const hsize_t* dims ){}
+	template<typename T> inline hid_t h5type( ){}
+	template<typename T> inline std::string type_name( ){ return "n/a"; }
+	template<> inline hid_t h5type<std::string>(){ // std::string is variable length
 			hid_t type = H5Tcopy (H5T_C_S1);
 	   		H5Tset_size (type,H5T_VARIABLE);
 			return type;
 	}
 }}
 
-#define H5CPP_REGISTER_FUNDAMENTAL_TYPE( T )									\
-			template <> struct TypeTraits<T> { 									\
-				static const char* 	name; 										\
-			}; 																	\
-			const char*  TypeTraits<T>::name = #T; 								\
-
+#define H5CPP_REGISTER_FUNDAMENTAL_TYPE( T )  template<> inline std::string type_name<T>(){ return #T; };
 
 // macros which specialize on the 'base' template detect underlying properties such as type at compile type, as well define 
 // general accessors so differences in properties can be mitigated
@@ -60,7 +55,7 @@ namespace h5 { namespace utils {
  */
 
 #define H5CPP_CTOR_SPEC( T,container, container_rank, ... ) 										\
-		template<> container<T> ctor<container<T>>(hsize_t hdf5_rank, const hsize_t* hdf5_dims ){ 			\
+		template<> inline container<T> ctor<container<T>>(hsize_t hdf5_rank, const hsize_t* hdf5_dims ){ 			\
 			/* it possible to have an HDF5 file space higher rank then of the container  					\
 			 * we're mapping it to. let's collapse dimensions which exceed rank of output container 
 			 *  
@@ -98,16 +93,16 @@ namespace h5 { namespace utils {
 			typedef T type; 																				\
 			static const size_t rank=R; 																	\
 		}; 																									\
-		hsize_t get_size( const container<T>&ref ){															\
+		inline hsize_t get_size( const container<T>&ref ){													\
 			return ref.n_elem; 																				\
 		}; 																									\
-		std::array<hsize_t,R> get_dims( const container<T>& ref ){											\
+		inline std::array<hsize_t,R> get_dims( const container<T>& ref ){									\
 			return __VA_ARGS__; 																			\
 		}; 						 																			\
-		T* get_ptr( container<T>& ref ){																	\
+		inline T* get_ptr( container<T>& ref ){																\
 			return ref.address;  																			\
 		}; 																									\
-		const T* get_ptr( const container<T>& ref ){														\
+		inline const T* get_ptr( const container<T>& ref ){													\
 			return ref.address;  																			\
 		}; 																									\
 
@@ -135,7 +130,7 @@ namespace h5 { namespace utils {
 #endif
 
 
-#define H5CPP_POD2H5T(POD_TYPE,H_TYPE) 	template<> hid_t h5type<POD_TYPE>(){ return  H5Tcopy(H_TYPE); }
+#define H5CPP_POD2H5T(POD_TYPE,H_TYPE) 	template<> inline hid_t h5type<POD_TYPE>(){ return  H5Tcopy(H_TYPE); }
 #define H5CPP_SPECIALIZE(T)  H5CPP_ARMA_TEMPLATE_SPEC(T)  H5CPP_STL_TEMPLATE_SPEC(T)
 #define H5CPP_REGISTER_STL_TYPE( T, H ) H5CPP_POD2H5T(T,H) H5CPP_STL_TEMPLATE_SPEC(T)
 #define H5CPP_REGISTER_TYPE( T, H ) H5CPP_POD2H5T(T,H) H5CPP_SPECIALIZE(T)
@@ -157,4 +152,15 @@ namespace h5 { namespace utils {
 	H5CPP_REGISTER_TYPE(unsigned long long int, H5T_NATIVE_ULLONG); H5CPP_REGISTER_TYPE(long long int, H5T_NATIVE_LLONG);
 	H5CPP_REGISTER_TYPE(float, H5T_NATIVE_FLOAT); 					H5CPP_REGISTER_TYPE(double, H5T_NATIVE_DOUBLE);
 }}
+/*
+#undef H5CPP_REGISTER_FUNDAMENTAL_TYPE
+#undef H5CPP_REGISTER_TYPE
+#undef H5CPP_REGISTER_STL_TYPE
+#undef H5CPP_SPECIALIZE
+#undef H5CPP_POD2H5T
+#undef H5CPP_STL_TEMPLATE_SPEC
+#undef H5CPP_ARMA_TEMPLATE_SPEC
+#undef H5CPP_BASE_TEMPLATE_SPEC
+#undef H5CPP_CTOR_SPEC
+*/
 #endif
