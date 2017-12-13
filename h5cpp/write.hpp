@@ -68,8 +68,8 @@ namespace h5{
 		void write( hid_t ds, const T& ref){
 
 			std::array<hsize_t,Rank> offset = {}; // initialize to zeros
-			std::array<hsize_t,Rank> count = utils::dims( ref );
-			const BaseType* ptr = utils::data( ref );
+			std::array<hsize_t,Rank> count = utils::get_dims( ref );
+			const BaseType* ptr = utils::get_ptr( ref );
 			h5::write<BaseType>(ds,ptr,offset.data(), count.data() );
 	}
 
@@ -84,7 +84,7 @@ namespace h5{
 	template<typename T, typename BaseType = typename utils::base<T>::type>
 		void write( hid_t ds, const T& ref, std::initializer_list<hsize_t> offset,	std::initializer_list<hsize_t> count){
 
-		const BaseType* ptr = utils::data( ref );
+		const BaseType* ptr = utils::get_ptr( ref );
 		h5::write<BaseType>(ds,ptr,offset.begin(),count.begin());
 	}
 	/** \ingroup io-write 
@@ -97,7 +97,7 @@ namespace h5{
 	template<typename T > void write( hid_t fd, const std::string& path, const T& ref){
 
 		hid_t ds = h5::utils::dataset_exist(fd, path ) ?
-			H5Dopen(fd, path.data(), H5P_DEFAULT) : create<T>(fd,path,ref);
+			H5Dopen(fd, path.data(), H5P_DEFAULT) : h5::create(fd,path,ref);
 			h5::write(ds,ref );
         H5Dclose(ds);
 	}

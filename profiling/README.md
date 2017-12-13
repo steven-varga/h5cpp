@@ -21,18 +21,15 @@
  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --->
 
-How to install google-test framework:
--------------------------------------
+PROFILEING:
+=========
 
-first install google-test sources: `sudo apt-get install libgtest-dev`
-make sure you have cmake: `sudo apt-get install cmake` 
-you find the source dir here: `cd /usr/src/gtest` 
-inside the source directory run `sudo cmake CMakeLists.txt` 
-then `sudo make`
-copy  libgtest.a and libgtest_main.a to your /usr/lib folder `sudo cp *.a /usr/lib`
+...in progress...
 
-specify link in makefile: `LDLIBS = -lgtest -lgtest_main`
+`make all` will compile files, then invokes the profiler and visualizer 
+you need to have `google-pprof` and `kcachegrind`
 
-FAILS:
-------
+TODO:
+----
+use google test framework for timing and  testing for types
 

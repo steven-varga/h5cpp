@@ -55,8 +55,8 @@ requirements:
 	`make -j4` then `sudo make install`
 
 2. C++11 or above capable compiler installed HDF5 libraries: `sudo apt install build-essential g++`
-3. set the location of the include library, and c++11 or higher flag: `h5c++  -I../h5cpp -std=c++14`
-4. optionally include `<armadillo>`  header file before including `<h5cpp>`
+3. set the location of the include library, and c++11 or higher flag: `h5c++  -Iyour/project/../h5cpp -std=c++14` or `CFLAGS += pkg-config --cflags h5cpp`
+4. optionally include `<armadillo>`  header file before including `<h5cpp/all>`
 
 usage:
 -------
@@ -64,6 +64,8 @@ usage:
 
 *to read/map a 10x5 matrix from a 3D array from location {3,4,1}*
 ```cpp
+	#include <h5cpp/all>
+	...
 	hid_t fd h5::open("some_file.h5");
 		/* the RVO arma::Mat<double> object will have the size 10x5 filled*/
 		auto M = h5::read<arma::mat>(fd,"path/to/matrix",{3,4,1},{10,1,5});
@@ -72,16 +74,26 @@ usage:
 
 *to write the entire matrix back to a different file*
 ```cpp
+	#include <h5cpp/all>
+	...
 	hid_t fd = h5::create("output.h5")
 		h5::write(fd,"/result",M);
 	h5::close(fd);
 ```
 *to create an dataset recording a stream of struct into an extendable chunked dataset with GZIP level 9 compression:*
 ```cpp
+	#include <h5cpp/core>
+		#include "your_data_definition.h"
+	#include <h5cpp/io>
+	...
 	hid_t ds = h5::create<some_type>(fd,"bids",{H5S_UNLIMITED},{1000}, 9);
 ```
 *to append records to an HDF5 datastream* 
 ```cpp
+	#include <h5cpp/core>
+		#include "your_data_definition.h"
+	#include <h5cpp/io>
+
 	auto ctx = h5::context<some_struct>( dataset );
 	for( record:entire_dataset)
 				h5::append(ctx, record );
@@ -119,6 +131,10 @@ templates:
 
 **append to extentable dataset**
 ```cpp
+	#include <h5cpp/core>
+		#include "your_data_definition.h"
+	#include <h5cpp/io>
+
 	template <class T> context<T>( hid_t ds);
 	template<class T> context<T>( hid_t fd, const std::string& path);
 	template<typename T> void append( h5::context<T>& ctx, const T& ref);
@@ -129,8 +145,9 @@ supported types:
 
 	T := ([unsigned] ( char | short | int | long long int )) | ( float | double  )
 	S := T | c/c++ struct | std::string
-	object := std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> 
-	accept := object | T* 
+	ref 	:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T>
+	ptr 	:= T* 
+	accept 	:= ref | ptr 
 
 in addition to the standard data types offered by BLAS/LAPACK systems `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
 

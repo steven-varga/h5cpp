@@ -1,4 +1,4 @@
-#include <h5cpp>
+#include <h5cpp/all>
 #include <cstddef>
 
 #define values 0,1,2,3,4,5,6,7,8,9
@@ -10,8 +10,6 @@ int main(){
 
 	{ //CREATE 
 		// fixed size 'bool' with chunks: {1,1,1} enabled
-		h5::create<bool>(fd,"/types/bool",{2,3,1},{1,1,1}); 
-		h5::create<bool>(fd,"/types/bool unlimited",{H5S_UNLIMITED},{10}, 9 ); 
 		h5::create<short>(fd,"/types/short",{2,H5S_UNLIMITED},{2,10} );
 		h5::create<unsigned short>(fd,"/types/ushort",{2,3,4}  );
 

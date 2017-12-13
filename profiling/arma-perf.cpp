@@ -1,6 +1,6 @@
 #include <vector>
 #include <armadillo>
-#include <h5cpp>
+#include <h5cpp/all>
 #include <gperftools/profiler.h>
 
 

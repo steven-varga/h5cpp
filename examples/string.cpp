@@ -1,9 +1,9 @@
 #include <vector>
 #include <armadillo>
-#include <h5cpp>
-#include <mock.hpp>
+#include <h5cpp/all>
+#include <h5cpp/mock.hpp>
 
-using namespace h5::mock;
+using namespace h5::utils;
 
 int main(int argc, char **argv) {
 	arma::wall_clock timer;

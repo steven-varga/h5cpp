@@ -137,9 +137,9 @@ namespace h5 {
 	 * \endcode 
 	 */
 	template<typename T, typename BaseType = typename utils::base<T>::type, size_t Rank = utils::base<T>::rank >
-		hid_t create(  hid_t fd, const std::string& path, const T ref ){
+		hid_t create(  hid_t fd, const std::string& path, const T& ref ){
 
-		std::array<hsize_t,Rank> max_dims = utils::dims( ref );
+		std::array<hsize_t,Rank> max_dims = h5::utils::get_dims( ref );
 		std::array<hsize_t,Rank> chunk_dims={}; // initialize to zeros
  		return impl::create(fd,path,Rank,max_dims.data(),chunk_dims.data(),H5CPP_NO_COMPRESSION, utils::h5type<BaseType>());
 	}

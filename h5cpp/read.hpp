@@ -89,7 +89,7 @@ namespace h5 {
 		hsize_t count[H5CPP_MAX_RANK];
 		hsize_t rank = H5Sget_simple_extent_dims(file_space, count, NULL);
 		T data_set = utils::ctor<T>(rank, count );
-		BaseType * ptr = utils::data( data_set );
+		BaseType * ptr = utils::get_ptr( data_set );
 		impl::read(ds, ptr, offset, count);
 		return data_set;
 	}
@@ -151,7 +151,7 @@ namespace h5 {
 			std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count ){
 		hsize_t rank = count.size();
 		T data_set = utils::ctor<T>(rank, count.begin() );
-		BaseType * ptr = utils::data( data_set );
+		BaseType * ptr = utils::get_ptr( data_set );
 		impl::read(ds, ptr, offset.begin(), count.begin());
 		return data_set;
 	}

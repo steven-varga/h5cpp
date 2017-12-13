@@ -1,5 +1,5 @@
 #include <armadillo>
-#include <h5cpp>
+#include <h5cpp/all>
 
 int main(){
 	{ // CREATE - WRITE

@@ -52,6 +52,7 @@ namespace h5{
  *  	@example arma-partial.cpp
  *  	@example struct.cpp
  *  	@example string.cpp
+ *  	@example struct.h
  *  @} 
  *
  */

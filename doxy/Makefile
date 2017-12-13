@@ -21,6 +21,7 @@
 
 all: Doxyfile
 	@doxygen Doxyfile
+test:
 
 upload:
 	rsync -a ../docs/html/ osaka.vargaconsulting.ca:h5cpp.ca

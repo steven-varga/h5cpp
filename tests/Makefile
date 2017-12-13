@@ -22,27 +22,37 @@
 # SEE README to instal GTEST !!!
 
 CXX = h5c++
-CXXFLAGS =  -I../h5cpp -std=c++14
+CXXFLAGS =  -I../ -std=c++14
 LIBS = -lprofiler -lglog -lgtest -lgtest_main
+flags =  --gtest_print_time=0 --gtest_color=auto
 
+apps = macros basic
 
-app = basic
-
-all: $(app)
+all: $(apps)
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
 
-$(app): $(app).o 
+basic: basic.o 
 	$(CXX) $^ $(LIBS) -o $@	
 
-test: $(app)
-	@./$(app) --gtest_print_time=0 --gtest_color=auto 
+macros: macros.o 
+	$(CXX) $^ $(LIBS) -o $@	
+
+test-macros: macros
+	./macros $(flags)
+
+test-basic: basic
+	./basic $(flags)
+
+
+
+test: test-basic test-macros
 
 #--gtest_shuffle 
 
 clean:
-	@$(RM) *.o *.h5 $(app)
+	@$(RM) *.o *.h5 $(apps)
 
 
 .PHONY: test

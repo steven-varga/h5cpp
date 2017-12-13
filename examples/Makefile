@@ -21,7 +21,7 @@
 apps = raw stl arma arma-partial struct string
 
 CXX = h5c++
-CXXFLAGS = -I../h5cpp -std=c++14
+CXXFLAGS = -I../ -std=c++14
 LIBS =  -lprofiler -lglog
 
 %.o : $(SRC_DIR)/%.cpp 
