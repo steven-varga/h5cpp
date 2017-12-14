@@ -29,6 +29,7 @@
 #include <stdexcept>
 #include <initializer_list>
 #include <complex>
+#include <type_traits>
  
 #include <hdf5.h>
 #include <hdf5_hl.h>

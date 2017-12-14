@@ -164,6 +164,7 @@ TODO:
 3. support for eigen3 matrix library
 4. add more test cases
 5. better profiling of read|write|create operations
+6. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a) using explicit instantiation
 
 Currently  dense vectors/matrices/cubes are supported, however Sparse matrix support will be added later using either [Compressed Sparse Row](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29) or [Compressed Sparse Column](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29) format.
 

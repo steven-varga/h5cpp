@@ -26,30 +26,38 @@ CXXFLAGS =  -I../ -std=c++14
 LIBS = -lprofiler -lglog -lgtest -lgtest_main
 flags =  --gtest_print_time=0 --gtest_color=auto
 
-apps = macros basic
-
+apps = macros integral struct stl armadillo 
 all: $(apps)
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
-
-basic: basic.o 
+chrono:  chrono.o 
 	$(CXX) $^ $(LIBS) -o $@	
-
+integral:  integral.o 
+	$(CXX) $^ $(LIBS) -o $@	
+struct: struct.o 
+	$(CXX) $^ $(LIBS) -o $@	
+armadillo: armadillo.o
+	$(CXX) $^ $(LIBS) -o $@	
+stl: stl.o
+	$(CXX) $^ $(LIBS) -o $@	
 macros: macros.o 
 	$(CXX) $^ $(LIBS) -o $@	
 
 test-macros: macros
 	./macros $(flags)
+test-integral: integral
+	./integral $(flags)
+test-struct: struct
+	./struct $(flags)
+test-stl: stl
+	./stl $(flags)
+test-armadillo: armadillo
+	./armadillo $(flags)
+test-chrono: chrono
+	./chrono $(flags)
 
-test-basic: basic
-	./basic $(flags)
-
-
-
-test: test-basic test-macros
-
-#--gtest_shuffle 
+test: test-macros test-integral test-struct test-stl test-armadillo 
 
 clean:
 	@$(RM) *.o *.h5 $(apps)

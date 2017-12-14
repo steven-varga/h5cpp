@@ -24,16 +24,14 @@
 #include <armadillo>
 #include <hdf5.h>
 #include <gtest/gtest.h>
-#include "event_listener.hpp"
 #include <h5cpp/mock.hpp>
 #include <h5cpp/macros.h>
+
+#include "event_listener.hpp"
 #include "struct.h"
+#include "abstract.h"
 
-using namespace h5::utils;
-
-#define H5CPP_TEST_PRIMITIVE_TYPES unsigned char, unsigned short, unsigned int, unsigned long long int, char,short, int, long long int, float, double
-#define H5CPP_TEST_STL_VECTOR_TYPES H5CPP_TEST_PRIMITIVE_TYPES, std::string, sn::struct_type
-#define H5CPP_TEST_ARMADILLO_TYPES H5CPP_TEST_PRIMITIVE_TYPES
+//using namespace h5::utils;
 
 /** test harness to open/close HDF5 file 
  *
@@ -176,14 +174,7 @@ TYPED_TEST(ArmaCubeTest, arma_matrix ) {
 	if( this->ptr != this->object.memptr() ) ADD_FAILURE();
 }
 
+/*----------- BEGIN TEST RUNNER ---------------*/
+H5CPP_TEST_RUNNER( int argc, char**  argv );
+/*----------------- END -----------------------*/
 
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-
-	testing::TestEventListeners& listeners = testing::UnitTest::GetInstance()->listeners();
-	delete listeners.Release(listeners.default_result_printer());
-  	listeners.Append(new MinimalistPrinter(argv[0]) );
-
-  	// will create/read/write/append to datasets in fd
-	return RUN_ALL_TESTS();
-}

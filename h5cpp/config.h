@@ -88,5 +88,13 @@ namespace h5{
  *  @} 
  */
 
+/** @defgroup conversions 
+ *  conversions between common types: boost::chrono, doublem, long long ... 
+ *  @{
+ *  @} 
+ */
+
+
+
 
 

@@ -22,6 +22,10 @@
 
 #include "gtest/gtest.h"
 
+
+#ifndef H5CPP_GTEST_EVENT_LISTENER
+#define H5CPP_GTEST_EVENT_LISTENER
+
 #define KRED  "\x1B[31m"
 #define KGRN  "\x1B[32m"
 #define KNRM  "\x1B[0m"
@@ -29,7 +33,7 @@
 namespace testing { namespace internal {
 	/* 
 	 */
-	template<> std::string GetTypeName<std::string>() {
+	template<> inline std::string GetTypeName<std::string>() {
 		return std::string("std::string");
 	}
 }}
@@ -67,4 +71,4 @@ class MinimalistPrinter : public ::testing::EmptyTestEventListener {
 #undef KGRN
 #undef KNRM
 
-
+#endif
