@@ -105,8 +105,7 @@ templates:
 **create dataset within an opened hdf5 file**
 ```cpp
 	template<typename T> hid_t create(  hid_t fd, const std::string& path, const T ref );
-	template <typename T> hid_t create(hid_t fd, const std::string& path,
-			std::initializer_list<hsize_t> max_dims, std::initializer_list<hsize_t> chunk_dims={}, const int32_t deflate = H5CPP_NO_COMPRESSION )
+	template <typename T> hid_t create(hid_t fd, const std::string& path, std::initializer_list<hsize_t> max_dims, std::initializer_list<hsize_t> chunk_dims={}, const int32_t deflate = H5CPP_NO_COMPRESSION );
 ```
 
 **read a dataset and return a reference of the created object**
@@ -122,14 +121,12 @@ templates:
 	template<typename T> void write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count );
 	template<typename T> void write(hid_t ds, const T* ptr, std::initializer_list<hsize_t> offset,	std::initializer_list<hsize_t> count);
 	template<typename T> void write(hid_t ds, const T& ref, std::initializer_list<hsize_t> offset,	std::initializer_list<hsize_t> count);
-	template<typename T> void write( hid_t fd, const std::string& path, const T& ref);
-	template<typename T> void write( hid_t fd, const std::string& path, const T& ref, 
-				std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count);
-	template<typename T> void write( hid_t fd, const std::string& path, const T* ptr,
-			std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count)
+	template<typename T> void write(hid_t fd, const std::string& path, const T& ref);
+	template<typename T> void write(hid_t fd, const std::string& path, const T& ref, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count);
+	template<typename T> void write(hid_t fd, const std::string& path, const T* ptr, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count);
 ```
 
-**append to extentable dataset**
+**append to extentable C++/C struct dataset]**
 ```cpp
 	#include <h5cpp/core>
 		#include "your_data_definition.h"
@@ -152,25 +149,27 @@ supported types:
 in addition to the standard data types offered by BLAS/LAPACK systems `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
 
 
-documentation, examples, google-test:
+[documentation](http://h5cpp.ca/modules.html), [examples](http://h5cpp.ca/examples.html), google-test:
 -------------------------------------
 `make all` generates doxygen documention into docs/html and compiles `examples/*.cpp`
 also see `tests` directory for test cases
 
 TODO:
 -----
-1. implement  complex numbers, `std::vector<bool>`
-2. sparse matrix support
-3. support for eigen3 matrix library
-4. add more test cases
-5. better profiling of read|write|create operations
-6. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a) using explicit instantiation
 
-Currently  dense vectors/matrices/cubes are supported, however Sparse matrix support will be added later using either [Compressed Sparse Row](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29) or [Compressed Sparse Column](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29) format.
+1. [boost::gregorian](http://www.boost.org/doc/libs/1_65_1/doc/html/date_time/gregorian.html), [boost::posix_time](http://www.boost.org/doc/libs/1_65_1/doc/html/date_time/posix_time.html) support [in progress]
+2. support for [eigen3](http://eigen.tuxfamily.org/index.php?title=Main_Page), [boost matrix library](http://www.boost.org/doc/libs/1_65_1/libs/numeric/ublas/doc/matrix.htm)
+3. scipy|[julia](https://julialang.org/)|matlab object format support
+4. sparse matrix support: [compressed sparse row](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29
+), [compressed sparse column]( https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29
+)
+5. implement  complex numbers, `std::vector<bool>`
+7. statistical profiling of read|write|create operations, and visualization
+
+98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a) using explicit instantiation
+99. add more test cases [in progress]
 
 <div style="text-align: right">
 **Copyright (c) 2017 vargaconsulting, Toronto,ON Canada** <steven@vargaconsulting.ca>
 </div>
-
-
 
