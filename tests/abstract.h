@@ -49,6 +49,12 @@ herr_t gtest_hdf5_error_handler (int a, void *unused) {
 	ADD_FAILURE();
 }
 
+#ifdef H5CPP_CHRONO
+	#define H5CPP_TEST_CHRONO_TYPES h5::chrono::duration, h5::chrono::ptime, h5::chrono::period, h5::chrono::iterator
+#else
+	#define H5CPP_TEST_CHRONO_TYPES 
+#endif
+
 #define H5CPP_TEST_PRIMITIVE_TYPES 								\
 	unsigned char, unsigned short, unsigned int, unsigned long 	\
 	long int, char,short, int, long long int, float, double 	\

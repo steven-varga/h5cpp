@@ -23,14 +23,15 @@
 
 CXX = h5c++
 CXXFLAGS =  -I../ -std=c++14
-LIBS = -lprofiler -lglog -lgtest -lgtest_main
+LIBS = -lprofiler -lglog -lgtest -lgtest_main -lboost_date_time
 flags =  --gtest_print_time=0 --gtest_color=auto
 
-apps = macros integral struct stl armadillo 
+apps = macros integral struct stl armadillo chrono 
 all: $(apps)
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
+
 chrono:  chrono.o 
 	$(CXX) $^ $(LIBS) -o $@	
 integral:  integral.o 
@@ -57,7 +58,7 @@ test-armadillo: armadillo
 test-chrono: chrono
 	./chrono $(flags)
 
-test: test-macros test-integral test-struct test-stl test-armadillo 
+test: test-macros test-integral test-struct test-stl test-armadillo chrono
 
 clean:
 	@$(RM) *.o *.h5 $(apps)

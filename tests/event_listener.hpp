@@ -46,7 +46,7 @@ class MinimalistPrinter : public ::testing::EmptyTestEventListener {
 		auto status =  ti.result()->Passed() ? KGRN "[  OK  ]" KNRM :  KRED "[FAILED]" KNRM;
 
 		printf("%-40s %35s %-6s\n",
-				 				  ti.name(), ti.type_param(), status );
+				 				  ti.name(), ti.type_param() != nullptr ? ti.type_param():ti.test_case_name(), status );
 	}
 
 	virtual void OnTestProgramStart(const testing::UnitTest& ut){
