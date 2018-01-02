@@ -140,11 +140,13 @@ template<typename T> void append( h5::context<T>& ctx, const T& ref);
 supported types:
 ---------------- 
 
-T := ([unsigned] ( char | short | int | long long int )) | ( float | double  )
-S := T | c/c++ struct | std::string
-ref 	:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T>
-ptr 	:= T* 
-accept 	:= ref | ptr 
+
+	T := ([unsigned] ( char | short | int | long long int )) | ( float | double  )
+	S := T | c/c++ struct | std::string
+	ref 	:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T>
+	ptr 	:= T* 
+	accept 	:= ref | ptr 
+
 
 in addition to the standard data types offered by BLAS/LAPACK systems `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
 
