@@ -24,12 +24,22 @@
 PROFILEING:
 =========
 
+Initial profiling shows the library is indeed thin, as intended. 
+
 ...in progress...
 
-`make all` will compile files, then invokes the profiler and visualizer 
-you need to have `google-pprof` and `kcachegrind`
+`make all` will compile files,  invokes profiler and visualizer
+you need to have `google-pprof` and `kcachegrind` installed. 
 
+![struct append][struct]
+![stl][stl]
+![armadillo][armadillo]
 TODO:
 ----
 use google test framework for timing and  testing for types
+
+[struct][../docs/pix/perf-struct.png]
+[stl][../docs/pix/perf-stl.png]
+[armadillo][../docs/pix/perf-armadillo.png]
+
 
