@@ -51,8 +51,6 @@ test: $(apps)
 	@./string
 	h5dump -d string.mat string.h5
 
-
-
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)
 

@@ -157,19 +157,19 @@ also see `tests` directory for test cases
 TODO:
 -----
 
-1. [boost::gregorian](http://www.boost.org/doc/libs/1_65_1/doc/html/date_time/gregorian.html), [boost::posix_time](http://www.boost.org/doc/libs/1_65_1/doc/html/date_time/posix_time.html) support [in progress]
-2. support for [eigen3](http://eigen.tuxfamily.org/index.php?title=Main_Page), [boost matrix library](http://www.boost.org/doc/libs/1_65_1/libs/numeric/ublas/doc/matrix.htm)
-3. scipy|[julia](https://julialang.org/)|matlab object format support
-4. sparse matrix support: [compressed sparse row](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29
+
+1. support for [eigen3](http://eigen.tuxfamily.org/index.php?title=Main_Page), [boost matrix library](http://www.boost.org/doc/libs/1_65_1/libs/numeric/ublas/doc/matrix.htm)
+2. scipy|[julia](https://julialang.org/)|matlab object format support
+3. sparse matrix support: [compressed sparse row](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29
 ), [compressed sparse column]( https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29
 )
-5. implement  complex numbers, `std::vector<bool>`
-7. statistical profiling of read|write|create operations, and visualization
+4. implement  complex numbers, `std::vector<bool>`
+5. statistical profiling of read|write|create operations, and visualization
 
-98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a) using explicit instantiation
+98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a)
 99. add more test cases [in progress]
 
 <div style="text-align: right">
-**Copyright (c) 2017 vargaconsulting, Toronto,ON Canada** <steven@vargaconsulting.ca>
+**Copyright (c) 2018 vargaconsulting, Toronto,ON Canada** <steven@vargaconsulting.ca>
 </div>
 

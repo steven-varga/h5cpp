@@ -37,8 +37,8 @@
 #include <string.h> // strdup is used 	
 
 
-#ifndef  H5CPP_CORE_H
-#define H5CPP_CORE_H
+#ifndef  H5CPP_CORE_h
+#define H5CPP_CORE_h
 	#include "config.h"
 	#include "utils.hpp"
 	#include "misc.hpp"

@@ -44,19 +44,6 @@ namespace h5{
 	typedef std::complex<double> cx_double;
 	typedef std::complex<float>  cx_float;
 }
-/** @defgroup examples H5CPP examples
- *  @{
- *  	@example raw.cpp
- *   	@example stl.cpp
- * 		@example arma.cpp
- *  	@example arma-partial.cpp
- *  	@example struct.cpp
- *  	@example string.cpp
- *  	@example struct.h
- *  @} 
- *
- */
-
 /** @defgroup file-io HDF5 file IO
  *  file IO operations
  *  @{
@@ -88,11 +75,35 @@ namespace h5{
  *  @} 
  */
 
-/** @defgroup conversions 
- *  conversions between common types: boost::chrono, doublem, long long ... 
- *  @{
- *  @} 
- */
+/** @defgroup chrono 
+* **conversions between types:** boost::[duration|ptime|date], double, unsigned long, std::string 
+* with nanosecond resolution. For higher 1E-9 resolution see [BOOST date-time][1]. The internals 
+* are in [chrono.md][2] and [more examples are here][3] 
+* As side effect it includes boost headers and you also must link against  `-lboost_date_time`
+*
+*```
+*     #include <boost/date_time/posix_time/posix_time.hpp>
+*     #include <boost/date_time/gregorian/gregorian.hpp>
+*```
+*
+*  **usage:**
+*``` 
+*	#include <h5cpp/core>
+*	#include <h5cpp/chrono>
+*	#include <h5cpp/io>
+*		
+*	...
+*	auto pt = boost::posix_time::microsec_clock::local_time();
+*	std::string time = h5::as<std::string>(pt);
+*	...
+*```
+* [1]: http://www.boost.org/doc/libs/master/doc/html/date_time/details.html#date_time.buildinfo)
+* [2]: \ref link-chrono
+* [3]: \ref link-examples-chrono
+* [4]: https://stat.ethz.ch/R-manual/R-devel/library/base/html/DateTimeClasses.html
+* @{
+* @} 
+*/
 
 
 
