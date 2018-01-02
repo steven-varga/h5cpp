@@ -25,7 +25,7 @@ test:
 
 upload:
 	rsync -a ../docs/html/ osaka.vargaconsulting.ca:h5cpp.ca
-
+	rsync -a ../docs/pix/ osaka.vargaconsulting.ca:h5cpp.ca/pix
 clean:
 	$(RM) -rf ../docs/html
 

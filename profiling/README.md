@@ -22,7 +22,7 @@
 --->
 
 PROFILEING:
-=========
+===========
 
 Initial profiling shows the library is indeed thin, as intended. 
 
@@ -31,15 +31,11 @@ Initial profiling shows the library is indeed thin, as intended.
 `make all` will compile files,  invokes profiler and visualizer
 you need to have `google-pprof` and `kcachegrind` installed. 
 
-![struct append][struct]
-![stl][stl]
-![armadillo][armadillo]
+![struct append](http://h5cpp.ca/pix/perf-struct.png)
+![stl](http://h5cpp.ca/pix/perf-stl.png)
+![armadillo](http://h5cpp.ca/pix/perf-armadillo.png)
+
 TODO:
 ----
 use google test framework for timing and  testing for types
-
-[struct][../docs/pix/perf-struct.png]
-[stl][../docs/pix/perf-stl.png]
-[armadillo][../docs/pix/perf-armadillo.png]
-
 
