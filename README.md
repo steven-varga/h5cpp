@@ -64,39 +64,39 @@ usage:
 
 *to read/map a 10x5 matrix from a 3D array from location {3,4,1}*
 ```cpp
-	#include <h5cpp/all>
-	...
-	hid_t fd h5::open("some_file.h5");
-		/* the RVO arma::Mat<double> object will have the size 10x5 filled*/
-		auto M = h5::read<arma::mat>(fd,"path/to/matrix",{3,4,1},{10,1,5});
-	h5::close(fd);
+#include <h5cpp/all>
+...
+hid_t fd h5::open("some_file.h5");
+	/* the RVO arma::Mat<double> object will have the size 10x5 filled*/
+	auto M = h5::read<arma::mat>(fd,"path/to/matrix",{3,4,1},{10,1,5});
+h5::close(fd);
 ```
 
 *to write the entire matrix back to a different file*
 ```cpp
-	#include <h5cpp/all>
-	...
-	hid_t fd = h5::create("output.h5")
-		h5::write(fd,"/result",M);
-	h5::close(fd);
+#include <h5cpp/all>
+...
+hid_t fd = h5::create("output.h5")
+	h5::write(fd,"/result",M);
+h5::close(fd);
 ```
 *to create an dataset recording a stream of struct into an extendable chunked dataset with GZIP level 9 compression:*
 ```cpp
-	#include <h5cpp/core>
-		#include "your_data_definition.h"
-	#include <h5cpp/io>
-	...
-	hid_t ds = h5::create<some_type>(fd,"bids",{H5S_UNLIMITED},{1000}, 9);
+#include <h5cpp/core>
+	#include "your_data_definition.h"
+#include <h5cpp/io>
+...
+hid_t ds = h5::create<some_type>(fd,"bids",{H5S_UNLIMITED},{1000}, 9);
 ```
 *to append records to an HDF5 datastream* 
 ```cpp
-	#include <h5cpp/core>
-		#include "your_data_definition.h"
-	#include <h5cpp/io>
+#include <h5cpp/core>
+	#include "your_data_definition.h"
+#include <h5cpp/io>
 
-	auto ctx = h5::context<some_struct>( dataset );
-	for( record:entire_dataset)
-				h5::append(ctx, record );
+auto ctx = h5::context<some_struct>( dataset );
+for( record:entire_dataset)
+			h5::append(ctx, record );
 ```
 
 templates:
@@ -104,47 +104,47 @@ templates:
 
 **create dataset within an opened hdf5 file**
 ```cpp
-	template<typename T> hid_t create(  hid_t fd, const std::string& path, const T ref );
-	template <typename T> hid_t create(hid_t fd, const std::string& path, std::initializer_list<hsize_t> max_dims, std::initializer_list<hsize_t> chunk_dims={}, const int32_t deflate = H5CPP_NO_COMPRESSION );
+template<typename T> hid_t create(  hid_t fd, const std::string& path, const T ref );
+template <typename T> hid_t create(hid_t fd, const std::string& path, std::initializer_list<hsize_t> max_dims, std::initializer_list<hsize_t> chunk_dims={}, const int32_t deflate = H5CPP_NO_COMPRESSION );
 ```
 
 **read a dataset and return a reference of the created object**
 ```cpp
-	template<typename T> T read(hid_t fd, const std::string& path ); 
-	template<typename T> T read(hid_t ds ); 
-	template<typename T> T read(hid_t ds, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  ); 
-	template<typename T> T read(hid_t fd, const std::string& path, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  );
+template<typename T> T read(hid_t fd, const std::string& path ); 
+template<typename T> T read(hid_t ds ); 
+template<typename T> T read(hid_t ds, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  ); 
+template<typename T> T read(hid_t fd, const std::string& path, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  );
 ```
 
 **write dataset into a specified location**
 ```cpp
-	template<typename T> void write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count );
-	template<typename T> void write(hid_t ds, const T* ptr, std::initializer_list<hsize_t> offset,	std::initializer_list<hsize_t> count);
-	template<typename T> void write(hid_t ds, const T& ref, std::initializer_list<hsize_t> offset,	std::initializer_list<hsize_t> count);
-	template<typename T> void write(hid_t fd, const std::string& path, const T& ref);
-	template<typename T> void write(hid_t fd, const std::string& path, const T& ref, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count);
-	template<typename T> void write(hid_t fd, const std::string& path, const T* ptr, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count);
+template<typename T> void write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count );
+template<typename T> void write(hid_t ds, const T* ptr, std::initializer_list<hsize_t> offset,	std::initializer_list<hsize_t> count);
+template<typename T> void write(hid_t ds, const T& ref, std::initializer_list<hsize_t> offset,	std::initializer_list<hsize_t> count);
+template<typename T> void write(hid_t fd, const std::string& path, const T& ref);
+template<typename T> void write(hid_t fd, const std::string& path, const T& ref, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count);
+template<typename T> void write(hid_t fd, const std::string& path, const T* ptr, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count);
 ```
 
 **append to extentable C++/C struct dataset]**
 ```cpp
-	#include <h5cpp/core>
-		#include "your_data_definition.h"
-	#include <h5cpp/io>
+#include <h5cpp/core>
+	#include "your_data_definition.h"
+#include <h5cpp/io>
 
-	template <class T> context<T>( hid_t ds);
-	template<class T> context<T>( hid_t fd, const std::string& path);
-	template<typename T> void append( h5::context<T>& ctx, const T& ref);
+template <class T> context<T>( hid_t ds);
+template<class T> context<T>( hid_t fd, const std::string& path);
+template<typename T> void append( h5::context<T>& ctx, const T& ref);
 ```
 
 supported types:
 ---------------- 
 
-	T := ([unsigned] ( char | short | int | long long int )) | ( float | double  )
-	S := T | c/c++ struct | std::string
-	ref 	:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T>
-	ptr 	:= T* 
-	accept 	:= ref | ptr 
+T := ([unsigned] ( char | short | int | long long int )) | ( float | double  )
+S := T | c/c++ struct | std::string
+ref 	:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T>
+ptr 	:= T* 
+accept 	:= ref | ptr 
 
 in addition to the standard data types offered by BLAS/LAPACK systems `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
 
@@ -156,7 +156,6 @@ also see `tests` directory for test cases
 
 TODO:
 -----
-
 
 1. support for [eigen3](http://eigen.tuxfamily.org/index.php?title=Main_Page), [boost matrix library](http://www.boost.org/doc/libs/1_65_1/libs/numeric/ublas/doc/matrix.htm)
 2. scipy|[julia](https://julialang.org/)|matlab object format support
