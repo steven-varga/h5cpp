@@ -22,10 +22,18 @@
 --->
 
 **gprof** directory contains [gperf][1] tools base profiling. `make all` will compile files.
-In order to execute profiling download in install  `google-pprof` and `kcachegrind`.  To  invoke profiler and visualizer
-type `make ????-profile`.
+In order to execute  download in install  `google-pprof` and `kcachegrind`.  
 
-Initial result [c++ struct][40], [stl vector][41] and [armadillo][42] indicate that the library adds minimal overhead to
+```shell
+sudo apt install google-perftools
+sudo apt install kcachegrind
+```
+
+To  invoke google profiler and cachgrind visualizer type `make ????-profile`.
+
+
+
+Initial result [c++ struct][40], [stl vector][41] and [armadillo][42] indicate the library adds minimal overhead to
 [HDF5][50] calls.
 
 **grid-engine** based detailed test suite is in progress. This is a massive iterative case executed on AWS EC2 based 
@@ -33,8 +41,8 @@ Grid-Engine to measure performance.
 
 
 [1]:  https://github.com/gperftools/gperftools
-[40]: http://h5cpp.ca/pix/perf-struct.png" 
-[41]: http://h5cpp.ca/pix/perf-stl.png" 
-[42]: http://h5cpp.ca/pix/perf-armadillo.png" 
+[40]: http://h5cpp.ca/pix/perf-struct.png 
+[41]: http://h5cpp.ca/pix/perf-stl.png
+[42]: http://h5cpp.ca/pix/perf-armadillo.png 
 
 [50]: https://www.hdfgroup.org/
