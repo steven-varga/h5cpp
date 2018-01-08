@@ -44,6 +44,15 @@ namespace h5{
 	typedef std::complex<double> cx_double;
 	typedef std::complex<float>  cx_float;
 }
+/**
+@example arma.cpp
+@example arma-partial.cpp
+@example raw.cpp
+@example stl.cpp
+@example string.cpp
+@example struct.cpp
+*/
+
 /** @defgroup file-io HDF5 file IO
  *  file IO operations
  *  @{

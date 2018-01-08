@@ -21,21 +21,20 @@
  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --->
 
-PROFILEING:
-===========
+**gprof** directory contains [gperf][1] tools base profiling. `make all` will compile files.
+In order to execute profiling download in install  `google-pprof` and `kcachegrind`.  To  invoke profiler and visualizer
+type `make ????-profile`.
 
-Initial profiling shows the library is indeed thin, as intended. 
+Initial result [c++ struct][40], [stl vector][41] and [armadillo][42] indicate that the library adds minimal overhead to
+[HDF5][50] calls.
 
-...in progress...
+**grid-engine** based detailed test suite is in progress. This is a massive iterative case executed on AWS EC2 based 
+Grid-Engine to measure performance.
 
-`make all` will compile files,  invokes profiler and visualizer
-you need to have `google-pprof` and `kcachegrind` installed. 
 
-![struct append](http://h5cpp.ca/pix/perf-struct.png)
-![stl](http://h5cpp.ca/pix/perf-stl.png)
-![armadillo](http://h5cpp.ca/pix/perf-armadillo.png)
+[1]:  https://github.com/gperftools/gperftools
+[40]: http://h5cpp.ca/pix/perf-struct.png" 
+[41]: http://h5cpp.ca/pix/perf-stl.png" 
+[42]: http://h5cpp.ca/pix/perf-armadillo.png" 
 
-TODO:
-----
-use google test framework for timing and  testing for types
-
+[50]: https://www.hdfgroup.org/
