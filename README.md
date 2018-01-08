@@ -21,8 +21,6 @@
  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --->
 
-[H5CPP documentation and website](http://h5cpp.ca)
-==================================================
 
 an easy to use c++11 templates between ([std::vector](http://en.cppreference.com/w/cpp/container/vector) | [armadillo](http://arma.sourceforge.net) ) and [HDF5](https://support.hdfgroup.org/HDF5/doc/H5.intro.html) datasets 
 ----------------------------------------------------------------------------
@@ -140,13 +138,13 @@ template<typename T> void append( h5::context<T>& ctx, const T& ref);
 supported types:
 ---------------- 
 
-
+```yacc
 	T := ([unsigned] ( char | short | int | long long int )) | ( float | double  )
 	S := T | c/c++ struct | std::string
 	ref 	:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T>
 	ptr 	:= T* 
 	accept 	:= ref | ptr 
-
+```
 
 in addition to the standard data types offered by BLAS/LAPACK systems `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
 

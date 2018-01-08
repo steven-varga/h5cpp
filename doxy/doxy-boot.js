@@ -1,7 +1,7 @@
 $( document ).ready(function() {
 
-    $("div.headertitle").addClass("page-header");
-    $("div.title").addClass("h1");
+    $("div.headertitle").remove();
+    $("div.title").remove();
 
     $('li > a[href="index.html"] > span').before("<i class='fa fa-cog'></i> ");
     $('li > a[href="modules.html"] > span').before("<i class='fa fa-square'></i> ");

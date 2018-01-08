@@ -18,11 +18,11 @@
 # IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-apps = struct-perf arma-perf stl-perf
+apps = struct-perf arma-perf stl-perf bandwidth
 
 CXX = h5c++
 CXXFLAGS = -I../ -std=c++14
-LIBS =  -lprofiler -lglog
+LIBS =  -lprofiler -lglog -lboost_program_options
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
@@ -35,10 +35,12 @@ arma-perf: arma-perf.o
 	$(CXX) $^ $(LIBS) -o $@	
 struct-perf: struct-perf.o 
 	$(CXX) $^ $(LIBS) -o $@	
+bandwidth: bandwidth.o 
+	$(CXX) $^ $(LIBS) -o $@	
 
 test: 
 
-profile: struct-profile arma-profile stl-profile 
+profile: struct-profile arma-profile stl-profile bandwidth
 
 
 clean:
