@@ -22,11 +22,11 @@
 --->
 
 
-an easy to use c++11 templates between ([std::vector](http://en.cppreference.com/w/cpp/container/vector) | [armadillo](http://arma.sourceforge.net) ) and [HDF5](https://support.hdfgroup.org/HDF5/doc/H5.intro.html) datasets 
-----------------------------------------------------------------------------
+an easy to use c++11 templates between ([std::vector][1] | [armadillo][2] ) and [HDF5][3] datasets 
+--------------------------------------------------------------------------------------------------
 
 Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardised or custom binary/text objects.
-Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API](https://support.hdfgroup.org/HDF5/doc/RM/RM_H5Front.html) provided by HDF Group requires detailed understanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
+Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
 
 HDF5 CPP is a set of routines to simplify the process and by implementing **CREATE,READ,WRITE,APPEND** operations on **fixed** or **variable length** N dimensional arrays.
 This header only implementation supports **raw pointers**, **stl::vector**, **armadillo**  matrix library by directly operating on the underlying data-store of the object hence avoiding unnecessary memory allocations.
@@ -48,7 +48,7 @@ requirements:
 -------------
 1. installed serial HDF5 libraries:
 	- pre-compiled on ubuntu: `sudo apt install libhdf5-serial-dev hdf5-tools hdf5-helpers hdfview`
-	- from source: [HDF5 download](https://support.hdfgroup.org/HDF5/release/obtain5.html) 
+	- from source: [HDF5 download][5]
 	`./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110 --enable-hl`
 	`make -j4` then `sudo make install`
 
@@ -150,20 +150,26 @@ in addition to the standard data types offered by BLAS/LAPACK systems `std::vect
 
 
 [documentation](http://h5cpp.ca/modules.html), [examples](http://h5cpp.ca/examples.html), google-test:
--------------------------------------
+----------------------------------------------------------------------------------------------------
 `make all` generates doxygen documention into docs/html and compiles `examples/*.cpp`
-also see `tests` directory for test cases
+In `tests` directory there are instruction on google test suit, similarly you find instructions in 
+`h5cpp/profiling`
+
+**to build documentation, examples and profile code install:**
+
+```shell
+apt install build-essential libhdf5-serial-dev
+apt install google-perftools kcachegrind
+apt install doxygen doxygen-gui markdown
+```
+
 
 TODO:
 -----
-
-1. support for [eigen3](http://eigen.tuxfamily.org/index.php?title=Main_Page), [boost matrix library](http://www.boost.org/doc/libs/1_65_1/libs/numeric/ublas/doc/matrix.htm)
-2. scipy|[julia](https://julialang.org/)|matlab object format support
-3. sparse matrix support: [compressed sparse row](https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29
-), [compressed sparse column]( https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29
-)
+1. statistical profiling of read|write|create operations, and visualization
+2. support for [eigen3][6], [boost matrix library][7]
+3. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
 4. implement  complex numbers, `std::vector<bool>`
-5. statistical profiling of read|write|create operations, and visualization
 
 98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a)
 99. add more test cases [in progress]
@@ -171,4 +177,16 @@ TODO:
 <div style="text-align: right">
 **Copyright (c) 2018 vargaconsulting, Toronto,ON Canada** <steven@vargaconsulting.ca>
 </div>
+
+[1]: http://en.cppreference.com/w/cpp/container/vector
+[2]: http://arma.sourceforge.net
+[3]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html
+[4]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5Front.html
+[5]: https://support.hdfgroup.org/HDF5/release/obtain5.html
+[6]: http://eigen.tuxfamily.org/index.php?title=Main_Page
+[7]: http://www.boost.org/doc/libs/1_65_1/libs/numeric/ublas/doc/matrix.htm
+[8]: https://julialang.org/
+[9]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29
+[10]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29
+
 
