@@ -129,8 +129,6 @@ namespace h5{
 	 */
 	template<typename T> inline void write( hid_t fd, const std::string& path, const T* ptr,
 			std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count){
-
-		std::cout<<"********";
      	hid_t ds = H5Dopen (fd, path.data(), H5P_DEFAULT);
 			h5::write(ds,ptr,offset.begin(),count.begin());
         H5Dclose(ds);
