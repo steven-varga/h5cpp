@@ -75,7 +75,6 @@ namespace h5 { namespace impl {
 		H5Pclose(dcpl); H5Sclose( space); H5Tclose(type);
 		return ds;
 	}
-
 }}
 
 
@@ -86,14 +85,24 @@ namespace h5 { namespace impl {
 namespace h5 {
 
 	/** \ingroup io-create 
-	 * @brief create dataset within HDF5 file space with given properties  
+	 * \brief **T** template parameter defines the underlying representation of dataset created within HDF5 filesystem 
+	 * referenced by **fd** descriptor.
+	 * **path** behaves much similar to POSIX files system path: either relative or absolute. HDF5 supports 
+	 * arbitrary number of dimensions which is specified by **max_dim**, and **chunk_size** controls how this 
+	 * array is accessed. When chunked access is used keep in mind small values may result in excessive 
+	 * data cache operations.<br>
+	 * This function is general, ca
+	 *
+	 * **TODO:**
+	 * 		provide mechanism to specify attributes, filters, ...  
+	 *
 	 * @param fd opened HDF5 file descripor
 	 * @param path full path where the newly created object will be placed
 	 * @param max_dims size of the object, H5S_UNLIMITED to mark extendable dimension
 	 * @param chunk_dims for better performance data sets maybe stored in chunks, which is a unit size 
-	 * 		  for IO operations. Streaming, and filters may be applied only on chunked datsets.
+	 * 		  for IO operations. Streaming, and filters may be applied only on chunked datasets.
 	 * @param deflate 0-9 controls <a href="https://support.hdfgroup.org/HDF5/Tutor/compress.html"> GZIP compression</a>
-	 * @tparam T [unsigned](char|short|int|long long) | (float|double)    
+	 * @tparam T [unsigned](int8_t|int16_t|int32_t|int64_t) | (float|double)    
 	 * @return opened dataset descriptor of hid_t, that must be closed with H5Dclose  
 	 * \code
 	 * examples:
@@ -119,7 +128,7 @@ namespace h5 {
 	 * @param fd opened HDF5 file descripor
 	 * @param path full path where the newly created object will be placed
 	 * @param ref stl|arma|eigen valid templated object with dimensions       
-	 * @tparam T [unsigned](char|short|int|long long) | (float|double)    
+	 * @tparam T [unsigned](int8_t|int16_t|int32_t|int64_t)| (float|double)    
 	 * @return opened dataset descriptor of hid_t, that must be closed with H5Dclose 
 	 * \code
 	 * example:

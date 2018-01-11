@@ -29,9 +29,8 @@
  */
 namespace h5{
 	/**  \ingroup file-io 
-	 * @brief create an HDF5 file
-	 * simple mapping from the original H5Fcreate with default values, for refined access call the H5F_ relevant 
-	 * routines  
+	 * @brief create an HDF5 file simple mapping from the original H5Fcreate with default values, for refined access call the H5F_ relevant 
+	 * routines.
 	 * @param path the location where the file is created
 	 * @return an open hid_t  HDF5 file descriptor 
 	 * @see <a href="https://support.hdfgroup.org/HDF5/Tutor/compress.html">GZIP</a> @see close 
@@ -49,7 +48,7 @@ namespace h5{
         return fd;
     };
 	/** \ingroup file-io  
-	 * open an existing HDF5 file.
+	 * \brief open an existing HDF5 file.
 	 * @param path the location of the file
 	 * @param flags (H5F_ACC_RDWR[|H5F_ACC_SWMR_WRITE])| H5F_ACC_RDONLY 
 	 * @see <a href="https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Open">H5Fopen</a>
@@ -63,7 +62,7 @@ namespace h5{
         return fd;
     };
 	/** \ingroup file-io 
-	 * open an existing HDF5 file
+	 * \brief open an existing HDF5 file
 	 * @param fd valid HDF5 file descripotor
 	 * @param path the location of the file
 	 * @see <a href="https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Open">H5Fopen</a>

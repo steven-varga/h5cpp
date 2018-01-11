@@ -25,8 +25,7 @@
 an easy to use c++11 templates between ([std::vector][1] | [armadillo][2] ) and [HDF5][3] datasets 
 --------------------------------------------------------------------------------------------------
 
-Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardised or custom binary/text objects.
-Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
+Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects.Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
 
 HDF5 CPP is a set of routines to simplify the process and by implementing **CREATE,READ,WRITE,APPEND** operations on **fixed** or **variable length** N dimensional arrays.
 This header only implementation supports **raw pointers**, **stl::vector**, **armadillo**  matrix library by directly operating on the underlying data-store of the object hence avoiding unnecessary memory allocations.
@@ -97,7 +96,7 @@ for( record:entire_dataset)
 			h5::append(ctx, record );
 ```
 
-templates:
+Templates:
 -----------
 
 **create dataset within an opened hdf5 file**
@@ -139,7 +138,7 @@ supported types:
 ---------------- 
 
 ```yacc
-	T := ([unsigned] ( char | short | int | long long int )) | ( float | double  )
+	T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
 	S := T | c/c++ struct | std::string
 	ref 	:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T>
 	ptr 	:= T* 
@@ -163,13 +162,13 @@ apt install google-perftools kcachegrind
 apt install doxygen doxygen-gui markdown
 ```
 
-
 TODO:
 -----
 1. statistical profiling of read|write|create operations, and visualization
-2. support for [eigen3][6], [boost matrix library][7]
-3. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
-4. implement  complex numbers, `std::vector<bool>`
+2. replace macro generics with templates, resulting clean c++11 experience
+3. support for [eigen3][6], [boost matrix library][7]
+4. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
+5. implement  complex numbers, `std::vector<bool>`
 
 98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a)
 99. add more test cases [in progress]
@@ -189,4 +188,4 @@ TODO:
 [9]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29
 [10]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29
 
-
+[40]: https://support.hdfgroup.org/HDF5/Tutor/HDF5Intro.pdf

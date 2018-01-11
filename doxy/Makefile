@@ -23,10 +23,10 @@ all: Doxyfile
 	@doxygen Doxyfile
 test:
 
-upload:
+upload: all
 	rsync -a  ../docs/html/ osaka.vargaconsulting.ca:h5cpp.ca
 	rsync -a  ../docs/pix/ osaka.vargaconsulting.ca:h5cpp.ca/pix
-view:
+view: all
 	xdg-open ../docs/html/index.html
 clean:
 	$(RM) -rf ../docs/html

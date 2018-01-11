@@ -53,66 +53,27 @@ namespace h5{
 @example struct.cpp
 */
 
-/** @defgroup file-io HDF5 file IO
- *  file IO operations
- *  @{
- *  @} 
- */
-
 /** @defgroup io-create HDF5 dataset Create
- *  dataset CREATE operations
- *  @{
- *  @} 
+ * \brief Detailed description when and how to **create** an HDF5 dataset within an HDF5 file whether to use **chunk**-ed dataset,
+ *  what compression is supported, and missing features which are planned, and ones which for now not implemented.  
  */
 
 /** @defgroup io-read HDF5 dataset Read
- *  dataset READ  operations
- *  @{
- *  @} 
+ *  \brief  Templated READ  operations for supported objects and use cases  
  */
 
-
 /** @defgroup io-write HDF5 dataset Write
- *  dataset WRITE operations
- *  @{
- *  @} 
+ *  \brief Templated WRITE operations 
  */
 
 /** @defgroup io-append HDF5 dataset Append
- *  dataset APPEND operations
- *  @{
- *  @} 
+ *  \brief dataset APPEND operations for streamed data access with examples
+  */
+
+/** @defgroup file-io HDF5 file IO
+ *  \brief The  **open** | **close**, **create**  operations listed here are to create a place holder, an hdf5 file, for your datasets. In POSIX sense this is an entire **image** of a file system and the **dataset** is a file within that you manipulate with  the above Create|Read|Write|Append operation. File IO operations are straight maps from already existing HDF5 calls, hence they are freely interchangeable.
  */
 
-/** @defgroup chrono 
-* **conversions between types:** boost::[duration|ptime|date], double, unsigned long, std::string 
-* with nanosecond resolution. For higher 1E-9 resolution see [BOOST date-time][1]. The internals 
-* are in [chrono.md][2] and [more examples are here][3] 
-* As side effect it includes boost headers and you also must link against  `-lboost_date_time`
-*
-*```
-*     #include <boost/date_time/posix_time/posix_time.hpp>
-*     #include <boost/date_time/gregorian/gregorian.hpp>
-*```
-*
-*  **usage:**
-*``` 
-*	#include <h5cpp/core>
-*	#include <h5cpp/chrono>
-*	#include <h5cpp/io>
-*		
-*	...
-*	auto pt = boost::posix_time::microsec_clock::local_time();
-*	std::string time = h5::as<std::string>(pt);
-*	...
-*```
-* [1]: http://www.boost.org/doc/libs/master/doc/html/date_time/details.html#date_time.buildinfo)
-* [2]: \ref link-chrono
-* [3]: \ref link-examples-chrono
-* [4]: https://stat.ethz.ch/R-manual/R-devel/library/base/html/DateTimeClasses.html
-* @{
-* @} 
-*/
 
 
 
