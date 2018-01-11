@@ -2,6 +2,7 @@ $( document ).ready(function() {
 
     $("div.headertitle").remove();
     $("div.title").remove();
+ // $("#search-box").toggle.hide();
 
     $('li > a[href="index.html"] > span').before("<i class='fa fa-cog'></i> ");
     $('li > a[href="modules.html"] > span').before("<i class='fa fa-square'></i> ");
@@ -268,4 +269,6 @@ $( document ).ready(function() {
 		}
 	});
   searchBox.CloseResultsWindow();
+	// moves search field to header: Norbert Feher, Budapest
+  $('.navbar-nav').append($('#search-field').parent());
 });
