@@ -51,26 +51,32 @@ namespace h5{
 @example stl.cpp
 @example string.cpp
 @example struct.cpp
+@example arma-perf.cpp
+@example stl-perf.cpp
+@example struct-perf.cpp
 */
 
-/** @defgroup io-create HDF5 dataset Create
- * \brief Detailed description when and how to **create** an HDF5 dataset within an HDF5 file whether to use **chunk**-ed dataset,
- *  what compression is supported, and missing features which are planned, and ones which for now not implemented.  
+/** @defgroup io-create h5::create(fd, path, max_dims, chunk_dims, deflate );
+ * \brief **fd** - file descriptor, **path** - how you reach dataset within file, **max_dims** -- tells the size of dataset, 
+ * the value **H5S_UNLIMITED** marks given dimension **extendable**, **chunk_dims** tells the size of elementary IO operations 
+ * if specified the rank of **max_dims** and **chunk_dims** must match.  
+ * Empty set:{} indicates no-chunked operations.  And finally **deflate** controls the level of GZIP compression. 
  */
 
-/** @defgroup io-read HDF5 dataset Read
- *  \brief  Templated READ  operations for supported objects and use cases  
+/** @defgroup io-read h5::read<T>( [ds | path], {offset}, {size} ); 
+ * \brief Templated [full|partial] READ operations for T:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> objects 
+ * from opened **ds** dataset descriptor or **path** to given dataset. The RVO optimized object returned will contain the data requested. 
  */
 
-/** @defgroup io-write HDF5 dataset Write
- *  \brief Templated WRITE operations 
+/** @defgroup io-write h5::write<T>( [ds | path], Object<T>, {offset},{size} );
+ *  \brief Templated WRITE operations Object:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> 
  */
 
-/** @defgroup io-append HDF5 dataset Append
+/** @defgroup io-append h5::append(context, record);
  *  \brief dataset APPEND operations for streamed data access with examples
   */
 
-/** @defgroup file-io HDF5 file IO
+/** @defgroup file-io h5::open | h5::close | h5::create
  *  \brief The  **open** | **close**, **create**  operations listed here are to create a place holder, an hdf5 file, for your datasets. In POSIX sense this is an entire **image** of a file system and the **dataset** is a file within that you manipulate with  the above Create|Read|Write|Append operation. File IO operations are straight maps from already existing HDF5 calls, hence they are freely interchangeable.
  */
 

@@ -101,26 +101,33 @@ Templates:
 
 **create dataset within an opened hdf5 file**
 ```cpp
-template<typename T> hid_t create(  hid_t fd, const std::string& path, const T ref );
-template <typename T> hid_t create(hid_t fd, const std::string& path, std::initializer_list<hsize_t> max_dims, std::initializer_list<hsize_t> chunk_dims={}, const int32_t deflate = H5CPP_NO_COMPRESSION );
+using par_t = std::initializer_list<hsize_t>
+
+template <typename T> hid_t create(  hid_t fd, const std::string& path, const T ref );
+template <typename T> hid_t create(hid_t fd, const std::string& path, par_t max_dims, par_t chunk_dims={},
+															const int32_t deflate = H5CPP_NO_COMPRESSION );
 ```
 
 **read a dataset and return a reference of the created object**
 ```cpp
-template<typename T> T read(hid_t fd, const std::string& path ); 
-template<typename T> T read(hid_t ds ); 
-template<typename T> T read(hid_t ds, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  ); 
-template<typename T> T read(hid_t fd, const std::string& path, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  );
+using par_t = std::initializer_list<hsize_t>
+
+template <typename T> T read(hid_t fd, const std::string& path ); 
+template <typename T> T read(hid_t ds ); 
+template <typename T> T read(hid_t ds, par_t offset, par_t count  ); 
+template <typename T> T read(hid_t fd, const std::string& path, par_t offset, par_t count  );
 ```
 
 **write dataset into a specified location**
 ```cpp
-template<typename T> void write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count );
-template<typename T> void write(hid_t ds, const T* ptr, std::initializer_list<hsize_t> offset,	std::initializer_list<hsize_t> count);
-template<typename T> void write(hid_t ds, const T& ref, std::initializer_list<hsize_t> offset,	std::initializer_list<hsize_t> count);
-template<typename T> void write(hid_t fd, const std::string& path, const T& ref);
-template<typename T> void write(hid_t fd, const std::string& path, const T& ref, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count);
-template<typename T> void write(hid_t fd, const std::string& path, const T* ptr, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count);
+using par_t = std::initializer_list<hsize_t>
+
+template <typename T> void write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count );
+template <typename T> void write(hid_t ds, const T* ptr, par_t offset, par_t count);
+template <typename T> void write(hid_t ds, const T& ref, par_t offset, par_t count);
+template <typename T> void write(hid_t fd, const std::string& path, const T& ref);
+template <typename T> void write(hid_t fd, const std::string& path, const T& ref, par_t offset, par_t count);
+template <typename T> void write(hid_t fd, const std::string& path, const T* ptr, par_t offset, par_t count);
 ```
 
 **append to extentable C++/C struct dataset]**
@@ -129,9 +136,9 @@ template<typename T> void write(hid_t fd, const std::string& path, const T* ptr,
 	#include "your_data_definition.h"
 #include <h5cpp/io>
 
-template <class T> context<T>( hid_t ds);
-template<class T> context<T>( hid_t fd, const std::string& path);
-template<typename T> void append( h5::context<T>& ctx, const T& ref);
+template <typename T> context<T>( hid_t ds);
+template <typename T> context<T>( hid_t fd, const std::string& path);
+template <typename T> void append( h5::context<T>& ctx, const T& ref);
 ```
 
 supported types:

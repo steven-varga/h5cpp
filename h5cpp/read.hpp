@@ -111,7 +111,7 @@ namespace h5 {
 	 * @param ds valid HDF5 dataset descriptor
 	 * @param offset the coordinates withing HDF5 dataset with rank of the file space, for instance a cube {0,0,0}
 	 * @param count amount of data returned, each dimension must be in (1,max_dimension), for instance {1,3,10} returns a matrix
-	 * @tparam T [unsigned](char|short|int|long long)|(float|double) type    
+	 * @tparam T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
 	 * @return T<some_type> object 
 	 */
 	template<typename T, typename BaseType = typename utils::base<T>::type > inline T read( hid_t ds, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count ){
@@ -173,7 +173,8 @@ namespace h5 {
 	 * @param ptr pointer to a sufficient size allocated memory where data is loaded
 	 * @param offset the coordinates withing HDF5 dataset with rank of the file space, for instance a cube {0,0,0}
 	 * @param count amount of data returned, each dimension must be in (1,max_dimension), for instance {1,3,10} returns a matrix
-	 * @tparam T [unsigned](char|short|int|long long)|(float|double) type    
+	 * @tparam T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
+
 	 * @return T<sometype> object 
 	 */
 	template<typename T> inline T* read( hid_t fd, const std::string& path, T* ptr, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count ){
@@ -189,7 +190,7 @@ namespace h5 {
 	 * @param path valid absolute path to HDF5 dataset
 	 * @param offset the coordinates withing HDF5 dataset with rank of the file space, for instance a cube {0,0,0}
 	 * @param count amount of data returned, each dimension must be in (1,max_dimension), for instance {1,3,10} returns a matrix
-	 * @tparam T [unsigned](char|short|int|long long)|(float|double) type    
+	 * @tparam T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
 	 * @return T<some_type> object 
 	 */
 	template<typename T> inline T read( hid_t fd, const std::string& path, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count ){
