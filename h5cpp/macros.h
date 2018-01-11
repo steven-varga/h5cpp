@@ -166,4 +166,14 @@ namespace h5 { namespace utils {
 #undef H5CPP_BASE_TEMPLATE_SPEC
 #undef H5CPP_CTOR_SPEC
 */
+
+#define H5CPP_DOC_LINKS 													 \
+	 /* [1]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Create \
+	 * [2]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Open   \
+	 * [3]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Close  \
+	 * [4]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-Open \
+	 * [5]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-Close \
+	 * [10]: https://support.hdfgroup.org/HDF5/Tutor/compress.html \
+	 */ 
+
 #endif

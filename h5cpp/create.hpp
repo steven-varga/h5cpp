@@ -24,7 +24,6 @@
 #ifndef  H5CPP_CREATE_H 
 #define H5CPP_CREATE_H
 
-
 namespace h5 { namespace impl {
 	inline hid_t create(hid_t fd, const std::string& path_,
 			size_t rank,  const hsize_t* max_dims,  const hsize_t* chunk_dims, int32_t deflate, hid_t type){
@@ -101,20 +100,29 @@ namespace h5 {
 	 * @param max_dims size of the object, H5S_UNLIMITED to mark extendable dimension
 	 * @param chunk_dims for better performance data sets maybe stored in chunks, which is a unit size 
 	 * 		  for IO operations. Streaming, and filters may be applied only on chunked datasets.
-	 * @param deflate 0-9 controls <a href="https://support.hdfgroup.org/HDF5/Tutor/compress.html"> GZIP compression</a>
+	 * @param deflate 0-9 controls [GZIP][10] compression.
 	 * @tparam T [unsigned](int8_t|int16_t|int32_t|int64_t) | (float|double)    
-	 * @return opened dataset descriptor of hid_t, that must be closed with H5Dclose  
+	 * @return opened dataset descriptor of hid_t, that must be closed with [H5Dclose][5]  
 	 * \code
-	 * examples:
-	 * 		hid_t ds = create<double>(fd, "matrix/double type",{100,10},{1,10}, 9); 	// create a matrix with level 9 gzip compression 
-	 * 		hid_t ds = create<short>(fd, "array/short",{100,10,10});          			// a cube of shorts, no compression or chunks 
-	 * 		hid_t ds = create<float>(fd, "stream",{H5S_UNLIMITED},{10}, 9); 			// extensible dataset to record a stream
-	 *  																				//
-	 * 		hid_t ds = h5::create<float>(fd,"stl/partial",{100,vf.size()},{1,10}, 9);   // creating a dataset, then saving an stl::vector 
-	 * 			h5::write(ds, vf, {2,0},{1,10} ); 										// write data into 4th row 	
-	 * 			auto rvo  = h5::read< std::vector<float>>(ds); 							// read back dataset as stl::vector
-	 * 		H5Dclose(ds); 																// closing descriptor
-	 * \endcode  
+	 * example:
+	 * 		hid_t ds = create<double>(fd, "matrix/double type",{100,10},{1,10}, 9); 	 
+	 * 		hid_t ds = create<short>(fd, "array/short",{100,10,10});          			 
+	 * 		hid_t ds = create<float>(fd, "stream",{H5S_UNLIMITED},{10}, 9); 			
+	 *  																				
+	 * 		hid_t ds = h5::create<float>(fd,"stl/partial",{100,vf.size()},{1,10}, 9);    
+	 * 			h5::write(ds, vf, {2,0},{1,10} ); 										 	
+	 * 			auto rvo  = h5::read< std::vector<float>>(ds); 							
+	 * 		H5Dclose(ds); 																
+	 * \endcode 
+	 
+	 
+	 * @sa open close [gzip][10] [H5Fcreate][1] [H5Fopen][2] [H5Fclose][3] [H5Dopen][4] [H5Dclose][5] 
+	 * [1]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Create
+	 * [2]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Open
+	 * [3]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Close
+	 * [4]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-Open
+	 * [5]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-Close
+	 * [10]: https://support.hdfgroup.org/HDF5/Tutor/compress.html
 	 */
 	template <typename T> inline hid_t create(hid_t fd, const std::string& path,
 			std::initializer_list<hsize_t> max_dims, std::initializer_list<hsize_t> chunk_dims={},
@@ -129,7 +137,7 @@ namespace h5 {
 	 * @param path full path where the newly created object will be placed
 	 * @param ref stl|arma|eigen valid templated object with dimensions       
 	 * @tparam T [unsigned](int8_t|int16_t|int32_t|int64_t)| (float|double)    
-	 * @return opened dataset descriptor of hid_t, that must be closed with H5Dclose 
+	 * @return opened dataset descriptor of hid_t, that must be closed with [H5Dclose][5] 
 	 * \code
 	 * example:
 	 * 	#include <hdf5.h>
@@ -143,7 +151,14 @@ namespace h5 {
 	 * 		H5Dclose(ds); 								// close dataset
 	 * 		h5::close(fd); 								// and file descriptor
 	 * 	}
-	 * \endcode 
+	 * \endcode
+	 * @sa open close [gzip][10] [H5Fcreate][1] [H5Fopen][2] [H5Fclose][3] [H5Dopen][4] [H5Dclose][5] 
+	 * [1]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Create
+	 * [2]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Open
+	 * [3]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Close
+	 * [4]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-Open
+	 * [5]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-Close
+	 * [10]: https://support.hdfgroup.org/HDF5/Tutor/compress.html
 	 */
 	template<typename T, typename BaseType = typename utils::base<T>::type, size_t Rank = utils::base<T>::rank >
 		inline hid_t create(  hid_t fd, const std::string& path, const T& ref ){
