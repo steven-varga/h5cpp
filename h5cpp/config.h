@@ -65,7 +65,10 @@ namespace h5{
 
 /** @defgroup io-read h5::read<T>( [ds | path], {offset}, {size} ); 
  * \brief Templated [full|partial] READ operations for T:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> objects 
- * from opened **ds** dataset descriptor or **path** to given dataset. The RVO optimized object returned will contain the data requested. 
+ * from opened **ds** [dataset] descriptor or **path**.  Returned objects are [RVO] optimized and for calls within loops
+ * **raw pointer** templates provide means to load  [dataset]s from **offset** and given **size**.  
+ * [RVO]: http://en.cppreference.com/w/cpp/language/copy_elision
+ * [dataset]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html#Intro-PMRdWrPortion 
  */
 
 /** @defgroup io-write h5::write<T>( [ds | path], Object<T>, {offset},{size} );
@@ -76,8 +79,14 @@ namespace h5{
  *  \brief dataset APPEND operations for streamed data access with examples
   */
 
-/** @defgroup file-io h5::open | h5::close | h5::create
- *  \brief The  **open** | **close**, **create**  operations listed here are to create a place holder, an hdf5 file, for your datasets. In POSIX sense this is an entire **image** of a file system and the **dataset** is a file within that you manipulate with  the above Create|Read|Write|Append operation. File IO operations are straight maps from already existing HDF5 calls, hence they are freely interchangeable.
+/** @defgroup file-io h5::open | h5::close | h5::create | h5::mute
+ *  \brief The  **open** | **close**, **create**  operations listed here are to create a place holder, an [hdf5 file][3], for your [datasets][2]. 
+ *  In POSIX sense this is an entire **image** of a file system and the **dataset** is a file within. These datasets can be manipulated
+ *  with **Create|Read|Write|Append** operation. File IO operations are straight maps from already [existing HDF5 calls][1], hence they are 
+ *  freely interchangeable.
+ *  [1]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html
+ *  [2]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html#Intro-ODatasets
+ *  [3]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html#Intro-FileOrg
  */
 
 

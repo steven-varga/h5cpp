@@ -25,7 +25,7 @@
 #define H5CPP_READ_H
 namespace h5{ namespace impl{ // implementation details namespace
 
-	template<typename T> inline T* read( hid_t ds, T* ptr, const hsize_t* offset, const hsize_t* count ){
+	template<typename T> inline T* read( hid_t ds, T* ptr, const hsize_t* offset, const hsize_t* count ) noexcept {
 
 		hid_t file_space = H5Dget_space(ds);
         hsize_t rank = H5Sget_simple_extent_ndims(file_space);
@@ -40,7 +40,7 @@ namespace h5{ namespace impl{ // implementation details namespace
 		return ptr;
 	}
 
-	inline std::vector<std::string> read(hid_t ds, const hsize_t* offset, const hsize_t* count ){
+	inline std::vector<std::string> read(hid_t ds, const hsize_t* offset, const hsize_t* count ) noexcept {
 
 		hid_t file_space = H5Dget_space(ds);
 		hsize_t rank = H5Sget_simple_extent_ndims(file_space);
@@ -82,7 +82,7 @@ namespace h5 {
 	 * 		stl::vector<float> entire_dataset = h5::read<stl::vector<float>>( ds );		
 	 * \endcode 
 	 */
-	template<typename T,typename BaseType = typename utils::base<T>::type> inline T read( hid_t ds ){
+	template<typename T,typename BaseType = typename utils::base<T>::type> inline T read( hid_t ds ) noexcept {
 
 		hid_t file_space = H5Dget_space(ds);
 		hsize_t offset[H5CPP_MAX_RANK]={}; // all zeros
@@ -103,7 +103,8 @@ namespace h5 {
 	 * @tparam T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
 	 * @return T<sometype> object 
 	 */
-	template<typename T> inline T* read( hid_t ds, T* ptr, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count ){
+	template<typename T> inline T* read( hid_t ds, T* ptr, 
+			std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count ) noexcept {
 		return impl::read(ds,ptr,offset.begin(),count.begin() );
 	}
 	/** \ingroup io-read 
@@ -114,7 +115,8 @@ namespace h5 {
 	 * @tparam T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
 	 * @return T<some_type> object 
 	 */
-	template<typename T, typename BaseType = typename utils::base<T>::type > inline T read( hid_t ds, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count ){
+	template<typename T, typename BaseType = typename utils::base<T>::type > inline T read( hid_t ds, 
+			std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count ) noexcept {
 		hsize_t rank = count.size();
 		T data_set = utils::ctor<T>(rank, count.begin() );
 		BaseType * ptr = utils::get_ptr( data_set );
@@ -126,7 +128,7 @@ namespace h5 {
 	 * @param ds valid HDF5 dataset descriptor
 	 * @return std::vector<std:string> object 
 	 */
-	template<> inline std::vector<std::string> read<std::vector<std::string>,std::string>( hid_t ds ){
+	template<> inline std::vector<std::string> read<std::vector<std::string>,std::string>( hid_t ds ) noexcept {
 
 		hid_t file_space = H5Dget_space(ds);
 		hsize_t offset[H5CPP_MAX_RANK]={}; // all zeros
@@ -141,7 +143,8 @@ namespace h5 {
 	 * @param count amount of data returned, each dimension must be in (1,max_dimension), for instance {1,3,10} returns a matrix
 	 * @return std::vector<std:string> object 
 	 */
-	template<> inline std::vector<std::string> read<std::vector<std::string>,std::string>(hid_t ds,std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  ){
+	template<> inline std::vector<std::string> read<std::vector<std::string>,std::string>(hid_t ds,
+			std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  ) noexcept {
 		hid_t file_space = H5Dget_space(ds);
 		//hsize_t offset[H5CPP_MAX_RANK]={}; // all zeros
 		//hsize_t count[H5CPP_MAX_RANK];
@@ -151,23 +154,35 @@ namespace h5 {
 	}
 	/** \ingroup io-read 
 	 * @brief reads entire HDF5 dataset specified by path and returns object defined by T template
+	 * throws std::runtime_error if dataset not found, and return value is undefined 
 	 * @param fd valid HDF5 file descriptor
 	 * @param path valid absolute path to HDF5 dataset
 	 * @tparam T := [stl | arma | eigen] templated type    
 	 * @return T<sometype> object
+	 * @exception std::runtime_exception - if dataset not found
+	 * @see [std::runtime_exception][10]
+	 *
 	 * \code
 	 * example:
-	 * 		stl::vector<float> entire_dataset = h5::read<stl::vector<float>>( fd,"absolute/path" );		
-	 * \endcode 
+	 * try{
+	 * 	stl::vector<float> entire_dataset = 
+	 * 				h5::read<stl::vector<float>>( fd,"absolute/path" );	
+	 * } catch( const std::runtime_exception& ex ) {
+	 * 	std::cerr << ex.what();
+	 * }	
+	 * \endcode
+	 * [10]: http://en.cppreference.com/w/cpp/error/exception 
 	 */
 	template<typename T> inline T read( hid_t fd, const std::string& path ){
      	hid_t ds = H5Dopen(fd, path.data(), H5P_DEFAULT);
+		if( ds < 0) throw std::runtime_error("dataset not found: " + path );
 			const T& data = h5::read<T>(ds);
         H5Dclose(ds);
 		return data;
 	}
 	/** \ingroup io-read 
 	 * @brief partial reads HDF5 dataset into a memory region defined by pointer 
+	 * throws std::runtime_error if dataset not found 
 	 * @param fd valid HDF5 file descriptor
 	 * @param path valid absolute path to HDF5 dataset
 	 * @param ptr pointer to a sufficient size allocated memory where data is loaded
@@ -175,10 +190,28 @@ namespace h5 {
 	 * @param count amount of data returned, each dimension must be in (1,max_dimension), for instance {1,3,10} returns a matrix
 	 * @tparam T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
 
-	 * @return T<sometype> object 
+	 * @return T<sometype> object
+ 	 * @exception std::runtime_exception - if dataset not found
+	 * @see [std::runtime_exception][10]
+	 *
+	 * \code
+	 * example:
+	 * float* ptr = malloc(100);
+	 * try{
+	 * 	h5::read<float*>( fd,"absolute/path",ptr, {10},{100} );	
+	 * } catch( const std::runtime_exception& ex ) {
+	 * 	std::cerr << ex.what();
+	 * }
+	 * ...
+	 *
+	 * \endcode
+	 * [10]: http://en.cppreference.com/w/cpp/error/exception 
 	 */
-	template<typename T> inline T* read( hid_t fd, const std::string& path, T* ptr, std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count ){
+	template<typename T> inline T* read( hid_t fd, const std::string& path, T* ptr, 
+			std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count ){
+
      	hid_t ds = H5Dopen(fd, path.data(), H5P_DEFAULT);
+			if( ds < 0) throw std::runtime_error("dataset not found: " + path );
 			T* data = h5::read<T>(ds,ptr,offset,count);
         H5Dclose(ds);
 		return data;

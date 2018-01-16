@@ -65,7 +65,11 @@ usage:
 ...
 hid_t fd h5::open("some_file.h5");
 	/* the RVO arma::Mat<double> object will have the size 10x5 filled*/
-	auto M = h5::read<arma::mat>(fd,"path/to/matrix",{3,4,1},{10,1,5});
+	try {
+		auto M = h5::read<arma::mat>(fd,"path/to/matrix",{3,4,1},{10,1,5});
+	} catch (const std::runtime_error& ex ){
+		...
+	}
 h5::close(fd);
 ```
 
@@ -103,9 +107,9 @@ Templates:
 ```cpp
 using par_t = std::initializer_list<hsize_t>
 
-template <typename T> hid_t create(  hid_t fd, const std::string& path, const T ref );
+template <typename T> hid_t create(  hid_t fd, const std::string& path, const T ref ) noexcept;
 template <typename T> hid_t create(hid_t fd, const std::string& path, par_t max_dims, par_t chunk_dims={},
-															const int32_t deflate = H5CPP_NO_COMPRESSION );
+															const int32_t deflate = H5CPP_NO_COMPRESSION ) noexcept;
 ```
 
 **read a dataset and return a reference of the created object**
@@ -113,8 +117,8 @@ template <typename T> hid_t create(hid_t fd, const std::string& path, par_t max_
 using par_t = std::initializer_list<hsize_t>
 
 template <typename T> T read(hid_t fd, const std::string& path ); 
-template <typename T> T read(hid_t ds ); 
-template <typename T> T read(hid_t ds, par_t offset, par_t count  ); 
+template <typename T> T read(hid_t ds ) noexcept; 
+template <typename T> T read(hid_t ds, par_t offset, par_t count  ) noexcept; 
 template <typename T> T read(hid_t fd, const std::string& path, par_t offset, par_t count  );
 ```
 
@@ -122,12 +126,12 @@ template <typename T> T read(hid_t fd, const std::string& path, par_t offset, pa
 ```cpp
 using par_t = std::initializer_list<hsize_t>
 
-template <typename T> void write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count );
-template <typename T> void write(hid_t ds, const T* ptr, par_t offset, par_t count);
-template <typename T> void write(hid_t ds, const T& ref, par_t offset, par_t count);
-template <typename T> void write(hid_t fd, const std::string& path, const T& ref);
-template <typename T> void write(hid_t fd, const std::string& path, const T& ref, par_t offset, par_t count);
-template <typename T> void write(hid_t fd, const std::string& path, const T* ptr, par_t offset, par_t count);
+template <typename T> void write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count ) noexcept;
+template <typename T> void write(hid_t ds, const T* ptr, par_t offset, par_t count) noexcept;
+template <typename T> void write(hid_t ds, const T& ref, par_t offset, par_t count) noexcept;
+template <typename T> void write(hid_t fd, const std::string& path, const T& ref) noexcept;
+template <typename T> void write(hid_t fd, const std::string& path, const T& ref, par_t offset, par_t count) noexcept;
+template <typename T> void write(hid_t fd, const std::string& path, const T* ptr, par_t offset, par_t count) noexcept;
 ```
 
 **append to extentable C++/C struct dataset]**
@@ -138,7 +142,7 @@ template <typename T> void write(hid_t fd, const std::string& path, const T* ptr
 
 template <typename T> context<T>( hid_t ds);
 template <typename T> context<T>( hid_t fd, const std::string& path);
-template <typename T> void append( h5::context<T>& ctx, const T& ref);
+template <typename T> void append( h5::context<T>& ctx, const T& ref) noexcept;
 ```
 
 supported types:
@@ -176,6 +180,9 @@ TODO:
 3. support for [eigen3][6], [boost matrix library][7]
 4. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
 5. implement  complex numbers, `std::vector<bool>`
+
+20. read data into posix shared mem
+21. MPI/parallel file system support
 
 98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a)
 99. add more test cases [in progress]

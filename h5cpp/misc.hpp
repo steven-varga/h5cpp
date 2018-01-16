@@ -31,6 +31,7 @@
  */
 namespace h5{
 
+
 	/**  @ingroup file-io
 	 * @brief create an HDF5 file with default properties, in most cases this is all you need
 	 * to have a container for datasets.
@@ -127,6 +128,31 @@ namespace h5{
 	inline void close(hid_t fd) {
 		H5Fclose(fd);
 	}
+
+	/**  @ingroup file-io
+	 * @brief removes default error handler	preventing diagnostic error messages printed
+	 * @sa [H5Eset_auto2][11] [H5Error][12]  open close [H5Fcreate][1] [H5Fopen][2] [H5Fclose][3] 
+	 * @code
+	 * 		hid_t fd; 
+	 * 		if( fd = h5::open("example.h5") < 0 )  	// try to open files
+	 * 			fd = h5::create("example.h5"); 		// and create on failure
+	 * 		... 									// do some work
+	 * 		h5::close(fd); 							// close file descriptor
+	 * @endcode
+	 * [1]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Create
+	 * [2]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Open
+	 * [3]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Close
+	 * [4]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-Open
+	 * [5]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-Close
+	 * [10]: https://support.hdfgroup.org/HDF5/Tutor/compress.html
+	 * [11]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5E.html#Error-SetAuto2
+	 * [12]: https://support.hdfgroup.org/HDF5/doc/H5.user/Errors.html
+	 */
+    inline void mute( ){
+		H5Eset_auto (H5E_DEFAULT, NULL, nullptr);
+    };
+
+
 	/*
 	 */ 
 }

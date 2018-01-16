@@ -30,7 +30,7 @@
 	#include "context-v18.hpp"
 //#endif
 namespace h5 {
-	/** \ingroup io-append
+	/** @ingroup io-append
 	 * @brief extends HDF5 dataset along the first/slowest growing dimension, then writes passed object to the newly created space
 	 * @param ctx context for dataset @see context
 	 * @param ref T type const reference to object appended

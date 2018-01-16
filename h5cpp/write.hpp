@@ -90,15 +90,16 @@ namespace h5{
 	}
 	/** \ingroup io-write 
 	 * @brief  writes HDF5 dataset into opened HDF5 dataset
+	 *  as a side effect, removes existing dataset if exists 
 	 * @param fd valid file descriptor 
 	 * @param path valid absolute path to HDF5 dataset
 	 * @param ref reference to object 
 	 * @tparam T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
 	 */
 	template<typename T> inline void write( hid_t fd, const std::string& path, const T& ref){
-
-		hid_t ds = h5::utils::dataset_exist(fd, path ) ?
-			H5Dopen(fd, path.data(), H5P_DEFAULT) : h5::create(fd,path,ref);
+		if( h5::utils::dataset_exist(fd, path ) ) 
+			H5Ldelete(fd,path.c_str(), H5P_DEFAULT); //H5Dopen(fd, path.data(), H5P_DEFAULT) : 
+		hid_t ds = h5::create(fd,path,ref);
 			h5::write(ds,ref );
         H5Dclose(ds);
 	}
