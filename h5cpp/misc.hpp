@@ -77,12 +77,7 @@ namespace h5{
 	 */ 
 
     inline hid_t open(const std::string& path,  unsigned flags ){
-
-        hid_t plist = H5Pcreate(H5P_FILE_ACCESS);
-        	hid_t fd =  H5Fopen(path.data(), flags,  plist);
-
-        H5Pclose(plist);
-        return fd;
+        return  H5Fopen(path.data(), flags,  H5P_DEFAULT);
     };
 
 	/** \ingroup file-io 
