@@ -57,7 +57,7 @@ namespace h5{
         H5Pclose(plist);
         return fd;
     };
-	
+
 	/** @ingroup file-io 
 	 * open an existing HDF5 file.
 	 * @param path the location of the file

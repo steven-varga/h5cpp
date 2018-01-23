@@ -16,9 +16,7 @@ int main(){
 		h5::close(fd); 											// close fd
 	}
 	{ // READ
-		hid_t fd = h5::open("arma.h5", H5F_ACC_RDONLY); 	// you can have multiple fd open with H5F_ACC_RDONLY, but single write
-		arma::mat M = h5::read<arma::mat>(fd,"arma/M"); 	// read entire edataset back, must have enough free memory
-		h5::close(fd); 										// close fd
+		arma::mat M = h5::read<arma::mat>("arma.h5","arma/M"); 	// read entire dataset back with a single read
 		M.print();
 	}
 }

@@ -129,7 +129,6 @@ namespace h5 {
 	 * @return std::vector<std:string> object 
 	 */
 	template<> inline std::vector<std::string> read<std::vector<std::string>,std::string>( hid_t ds ) noexcept {
-
 		hid_t file_space = H5Dget_space(ds);
 		hsize_t offset[H5CPP_MAX_RANK]={}; // all zeros
 		hsize_t count[H5CPP_MAX_RANK];
@@ -145,11 +144,6 @@ namespace h5 {
 	 */
 	template<> inline std::vector<std::string> read<std::vector<std::string>,std::string>(hid_t ds,
 			std::initializer_list<hsize_t> offset, std::initializer_list<hsize_t> count  ) noexcept {
-		hid_t file_space = H5Dget_space(ds);
-		//hsize_t offset[H5CPP_MAX_RANK]={}; // all zeros
-		//hsize_t count[H5CPP_MAX_RANK];
-		//hsize_t rank = H5Sget_simple_extent_dims(file_space, count, NULL);
-
 		return impl::read(ds, offset.begin(), count.begin() );
 	}
 	/** \ingroup io-read 
@@ -180,6 +174,34 @@ namespace h5 {
         H5Dclose(ds);
 		return data;
 	}
+	/** \ingroup io-read 
+	 * @brief reads entire HDF5 dataset specified by path and returns object defined by T template
+	 * throws std::runtime_error if dataset not found, and return value is undefined 
+	 * @param file  path to hdf5 file
+	 * @param path  valid absolute path to HDF5 dataset
+	 * @tparam T := [stl | arma | eigen] templated type    
+	 * @return T<sometype> object
+	 * @exception std::runtime_exception - if dataset not found
+	 * @see [std::runtime_exception][10]
+	 *
+	 * \code
+	 * example:
+	 * try{
+	 * 	stl::vector<float> entire_dataset = 
+	 * 				h5::read<stl::vector<float>>( "myfile.h5","absolute/path" );	
+	 * } catch( const std::runtime_exception& ex ) {
+	 * 	std::cerr << ex.what();
+	 * }	
+	 * \endcode
+	 * [10]: http://en.cppreference.com/w/cpp/error/exception 
+	 */
+	template<typename T> inline T read( const std::string& file, const std::string& path ){
+     	hid_t fd = h5::open( file, H5F_ACC_RDONLY);
+			const T& data = h5::read<T>(fd, path);
+        H5Fclose(fd);
+		return data;
+	}
+
 	/** \ingroup io-read 
 	 * @brief partial reads HDF5 dataset into a memory region defined by pointer 
 	 * throws std::runtime_error if dataset not found 

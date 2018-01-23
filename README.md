@@ -116,6 +116,7 @@ template <typename T> hid_t create(hid_t fd, const std::string& path, par_t max_
 ```cpp
 using par_t = std::initializer_list<hsize_t>
 
+template <typename T> T read(const std::string& file, const std::string& path ); 
 template <typename T> T read(hid_t fd, const std::string& path ); 
 template <typename T> T read(hid_t ds ) noexcept; 
 template <typename T> T read(hid_t ds, par_t offset, par_t count  ) noexcept; 

@@ -34,8 +34,6 @@ int main(int argc, char **argv) {
 	}
 	H5Dclose(ds);
 	h5::close(fd);
-
-
 	{ // write STL vector
 		hid_t fd = h5::open("string.h5", H5F_ACC_RDWR);
 		h5::write(fd,"/all",data);
@@ -60,9 +58,12 @@ int main(int argc, char **argv) {
 		hid_t fd = h5::open("./string.h5",H5F_ACC_RDWR);
 		h5::mute(); // turn off diagnostic messages
 		try {
+
+			std::cerr <<"Trying to open a nonexisting dataset, which should result in an exception thrown: \n";
 			h5string all = h5::read<h5string>(fd, "/path to non exixsting dataset");
 		} catch( std::runtime_error ex ){
 			std::cerr <<"RUNTIME ERROR: " << ex.what() <<std::endl<<std::endl;
+			std::cerr <<"[the previous runtime exception happened on purpose]\n";
 		}
 		h5::close( fd );
 	}
