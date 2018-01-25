@@ -118,12 +118,12 @@ namespace h5 { namespace utils {
 	#define  H5CPP_ARMA_TEMPLATE_SPEC(T) 																				\
 	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Row, memptr(), n_elem, H5CPP_RANK_VEC,  {ref.n_elem} ) 							\
 	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Col, memptr(), n_elem, H5CPP_RANK_VEC,  {ref.n_elem} ) 							\
-	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Mat, memptr(), n_elem, H5CPP_RANK_MAT,  {ref.n_rows, ref.n_cols} ) 				\
-	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Cube,memptr(), n_elem, H5CPP_RANK_CUBE, {ref.n_rows, ref.n_cols, ref.n_slices} ) 	\
+	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Mat, memptr(), n_elem, H5CPP_RANK_MAT,  {ref.n_cols, ref.n_rows} ) 				\
+	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Cube,memptr(), n_elem, H5CPP_RANK_CUBE, {ref.n_slices, ref.n_cols, ref.n_rows} ) 	\
 	H5CPP_CTOR_SPEC(T, arma::Row,  H5CPP_RANK_VEC,  (dims[0]) )															\
 	H5CPP_CTOR_SPEC(T, arma::Col,  H5CPP_RANK_VEC,  (dims[0]) )															\
-	H5CPP_CTOR_SPEC(T, arma::Mat,  H5CPP_RANK_MAT,  (dims[0],dims[1]) )													\
-	H5CPP_CTOR_SPEC(T, arma::Cube, H5CPP_RANK_CUBE, (dims[0],dims[1],dims[2]) )											\
+	H5CPP_CTOR_SPEC(T, arma::Mat,  H5CPP_RANK_MAT,  (dims[1],dims[0]) )													\
+	H5CPP_CTOR_SPEC(T, arma::Cube, H5CPP_RANK_CUBE, (dims[2],dims[1],dims[0]) )											\
 
 #else
 	#define H5CPP_ARMA_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
