@@ -15,17 +15,13 @@
 #include <string>
 #include <array>
 
+
+#include "read.hpp"
+
 using namespace std;
 namespace po = boost::program_options;
 
-// operation: read|write|update, object: raw|arma|stl::vector, type:string|int|long,  runtime     
-
-template <class T> void harness( int size ){
-
-	std::cout<<"update" <<"\t"<<"arma::mat"<<"\t"<<"std::string"<<"\t"<<32242354543<<std::endl;
-};
-
-
+// used when capturing /proc/... system info 
 std::string exec(const char* cmd) {
 	const int buf_size = 1024;
     std::array<char, buf_size> buffer;
@@ -46,7 +42,29 @@ int main(int argc, char **argv) {
     po::options_description desc("Allowed options",120);
 
 	std::map<std::string,std::function<void(int)>> dispatch;
-	dispatch["string"] = harness<arma::Mat<std::string>>;
+
+	dispatch["raw-float"] = harness<float>;
+	dispatch["raw-double"] = harness<double>;
+	dispatch["raw-int8"] = harness<int8_t>;
+	dispatch["raw-int16"] = harness<int16_t>;
+	dispatch["raw-int32"] = harness<int32_t>;
+	dispatch["raw-int64"] = harness<int64_t>;
+
+	dispatch["stl-vec-string"] = harness<std::vector<std::string>>;
+	dispatch["stl-vec-float"] = harness<std::vector<float>>;
+	dispatch["stl-vec-double"] = harness<std::vector<double>>;
+	dispatch["stl-vec-int8"] = harness<std::vector<int8_t>>;
+	dispatch["stl-vec-int16"] = harness<std::vector<int16_t>>;
+	dispatch["stl-vec-int32"] = harness<std::vector<int32_t>>;
+	dispatch["stl-vec-int64"] = harness<std::vector<int64_t>>;
+
+	dispatch["arma-mat-string"] = harness<arma::Mat<std::string>>;
+	dispatch["arma-mat-float"] = harness<arma::Mat<float>>;
+	dispatch["arma-mat-double"] = harness<arma::Mat<double>>;
+	dispatch["arma-mat-int8"] = harness<arma::Mat<int8_t>>;
+	dispatch["arma-mat-int16"] = harness<arma::Mat<int16_t>>;
+	dispatch["arma-mat-int32"] = harness<arma::Mat<int32_t>>;
+	dispatch["arma-mat-int64"] = harness<arma::Mat<int64_t>>;
 
     desc.add_options()
             ("case,c", po::value<std::string>(),"one of the test cases queried by --list option")
@@ -54,7 +72,7 @@ int main(int argc, char **argv) {
             ("size,s", po::value<unsigned long>()->default_value(1),"size in MB written onto disk")
 			("gzip,g", po::value<unsigned int>()->default_value(0), "0-9 0 for no compression, 9 for highest")
             ("chunk", po::value<unsigned int>()->default_value(1), "number of days in blocks/hdf5-chunks, 0 no-chunks")
-            ("list,l","list test types...\n")
+            ("list,l","list test cases...\n")
 
             ("glog-dir", po::value<string>()->default_value("./"),"glog output directory") 
             ("glog-stderr", po::value<bool>()->default_value(true),"glog output to stderr if true") 
@@ -85,7 +103,7 @@ int main(int argc, char **argv) {
 	std::string cpu_freq = exec("cat /proc/cpuinfo | grep 'cpu MHz'| head -n 1|cut -d':' -f2|tr -d '\n \t'");
 	std::string cpu_type = exec("cat /proc/cpuinfo | grep 'model name'| head -n 1| cut -d':' -f2|cut -d' ' -f4 | tr -d '\n \t'");
 	std::string load_avg = exec("cat /proc/loadavg | cut -d' ' -f1,2,3 | tr -d '\n' | tr ' ' '\t'");
-	dispatch["string"](134);
+//	dispatch["string"](134);
 
 	std::cout<< cpu_freq <<" " << cpu_type << " " << load_avg  << std::endl;
 
