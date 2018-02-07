@@ -19,3 +19,4 @@
 **/*.prof
 docs/html/
 data/
+**/.ycm_extra_conf.py
