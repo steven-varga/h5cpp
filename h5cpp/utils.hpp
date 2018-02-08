@@ -23,6 +23,21 @@
 #ifndef  H5CPP_UTILS_H 
 #define H5CPP_UTILS_H
 
+#include <string>
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+#include <stdexcept>
+#include <initializer_list>
+#include <complex>
+#include <type_traits>
+ 
+#include <hdf5.h>
+#include <hdf5_hl.h>
+#include <stdlib.h>
+#include <string.h> // strdup is used 	
+
+
 namespace h5{ namespace utils {
 	/**
 	 * HDF5 callback implementation for group iterator; 
@@ -34,7 +49,7 @@ namespace h5{ namespace utils {
 	 */
 	inline static herr_t h5_callback( hid_t g_id, const char *name, 
 			const H5L_info_t *info, void *op_data){
-
+		
 		std::vector<std::string> *data =  static_cast<std::vector<std::string>* >(op_data); 
 		data->push_back( std::string(name) );
 		return 0;
@@ -46,11 +61,21 @@ namespace h5{ namespace utils {
      * @return pair of strings containing path and dataset name
      */
     inline std::pair<std::string,std::string> split_path( const std::string& path ){
+		int i = path.size(), j=0, k=path.size();
+		const char* c = path.data();
+		std::string path_, dataset_;
+		while ( i && path[i] != '/') i--;
 
-        return std::pair<std::string,std::string>(
-            path.substr(0,path.find_last_of('/')), 
-            path.substr(path.find_last_of('/')+1, path.length()) );
-    }
+		if( i==0 ){ // only dataset is given
+			dataset_ = path[i]!='/' ? path : std::string(c+1,c+k);
+			path_ = "/";
+		}else{
+			dataset_ = std::string(c+i+1,c+k);
+			path_ = *c != '/' ?  "/"+ std::string(c,c+i) : std::string(c,c+i);
+		}
+
+        return std::pair<std::string,std::string>(path_, dataset_);
+	}
 
     /**
      * 
