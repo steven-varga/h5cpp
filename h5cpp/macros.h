@@ -31,13 +31,13 @@ namespace h5 { namespace utils {
 
 	template<typename T> struct base;
 	template<typename T> inline T ctor(hsize_t rank, const hsize_t* dims ){}
-	template<typename T> inline hid_t h5type( ){}
+	template<typename T> inline hid_t h5type( ){} // must apply 'H5Tclose' to return value to prevent resource leakage
 	template<typename T> inline std::string type_name( ){ return "n/a"; }
 	template<> inline hid_t h5type<std::string>(){ // std::string is variable length
 			hid_t type = H5Tcopy (H5T_C_S1);
 	   		H5Tset_size (type,H5T_VARIABLE);
 			return type;
-	}
+	}  // ditto! call H5Tclose on returned type
 }}
 
 #define H5CPP_REGISTER_FUNDAMENTAL_TYPE( T )  template<> inline std::string type_name<T>(){ return #T; };
