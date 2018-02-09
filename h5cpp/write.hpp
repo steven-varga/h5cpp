@@ -21,6 +21,12 @@
  */
 
 
+#include <hdf5.h>
+#include "macros.h"
+#include "utils.hpp"
+#include "create.hpp"
+#include <initializer_list>
+
 #ifndef  H5CPP_WRITE_H 
 #define H5CPP_WRITE_H
 

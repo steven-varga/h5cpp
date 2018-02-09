@@ -21,6 +21,9 @@
  */
 
 #include <memory>
+#include <hdf5.h>
+#include "macros.h"
+
 #ifndef  H5CPP_CONTEXT_V110_H 
 #define  H5CPP_CONTEXT_V110_H
 

@@ -20,7 +20,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <hdf5.h>
+#include "macros.h"
 #include <memory>
+
 #ifndef  H5CPP_CONTEXT_V18_H 
 #define H5CPP_CONTEXT_V18_H
 

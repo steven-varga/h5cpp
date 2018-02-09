@@ -20,6 +20,10 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <hdf5.h>
+#include "macros.h"
+#include "misc.hpp"
+#include <initializer_list>
 
 #ifndef  H5CPP_READ_H 
 #define H5CPP_READ_H
@@ -153,15 +157,15 @@ namespace h5 {
 	 * @param path valid absolute path to HDF5 dataset
 	 * @tparam T := [stl | arma | eigen] templated type    
 	 * @return T<sometype> object
-	 * @exception std::runtime_exception - if dataset not found
-	 * @see [std::runtime_exception][10]
+	 * @exception std::runtime_error - if dataset not found
+	 * @see [std::runtime_error][10]
 	 *
 	 * \code
 	 * example:
 	 * try{
 	 * 	stl::vector<float> entire_dataset = 
 	 * 				h5::read<stl::vector<float>>( fd,"absolute/path" );	
-	 * } catch( const std::runtime_exception& ex ) {
+	 * } catch( const std::runtime_error& ex ) {
 	 * 	std::cerr << ex.what();
 	 * }	
 	 * \endcode
@@ -181,15 +185,15 @@ namespace h5 {
 	 * @param path  valid absolute path to HDF5 dataset
 	 * @tparam T := [stl | arma | eigen] templated type    
 	 * @return T<sometype> object
-	 * @exception std::runtime_exception - if dataset not found
-	 * @see [std::runtime_exception][10]
+	 * @exception std::runtime_error - if dataset not found
+	 * @see [std::runtime_error][10]
 	 *
 	 * \code
 	 * example:
 	 * try{
 	 * 	stl::vector<float> entire_dataset = 
 	 * 				h5::read<stl::vector<float>>( "myfile.h5","absolute/path" );	
-	 * } catch( const std::runtime_exception& ex ) {
+	 * } catch( const std::runtime_error& ex ) {
 	 * 	std::cerr << ex.what();
 	 * }	
 	 * \endcode
@@ -213,15 +217,15 @@ namespace h5 {
 	 * @tparam T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
 
 	 * @return T<sometype> object
- 	 * @exception std::runtime_exception - if dataset not found
-	 * @see [std::runtime_exception][10]
+ 	 * @exception std::runtime_error - if dataset not found
+	 * @see [std::runtime_error][10]
 	 *
 	 * \code
 	 * example:
 	 * float* ptr = malloc(100);
 	 * try{
 	 * 	h5::read<float*>( fd,"absolute/path",ptr, {10},{100} );	
-	 * } catch( const std::runtime_exception& ex ) {
+	 * } catch( const std::runtime_error& ex ) {
 	 * 	std::cerr << ex.what();
 	 * }
 	 * ...

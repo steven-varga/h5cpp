@@ -20,6 +20,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <hdf5.h>
+#include <string>
 
 #ifndef  H5CPP_MISC_H
 #define H5CPP_MISC_H

@@ -24,19 +24,10 @@
 #define H5CPP_UTILS_H
 
 #include <string>
-#include <algorithm>
-#include <iterator>
-#include <iostream>
+#include <vector>
 #include <stdexcept>
-#include <initializer_list>
-#include <complex>
-#include <type_traits>
- 
 #include <hdf5.h>
-#include <hdf5_hl.h>
-#include <stdlib.h>
-#include <string.h> // strdup is used 	
-
+#include <string.h>
 
 namespace h5{ namespace utils {
 	/**
@@ -92,13 +83,14 @@ namespace h5{ namespace utils {
         for(char * current=strtok(full_path,"/"); current!=NULL; current=strtok(NULL,"/")){
             _path+= std::string("/")+std::string(current); // extend path
 
-            if( !H5Lexists(fd,_path.c_str(), 0 ) )
+            if( !H5Lexists(fd,_path.c_str(), 0 ) ){
                 if( create ) {
                     H5Gclose( H5Gcreate1(fd,_path.c_str(),0) );
-                }else {
+                } else {
                     free(full_path);
                     return -1;
                 }
+			}
         }
 
         return H5Gopen1(fd,path.c_str());

@@ -20,6 +20,11 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <hdf5.h>
+#include "macros.h"
+#include "utils.hpp"
+#include <limits>
+#include <initializer_list>
 
 #ifndef  H5CPP_CREATE_H 
 #define H5CPP_CREATE_H

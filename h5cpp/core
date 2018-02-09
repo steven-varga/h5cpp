@@ -20,25 +20,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <vector>
-#include <array>
-#include <string>
-#include <algorithm>
-#include <iterator>
-#include <iostream>
-#include <stdexcept>
-#include <initializer_list>
-#include <complex>
-#include <type_traits>
- 
-#include <hdf5.h>
-#include <hdf5_hl.h>
-#include <stdlib.h>
-#include <string.h> // strdup is used 	
-
-
-#ifndef  H5CPP_CORE_h
-#define H5CPP_CORE_h
+#ifndef  H5CPP_CORE_H
+#define H5CPP_CORE_H
 	#include "config.h"
 	#include "utils.hpp"
 	#include "misc.hpp"

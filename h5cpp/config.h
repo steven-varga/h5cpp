@@ -39,6 +39,7 @@
 	#define H5CPP_RANK_CUBE 3
 #endif
 
+#include <complex>
 
 namespace h5{
 	typedef std::complex<double> cx_double;
