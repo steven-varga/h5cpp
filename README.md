@@ -177,8 +177,8 @@ apt install doxygen doxygen-gui markdown
 TODO:
 -----
 1. statistical profiling of read|write|create operations, and visualization
-2. replace macro generics with templates, resulting clean c++11 experience
-3. support for [eigen3][6], [boost matrix library][7]
+2. adding [boostBlas][101], [eigen][102], [blitz][103], [itpp][104], [dlib][105], [blaze][106], [ETL][107]
+3. replace macro generics with templates, resulting clean c++11 experience
 4. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
 5. implement  complex numbers, `std::vector<bool>`
 
@@ -204,3 +204,14 @@ TODO:
 [10]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29
 
 [40]: https://support.hdfgroup.org/HDF5/Tutor/HDF5Intro.pdf
+
+
+
+[100]: http://arma.sourceforge.net/
+[101]: http://www.boost.org/doc/libs/1_66_0/libs/numeric/ublas/doc/index.html
+[102]: http://eigen.tuxfamily.org/index.php?title=Main_Page#Documentation
+[103]: https://sourceforge.net/projects/blitz/
+[104]: https://sourceforge.net/projects/itpp/
+[105]: http://dlib.net/linear_algebra.html
+[106]: https://bitbucket.org/blaze-lib/blaze
+[107]: https://github.com/wichtounet/etl
