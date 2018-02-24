@@ -31,7 +31,7 @@ namespace h5 { namespace utils {
 
 	template<typename T> struct base;
 	template<typename T> inline T ctor(hsize_t rank, const hsize_t* dims ){}
-	template<typename T> inline hid_t h5type( ){} // must apply 'H5Tclose' to return value to prevent resource leakage
+	template<typename T> static inline hid_t h5type( ){} // must apply 'H5Tclose' to return value to prevent resource leakage
 	template<typename T> inline std::string type_name( ){ return "n/a"; }
 	template<> inline hid_t h5type<std::string>(){ // std::string is variable length
 			hid_t type = H5Tcopy (H5T_C_S1);

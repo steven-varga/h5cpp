@@ -63,7 +63,7 @@ usage:
 ```cpp
 #include <h5cpp/all>
 ...
-hid_t fd h5::open("some_file.h5");
+hid_t fd h5::open("some_file.h5",H5F_ACC_RDWR);
 	/* the RVO arma::Mat<double> object will have the size 10x5 filled*/
 	try {
 		auto M = h5::read<arma::mat>(fd,"path/to/matrix",{3,4,1},{10,1,5});
