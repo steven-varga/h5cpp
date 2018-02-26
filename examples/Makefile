@@ -18,11 +18,12 @@
 # IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-apps = raw stl arma arma-partial struct string
+apps = raw stl eigen3 arma arma-partial struct string
 
 CXX = h5c++
-CXXFLAGS = -I../ -std=c++14
+CXXFLAGS = -I../ -I/usr/include/eigen3 -std=c++14
 LIBS =  -lprofiler -lglog
+
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
@@ -32,6 +33,8 @@ all: $(apps)
 raw: raw.o 
 	$(CXX) $^ $(LIBS) -o $@	
 stl: stl.o 
+	$(CXX) $^ $(LIBS) -o $@	
+eigen3: eigen3.o 
 	$(CXX) $^ $(LIBS) -o $@	
 arma: arma.o 
 	$(CXX) $^ $(LIBS) -o $@	
@@ -47,6 +50,7 @@ test: $(apps)
 	@./stl
 	@./arma
 	@./arma-partial
+	@./eigen3
 	@./struct
 	@./string
 	h5dump -d string.mat string.h5

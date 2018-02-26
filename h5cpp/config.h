@@ -46,7 +46,6 @@ namespace h5{
 	typedef std::complex<float>  cx_float;
 }
 /**
-@example arma.cpp
 @example arma-partial.cpp
 @example raw.cpp
 @example stl.cpp
@@ -55,6 +54,9 @@ namespace h5{
 @example arma-perf.cpp
 @example stl-perf.cpp
 @example struct-perf.cpp
+
+@example arma.cpp
+@example eigen3.cpp
 */
 
 /** @defgroup io-create h5::create(fd, path, max_dims, chunk_dims, deflate );

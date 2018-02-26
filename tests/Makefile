@@ -22,15 +22,21 @@
 # SEE README to instal GTEST !!!
 
 CXX = h5c++
-CXXFLAGS =  -I../ -std=c++14
+CXXFLAGS = -I../ -std=c++14 
 LIBS = -lprofiler -lglog -lgtest -lgtest_main -lboost_date_time
 flags =  --gtest_print_time=0 --gtest_color=auto
 
-apps = macros integral struct stl armadillo utils 
+apps = macros integral struct stl armadillo utils eigen3
 all: $(apps)
 
 %.o : $(SRC_DIR)/%.cpp 
-	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
+	$(CXX) -o $@  $(CXXFLAGS) -c $^
+
+eigen3.o : eigen3.cpp 
+	$(CXX) -I/usr/include/eigen3 $(CXXFLAGS) -c -o eigen3.o eigen3.cpp
+
+preprocessor: preprocessor.cpp 
+	$(CXX) -I/usr/include/eigen3 -E -std=c++14 preprocessor.cpp
 
 utils: utils.o
 	$(CXX) $^ $(LIBS) -o $@
@@ -42,10 +48,13 @@ struct: struct.o
 	$(CXX) $^ $(LIBS) -o $@	
 armadillo: armadillo.o
 	$(CXX) $^ $(LIBS) -o $@	
+eigen3: eigen3.o
+	$(CXX) $^ $(LIBS) -o $@	
 stl: stl.o
 	$(CXX) $^ $(LIBS) -o $@	
 macros: macros.o 
 	$(CXX) $^ $(LIBS) -o $@	
+
 
 test-utils: utils
 	./utils $(flags)
@@ -59,11 +68,14 @@ test-stl: stl
 	./stl $(flags)
 test-armadillo: armadillo
 	./armadillo $(flags)
+test-eigen3: eigen3
+	./eigen3 $(flags)
+test-preprocessor: preprocessor
 
 test: test-utils test-macros test-integral test-struct test-stl test-armadillo 
 
 clean:
-	@$(RM) *.o *.h5 $(apps)
+	@$(RM) *.o *.h5 $(apps) preprocessor
 
 
 .PHONY: test

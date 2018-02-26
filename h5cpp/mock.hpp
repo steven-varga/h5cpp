@@ -40,7 +40,7 @@ namespace h5 { namespace utils {
 							});
 		return data;
 	}
-
+// TODO: bang this so total memory alloc is same as 'n'
 	template <> inline std::vector<std::string> get_test_data( size_t n ){
 
 		std::vector<std::string> data;

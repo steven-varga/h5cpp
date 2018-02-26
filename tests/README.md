@@ -33,6 +33,13 @@ copy  libgtest.a and libgtest_main.a to your /usr/lib folder `sudo cp *.a /usr/l
 
 specify link in makefile: `LDLIBS = -lgtest -lgtest_main`
 
+eigen3:
+--------
+requires to specify the location of eigen3 system directory; which is on my system:
+`/usr/include/eigen3`
+
+
+
 FAILS:
 ------
 
