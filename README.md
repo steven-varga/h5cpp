@@ -152,7 +152,10 @@ supported types:
 ```yacc
 	T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
 	S := T | c/c++ struct | std::string
-	ref 	:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T>
+	ref 	:= std::vector<S> 
+			| arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> 
+			| Eigen::Matrix<T,Dynamic,Dynamic> | Eigen::Matrix<T,Dynamic,1> | Eigen::Matrix<T,1,Dynamic>
+			| Eigen::Array<T,Dynamic,Dynamic>  | Eigen::Array<T,Dynamic,1>  | Eigen::Array<T,1,Dynamic>
 	ptr 	:= T* 
 	accept 	:= ref | ptr 
 ```
