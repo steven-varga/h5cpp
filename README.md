@@ -22,8 +22,10 @@
 --->
 
 
-an easy to use c++11 templates between ([std::vector][1] | [armadillo][100] | [eigen3][102] | [uBlas][101] | [it++][104] ) and [HDF5][3] datasets 
---------------------------------------------------------------------------------------------------------------------
+an easy to use c++11 templates between popular matrix algebra systems and [HDF5][3] datasets 
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+The following objects are supported: [std::vector][1] | [armadillo][100] | [eigen3][102] | [uBlas][101] | [it++][104] | [blitz++][103]
 
 Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects.Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
 
@@ -158,6 +160,7 @@ ref 	:= std::vector<S>
 	| Eigen::Array<T,Dynamic,Dynamic>  | Eigen::Array<T,Dynamic,1>  | Eigen::Array<T,1,Dynamic>
 	| ublas::matrix<T> | ublas::vector<T>
 	| itpp::Mat<T> | itpp::Vec<T>
+	| blitz::Array<T,1> | blitz::Array<T,2> | blitz::Array<T,3>
 ptr 	:= T* 
 accept 	:= ref | ptr 
 ```
@@ -182,7 +185,7 @@ apt install doxygen doxygen-gui markdown
 TODO:
 -----
 1. statistical profiling of read|write|create operations, and visualization
-2. adding  [blitz][103], [dlib][105], [blaze][106], [ETL][107]
+2. adding [dlib][105], [blaze][106], [ETL][107]
 3. replace macro generics with templates, resulting clean c++11 experience
 4. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
 5. implement  complex numbers, `std::vector<bool>`
@@ -200,7 +203,7 @@ TODO:
 
 DONE:
 -----
-* [eigen3][102], [ublas][101], [itpp][104]  added
+* [eigen3][102], [ublas][101], [itpp][104] [blitz][103]  added
 
 [1]: http://en.cppreference.com/w/cpp/container/vector
 [2]: http://arma.sourceforge.net
