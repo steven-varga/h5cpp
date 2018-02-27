@@ -200,13 +200,34 @@ namespace h5 { namespace utils {
 	#define H5CPP_ITPPV_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
 #endif
 #define H5CPP_ITPP_TEMPLATE_SPEC(T) H5CPP_ITPPM_TEMPLATE_SPEC(T) H5CPP_ITPPV_TEMPLATE_SPEC(T)
+/* BLITZ  */
+#if defined(BZ_ARRAY_ONLY_H) || defined(H5CPP_USE_BLITZ)
+	namespace blitz {
+		template<class T> using vector 	= blitz::Array<T,1>;
+		template<class T> using matrix 	= blitz::Array<T,2>;
+		template<class T> using qube 	= blitz::Array<T,3>;
+	}
+
+	#define H5CPP_BLITZ_TEMPLATE_SPEC(T) \
+	H5CPP_BASE_TEMPLATE_SPEC(T,::blitz::vector,data(), ref.size(), H5CPP_RANK_VEC,  { (hsize_t)ref.size() } )	\
+	H5CPP_BASE_TEMPLATE_SPEC(T,::blitz::matrix,data(), ref.size(), H5CPP_RANK_MAT,  { (hsize_t)ref.cols(), (hsize_t)ref.rows()} )	\
+	H5CPP_BASE_TEMPLATE_SPEC(T,::blitz::qube,data(),   ref.size(), H5CPP_RANK_CUBE, { (hsize_t)ref.depth(),(hsize_t)ref.cols(),(hsize_t)ref.rows()} )	\
+	H5CPP_CTOR_SPEC(T, ::blitz::vector,   H5CPP_RANK_VEC,  (dims[0]) )												\
+	H5CPP_CTOR_SPEC(T, ::blitz::matrix,   H5CPP_RANK_MAT,  (dims[1], dims[0]) )												\
+	H5CPP_CTOR_SPEC(T, ::blitz::qube,     H5CPP_RANK_CUBE, (dims[2], dims[1], dims[0]) )										\
+
+#else
+	#define H5CPP_BLITZ_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
+#endif
+
+
 /* END DEF */
 
 
 #define H5CPP_POD2H5T(POD_TYPE,H_TYPE) 	template<> inline hid_t h5type<POD_TYPE>(){ return  H5Tcopy(H_TYPE); }
 /* BEGIN */
 #define H5CPP_SPECIALIZE(T)  H5CPP_ARMA_TEMPLATE_SPEC(T)  H5CPP_STL_TEMPLATE_SPEC(T) H5CPP_EIGEN_TEMPLATE_SPEC(T) \
-	H5CPP_UBLAS_TEMPLATE_SPEC(T)  H5CPP_ITPP_TEMPLATE_SPEC(T) \
+	H5CPP_UBLAS_TEMPLATE_SPEC(T)  H5CPP_ITPP_TEMPLATE_SPEC(T) H5CPP_BLITZ_TEMPLATE_SPEC(T) \
 
 /* END */
 #define H5CPP_REGISTER_STL_TYPE( T, H ) H5CPP_POD2H5T(T,H) H5CPP_STL_TEMPLATE_SPEC(T)

@@ -18,7 +18,7 @@
 # IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-apps = raw stl itpp ublas eigen3 arma  arma-partial struct string
+apps = raw stl blitz itpp ublas eigen3 arma  arma-partial struct string
 
 CXX = h5c++
 CXXFLAGS = -I../ -I/usr/include/eigen3 -std=c++14
@@ -42,6 +42,8 @@ ublas: ublas.o
 	$(CXX) $^ $(LIBS) -o $@	
 itpp: itpp.o 
 	$(CXX) $^ $(LIBS) -litpp -o $@	
+blitz: blitz.o 
+	$(CXX) $^ $(LIBS) -lblitz -o $@	
 arma-partial: arma-partial.o 
 	$(CXX) $^ $(LIBS) -o $@
 struct: struct.o 
@@ -56,6 +58,8 @@ test: $(apps)
 	@./arma-partial
 	@./eigen3
 	@./ublas
+	@./itpp
+	@./blitz
 	@./struct
 	@./string
 	h5dump -d string.mat string.h5
