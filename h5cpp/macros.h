@@ -113,7 +113,7 @@ namespace h5 { namespace utils {
 	H5CPP_REGISTER_FUNDAMENTAL_TYPE(T) \
 
 /* ARMADILLO */
-#ifdef ARMA_INCLUDES
+#if defined(ARMA_INCLUDES) || defined(H5CPP_USE_ARMADILLO)
 /* definitions for armadillo containers */
 	#define  H5CPP_ARMA_TEMPLATE_SPEC(T) 																				\
 	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Row, memptr(), ref.n_elem, H5CPP_RANK_VEC,  {ref.n_elem} ) 							\
@@ -129,7 +129,7 @@ namespace h5 { namespace utils {
 	#define H5CPP_ARMA_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
 #endif
 /* EIGEN3: doesn use versioning  */
-#ifdef EIGEN_CORE_H
+#if defined(EIGEN_CORE_H) || defined(H5CPP_USE_EIGEN3)
 	namespace eigen {
 		template<class T> using amat 	= Eigen::Array<T,Eigen::Dynamic,Eigen::Dynamic>;
 		template<class T> using arowvec = Eigen::Array<T,1,Eigen::Dynamic>;
@@ -158,7 +158,7 @@ namespace h5 { namespace utils {
 	#define H5CPP_EIGEN_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
 #endif
 /* BOOST MATRIX  */
-#ifdef _BOOST_UBLAS_MATRIX_
+#if defined(_BOOST_UBLAS_MATRIX_) || defined(H5CPP_USE_UBLAS_MATRIX)
 	namespace ublas {
 		template<class T> using matrix 	= boost::numeric::ublas::matrix<T>;
 	}
@@ -169,7 +169,7 @@ namespace h5 { namespace utils {
 #else
 	#define H5CPP_UBLASM_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
 #endif
-#ifdef _BOOST_UBLAS_VECTOR_
+#if defined(_BOOST_UBLAS_VECTOR_) || defined(H5CPP_USE_UBLAS_VECTOR)
 	namespace ublas {
 		template<class T> using vector 	= boost::numeric::ublas::vector<T>;
 	}
@@ -182,10 +182,31 @@ namespace h5 { namespace utils {
 #endif
 #define H5CPP_UBLAS_TEMPLATE_SPEC(T) H5CPP_UBLASM_TEMPLATE_SPEC(T) H5CPP_UBLASV_TEMPLATE_SPEC(T)
 
+/* IT++  */
+#if defined(MAT_H) || defined(H5CPP_USE_ITPP_MATRIX)
+	#define H5CPP_ITPPM_TEMPLATE_SPEC(T) \
+	H5CPP_BASE_TEMPLATE_SPEC(T,itpp::Mat,_data(), ref.size(), H5CPP_RANK_MAT,  { (hsize_t) ref.cols(), (hsize_t) ref.rows()} )	\
+	H5CPP_CTOR_SPEC(T, itpp::Mat,     H5CPP_RANK_MAT,  (dims[1], dims[0]) )												\
+
+#else
+	#define H5CPP_ITPPM_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
+#endif
+#if defined(VEC_H) || defined(H5CPP_USE_ITPP_VECTOR)
+	#define H5CPP_ITPPV_TEMPLATE_SPEC(T) \
+	H5CPP_BASE_TEMPLATE_SPEC(T, itpp::Vec, _data(), ref.size(), H5CPP_RANK_VEC,  { (hsize_t) ref.size() } )	\
+	H5CPP_CTOR_SPEC(T, itpp::Vec,     H5CPP_RANK_VEC,  (dims[0]) ) 													\
+
+#else
+	#define H5CPP_ITPPV_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
+#endif
+#define H5CPP_ITPP_TEMPLATE_SPEC(T) H5CPP_ITPPM_TEMPLATE_SPEC(T) H5CPP_ITPPV_TEMPLATE_SPEC(T)
+/* END DEF */
+
+
 #define H5CPP_POD2H5T(POD_TYPE,H_TYPE) 	template<> inline hid_t h5type<POD_TYPE>(){ return  H5Tcopy(H_TYPE); }
 /* BEGIN */
 #define H5CPP_SPECIALIZE(T)  H5CPP_ARMA_TEMPLATE_SPEC(T)  H5CPP_STL_TEMPLATE_SPEC(T) H5CPP_EIGEN_TEMPLATE_SPEC(T) \
-	H5CPP_UBLAS_TEMPLATE_SPEC(T) \
+	H5CPP_UBLAS_TEMPLATE_SPEC(T)  H5CPP_ITPP_TEMPLATE_SPEC(T) \
 
 /* END */
 #define H5CPP_REGISTER_STL_TYPE( T, H ) H5CPP_POD2H5T(T,H) H5CPP_STL_TEMPLATE_SPEC(T)

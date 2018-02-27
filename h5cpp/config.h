@@ -58,6 +58,7 @@ namespace h5{
 @example arma.cpp
 @example eigen3.cpp
 @example ublas.cpp
+@example itpp.cpp
 */
 
 /** @defgroup io-create h5::create(fd, path, max_dims, chunk_dims, deflate );
