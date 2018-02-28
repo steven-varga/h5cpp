@@ -9,10 +9,6 @@ template<class T> using Colvec = blitz::Array<T,1>;
 template<class T> using Matrix = blitz::Array<T,2>;
 template<class T> using Cube   = blitz::Array<T,3>;
 
-
-// only EIGEN::DYNAMIC [ARRAY|MATRIX|VECTOR] are supported
-// in other words Eigen::Matrix<T,S,S>  where S \in unsigned will not work, rather cast static allocation  into Dynamic (heap memory) structure
-
 int main(){
 	{ // CREATE - WRITE
 		Matrix<double> M(4,5); 				// create a matrix

@@ -8,8 +8,7 @@ using namespace std;
 template<class T> using Matrix = blaze::DynamicMatrix<T,blaze::rowMajor>;
 template<class T> using Colvec = blaze::DynamicVector<T,blaze::columnVector>;
 
-// only EIGEN::DYNAMIC [ARRAY|MATRIX|VECTOR] are supported
-// in other words Eigen::Matrix<T,S,S>  where S \in unsigned will not work, rather cast static allocation  into Dynamic (heap memory) structure
+// for now only DYNAMIC [MATRIX|VECTOR] are supported
 
 int main(){
 	{ // CREATE - WRITE

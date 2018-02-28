@@ -7,10 +7,6 @@ using namespace std;
 template<class T> using Matrix = itpp::Mat<T>;
 template<class T> using Colvec = itpp::Vec<T>;
 
-
-// only EIGEN::DYNAMIC [ARRAY|MATRIX|VECTOR] are supported
-// in other words Eigen::Matrix<T,S,S>  where S \in unsigned will not work, rather cast static allocation  into Dynamic (heap memory) structure
-
 int main(){
 	{ // CREATE - WRITE
 		Matrix<double> M(4,5); 				// create a matrix
