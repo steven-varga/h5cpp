@@ -25,7 +25,8 @@
 an easy to use c++11 templates between popular matrix algebra systems and [HDF5][3] datasets 
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
-The following objects are supported: [std::vector][1] | [armadillo][100] | [eigen3][102] | [uBlas][101] | [it++][104] | [blitz++][103]
+The following objects are supported:
+ [std::vector][1] | [armadillo][100] | [eigen3][102] | [blaze][106] | [it++][104] | [blitz++][103] |  [uBlas][101] 
 
 Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects.Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
 
@@ -161,6 +162,9 @@ ref 	:= std::vector<S>
 	| ublas::matrix<T> | ublas::vector<T>
 	| itpp::Mat<T> | itpp::Vec<T>
 	| blitz::Array<T,1> | blitz::Array<T,2> | blitz::Array<T,3>
+	| blaze::DynamicVector<T,rowVector> |  blaze::DynamicVector<T,colVector>
+	| blaze::DynamicVector<T,blaze::rowVector> |  blaze::DynamicVector<T,blaze::colVector>
+	| blaze::DynamicMatrix<T,blaze::rowMajor>  |  blaze::DynamicMatrix<T,blaze::colMajor>
 ptr 	:= T* 
 accept 	:= ref | ptr 
 ```
@@ -185,7 +189,7 @@ apt install doxygen doxygen-gui markdown
 TODO:
 -----
 1. statistical profiling of read|write|create operations, and visualization
-2. adding [dlib][105], [blaze][106], [ETL][107]
+2. adding [ETL][107]
 3. replace macro generics with templates, resulting clean c++11 experience
 4. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
 5. implement  complex numbers, `std::vector<bool>`
@@ -196,14 +200,17 @@ TODO:
 98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a)
 99. add more test cases [in progress]
 
+
+DONE:
+-----
+* [eigen3][102], [ublas][101], [itpp][104] [blitz][103] [blaze][106]  added
+
+
 <div style="text-align: right">
 **Copyright (c) 2018 vargaconsulting, Toronto,ON Canada** <steven@vargaconsulting.ca>
 </div>
 
 
-DONE:
------
-* [eigen3][102], [ublas][101], [itpp][104] [blitz][103]  added
 
 [1]: http://en.cppreference.com/w/cpp/container/vector
 [2]: http://arma.sourceforge.net
@@ -217,8 +224,6 @@ DONE:
 [10]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29
 
 [40]: https://support.hdfgroup.org/HDF5/Tutor/HDF5Intro.pdf
-
-
 
 [100]: http://arma.sourceforge.net/
 [101]: http://www.boost.org/doc/libs/1_66_0/libs/numeric/ublas/doc/index.html

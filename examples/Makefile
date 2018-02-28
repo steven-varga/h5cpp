@@ -44,6 +44,8 @@ itpp: itpp.o
 	$(CXX) $^ $(LIBS) -litpp -o $@	
 blitz: blitz.o 
 	$(CXX) $^ $(LIBS) -lblitz -o $@	
+blaze: blaze.o 
+	$(CXX) $^ $(LIBS)  -o $@	
 arma-partial: arma-partial.o 
 	$(CXX) $^ $(LIBS) -o $@
 struct: struct.o 

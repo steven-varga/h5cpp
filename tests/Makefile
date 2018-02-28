@@ -26,7 +26,7 @@ CXXFLAGS = -I../ -std=c++14
 LIBS = -lprofiler -lglog -lgtest -lgtest_main -lboost_date_time
 flags =  --gtest_print_time=0 --gtest_color=auto
 
-apps = macros integral struct stl armadillo utils eigen3 ublas itpp blitz
+apps = macros integral struct stl armadillo utils eigen3 ublas itpp blitz blaze
 all: $(apps)
 
 %.o : $(SRC_DIR)/%.cpp 
@@ -56,6 +56,10 @@ itpp: itpp.o
 	$(CXX) $^ $(LIBS) -litpp -o $@	
 blitz: blitz.o
 	$(CXX) $^ $(LIBS) -lblitz -o $@	
+dlib: dlib.o
+	$(CXX) $^ $(LIBS) -ldlib -o $@	
+blaze: blaze.o
+	$(CXX) $^ $(LIBS)  -o $@	
 
 stl: stl.o
 	$(CXX) $^ $(LIBS) -o $@	
@@ -83,9 +87,13 @@ test-itpp: itpp
 	./itpp $(flags)
 test-blitz: blitz
 	./blitz $(flags)
+test-dlib: dlib
+	./dlib $(flags)
+test-blaze: dlib
+	./blaze $(flags)
 test-preprocessor: preprocessor
 
-test: test-utils test-macros test-integral test-struct test-stl test-armadillo test-ublas test-itpp test-blitz
+test: test-utils test-macros test-integral test-struct test-stl test-armadillo test-ublas test-itpp test-blitz test-blaze
 
 clean:
 	@$(RM) *.o *.h5 $(apps) preprocessor

@@ -60,6 +60,7 @@ namespace h5{
 @example ublas.cpp
 @example itpp.cpp
 @example blitz.cpp
+@example blaze.cpp
 */
 
 /** @defgroup io-create h5::create(fd, path, max_dims, chunk_dims, deflate );
