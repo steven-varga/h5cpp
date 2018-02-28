@@ -41,7 +41,7 @@ requires to specify the location of eigen3 system directory; which is on my syst
 dependencies for testing ALL TESTCASES:
 ----------------------------------------
 have boost ublas installed some way
-sudo apt install libarmadillo-dev libitpp-dev libblitz0-dev 
+sudo apt install libarmadillo-dev libitpp-dev libblitz0-dev libdlib-dev 
 
 FAILS:
 ------

@@ -26,7 +26,7 @@ an easy to use c++11 templates between popular matrix algebra systems and [HDF5]
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
 The following objects are supported:
- [std::vector][1] | [armadillo][100] | [eigen3][102] | [blaze][106] | [it++][104] | [blitz++][103] |  [uBlas][101] 
+[armadillo][100] | [eigen3][102] | [blaze][106] | [it++][104] | [blitz++][103] | [dlib][105] |  [uBlas][101] | [std::vector][1] 
 
 Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects.Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
 
@@ -60,10 +60,18 @@ requirements:
 
 usage:
 -------
-`sudo make install` will copy the header files and `h5cpp.pc` package config file into `/usr/local/` or copy them and ship it with your project. There is no other dependency than hdf5 libraries and include files. However in order to use armadillo  correctly you have to be sure to include them first.
+`sudo make install` will copy the header files and `h5cpp.pc` package config file into `/usr/local/` or copy them and ship it with your project.
+There is no other dependency than hdf5 libraries and include files. However to activate the template specialization for any given library you must include that library first then h5cpp. In case the auto detection fails you may optionally turn template specialization on by defining any of the following:
+```cpp
+#define [ H5CPP_USE_BLAZE | H5CPP_USE_ARMADILLO | H5CPP_USE_EIGEN3 | H5CPP_USE_UBLAS_MATRIX 
+	| H5CPP_USE_UBLAS_VECTOR | H5CPP_USE_ITPP_MATRIX | H5CPP_USE_ITPP_VECTOR | H5CPP_USE_BLITZ | H5CPP_USE_DLIB
+```
+
+
 
 *to read/map a 10x5 matrix from a 3D array from location {3,4,1}*
 ```cpp
+#include <armadillo>
 #include <h5cpp/all>
 ...
 hid_t fd h5::open("some_file.h5",H5F_ACC_RDWR);
@@ -78,6 +86,7 @@ h5::close(fd);
 
 *to write the entire matrix back to a different file*
 ```cpp
+#include <armadillo>
 #include <h5cpp/all>
 ...
 hid_t fd = h5::create("output.h5")
@@ -155,16 +164,17 @@ supported types:
 ```yacc
 T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
 S := T | c/c++ struct | std::string
-ref 	:= std::vector<S> 
+ref := std::vector<S> 
 	| arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> 
 	| Eigen::Matrix<T,Dynamic,Dynamic> | Eigen::Matrix<T,Dynamic,1> | Eigen::Matrix<T,1,Dynamic>
 	| Eigen::Array<T,Dynamic,Dynamic>  | Eigen::Array<T,Dynamic,1>  | Eigen::Array<T,1,Dynamic>
-	| ublas::matrix<T> | ublas::vector<T>
-	| itpp::Mat<T> | itpp::Vec<T>
-	| blitz::Array<T,1> | blitz::Array<T,2> | blitz::Array<T,3>
 	| blaze::DynamicVector<T,rowVector> |  blaze::DynamicVector<T,colVector>
 	| blaze::DynamicVector<T,blaze::rowVector> |  blaze::DynamicVector<T,blaze::colVector>
 	| blaze::DynamicMatrix<T,blaze::rowMajor>  |  blaze::DynamicMatrix<T,blaze::colMajor>
+	| itpp::Mat<T> | itpp::Vec<T>
+	| blitz::Array<T,1> | blitz::Array<T,2> | blitz::Array<T,3>
+	| dlib::Matrix<T>
+	| ublas::matrix<T> | ublas::vector<T>
 ptr 	:= T* 
 accept 	:= ref | ptr 
 ```
@@ -200,11 +210,11 @@ TODO:
 98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a)
 99. add more test cases [in progress]
 
-
+<!--
 DONE:
 -----
 * [eigen3][102], [ublas][101], [itpp][104] [blitz][103] [blaze][106]  added
-
+-->
 
 <div style="text-align: right">
 **Copyright (c) 2018 vargaconsulting, Toronto,ON Canada** <steven@vargaconsulting.ca>
