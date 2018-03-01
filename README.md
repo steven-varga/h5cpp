@@ -25,14 +25,11 @@
 an easy to use c++11 templates between popular matrix algebra systems and [HDF5][3] datasets 
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
-Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects.Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
+Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects. Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular [c++ scientific libraries][11].
 
-HDF5 CPP is a set of routines to simplify the process and by implementing **CREATE,READ,WRITE,APPEND** operations on **fixed** or **variable length** N dimensional arrays.
-This header only implementation supports **raw pointers**, **stl::vector**, **armadillo**  matrix library by directly operating on the underlying data-store of the object hence avoiding unnecessary memory allocations.
-
-The following objects are supported:
-[armadillo][100] | [eigen3][102] | [blaze][106] | [blitz++][103] |  [it++][104] | [dlib][105] |  [uBlas][101] | [std::vector][1] | [raw pointers][99]
-
+HDF5 CPP is to simplify object serialization by implementing **CREATE,READ,WRITE,APPEND** operations on **fixed** or **variable length** N dimensional arrays.
+This header only implementation supports [raw pointers][99] | [armadillo][100] | [eigen3][102] | [blaze][106] | [blitz++][103] |  [it++][104] | [dlib][105] |  [uBlas][101] | [std::vector][1] 
+by directly operating on the underlying data-store, avoiding intermediate/temporary memory allocations.
 
 performance: 
 ------------
@@ -179,9 +176,9 @@ ptr 	:= T*
 accept 	:= ref | ptr 
 ```
 
-in addition to the standard data types offered by BLAS/LAPACK systems `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
+in addition to the standard data types offered by BLAS/LAPACK systems and [POD struct][12] -s,  `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
 
-[documentation](http://h5cpp.ca/modules.html), [examples](http://h5cpp.ca/examples.html), test suite and profileing:
+[documentation](http://h5cpp.ca/modules.html), [examples](http://h5cpp.ca/examples.html), test suite and profiling:
 ----------------------------------------------------------------------------------------------------
 `make all` generates doxygen documention into docs/html and compiles `examples/*.cpp`
 In `tests` directory there are instruction on google test suit, similarly you find instructions in 
@@ -232,8 +229,11 @@ DONE:
 [8]: https://julialang.org/
 [9]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29
 [10]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29
+[11]: https://en.wikipedia.org/wiki/List_of_numerical_libraries#C++
+[12]: http://en.cppreference.com/w/cpp/concept/StandardLayoutType
 
 [40]: https://support.hdfgroup.org/HDF5/Tutor/HDF5Intro.pdf
+
 
 
 [99]: https://en.wikipedia.org/wiki/C_(programming_language)#Pointers
