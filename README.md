@@ -173,8 +173,8 @@ ref := std::vector<S>
 	| blaze::DynamicMatrix<T,blaze::rowMajor>  |  blaze::DynamicMatrix<T,blaze::colMajor>
 	| itpp::Mat<T> | itpp::Vec<T>
 	| blitz::Array<T,1> | blitz::Array<T,2> | blitz::Array<T,3>
-	| dlib::Matrix<T>
-	| ublas::matrix<T> | ublas::vector<T>
+	| dlib::Matrix<T>   | dlib::Vector<T,1> 
+	| ublas::matrix<T>  | ublas::vector<T>
 ptr 	:= T* 
 accept 	:= ref | ptr 
 ```
@@ -199,14 +199,14 @@ apt install doxygen doxygen-gui markdown
 TODO:
 -----
 1. statistical profiling of read|write|create operations, and visualization
-2. adding [ETL][107]
-3. replace macro generics with templates, resulting clean c++11 experience
+2. [ETL][107]: contacted author, waiting for reply
 4. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
 5. implement  complex numbers, `std::vector<bool>`
 
 20. read data into posix shared mem
 21. MPI/parallel file system support
 
+97. replace macro generics with templates, resulting clean c++11 experience
 98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a)
 99. add more test cases [in progress]
 
