@@ -25,13 +25,14 @@
 an easy to use c++11 templates between popular matrix algebra systems and [HDF5][3] datasets 
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
-The following objects are supported:
-[armadillo][100] | [eigen3][102] | [blaze][106] | [it++][104] | [blitz++][103] | [dlib][105] |  [uBlas][101] | [std::vector][1] 
-
 Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects.Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
 
 HDF5 CPP is a set of routines to simplify the process and by implementing **CREATE,READ,WRITE,APPEND** operations on **fixed** or **variable length** N dimensional arrays.
 This header only implementation supports **raw pointers**, **stl::vector**, **armadillo**  matrix library by directly operating on the underlying data-store of the object hence avoiding unnecessary memory allocations.
+
+The following objects are supported:
+[armadillo][100] | [eigen3][102] | [blaze][106] | [blitz++][103] |  [it++][104] | [dlib][105] |  [uBlas][101] | [std::vector][1] | [raw pointers][99]
+
 
 performance: 
 ------------
@@ -56,7 +57,7 @@ requirements:
 
 2. C++11 or above capable compiler installed HDF5 libraries: `sudo apt install build-essential g++`
 3. set the location of the include library, and c++11 or higher flag: `h5c++  -Iyour/project/../h5cpp -std=c++14` or `CFLAGS += pkg-config --cflags h5cpp`
-4. optionally include `<armadillo>`  header file before including `<h5cpp/all>`
+4. optionally include `[ <armadillo> | <Eigen/Dense> | <blaze/Math.h> | ... ]`  header file before including `<h5cpp/all>`
 
 usage:
 -------
@@ -64,7 +65,7 @@ usage:
 There is no other dependency than hdf5 libraries and include files. However to activate the template specialization for any given library you must include that library first then h5cpp. In case the auto detection fails you may optionally turn template specialization on by defining any of the following:
 ```cpp
 #define [ H5CPP_USE_BLAZE | H5CPP_USE_ARMADILLO | H5CPP_USE_EIGEN3 | H5CPP_USE_UBLAS_MATRIX 
-	| H5CPP_USE_UBLAS_VECTOR | H5CPP_USE_ITPP_MATRIX | H5CPP_USE_ITPP_VECTOR | H5CPP_USE_BLITZ | H5CPP_USE_DLIB
+	| H5CPP_USE_UBLAS_VECTOR | H5CPP_USE_ITPP_MATRIX | H5CPP_USE_ITPP_VECTOR | H5CPP_USE_BLITZ | H5CPP_USE_DLIB ]
 ```
 
 
@@ -83,10 +84,9 @@ hid_t fd h5::open("some_file.h5",H5F_ACC_RDWR);
 	}
 h5::close(fd);
 ```
-
 *to write the entire matrix back to a different file*
 ```cpp
-#include <armadillo>
+#include <Eigen/Dense>
 #include <h5cpp/all>
 ...
 hid_t fd = h5::create("output.h5")
@@ -181,34 +181,34 @@ accept 	:= ref | ptr
 
 in addition to the standard data types offered by BLAS/LAPACK systems `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
 
-
-[documentation](http://h5cpp.ca/modules.html), [examples](http://h5cpp.ca/examples.html), google-test:
+[documentation](http://h5cpp.ca/modules.html), [examples](http://h5cpp.ca/examples.html), test suite and profileing:
 ----------------------------------------------------------------------------------------------------
 `make all` generates doxygen documention into docs/html and compiles `examples/*.cpp`
 In `tests` directory there are instruction on google test suit, similarly you find instructions in 
 `h5cpp/profiling`
 
 **to build documentation, examples and profile code install:**
-
 ```shell
 apt install build-essential libhdf5-serial-dev
 apt install google-perftools kcachegrind
 apt install doxygen doxygen-gui markdown
+apt install libarmadillo-dev libeigen3-dev libblitz0-dev libitpp-dev libdlib-dev libboost-all-dev 
 ```
+in addition to above, download [blaze][106] and copy header files to `/usr/local/include`
+
 
 TODO:
 -----
-1. statistical profiling of read|write|create operations, and visualization
-2. [ETL][107]: contacted author, waiting for reply
-4. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
-5. implement  complex numbers, `std::vector<bool>`
+1. statistical profiling of `[read|write|create]` operations, and visualization
+2. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
+3. add support for [ complex numbers, fixed length strings ]
 
-20. read data into posix shared mem
-21. MPI/parallel file system support
+20. remote matrix with zeroMQ
+21. read data into posix shared mem
+22. MPI/parallel file system support
 
-97. replace macro generics with templates, resulting clean c++11 experience
-98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a)
-99. add more test cases [in progress]
+99. add test cases
+999. [ETL][107]: contacted author, waiting for reply
 
 <!--
 DONE:
@@ -235,6 +235,8 @@ DONE:
 
 [40]: https://support.hdfgroup.org/HDF5/Tutor/HDF5Intro.pdf
 
+
+[99]: https://en.wikipedia.org/wiki/C_(programming_language)#Pointers
 [100]: http://arma.sourceforge.net/
 [101]: http://www.boost.org/doc/libs/1_66_0/libs/numeric/ublas/doc/index.html
 [102]: http://eigen.tuxfamily.org/index.php?title=Main_Page#Documentation
@@ -243,3 +245,4 @@ DONE:
 [105]: http://dlib.net/linear_algebra.html
 [106]: https://bitbucket.org/blaze-lib/blaze
 [107]: https://github.com/wichtounet/etl
+
