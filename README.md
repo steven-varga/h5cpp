@@ -28,7 +28,7 @@ an easy to use c++11 templates between popular matrix algebra systems and [HDF5]
 Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects. Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular [c++ scientific libraries][11].
 
 HDF5 CPP is to simplify object serialization by implementing **CREATE,READ,WRITE,APPEND** operations on **fixed** or **variable length** N dimensional arrays.
-This header only implementation supports [raw pointers][99] | [armadillo][100] | [eigen3][102] | [blaze][106] | [blitz++][103] |  [it++][104] | [dlib][105] |  [uBlas][101] | [std::vector][1] 
+This header only implementation supports [raw pointers][99] | [armadillo][100] | [eigen3][102] | [blaze][106] | [blitz++][103] |  [it++][104] | [dlib][105] |  [uBlas][101] | [std::vector][1]
 by directly operating on the underlying data-store, avoiding intermediate/temporary memory allocations.
 
 performance: 
@@ -62,10 +62,8 @@ usage:
 There is no other dependency than hdf5 libraries and include files. However to activate the template specialization for any given library you must include that library first then h5cpp. In case the auto detection fails you may optionally turn template specialization on by defining any of the following:
 ```cpp
 #define [ H5CPP_USE_BLAZE | H5CPP_USE_ARMADILLO | H5CPP_USE_EIGEN3 | H5CPP_USE_UBLAS_MATRIX 
-	| H5CPP_USE_UBLAS_VECTOR | H5CPP_USE_ITPP_MATRIX | H5CPP_USE_ITPP_VECTOR | H5CPP_USE_BLITZ | H5CPP_USE_DLIB ]
+	| H5CPP_USE_UBLAS_VECTOR | H5CPP_USE_ITPP_MATRIX | H5CPP_USE_ITPP_VECTOR | H5CPP_USE_BLITZ | H5CPP_USE_DLIB | H5CPP_USE_ETL ]
 ```
-
-
 
 *to read/map a 10x5 matrix from a 3D array from location {3,4,1}*
 ```cpp
@@ -204,8 +202,16 @@ TODO:
 21. read data into posix shared mem
 22. MPI/parallel file system support
 
+98. add more data structures, libraries
 99. add test cases
-999. [ETL][107]: contacted author, waiting for reply
+
+HOW TO ADD XYZ linear algebra library?
+---------------------------------------
+If you're aware of a qualifying linear algebra library that should be included and it isn't please send me an email with the followings:
+* where to find it
+* list of data structures: mylib::vector<T>, mylib::matrix<T,?,..?..>, mylib::cube<T,...> 
+* accessors to number of rows, columns, slice, ..., size, read/write pointer to underlying data
+
 
 <!--
 DONE:
