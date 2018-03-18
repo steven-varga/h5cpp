@@ -1,0 +1,36 @@
+
+# Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+# Author: Varga, Steven <steven@vargaconsulting.ca>
+
+sudo: false
+language: cpp
+compiler:
+  - gcc
+  - clang
+env:
+- MY_VAR=EverythignIsAwesome
+
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    - llvm-toolchain-precise-6.0
+    packages:
+    - g++-6
+    - clang-3.9
+
+before_install:
+    - sudo apt-get -qq update
+    - sudo apt-get install -y  build-essential libhdf5-serial-dev google-perftools kcachegrind doxygen doxygen-gui markdown libarmadillo-dev libeigen3-dev libblitz0-dev libitpp-dev libdlib-dev libboost-all-dev 
+
+
+
+
+install:
+- "[ $CXX = g++ ] && export CXX=g++-6 || true"
+- "[ $CXX = clang++ ] && export CXX=clang++-3.8 || true"
+
+script:
+  - make
+  - make test
