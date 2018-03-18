@@ -21,6 +21,40 @@
  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --->
 
+
+`make all` generates doxygen documention into docs/html and compiles `examples/*.cpp`
+In `tests` directory there are instruction on google test suit, similarly you find instructions in 
+`h5cpp/profiling`
+
+**to build documentation, examples and profile code install:**
+```shell
+apt install build-essential libhdf5-serial-dev
+apt install google-perftools kcachegrind
+apt install doxygen doxygen-gui markdown
+apt install libarmadillo-dev libeigen3-dev libblitz0-dev libitpp-dev libdlib-dev libboost-all-dev 
+```
+in addition to above, download [blaze][106] and copy header files to `/usr/local/include`
+ETL is slightly trickier, make sure to clone it recursively, and have either gcc 6.3.0 or clang 3.9 or greater
+`git clone --recursive https://github.com/wichtounet/etl.git`
+`cd etl; CXX=clang++ make`
+
+
+
+requirements:
+-------------
+1. installed serial HDF5 libraries:
+	- pre-compiled on ubuntu: `sudo apt install libhdf5-serial-dev hdf5-tools hdf5-helpers hdfview`
+	- from source: [HDF5 download][5]
+	`./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110 --enable-hl`
+	`make -j4` then `sudo make install`
+
+2. C++11 or above capable compiler installed HDF5 libraries: `sudo apt install build-essential g++`
+3. set the location of the include library, and c++11 or higher flag: `h5c++  -Iyour/project/../h5cpp -std=c++14` or `CFLAGS += pkg-config --cflags h5cpp`
+4. optionally include `[ <armadillo> | <Eigen/Dense> | <blaze/Math.h> | ... ]`  header file before including `<h5cpp/all>`
+
+
+
+
 How to install google-test framework:
 -------------------------------------
 

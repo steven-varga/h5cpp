@@ -21,7 +21,6 @@
  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --->
 
-
 an easy to use c++11 templates between popular matrix algebra systems and [HDF5][3] datasets 
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -30,41 +29,43 @@ Hierarchical Data Format or HDF5 prevalent in high performance scientific comput
 HDF5 CPP is to simplify object serialization by implementing **CREATE,READ,WRITE,APPEND** operations on **fixed** or **variable length** N dimensional arrays.
 This header only implementation supports [raw pointers][99] | [armadillo][100] | [eigen3][102] | [blaze][106] | [blitz++][103] |  [it++][104] | [dlib][105] |  [uBlas][101] | [std::vector][1]
 by directly operating on the underlying data-store, avoiding intermediate/temporary memory allocations.
+The api [is doxygen documented][202], furnished with  [examples][201], as well as [profiled][200].
 
-performance: 
-------------
-|    experiment                               | time  | trans/sec | Mbyte/sec |
-|:--------------------------------------------|------:|----------:|----------:|
-|append:  1E6 x 64byte struct                 |  0.06 |   16.46E6 |   1053.87 |
-|append: 10E6 x 64byte struct                 |  0.63 |   15.86E6 |   1015.49 |
-|append: 50E6 x 64byte struct                 |  8.46 |    5.90E6 |    377.91 |
-|append:100E6 x 64byte struct                 | 24.58 |    4.06E6 |    260.91 |
-|write:  Matrix<float> [10e6 x  16] no-chunk  |  0.4  |    0.89E6 |   1597.74 |
-|write:  Matrix<float> [10e6 x 100] no-chunk  |  7.1  |    1.40E6 |    563.36 |
+supported classes:
+----------------------
+```yacc
+T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
+S := T | c/c++ struct | std::string
+ref := std::vector<S> 
+	| arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> 
+	| Eigen::Matrix<T,Dynamic,Dynamic> | Eigen::Matrix<T,Dynamic,1> | Eigen::Matrix<T,1,Dynamic>
+	| Eigen::Array<T,Dynamic,Dynamic>  | Eigen::Array<T,Dynamic,1>  | Eigen::Array<T,1,Dynamic>
+	| blaze::DynamicVector<T,rowVector> |  blaze::DynamicVector<T,colVector>
+	| blaze::DynamicVector<T,blaze::rowVector> |  blaze::DynamicVector<T,blaze::colVector>
+	| blaze::DynamicMatrix<T,blaze::rowMajor>  |  blaze::DynamicMatrix<T,blaze::colMajor>
+	| itpp::Mat<T> | itpp::Vec<T>
+	| blitz::Array<T,1> | blitz::Array<T,2> | blitz::Array<T,3>
+	| dlib::Matrix<T>   | dlib::Vector<T,1> 
+	| ublas::matrix<T>  | ublas::vector<T>
+ptr 	:= T* 
+accept 	:= ref | ptr 
+```
 
-Lenovo 230 i7 8G ram laptop on Linux Mint 18.1 system
+In addition to the standard data types offered by BLAS/LAPACK systems and [POD struct][12] -s,  `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
 
-requirements:
--------------
-1. installed serial HDF5 libraries:
-	- pre-compiled on ubuntu: `sudo apt install libhdf5-serial-dev hdf5-tools hdf5-helpers hdfview`
-	- from source: [HDF5 download][5]
-	`./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110 --enable-hl`
-	`make -j4` then `sudo make install`
 
-2. C++11 or above capable compiler installed HDF5 libraries: `sudo apt install build-essential g++`
-3. set the location of the include library, and c++11 or higher flag: `h5c++  -Iyour/project/../h5cpp -std=c++14` or `CFLAGS += pkg-config --cflags h5cpp`
-4. optionally include `[ <armadillo> | <Eigen/Dense> | <blaze/Math.h> | ... ]`  header file before including `<h5cpp/all>`
 
-usage:
--------
+how to use:
+-----------
 `sudo make install` will copy the header files and `h5cpp.pc` package config file into `/usr/local/` or copy them and ship it with your project.
-There is no other dependency than hdf5 libraries and include files. However to activate the template specialization for any given library you must include that library first then h5cpp. In case the auto detection fails you may optionally turn template specialization on by defining any of the following:
+There is no other dependency than hdf5 libraries and include files. However to activate the template specialization for any given library you must include that library first then h5cpp. In case the auto detection fails turn template specialization on by defining:
 ```cpp
 #define [ H5CPP_USE_BLAZE | H5CPP_USE_ARMADILLO | H5CPP_USE_EIGEN3 | H5CPP_USE_UBLAS_MATRIX 
 	| H5CPP_USE_UBLAS_VECTOR | H5CPP_USE_ITPP_MATRIX | H5CPP_USE_ITPP_VECTOR | H5CPP_USE_BLITZ | H5CPP_USE_DLIB | H5CPP_USE_ETL ]
 ```
 
+short  examples:
+----------------
 *to read/map a 10x5 matrix from a 3D array from location {3,4,1}*
 ```cpp
 #include <armadillo>
@@ -106,7 +107,6 @@ auto ctx = h5::context<some_struct>( dataset );
 for( record:entire_dataset)
 			h5::append(ctx, record );
 ```
-
 Templates:
 -----------
 
@@ -134,12 +134,12 @@ template <typename T> T read(hid_t fd, const std::string& path, par_t offset, pa
 ```cpp
 using par_t = std::initializer_list<hsize_t>
 
-template <typename T> void write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count ) noexcept;
-template <typename T> void write(hid_t ds, const T* ptr, par_t offset, par_t count) noexcept;
-template <typename T> void write(hid_t ds, const T& ref, par_t offset, par_t count) noexcept;
-template <typename T> void write(hid_t fd, const std::string& path, const T& ref) noexcept;
-template <typename T> void write(hid_t fd, const std::string& path, const T& ref, par_t offset, par_t count) noexcept;
-template <typename T> void write(hid_t fd, const std::string& path, const T* ptr, par_t offset, par_t count) noexcept;
+template <typename T> hid_t write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count ) noexcept;
+template <typename T> hid_t write(hid_t ds, const T* ptr, par_t offset, par_t count) noexcept;
+template <typename T> hid_t write(hid_t ds, const T& ref, par_t offset, par_t count) noexcept;
+template <typename T> hid_t write(hid_t fd, const std::string& path, const T& ref) noexcept;
+template <typename T> hid_t write(hid_t fd, const std::string& path, const T& ref, par_t offset, par_t count) noexcept;
+template <typename T> hid_t write(hid_t fd, const std::string& path, const T* ptr, par_t offset, par_t count) noexcept;
 ```
 
 **append to extentable C++/C struct dataset]**
@@ -152,58 +152,6 @@ template <typename T> context<T>( hid_t ds);
 template <typename T> context<T>( hid_t fd, const std::string& path);
 template <typename T> void append( h5::context<T>& ctx, const T& ref) noexcept;
 ```
-
-supported types:
----------------- 
-
-```yacc
-T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
-S := T | c/c++ struct | std::string
-ref := std::vector<S> 
-	| arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> 
-	| Eigen::Matrix<T,Dynamic,Dynamic> | Eigen::Matrix<T,Dynamic,1> | Eigen::Matrix<T,1,Dynamic>
-	| Eigen::Array<T,Dynamic,Dynamic>  | Eigen::Array<T,Dynamic,1>  | Eigen::Array<T,1,Dynamic>
-	| blaze::DynamicVector<T,rowVector> |  blaze::DynamicVector<T,colVector>
-	| blaze::DynamicVector<T,blaze::rowVector> |  blaze::DynamicVector<T,blaze::colVector>
-	| blaze::DynamicMatrix<T,blaze::rowMajor>  |  blaze::DynamicMatrix<T,blaze::colMajor>
-	| itpp::Mat<T> | itpp::Vec<T>
-	| blitz::Array<T,1> | blitz::Array<T,2> | blitz::Array<T,3>
-	| dlib::Matrix<T>   | dlib::Vector<T,1> 
-	| ublas::matrix<T>  | ublas::vector<T>
-ptr 	:= T* 
-accept 	:= ref | ptr 
-```
-
-in addition to the standard data types offered by BLAS/LAPACK systems and [POD struct][12] -s,  `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
-
-[documentation](http://h5cpp.ca/modules.html), [examples](http://h5cpp.ca/examples.html), test suite and profiling:
-----------------------------------------------------------------------------------------------------
-`make all` generates doxygen documention into docs/html and compiles `examples/*.cpp`
-In `tests` directory there are instruction on google test suit, similarly you find instructions in 
-`h5cpp/profiling`
-
-**to build documentation, examples and profile code install:**
-```shell
-apt install build-essential libhdf5-serial-dev
-apt install google-perftools kcachegrind
-apt install doxygen doxygen-gui markdown
-apt install libarmadillo-dev libeigen3-dev libblitz0-dev libitpp-dev libdlib-dev libboost-all-dev 
-```
-in addition to above, download [blaze][106] and copy header files to `/usr/local/include`
-
-
-TODO:
------
-1. statistical profiling of `[read|write|create]` operations, and visualization
-2. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
-3. add support for [ complex numbers, fixed length strings ]
-
-20. remote matrix with zeroMQ
-21. read data into posix shared mem
-22. MPI/parallel file system support
-
-98. add more data structures, libraries
-99. add test cases
 
 HOW TO ADD XYZ linear algebra library?
 ---------------------------------------
@@ -251,4 +199,9 @@ DONE:
 [105]: http://dlib.net/linear_algebra.html
 [106]: https://bitbucket.org/blaze-lib/blaze
 [107]: https://github.com/wichtounet/etl
+
+
+[200]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_profiling_README.html
+[201]: http://h5cpp.ca/examples.html
+[202]: http://h5cpp.ca/modules.html
 
