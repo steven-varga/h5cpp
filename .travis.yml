@@ -4,7 +4,6 @@
 
 sudo: false
 language: cpp
-dist: trusty
 
 matrix:
   include:
@@ -16,7 +15,7 @@ matrix:
           packages:
             - g++-7
       env:
-        - MATRIX_EVAL="HDF5_CXX=g++-7"
+        - MATRIX_EVAL="CXX=g++-7"
 
 before_install:
     - eval "${MATRIX_EVAL}"
