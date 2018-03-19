@@ -20,12 +20,15 @@ matrix:
 before_install:
     - eval "${MATRIX_EVAL}"
     - sudo apt-get -qq update
-    - sudo apt-get install -y  build-essential  google-perftools kcachegrind doxygen doxygen-gui markdown libarmadillo-dev libeigen3-dev libblitz0-dev libitpp-dev libboost-all-dev 
-      - ./scripts/install-hdf5.sh
       # libdlib-dev 
 
      
 install:
+    - ls 
+    - ./scripts/install-hdf5.sh
 
 script:
   - make
+
+
+# - sudo apt-get install -y  build-essential  google-perftools kcachegrind doxygen doxygen-gui markdown libarmadillo-dev libeigen3-dev libblitz0-dev libitpp-dev libboost-all-dev
