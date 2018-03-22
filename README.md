@@ -21,12 +21,12 @@
  CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --->
 
-an easy to use c++11 templates between popular matrix algebra systems and [HDF5][3] datasets 
+an easy to use c++11 templates between popular matrix algebra systems and [HDF5][hdf5] datasets 
 --------------------------------------------------------------------------------------------------------------------------------------------------
 
-Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects. Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular [c++ scientific libraries][11].
+[Hierarchical Data Format][hdf5] prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects. Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understanding the file format and doesn't support popular [c++ scientific libraries][11].
 
-HDF5 CPP is to simplify object serialization by implementing **CREATE,READ,WRITE,APPEND** operations on **fixed** or **variable length** N dimensional arrays.
+HDF5 CPP is to simplify object persistence by implementing **CREATE,READ,WRITE,APPEND** operations on **fixed** or **variable length** N dimensional arrays.
 This header only implementation supports [raw pointers][99] | [armadillo][100] | [eigen3][102] | [blaze][106] | [blitz++][103] |  [it++][104] | [dlib][105] |  [uBlas][101] | [std::vector][1]
 by directly operating on the underlying data-store, avoiding intermediate/temporary memory allocations.
 The api [is doxygen documented][202], furnished with  [examples][201], as well as [profiled][200].
@@ -52,8 +52,6 @@ accept 	:= ref | ptr
 ```
 
 In addition to the standard data types offered by BLAS/LAPACK systems and [POD struct][12] -s,  `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
-
-
 
 how to use:
 -----------
@@ -171,11 +169,11 @@ DONE:
 **Copyright (c) 2018 vargaconsulting, Toronto,ON Canada** <steven@vargaconsulting.ca>
 </div>
 
+[hdf5]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html
 
 
 [1]: http://en.cppreference.com/w/cpp/container/vector
 [2]: http://arma.sourceforge.net
-[3]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html
 [4]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5Front.html
 [5]: https://support.hdfgroup.org/HDF5/release/obtain5.html
 [6]: http://eigen.tuxfamily.org/index.php?title=Main_Page
