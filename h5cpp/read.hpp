@@ -89,7 +89,7 @@ namespace h5 {
 	template<typename T,typename BaseType = typename utils::base<T>::type> inline T read( hid_t ds ) noexcept {
 
 		hid_t file_space = H5Dget_space(ds);
-		hsize_t offset[H5CPP_MAX_RANK]={}; // all zeros
+		hsize_t offset[H5CPP_MAX_RANK]={0}; // all zeros
 		hsize_t count[H5CPP_MAX_RANK];
 		hsize_t rank = H5Sget_simple_extent_dims(file_space, count, NULL);
 		T data_set = utils::ctor<T>(rank, count );
@@ -258,10 +258,5 @@ namespace h5 {
         H5Dclose(ds);
 		return data;
 	}
-
-
 }
-
-
-
 #endif

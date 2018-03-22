@@ -130,7 +130,7 @@ namespace h5 {
 	 * [10]: https://support.hdfgroup.org/HDF5/Tutor/compress.html
 	 */
 	template <typename T> inline hid_t create(hid_t fd, const std::string& path,
-			std::initializer_list<hsize_t> max_dims, std::initializer_list<hsize_t> chunk_dims={},
+			std::initializer_list<hsize_t> max_dims, std::initializer_list<hsize_t> chunk_dims={0},
 			const int32_t deflate = H5CPP_NO_COMPRESSION ){
 
 		return impl::create(fd,path,max_dims.size(), max_dims.begin(), chunk_dims.begin(), deflate, utils::h5type<T>() );

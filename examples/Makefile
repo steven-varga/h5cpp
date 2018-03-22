@@ -20,13 +20,11 @@
 
 apps = raw stl dlib blaze blitz itpp ublas eigen3 arma  arma-partial struct string
 
-CXX = h5c++
-CXXFLAGS = -I../ -I/usr/include/eigen3 -std=c++14
-LIBS =  -lprofiler -lglog
-
+CXXFLAGS = -I../ -I../external -std=c++14 -Wno-deprecated -I/usr/include/eigen3
+LIBS =  -lprofiler -lglog -lhdf5 -lhdf5_hl -lz -ldl -lm  -lpthread
 
 %.o : $(SRC_DIR)/%.cpp 
-	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
+	$(CXX)   -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
 
 all: $(apps)
 
@@ -35,7 +33,7 @@ raw: raw.o
 stl: stl.o 
 	$(CXX) $^ $(LIBS) -o $@	
 eigen3: eigen3.o 
-	$(CXX) $^ $(LIBS) -o $@	
+	$(CXX) -w $^ $(LIBS) -o $@	
 arma: arma.o 
 	$(CXX) $^ $(LIBS) -o $@
 ublas: ublas.o 
@@ -65,10 +63,12 @@ test: $(apps)
 	@./itpp
 	@./blitz
 	@./blaze
-	@./dlib
 	@./struct
 	@./string
 	h5dump -d string.mat string.h5
+
+#	@./dlib
+
 
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)

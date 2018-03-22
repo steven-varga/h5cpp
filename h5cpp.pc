@@ -5,3 +5,5 @@ URL: h5cpp.ca
 Version: 1.0.0
 Requires: hdf5
 Cflags: -I/usr/local/include/h5cpp -std=c++11
+Libs:  -lhdf5 -lhdf5_hl -lz -ldl -lm  -lpthread
+

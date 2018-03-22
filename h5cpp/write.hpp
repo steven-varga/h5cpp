@@ -48,7 +48,6 @@ namespace h5{
 		hsize_t size = 1;for(int i=0;i<rank;i++) size*=count[i];
 		hid_t mem_space = H5Screate_simple(1, &size, NULL );
 		H5Sselect_all(mem_space);
-
 		H5Sselect_hyperslab(file_space, H5S_SELECT_SET, offset, NULL, count, NULL);
 			H5Dwrite(ds, type, mem_space, file_space,  H5P_DEFAULT, ptr);
 		H5Sclose(mem_space); H5Sclose(file_space); H5Tclose(type);

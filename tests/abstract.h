@@ -47,6 +47,7 @@ herr_t gtest_hdf5_error_handler (int a, void *unused) {
 	hid_t es = H5Eget_current_stack();
 	H5Eclear( es );
 	ADD_FAILURE();
+	return es;
 }
 
 #ifdef H5CPP_CHRONO
@@ -76,7 +77,7 @@ int main( ARGC, ARGV) { 		 																	\
   	hid_t fd = h5::create("test.h5");   h5::close(fd); 												\
 	/* install error handler that captures any h5 error 	*/ 										\
 	hid_t es = H5Eget_current_stack(); 																\
-	H5Eset_auto(H5E_DEFAULT,gtest_hdf5_error_handler, nullptr ); 									\
+	/*H5Eset_auto(H5E_DEFAULT,gtest_hdf5_error_handler, nullptr ); */									\
 																									\
   	/* will create/read/write/append to datasets in fd */ 											\
 	return RUN_ALL_TESTS(); 																		\

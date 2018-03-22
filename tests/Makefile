@@ -21,9 +21,8 @@
 ### 
 # SEE README to instal GTEST !!!
 
-CXX = h5c++
-CXXFLAGS = -I../ -std=c++14 
-LIBS = -lprofiler -lglog -lgtest -lgtest_main -lboost_date_time
+CXXFLAGS = -I../ -I../external -std=c++14 -Wno-deprecated -DDEBUG
+LIBS = -lprofiler -lglog -lgtest -lgtest_main -lboost_date_time -lhdf5 -lhdf5_hl -lz -ldl -lm  -lpthread
 flags =  --gtest_print_time=0 --gtest_color=auto
 
 apps = macros integral struct stl armadillo utils eigen3 ublas itpp blitz blaze dlib
@@ -55,9 +54,9 @@ ublas: ublas.o
 itpp: itpp.o
 	$(CXX) $^ $(LIBS) -litpp -o $@	
 blitz: blitz.o
-	$(CXX) $^ $(LIBS) -lblitz -o $@	
+	$(CXX) $^ $(LIBS)  -o $@	
 dlib: dlib.o
-	$(CXX) $^ $(LIBS) -ldlib -o $@	
+	$(CXX) $^ $(LIBS)  -o $@	
 blaze: blaze.o
 	$(CXX) $^ $(LIBS)  -o $@	
 
@@ -65,7 +64,6 @@ stl: stl.o
 	$(CXX) $^ $(LIBS) -o $@	
 macros: macros.o 
 	$(CXX) $^ $(LIBS) -o $@	
-
 
 test-utils: utils
 	./utils $(flags)
@@ -93,7 +91,9 @@ test-blaze: blaze
 	./blaze $(flags)
 test-preprocessor: preprocessor
 
-test: test-utils test-macros test-integral test-struct test-stl test-armadillo test-ublas test-itpp test-blitz test-blaze test-dlib 
+test: test-utils test-macros test-integral test-struct test-stl test-armadillo test-ublas test-itpp test-blitz test-blaze 
+
+#test: test-dlib 
 
 clean:
 	@$(RM) *.o *.h5 $(apps) preprocessor

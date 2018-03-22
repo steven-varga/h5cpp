@@ -20,9 +20,8 @@
 
 apps = struct-perf arma-perf stl-perf
 
-CXX = h5c++
 CXXFLAGS = -I../../ -std=c++14
-LIBS =  -lprofiler -lglog -lboost_program_options
+LIBS =  -lprofiler -lboost_program_options -lglog -lhdf5 -lhdf5_hl -lz -ldl -lm  -lpthread
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^

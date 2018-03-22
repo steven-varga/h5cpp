@@ -38,7 +38,10 @@ ETL is slightly trickier, make sure to clone it recursively, and have either gcc
 `git clone --recursive https://github.com/wichtounet/etl.git`
 `cd etl; CXX=clang++ make`
 
-
+compilers:
+-----------
+[GCC 6.1][gcc] supports -std=c++14
+[clang 3.4][clang] 
 
 requirements:
 -------------
@@ -79,4 +82,8 @@ sudo apt install libarmadillo-dev libitpp-dev libblitz0-dev libdlib-dev
 
 FAILS:
 ------
+
+
+[gcc]: https://gcc.gnu.org/projects/cxx-status.html#cxx14
+[clang]: https://clang.llvm.org/cxx_status.html
 
