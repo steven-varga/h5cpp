@@ -17,7 +17,7 @@ namespace h5 { namespace impl {
 	inline hid_t create(hid_t fd, const std::string& path_,
 			size_t rank,  const hsize_t* max_dims,  const hsize_t* chunk_dims, int32_t deflate, hid_t type){
 
-		hsize_t current_dims[rank];
+		hsize_t current_dims[H5CPP_MAX_RANK];
 		hid_t group, dcpl,space, ds;
 
 		std::pair<std::string, std::string> path = h5::utils::split_path( path_ );
@@ -48,13 +48,13 @@ namespace h5 { namespace impl {
 		if( *chunk_dims ){
 			// set current dimensions to given one or zero if H5S_UNLIMITED
 			// this mimics matlab(tm) behavior while allowing extendable matrices
-			for(int i=0;i<rank;i++)
+			for(hsize_t i=0;i<rank;i++)
 				current_dims[i] = max_dims[i] != H5S_UNLIMITED ? max_dims[i] : static_cast<hsize_t>(0);
 
 			H5Pset_chunk(dcpl, rank, chunk_dims);
 			if( deflate ) H5Pset_deflate (dcpl, deflate);
 		} else
-			for(int i=0;i<rank;i++) current_dims[i] = max_dims[i];
+			for(hsize_t i=0;i<rank;i++) current_dims[i] = max_dims[i];
 
 		space = H5Screate_simple( rank, current_dims, max_dims );
 		ds = H5Dcreate2(group, path.second.data(), type, space, H5P_DEFAULT, dcpl, H5P_DEFAULT);

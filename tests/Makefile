@@ -21,7 +21,7 @@
 ### 
 # SEE README to instal GTEST !!!
 
-CXXFLAGS = -I../ -I../external -std=c++14 -Wno-deprecated -DDEBUG
+CXXFLAGS = -Werror -I../ -I../external -std=c++14 -DDEBUG
 LIBS = -lprofiler -lglog -lgtest -lgtest_main -lboost_date_time -lhdf5 -lhdf5_hl -lz -ldl -lm  -lpthread
 flags =  --gtest_print_time=0 --gtest_color=auto
 

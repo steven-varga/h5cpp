@@ -27,7 +27,7 @@
 			 *  
 			 * */																							\
 			hsize_t dims[container_rank];																	\
-			int i=0; 																						\
+			hsize_t i=0; 																						\
 			/* branch off if indeed the ranks mismatch, otherwise just a straight copy */ 					\
 			if( container_rank < hdf5_rank ){ 																\
 				dims[container_rank-1]=1; 																	\
@@ -50,7 +50,7 @@
 				for(; i<container_rank; i++) dims[i] = hdf5_dims[i]; 										\
 			/*expands to constructor of the form: arma::Mat<int>(dims[0],dims[1]);  */ 						\
 			return container<T> __VA_ARGS__ ; 																\
-		}; 																									\
+		} 																									\
 
 
 /* ----------------------------- END META TEMPLATE -----------------------------------------*/ 				\
@@ -58,25 +58,20 @@
 		template<> struct base<container<T>> {																\
 			typedef T type; 																				\
 			static const size_t rank=R; 																	\
-		}; 																									\
+		};																									\
 		inline hsize_t get_size( const container<T>&ref ){													\
 			return n_elem; 																				\
-		}; 																									\
+		} 																									\
 		inline std::array<hsize_t,R> get_dims( const container<T>& ref ){									\
 			return __VA_ARGS__; 																			\
-		}; 						 																			\
+		} 						 																			\
 		inline T* get_ptr( container<T>& ref ){																\
 			return address;  																				\
-		}; 																									\
+		} 																									\
 		inline const T* get_ptr( const container<T>& ref ){													\
 			return address;  																				\
-		}; 																									\
+		} 																									\
 
-
-#define H5CPP_STL_TEMPLATE_SPEC(T) 																			\
-	H5CPP_BASE_TEMPLATE_SPEC(T, std::vector, ref.data(), ref.size(), H5CPP_RANK_VEC,  {ref.size()})  		\
-	H5CPP_CTOR_SPEC(T, std::vector, H5CPP_RANK_VEC, (dims[0]))												\
-	H5CPP_REGISTER_FUNDAMENTAL_TYPE(T) \
 
 
 #endif

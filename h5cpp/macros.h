@@ -9,14 +9,15 @@
 #include <vector>
 
 #ifndef  H5CPP_MACROS_H 
-#define H5CPP_MACROS_H
+#define  H5CPP_MACROS_H
 
 	namespace h5 { namespace utils {
 
 		template<typename T> struct base;
 		template<typename T> inline T ctor(hsize_t rank, const hsize_t* dims ){}
-		template<typename T> static inline hid_t h5type( ){} // must apply 'H5Tclose' to return value to prevent resource leakage
+		template<typename T> static inline hid_t h5type( ){ return 0; } // must apply 'H5Tclose' to return value to prevent resource leakage
 		template<typename T> inline std::string type_name( ){ return "n/a"; }
+		template<typename T> inline std::string h5type_name( ){ return "n/a"; }
 		template<> inline hid_t h5type<std::string>(){ // std::string is variable length
 				hid_t type = H5Tcopy (H5T_C_S1);
 				H5Tset_size (type,H5T_VARIABLE);
@@ -24,11 +25,18 @@
 		}  // ditto! call H5Tclose on returned type
 	}}
 	// generate mapt from C/C++ typename to std::string
-#define H5CPP_REGISTER_FUNDAMENTAL_TYPE( T )  template<> inline std::string type_name<T>(){ return #T; };
-#define H5CPP_POD2H5T(POD_TYPE,H_TYPE) 	      template<> inline hid_t h5type<POD_TYPE>(){ return  H5Tcopy(H_TYPE); }
+#define H5CPP_FUNDAMENTAL_TYPE( T, H )  \
+	template<> inline std::string type_name<T>(){ return #T; }  	\
+	template<> inline std::string h5type_name<T>(){ return #H; }   \
+ 	template<> inline hid_t h5type<T>(){ return  H5Tcopy(H); }     \
 
 #include "macros_base.h"
 #include "macros_linalg.h"
+
+#define H5CPP_STL_TEMPLATE_SPEC(T) 																			\
+	H5CPP_BASE_TEMPLATE_SPEC(T, std::vector, ref.data(), ref.size(), H5CPP_RANK_VEC,  {ref.size()})  		\
+	H5CPP_CTOR_SPEC(T, std::vector, H5CPP_RANK_VEC, (dims[0]))												\
+
 
 
 /* BEGIN:
@@ -39,8 +47,8 @@
 
 /* END */
 
-#define H5CPP_REGISTER_TYPE( T, H )     H5CPP_STL_TEMPLATE_SPEC(T)  H5CPP_LINALG_SPECIALIZE(T)   H5CPP_POD2H5T(T,H)
-#define H5CPP_REGISTER_STL_TYPE( T, H ) H5CPP_STL_TEMPLATE_SPEC(T)  H5CPP_POD2H5T(T,H)
+#define H5CPP_REGISTER_TYPE( T, H )     H5CPP_STL_TEMPLATE_SPEC(T)  H5CPP_LINALG_SPECIALIZE(T)  H5CPP_FUNDAMENTAL_TYPE(T,H)
+#define H5CPP_REGISTER_STL_TYPE( T, H ) H5CPP_STL_TEMPLATE_SPEC(T)  H5CPP_FUNDAMENTAL_TYPE(T,H)
 #define H5CPP_REGISTER_STRUCT( T ) 	    namespace h5{ namespace utils { H5CPP_STL_TEMPLATE_SPEC(T); }}
 
 namespace h5 { namespace utils {
@@ -50,12 +58,12 @@ namespace h5 { namespace utils {
 	//H5CPP_REGISTER_STL_TYPE(bool,H5T_NATIVE_HBOOL) // FIXME: stl::vector<bool> is a special case
 	H5CPP_REGISTER_STL_TYPE(long double,H5T_NATIVE_LDOUBLE)
 
-	H5CPP_REGISTER_TYPE(unsigned char, H5T_NATIVE_UCHAR); 			H5CPP_REGISTER_TYPE(char, H5T_NATIVE_CHAR);
-	H5CPP_REGISTER_TYPE(unsigned short, H5T_NATIVE_USHORT); 		H5CPP_REGISTER_TYPE(short, H5T_NATIVE_SHORT);
-	H5CPP_REGISTER_TYPE(unsigned int, H5T_NATIVE_UINT); 			H5CPP_REGISTER_TYPE(int, H5T_NATIVE_INT);
-	H5CPP_REGISTER_TYPE(unsigned long int, H5T_NATIVE_ULONG); 		H5CPP_REGISTER_TYPE(long int, H5T_NATIVE_LONG);
-	H5CPP_REGISTER_TYPE(unsigned long long int, H5T_NATIVE_ULLONG); H5CPP_REGISTER_TYPE(long long int, H5T_NATIVE_LLONG);
-	H5CPP_REGISTER_TYPE(float, H5T_NATIVE_FLOAT); 					H5CPP_REGISTER_TYPE(double, H5T_NATIVE_DOUBLE);
+	H5CPP_REGISTER_TYPE(unsigned char, H5T_NATIVE_UCHAR) 			H5CPP_REGISTER_TYPE(char, H5T_NATIVE_CHAR)
+	H5CPP_REGISTER_TYPE(unsigned short, H5T_NATIVE_USHORT) 			H5CPP_REGISTER_TYPE(short, H5T_NATIVE_SHORT)
+	H5CPP_REGISTER_TYPE(unsigned int, H5T_NATIVE_UINT) 				H5CPP_REGISTER_TYPE(int, H5T_NATIVE_INT)
+	H5CPP_REGISTER_TYPE(unsigned long int, H5T_NATIVE_ULONG) 		H5CPP_REGISTER_TYPE(long int, H5T_NATIVE_LONG)
+	H5CPP_REGISTER_TYPE(unsigned long long int, H5T_NATIVE_ULLONG)  H5CPP_REGISTER_TYPE(long long int, H5T_NATIVE_LLONG)
+	H5CPP_REGISTER_TYPE(float, H5T_NATIVE_FLOAT) 					H5CPP_REGISTER_TYPE(double, H5T_NATIVE_DOUBLE)
 }}
 
 

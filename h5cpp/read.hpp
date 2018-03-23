@@ -44,7 +44,7 @@ namespace h5{ namespace impl{ // implementation details namespace
 		H5Sselect_hyperslab(file_space, H5S_SELECT_SET, offset, NULL, count, NULL);
 		H5Dread(ds, mem_type, mem_space, file_space, H5P_DEFAULT, ptr );
 
-		for(int i=0; i<data_set.size(); i++)
+		for(hsize_t i=0; i<data_set.size(); i++)
 			if( ptr[i] != NULL )
 				data_set[i] = std::string( ptr[i] );
 
@@ -116,10 +116,8 @@ namespace h5 {
 	 * @return std::vector<std:string> object 
 	 */
 	template<> inline std::vector<std::string> read<std::vector<std::string>,std::string>( hid_t ds ) noexcept {
-		hid_t file_space = H5Dget_space(ds);
 		hsize_t offset[H5CPP_MAX_RANK]={}; // all zeros
 		hsize_t count[H5CPP_MAX_RANK];
-		hsize_t rank = H5Sget_simple_extent_dims(file_space, count, NULL);
 		return impl::read(ds, offset, count);
 	}
 	/** \ingroup io-read 

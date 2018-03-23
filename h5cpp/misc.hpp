@@ -41,7 +41,7 @@ namespace h5{
         hid_t fd = H5Fcreate(path.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist);
         H5Pclose(plist);
         return fd;
-    };
+    }
 
 	/** @ingroup file-io 
 	 * open an existing HDF5 file.
@@ -63,7 +63,7 @@ namespace h5{
 
     inline hid_t open(const std::string& path,  unsigned flags ){
         return  H5Fopen(path.data(), flags,  H5P_DEFAULT);
-    };
+    }
 
 	/** \ingroup file-io 
 
@@ -87,7 +87,7 @@ namespace h5{
 	 */ 
     inline hid_t open(hid_t fd, const std::string& path ){
      	return  H5Dopen(fd, path.data(), H5P_DEFAULT);
-    };
+    }
 
 	/** \ingroup file-io  
 	 * closes opened file descriptor
@@ -130,9 +130,7 @@ namespace h5{
 	 */
     inline void mute( ){
 		H5Eset_auto (H5E_DEFAULT, NULL, nullptr);
-    };
-
-
+    }
 	/*
 	 */ 
 }

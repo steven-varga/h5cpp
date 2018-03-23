@@ -35,7 +35,7 @@ namespace h5{ namespace utils {
      * @return pair of strings containing path and dataset name
      */
     inline std::pair<std::string,std::string> split_path( const std::string& path ){
-		int i = path.size(), j=0, k=path.size();
+		int i = path.size(),  k=path.size();
 		const char* c = path.data();
 		std::string path_, dataset_;
 		while ( i && path[i] != '/') i--;
