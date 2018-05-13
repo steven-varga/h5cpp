@@ -1,4 +1,4 @@
-# Copyright (c) 2017 vargaconsulting, Toronto,ON Canada
+# Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
 # Author: Varga, Steven <steven@vargaconsulting.ca>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -18,9 +18,9 @@
 # IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-apps = raw stl dlib blaze blitz itpp ublas eigen3 arma  arma-partial struct string
+apps = basics raw stl dlib blaze blitz itpp ublas eigen3 arma  arma-partial struct string
 
-CXXFLAGS = -I../ -I../external -std=c++14 -Wno-deprecated -I/usr/include/eigen3
+CXXFLAGS = -I../ -I../external -std=c++17 -Wno-deprecated -I/usr/include/eigen3
 LIBS =  -lprofiler -lglog -lhdf5 -lhdf5_hl -lz -ldl -lm  -lpthread
 
 %.o : $(SRC_DIR)/%.cpp 
@@ -28,6 +28,10 @@ LIBS =  -lprofiler -lglog -lhdf5 -lhdf5_hl -lz -ldl -lm  -lpthread
 
 all: $(apps)
 
+properties: properties.o
+	$(CXX) $^ $(LIBS) -o $@
+file: file.o
+	$(CXX) $^ $(LIBS) -o $@
 raw: raw.o 
 	$(CXX) $^ $(LIBS) -o $@	
 stl: stl.o 
@@ -65,7 +69,7 @@ test: $(apps)
 	@./blaze
 	@./struct
 	@./string
-	h5dump -d string.mat string.h5
+	h5dump -H -d string.mat string.h5
 
 #	@./dlib
 
