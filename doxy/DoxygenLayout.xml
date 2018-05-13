@@ -8,8 +8,9 @@
 		collections of all sizes and complexity. This header only library provides templates of [CREATE|READ|WRITE|APPEND] 
 		operations for popular Linear Algebra packages such as Armadillo C++.
 		"/>
-		<tab type="pages" visible="yes" title="Profiling" intro="
-		Collection of documents with supporting evidence why you should choose H5CPP and HDF5 for your next project."/>
+		<tab type="pages" visible="yes" title="Documents" intro="
+			Collection of documents with supporting evidence why you should choose H5CPP and HDF5 for your next project."/>
+
 	<tab type="examples" visible="yes" title="Examples" intro="	To demonstrate basic usage and simplicity of H5CPP the following examples are provided. In order to compile either refer to 
 		introduction page or read the content of the Makefile. It is possible to use C++ compiler directly without using h5c++, which is handy when working with MKL and or Intel compiler chain, example will be coming soon..."/>
 
