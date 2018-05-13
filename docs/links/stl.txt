@@ -1,0 +1,10 @@
+
+ALIASES += lraii="[RAII]: http://en.cppreference.com/w/cpp/language/raii\n"
+ALIASES += lpointers="[pointers]: http://en.cppreference.com/w/cpp/language/pointer\n"
+ALIASES += lstatic_cast="[static_cast]: [http://en.cppreference.com/w/cpp/language/static_cast
+
+ALIASES += stl_links="\lraii \lpointers \lstatic_cast \n"
+ALIASES += stl_text="@sa [RAII][] [static_cast][] std::unique_ptr std::runtime_error \n"
+
+ALIASES += sa_stl="\stl_text \stl_links \n"
+

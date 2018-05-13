@@ -1,0 +1,20 @@
+
+ALIASES += h5cpp="[implicit]: \n"
+
+
+ALIASES += lh5capi="[CAPI]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5Front.html\n"
+ALIASES += lh5fcreate="[H5Fcreate]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Create\n"
+ALIASES += lh5fopen="[H5Fopen]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Open\n"
+ALIASES += lh5fclose="[H5Fclose]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html#File-Close\n"
+ALIASES += lh5dopen="[H5Dopen]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-Open\n"
+ALIASES += lh5dclose="[H5Dclose]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5D.html#Dataset-Close\n"
+ALIASES += lh5gzip="[gzip]: https://support.hdfgroup.org/HDF5/Tutor/compress.html\n"
+ALIASES += lraii="[RAII]: http://en.cppreference.com/w/cpp/language/raii\n"
+ALIASES += lpointers="[pointers]: http://en.cppreference.com/w/cpp/language/pointer\n"
+ALIASES += lruntime_error="[runtime_error]: http://en.cppreference.com/w/cpp/error/runtime_error\n"
+
+ALIASES += hdf5_links="\lh5capi \lh5fcreate \lh5fopen \lh5fclose \lh5dopen \lh5dclose \lh5gzip \n"
+ALIASES += hdf5_text="@sa [H5Fcreate][] [H5Fopen][] [H5Fclose][] [H5Dopen][] [H5Dclose][] [gzip][] \n"
+
+ALIASES += sa_hdf5="\hdf5_text \hdf5_links \n"
+
