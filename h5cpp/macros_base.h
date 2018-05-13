@@ -27,7 +27,7 @@
 			 *  
 			 * */																							\
 			hsize_t dims[container_rank];																	\
-			hsize_t i=0; 																						\
+			hsize_t i=0; 																					\
 			/* branch off if indeed the ranks mismatch, otherwise just a straight copy */ 					\
 			if( container_rank < hdf5_rank ){ 																\
 				dims[container_rank-1]=1; 																	\

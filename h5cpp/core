@@ -3,11 +3,16 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
+// #include "std17.h" // c++17 shims sourced from http://en.cppreference.com
+// std::apply std::invoke
+
 #ifndef  H5CPP_CORE_H
 #define H5CPP_CORE_H
 	#include "config.h"
+
+	#include "macros.h"
+	#include "macros_handles.h"
 	#include "utils.hpp"
 	#include "misc.hpp"
-	#include "macros.h"
 #endif	
 

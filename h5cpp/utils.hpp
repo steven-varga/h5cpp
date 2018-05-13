@@ -13,6 +13,8 @@
 #include <string.h>
 
 namespace h5{ namespace utils {
+
+
 	/**
 	 * HDF5 callback implementation for group iterator; 
 	 * @param g_id - input

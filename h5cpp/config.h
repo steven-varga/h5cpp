@@ -5,7 +5,7 @@
  */
 
 #ifndef H5CPP_MAX_RANK
-	#define H5CPP_MAX_RANK 5 //< maximum dimensions of stored arrays
+	#define H5CPP_MAX_RANK 7 //< maximum dimensions of stored arrays
 #endif
 #ifndef H5CPP_NO_COMPRESSION 
 	#define H5CPP_NO_COMPRESSION 0 //< maximum dimensions of stored arrays
@@ -23,13 +23,44 @@
 	#define H5CPP_RANK_CUBE 3
 #endif
 
+#ifndef H5CPP_SMART_POINTERS_ONLY
+#endif
+
+// implicit conversion enabled by default `-DH5CPP_CONVERSION_EXPLICIT` to disable 
+#ifndef H5CPP_CONVERSION_EXPLICIT
+	#define H5CPP_CONVERSION_IMPLICIT
+#endif
+// conversion from CAPI enabled by default `-DH5CPP_CONVERSION_FROM_CAPI_DISABLED` to disable 
+#ifndef H5CPP_CONVERSION_FROM_CAPI_DISABLED
+	#define H5CPP_CONVERSION_FROM_CAPI
+#endif
+// conversion to CAPI enabled by default `-DH5CPP_CONVERSION_TO_CAPI_DISABLED` to disable 
+#ifndef H5CPP_CONVERSION_TO_CAPI_DISABLED
+	#define H5CPP_CONVERSION_TO_CAPI
+#endif
+
+
 #include <complex>
+#include <hdf5.h>
 
 namespace h5{
-	typedef std::complex<double> cx_double;
-	typedef std::complex<float>  cx_float;
+	using cx_double =  std::complex<double>; /**< scientific type */
+	using cx_float = std::complex<float>;    /**< scientific type */
+	using chunk_t = std::initializer_list<hsize_t>; /**< */
+	using dims_t = std::initializer_list<hsize_t>;
+	using count_t = std::initializer_list<hsize_t>;
+	using offset_t = std::initializer_list<hsize_t>;
+	using offset_t = std::initializer_list<hsize_t>;
 }
+
+
+
+
 /**
+ 
+@example file.cpp
+@example properties.cpp
+
 @example arma-partial.cpp
 @example raw.cpp
 @example stl.cpp
@@ -47,6 +78,30 @@ namespace h5{
 @example blaze.cpp
 @example dlib.cpp
 */
+
+/** @defgroup io-wrap h5::fd_t,  h5::ds_t,  h5::at_t, h5::gr_t, h5::ob_t, h5::cpl_t, h5::apl_t, h5::tpl_t  
+ * \brief thin [std::unique_ptr] like type safe wraps for CAPI **hid_t**,**herr_t** types which upon destruction call
+ * [H5Dclose]|[H5Dclose]  facilitating [RAII]. Automatic/implicit conversion between CAPI and H5CPP equivalent 
+ * allow transparent integration with existing CAPI code. 
+ * `H5CPP_CAPI_CONVERSION_EXPLICIT` preprocessor directive provided to deny implicit conversion requiring explicit 
+ * type cast: static_cast<hid_t>( fd_t ) or compile time error. 
+ * \hdf5_links
+ */
+
+
+
+
+/** @defgroup file-io h5::open | h5::create | h5::mute
+ *  \brief The  **open** | **close**, **create**  operations  are to create/manipulate a place holder, an hdf5 file, of datasets. 
+ *  In POSIX sense the HDF5 container is an entire **image** of a file system and the **dataset** is a document within. The datasets can be manipulated
+ *  with **Create|Read|Write|Append** operations. 
+ *  File IO operations are straight maps from already existing CAPI HDF5 calls, with the addition of type safety, and 
+ *  [RAII idiom](@ref link_raii_idiom) to aid productivity. 
+ *  How the  returned managed handles may be passed to CAPI calls is governed by H5CPP conversion policy 
+ *  [and you can read on the topic further on here](@ref link_conversion_policy) 
+ *  \hdf5_links
+ */
+
 
 /** @defgroup io-create h5::create(fd, path, max_dims, chunk_dims, deflate );
  * \brief **fd** - file descriptor, **path** - how you reach dataset within file, **max_dims** -- tells the size of dataset, 
@@ -70,16 +125,6 @@ namespace h5{
 /** @defgroup io-append h5::append(context, record);
  *  \brief dataset APPEND operations for streamed data access with examples
   */
-
-/** @defgroup file-io h5::open | h5::close | h5::create | h5::mute
- *  \brief The  **open** | **close**, **create**  operations listed here are to create a place holder, an [hdf5 file][3], for your [datasets][2]. 
- *  In POSIX sense this is an entire **image** of a file system and the **dataset** is a file within. These datasets can be manipulated
- *  with **Create|Read|Write|Append** operation. File IO operations are straight maps from already [existing HDF5 calls][1], hence they are 
- *  freely interchangeable.
- *  [1]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5F.html
- *  [2]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html#Intro-ODatasets
- *  [3]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html#Intro-FileOrg
- */
 
 
 
