@@ -1,24 +1,6 @@
 <!---
-
  Copyright (c) 2017 vargaconsulting, Toronto,ON Canada
  Author: Varga, Steven <steven@vargaconsulting.ca>
-
- Permission is hereby granted, free of charge, to any person obtaining a copy of
- this  software  and associated documentation files (the "Software"), to deal in
- the Software  without   restriction, including without limitation the rights to
- use, copy, modify, merge,  publish,  distribute, sublicense, and/or sell copies
- of the Software, and to  permit persons to whom the Software is furnished to do
- so, subject to the following conditions:
-
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
-
- THE  SOFTWARE IS  PROVIDED  "AS IS",  WITHOUT  WARRANTY  OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT  SHALL THE AUTHORS OR
- COPYRIGHT HOLDERS BE LIABLE FOR ANY  CLAIM,  DAMAGES OR OTHER LIABILITY, WHETHER
- IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
- CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 --->
 
 an easy to use c++11 templates between popular matrix algebra systems and [HDF5][hdf5] datasets 
@@ -69,94 +51,101 @@ short  examples:
 #include <armadillo>
 #include <h5cpp/all>
 ...
-hid_t fd h5::open("some_file.h5",H5F_ACC_RDWR);
+auto fd h5::open("some_file.h5", H5F_ACC_RDWR);
 	/* the RVO arma::Mat<double> object will have the size 10x5 filled*/
 	try {
 		auto M = h5::read<arma::mat>(fd,"path/to/matrix",{3,4,1},{10,1,5});
 	} catch (const std::runtime_error& ex ){
 		...
 	}
-h5::close(fd);
+// fd closes underlying resource imlementing raii idiom
 ```
 *to write the entire matrix back to a different file*
 ```cpp
 #include <Eigen/Dense>
 #include <h5cpp/all>
 ...
-hid_t fd = h5::create("output.h5")
+auto fd = h5::create("output.h5")
 	h5::write(fd,"/result",M);
-h5::close(fd);
 ```
+
 *to create an dataset recording a stream of struct into an extendable chunked dataset with GZIP level 9 compression:*
 ```cpp
 #include <h5cpp/core>
 	#include "your_data_definition.h"
 #include <h5cpp/io>
 ...
-hid_t ds = h5::create<some_type>(fd,"bids",{H5S_UNLIMITED},{1000}, 9);
+auto ds = h5::create<some_type>(fd,"bids",{H5S_UNLIMITED},{1000}, 9);
 ```
 *to append records to an HDF5 datastream* 
 ```cpp
 #include <h5cpp/core>
 	#include "your_data_definition.h"
 #include <h5cpp/io>
+auto fd = h5::create("NYSE high freq dataset.h5");
+auto ds = h5::packet_table::create<ns::nyse_stock_quote>( fd, "price_quotes/2018-01-05.qte",{H5S_UNLIMITED},{1024}, 9 );
+quote_update_t qu;
 
-auto ctx = h5::context<some_struct>( dataset );
-for( record:entire_dataset)
-			h5::append(ctx, record );
+bool having_a_good_day{true};
+while( having_a_good_day ){
+	try{
+		recieve_data_from_udp_stream( qu )
+		h5::append(ds, qu );
+	} catch ( ... ){
+	  if( cant_fix_connection() )
+	  		having_a_good_day = false; 
+	}
+}
 ```
 Templates:
 -----------
 
 **create dataset within an opened hdf5 file**
 ```cpp
-using par_t = std::initializer_list<hsize_t>
-
-template <typename T> hid_t create(  hid_t fd, const std::string& path, const T ref ) noexcept;
-template <typename T> hid_t create(hid_t fd, const std::string& path, par_t max_dims, par_t chunk_dims={},
+template <typename T> h5::ds_t create( const h5::fd_t& fd, const std::string& path, const T& ref ) noexcept;
+template <typename T> h5::ds_t create( const h5::fd_t& fd, const std::string& path, h5::dims_t max_dims, h5::chunk_t chunk_dims={},
 															const int32_t deflate = H5CPP_NO_COMPRESSION ) noexcept;
 ```
 
 **read a dataset and return a reference of the created object**
 ```cpp
-using par_t = std::initializer_list<hsize_t>
-
 template <typename T> T read(const std::string& file, const std::string& path ); 
-template <typename T> T read(hid_t fd, const std::string& path ); 
-template <typename T> T read(hid_t ds ) noexcept; 
-template <typename T> T read(hid_t ds, par_t offset, par_t count  ) noexcept; 
-template <typename T> T read(hid_t fd, const std::string& path, par_t offset, par_t count  );
+template <typename T> T read(const h5::fd_t& fd, const std::string& path ); 
+template <typename T> T read(const h5::ds_t& ds ) noexcept; 
+template <typename T> T read(const h5::ds_t& ds, h5::offset_t offset, h5::count_t count  ) noexcept; 
+template <typename T> T read(const h5::ds_t& ds, const std::string& path, h5::offset_t offset, h5::count_t count  );
 ```
 
 **write dataset into a specified location**
 ```cpp
-using par_t = std::initializer_list<hsize_t>
-
-template <typename T> hid_t write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count ) noexcept;
-template <typename T> hid_t write(hid_t ds, const T* ptr, par_t offset, par_t count) noexcept;
-template <typename T> hid_t write(hid_t ds, const T& ref, par_t offset, par_t count) noexcept;
-template <typename T> hid_t write(hid_t fd, const std::string& path, const T& ref) noexcept;
-template <typename T> hid_t write(hid_t fd, const std::string& path, const T& ref, par_t offset, par_t count) noexcept;
-template <typename T> hid_t write(hid_t fd, const std::string& path, const T* ptr, par_t offset, par_t count) noexcept;
+template <typename T> h5::err_t write(const h5::ds_t& ds, const T* ptr, const hsize_t* offset, const hsize_t* count ) noexcept;
+template <typename T> h5::err_t write(const h5::ds_t& ds, const T* ptr, h5::offset_t offset, h5::count_t count) noexcept;
+template <typename T> h5::err_t write(const h5::ds_t& ds, const T& ref, h5::offset_t offset, h5::count_t count) noexcept;
+template <typename T> h5::err_t write(const h5::ds_t& fd, const std::string& path, const T& ref) noexcept;
+template <typename T> h5::err_t write(const h5::ds_t& fd, const std::string& path, const T& ref, h5::offset_t offset, h5::count_t count) noexcept;
+template <typename T> h5::err_t write(const h5::ds_t& fd, const std::string& path, const T* ptr, h5::offset_t offset, h5::count_t count) noexcept;
 ```
 
-**append to extentable C++/C struct dataset]**
+**append to extentable C++/C struct dataset**
 ```cpp
 #include <h5cpp/core>
 	#include "your_data_definition.h"
 #include <h5cpp/io>
 
-template <typename T> context<T>( hid_t ds);
-template <typename T> context<T>( hid_t fd, const std::string& path);
-template <typename T> void append( h5::context<T>& ctx, const T& ref) noexcept;
+template <typename T> void h5::append(const h5::pt_t& ds, const T& ref) noexcept;
 ```
 
-HOW TO ADD XYZ linear algebra library?
----------------------------------------
-If you're aware of a qualifying linear algebra library that should be included and it isn't please send me an email with the followings:
-* where to find it
-* list of data structures: mylib::vector<T>, mylib::matrix<T,?,..?..>, mylib::cube<T,...> 
-* accessors to number of rows, columns, slice, ..., size, read/write pointer to underlying data
+**file and dataset io** all descriptors implement raii idiom and close underlying resource when going out of scope, in addition may be
+ seamlessly passed/receive HDF5 CAPI types with implicit conversion enabled `-DHCPP_IMPLICIT_CONVERSION_ON`  or though explicit:
+  `hid_t capi_fd = static_cast<hid_t>( h5cpp_fd );` The library defaults to `-DHCPP_IMPLICIT_CONVERSION_OFF` facilitating type safety.
+
+```cpp
+h5::fd_t h5::create( const std::string& path, unsigned flags, const h5::cpl_t& cpl = h5::CP_DEFAULT, const h5::apl_t& apl = h5::AP_DEFAULT );
+h5::fd_t h5::open( const std::string& path, unsigned flags, const h5::apl_t& apl = h5::AP_DEFAULT );
+h5::ds_t h5::open( const h5::fd_t& fd, const std::string& path, unsigned flags, const h5::apl_t& apl = h5::AP_DEFAULT );
+h5::pt_t h5::pocket_table::open( const h5::fd_t& fd, const std::string& path, unsigned flags, const h5::apl_t& apl = h5::AP_DEFAULT );
+```
+
 
 
 <!--

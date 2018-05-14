@@ -11,7 +11,7 @@
 	#include "config.h"
 
 	#include "macros.h"
-	#include "macros_handles.h"
+	#include "properties.hpp"
 	#include "utils.hpp"
 	#include "misc.hpp"
 #endif	

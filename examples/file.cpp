@@ -23,12 +23,12 @@ int main(){
 		// or the c++11 wrapped smart pointer equivalent h5::AP_DEFAULT
 		h5::create("003.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
 		// file is closed when returning h5::create function, convenient if we don't proceed with
-		// creating datasets 
+		// creating dataset
 	}
 
 	{ //CREATE
 		auto fd = h5::create("002.h5", H5F_ACC_TRUNC );
-		h5::fapl_t fapl = h5::fclose_degree_weak | h5::stdio ;
+		//h5::fapl_t fapl = h5::fclose_degree_weak | h5::stdio ;
 		h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value<short>{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9};
 		// create an extendable 2D array, and get a handle to the object that 
 		// automatically closes resource when leaving code block. Or call

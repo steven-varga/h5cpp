@@ -5,10 +5,91 @@
 #define H5CPP_PROPERTYLISTS_H
 
 #include <hdf5.h>
+#include <hdf5_hl.h> //TODO: H5PTclose ???? 
+
 #include <initializer_list>
 #include <functional>
 #include <experimental/tuple>
 #include <algorithm>
+
+#define H5CPP_CONVERSION_FROM_CAPI
+#define H5CPP_CONVERSION_TO_CAPI
+
+
+#ifdef H5CPP_CONVERSION_IMPLICIT
+	#define H5CPP__EXPLICIT
+#else
+	#define H5CPP__EXPLICIT explicit
+#endif
+
+namespace h5 { namespace impl { namespace detail {
+	template <class T, auto capi_call, bool,bool>
+	struct hid_t final {
+		hid_t()=delete;
+	};
+
+	template<class T, auto capi_call>
+	struct hid_t<T,capi_call, true,true> {
+		// from CAPI
+		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
+			if( H5Iis_valid( handle_ ) )
+				int count = H5Iinc_ref( handle_ );
+		}
+		// TO CAPI
+		H5CPP__EXPLICIT operator ::hid_t() const {
+			return  handle;
+		}
+        hid_t( std::initializer_list<::hid_t> fd )
+		   : handle( *fd.begin()){
+		}
+		hid_t() = delete;
+		/* move ctor must invalidate old handle */
+		hid_t( hid_t<T,capi_call,true,true>&& ref ){
+			handle = ref.handle;
+			ref.handle = H5I_UNINIT;
+		}
+		~hid_t(){
+			::herr_t err = 0;
+			if( H5Iis_valid( handle ) )
+				err = capi_call( handle );
+		}
+		private:
+		::hid_t handle;
+	};
+	// disable from CAPI and TOCAPI conversions 
+	// TODO: reestablish selective conversions 
+	template<class T, auto capi_call>
+	struct hid_t<T,capi_call, false, false> : hid_t<T,capi_call,true,true> {
+		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) = delete;
+		H5CPP__EXPLICIT operator ::hid_t() = delete;
+		hid_t( hid_t<T,capi_call, false, false>&& ref ) = default;
+		hid_t( std::initializer_list<::hid_t> fd ) = default;
+		~hid_t() = default;
+	};
+}}}
+
+namespace h5 { namespace impl {
+	template <class T, auto capi_call > using hid_t = detail::hid_t<T,capi_call, true,true>;
+}}
+
+/*hide details */
+
+
+namespace h5 {
+	/*base template with no default ctors to prevent instantiation*/
+	#define H5CPP__defhid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::hid_t<impl::T_,D_>;
+	H5CPP__defhid_t(fd_t, H5Fclose) 	H5CPP__defhid_t(ds_t, H5Dclose) 	H5CPP__defhid_t(pt_t, H5PTclose)
+
+	H5CPP__defhid_t(acpl_t,H5Pclose) 
+	H5CPP__defhid_t(dapl_t,H5Pclose) H5CPP__defhid_t(dxpl_t,H5Pclose) H5CPP__defhid_t(dcpl_t,H5Pclose)
+	H5CPP__defhid_t(tapl_t,H5Pclose) H5CPP__defhid_t(tcpl_t,H5Pclose)
+	H5CPP__defhid_t(fapl_t,H5Pclose) H5CPP__defhid_t(fcpl_t,H5Pclose) H5CPP__defhid_t(fmpl_t,H5Pclose)
+	H5CPP__defhid_t(gapl_t,H5Pclose) H5CPP__defhid_t(gcpl_t,H5Pclose)
+	H5CPP__defhid_t(lapl_t,H5Pclose) H5CPP__defhid_t(lcpl_t,H5Pclose)
+	H5CPP__defhid_t(ocrl_t,H5Pclose) H5CPP__defhid_t(ocpl_t,H5Pclose)
+	H5CPP__defhid_t(scpl_t,H5Pclose)
+	#undef H5CPP__defhid_t
+}
 
 namespace h5 { namespace impl {
 	/* CAPI macros are sequence calls: (H5OPEN, register_property_class), these are all meant to be read only/copied from */
