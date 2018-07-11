@@ -1,0 +1,11 @@
+#/bin/bash
+
+
+for TEST_CASE in `./harness --list `; do
+	for GRID_ROW in {0..9}; do
+		for GRID_COL in 1 100 500 1000 1500; do
+			echo qsub ./harness --test-case  $TEST_CASE --grid_row $GRID_ROW --grid-col $GRID_COL
+		done
+	done
+done
+

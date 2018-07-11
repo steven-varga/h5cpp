@@ -186,6 +186,9 @@ C/C++ type map to HDF5 file space  						{#link_base_template_types}
 
 TODO: write detailed description of supported types, and how memory space is mapped to file space
 
+Support for STL                                          {#link_stl_template_types}
+=========================================
+TODO: write detailed description of supported types, and how memory space is mapped to file space
 
 
 Support for Popular Scientific Libraries                {#link_linalg_template_types}

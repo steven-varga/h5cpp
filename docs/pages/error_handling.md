@@ -4,14 +4,9 @@
 --->
 
 
-Conversion between CAPI and C++   {#link_conversion_policy}
+Error handling,   {#link_error_handler}
 ============================================================
 TODO: port article from sandbox on implicit/explicit conversion
 
 
-RAII   {#link_raii_idiom}
-============================================================
-
-
-TODO: port article from sandbox on implicit/explicit conversion
 

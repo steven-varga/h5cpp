@@ -1,5 +1,5 @@
 <!---
- Copyright (c) 2017 vargaconsulting, Toronto,ON Canada
+ Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
  Author: Varga, Steven <steven@vargaconsulting.ca>
 --->
 
@@ -31,7 +31,7 @@ the complex ones are left as an exercise for you to implement -- if you ever nee
 
 
 File Creation Property Lists   {#link_fcpl_l}
-========================================
+===============================================
 ```cpp
 // flags := H5F_ACC_TRUNC | H5F_ACC_EXCL either to truncate or open file exclusively
 // you may pass CAPI property list descriptors daisy chained with '|' operator 
@@ -41,7 +41,7 @@ auto fd = h5::create("002.h5", H5F_ACC_TRUNC,
 ```
 
 File Access Property Lists   {#link_fapl_l}
-===========================================
+=============================================
 
 ```cpp
 h5::fapl_t fapl = h5::fclose_degree_weak | h5::fapl_core{2048,1} | h5::core_write_tracking{false,1} 
@@ -58,6 +58,9 @@ h5::dcpl_t dcpl = h5::chunk{1,4,5} | h5::deflate{4} | h5::layout_compact | h5::d
 ```
 
 Data Access Property Lists   {#link_dapl_l}
+===============================================
+
+Link Creation Property List   {#link_lcpl_l}
 ===============================================
 
 

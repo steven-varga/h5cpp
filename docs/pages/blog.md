@@ -1,220 +1,61 @@
-<!---
 
- Copyright (c) 2017 vargaconsulting, Toronto,ON Canada
- Author: Varga, Steven <steven@vargaconsulting.ca>
+ 
+Few years back then, I was looking for data container with low latency access to stored objects, and possibly support for linear algebra as well as streams. While protocol buffers offered stream support, it was lacking of indexed block access. Soon I realized I was looking for something like TIFF, a container with file system like properties. When examined HDF5 I got very close to what I needed to store financial engineering datasets. In 2011 HDF5 had good support for full and partial read write for high dimensional extendable datasets with optional compression. Also scientific platforms such as Matlab and R supported HDF5 and most importantly worked across various operating systems.
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of
- this  software  and associated documentation files (the "Software"), to deal in
- the Software  without   restriction, including without limitation the rights to
- use, copy, modify, merge,  publish,  distribute, sublicense, and/or sell copies
- of the Software, and to  permit persons to whom the Software is furnished to do
- so, subject to the following conditions:
+Custom storage for each data format has the advantage of focusing on components which is needed; in the past we've seen various image formats, databases for 3d meshes and so on; machine learning / data science is an emerging field where data-storage is a necessary part but not the main attraction.  Which requires a general, fast, block and sequential access, capable of storing the observations used for model building. HDF5 does provide basic building blocks for the role, but there is a gap between what it offerred and what was needed.
 
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
+Researchers and engineers working directly with popular linear algebra libraries, complex POD structures or time series with tight bounds on latency and throughput benefit from using H5CPP template libraries, while engineers who need fast storage solution for arbitrary complex POD struct types already available in C/C++ header files benefit from H5CPP clang based compiler technology.
 
- THE  SOFTWARE IS  PROVIDED  "AS IS",  WITHOUT  WARRANTY  OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT  SHALL THE AUTHORS OR
- COPYRIGHT HOLDERS BE LIABLE FOR ANY  CLAIM,  DAMAGES OR OTHER LIABILITY, WHETHER
- IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
- CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
---->
+The current C++ HDF5 approach considers C++ as a different language from C, and reproduces the CAPI calls, adding only marginal value. Also  existing C/C++ library is lacking of high performance packet writing capability, seamless POD structure transformation to HDF5 compound types and has no support for popular matrix algebra libraries and STL containers. In fact HDF5 C++ doesn't consider  C++ templates at all; whereas modern C++ is about templates, and template meta-programming paradigms.
 
-what is h5cpp
-----------------
+The original design criteria was to implement an intuitive, easy to use template based library that supports most major linear algebra systems,  with read, write and append operations. This work may be freely downloaded from my [GitHub page][1], and doxygen based documentation is published [here][2].
+However in the in the past few month, in co-operation with [Gerd Heber, HDFGroup][3],  I've been  engaged with a design and [implementation of new, unique interface][4]: a mixture of Gerd's idea of having something python-ishly flexible ,devilishly easy to use, but instead of using dictionary based named argument passing mechanism, I proposed sexy [EBNF grammar][6], implemented in C++ template meta programming.
+This unique C++ API  gets you to start coding without any knowledge of HDF5 API, yet it provides extensive support for the details when you're ready for it.
 
-how to use it
-----------------
+The type system is hidden behind templates, and IO calls will do the right thing. In addition to templates, an [optional clang based compiler][5] scans your project source files, detects all C/C++ POD structs being referenced by H5CPP calls, then from the topologically sorted nodes produces the HDF5 Compound type transformations. The [HDF5 DDL][60], or Data Definition  is required to do operations with HDF5 Compound datatypes, and can be a tedious process to do this in the  old fashioned way. Especially when you have a large complex project or you want to focus on the idea, and ignore the details. If you heard of protocolbuffer or thift, which produces source code from [DDL][40] -- what you see here is the exact opposite:
+	the compiler takes arbitrary C/C++ source code and produces HDF5 Compound type DDL.
+The above mechanism works with arbitrary depth of fundamental, array types and POD struct types.
 
-how h5cpp compares to hdf5 c++
--------------------------------
+After hearing so many great things wouldn't it be nice to have a sneak peak? By  [clicking on this link][100] you're dropped into bash shell. In `compiler` directory you find the current `h5cpp` version and a brief demonstration of complex C/C++ POD struct being converted to HDF5 Compound type. Feel free to edit to your liking, then run `make` to compile and run the project.
+`h5dump -Hp example.h5` can help you to examine the final result.
 
-h5cpp in datascience
----------------------
-
-
-
-
-an easy to use c++11 templates between ([std::vector][1] | [armadillo][2] ) and [HDF5][3] datasets 
---------------------------------------------------------------------------------------------------
-
-Hierarchical Data Format or HDF5 prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and sequential operations on standardized or custom binary/text objects.Scientific computing platforms such as Julia, Matlab, R, Python, C/C++, Fortran come with the necessary libraries to read write HDF5 dataset. However the [C/C++ API][4] provided by HDF Group requires detailed understaanding the file format and doesn't support popular c++ objects such as **armadillo**,**stl**
-
-HDF5 CPP is a set of routines to simplify the process and by implementing **CREATE,READ,WRITE,APPEND** operations on **fixed** or **variable length** N dimensional arrays.
-This header only implementation supports **raw pointers**, **stl::vector**, **armadillo**  matrix library by directly operating on the underlying data-store of the object hence avoiding unnecessary memory allocations.
-
-performance: 
-------------
-|    experiment                               | time  | trans/sec | Mbyte/sec |
-|:--------------------------------------------|------:|----------:|----------:|
-|append:  1E6 x 64byte struct                 |  0.06 |   16.46E6 |   1053.87 |
-|append: 10E6 x 64byte struct                 |  0.63 |   15.86E6 |   1015.49 |
-|append: 50E6 x 64byte struct                 |  8.46 |    5.90E6 |    377.91 |
-|append:100E6 x 64byte struct                 | 24.58 |    4.06E6 |    260.91 |
-|write:  Matrix<float> [10e6 x  16] no-chunk  |  0.4  |    0.89E6 |   1597.74 |
-|write:  Matrix<float> [10e6 x 100] no-chunk  |  7.1  |    1.40E6 |    563.36 |
-
-Lenovo 230 i7 8G ram laptop on Linux Mint 18.1 system
-
-requirements:
--------------
-1. installed serial HDF5 libraries:
-	- pre-compiled on ubuntu: `sudo apt install libhdf5-serial-dev hdf5-tools hdf5-helpers hdfview`
-	- from source: [HDF5 download][5]
-	`./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110 --enable-hl`
-	`make -j4` then `sudo make install`
-
-2. C++11 or above capable compiler installed HDF5 libraries: `sudo apt install build-essential g++`
-3. set the location of the include library, and c++11 or higher flag: `h5c++  -Iyour/project/../h5cpp -std=c++14` or `CFLAGS += pkg-config --cflags h5cpp`
-4. optionally include `<armadillo>`  header file before including `<h5cpp/all>`
-
-usage:
--------
-`sudo make install` will copy the header files and `h5cpp.pc` package config file into `/usr/local/` or copy them and ship it with your project. There is no other dependency than hdf5 libraries and include files. However in order to use armadillo  correctly you have to be sure to include them first.
-
-*to read/map a 10x5 matrix from a 3D array from location {3,4,1}*
-```cpp
-#include <h5cpp/all>
-...
-hid_t fd h5::open("some_file.h5");
-	/* the RVO arma::Mat<double> object will have the size 10x5 filled*/
-	try {
-		auto M = h5::read<arma::mat>(fd,"path/to/matrix",{3,4,1},{10,1,5});
-	} catch (const std::runtime_error& ex ){
-		...
-	}
-h5::close(fd);
+The `new api` directory `file.cpp` contains examples of property lists, and demonstrates the level of control, whereas `arma.cpp` gives a glimps how easy persisting linear algebra objects can be with this state of the art HDF5 C++ library. 
+```bash
+cd 'new\ api'      #enter directory
+make               #compile and run 
+h5dump -pH file.h5 #dump header and properties of an HDF5 file
 ```
 
-*to write the entire matrix back to a different file*
-```cpp
-#include <h5cpp/all>
-...
-hid_t fd = h5::create("output.h5")
-	h5::write(fd,"/result",M);
-h5::close(fd);
-```
-*to create an dataset recording a stream of struct into an extendable chunked dataset with GZIP level 9 compression:*
-```cpp
-#include <h5cpp/core>
-	#include "your_data_definition.h"
-#include <h5cpp/io>
-...
-hid_t ds = h5::create<some_type>(fd,"bids",{H5S_UNLIMITED},{1000}, 9);
-```
-*to append records to an HDF5 datastream* 
-```cpp
-#include <h5cpp/core>
-	#include "your_data_definition.h"
-#include <h5cpp/io>
 
-auto ctx = h5::context<some_struct>( dataset );
-for( record:entire_dataset)
-			h5::append(ctx, record );
-```
+design considerations:
+- high throughput, low latency stream and block IO
+- guaranteed thread safe design
+- extending and not replacing CAPI
+- compile time error over runtime error whenever possible
+- intelligent compile time error messages from using [SFINEA][] 
+- RAII idiom for [resource management][10] prevents leakage 
+- [conversion policy][11] how software writers can reach CAPI from seamless integration to restricted explicit conversion
+- error handling policy: exceptions or no-excpetions
+- [static polymorphism][20] (CRTP idiom) instead of [runtime polymorphism][21]
+- [compile time expressions][23], [copy elision][22] and return value optimization
+- polished easy to maintain well documented terse codebase 
 
-Templates:
------------
-
-**create dataset within an opened hdf5 file**
-```cpp
-using par_t = std::initializer_list<hsize_t>
-
-template <typename T> hid_t create(  hid_t fd, const std::string& path, const T ref ) noexcept;
-template <typename T> hid_t create(hid_t fd, const std::string& path, par_t max_dims, par_t chunk_dims={},
-															const int32_t deflate = H5CPP_NO_COMPRESSION ) noexcept;
-```
-
-**read a dataset and return a reference of the created object**
-```cpp
-using par_t = std::initializer_list<hsize_t>
-
-template <typename T> T read(const std::string& file, const std::string& path ); 
-template <typename T> T read(hid_t fd, const std::string& path ); 
-template <typename T> T read(hid_t ds ) noexcept; 
-template <typename T> T read(hid_t ds, par_t offset, par_t count  ) noexcept; 
-template <typename T> T read(hid_t fd, const std::string& path, par_t offset, par_t count  );
-```
-
-**write dataset into a specified location**
-```cpp
-using par_t = std::initializer_list<hsize_t>
-
-template <typename T> void write(hid_t ds, const T* ptr, const hsize_t* offset, const hsize_t* count ) noexcept;
-template <typename T> void write(hid_t ds, const T* ptr, par_t offset, par_t count) noexcept;
-template <typename T> void write(hid_t ds, const T& ref, par_t offset, par_t count) noexcept;
-template <typename T> void write(hid_t fd, const std::string& path, const T& ref) noexcept;
-template <typename T> void write(hid_t fd, const std::string& path, const T& ref, par_t offset, par_t count) noexcept;
-template <typename T> void write(hid_t fd, const std::string& path, const T* ptr, par_t offset, par_t count) noexcept;
-```
-
-**append to extentable C++/C struct dataset]**
-```cpp
-#include <h5cpp/core>
-	#include "your_data_definition.h"
-#include <h5cpp/io>
-
-template <typename T> context<T>( hid_t ds);
-template <typename T> context<T>( hid_t fd, const std::string& path);
-template <typename T> void append( h5::context<T>& ctx, const T& ref) noexcept;
-```
-
-supported types:
----------------- 
-
-```yacc
-	T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
-	S := T | c/c++ struct | std::string
-	ref 	:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T>
-	ptr 	:= T* 
-	accept 	:= ref | ptr 
-```
-
-in addition to the standard data types offered by BLAS/LAPACK systems `std::vector` also supports `std::string` data-types mapping N dimensional variable-length C like string HDF5 data-sets to `std::vector<std::string>` objects.
+It would be too early to speak of future of a not yet completed project,  but most likely it will follow the law of economics: increased demand will positively affect production.
 
 
-[documentation](http://h5cpp.ca/modules.html), [examples](http://h5cpp.ca/examples.html), google-test:
-----------------------------------------------------------------------------------------------------
-`make all` generates doxygen documention into docs/html and compiles `examples/*.cpp`
-In `tests` directory there are instruction on google test suit, similarly you find instructions in 
-`h5cpp/profiling`
+[1]: http://github.com/steven-varga/h5cpp
+[2]: http://h5cpp.ca
+[3]: https://github.com/gheber
+[4]: http://sandbox.h5cpp.ca
+[5]: http://sandbox.h5cpp.ca/compiler
+[6]: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
+[10]: http://sandbox.h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_conversion.html#link_raii_idiom
+[11]: http://sandbox.h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_conversion.html#link_conversion_policy
+[20]: https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
+[21]: https://en.wikipedia.org/wiki/Virtual_method_table
+[22]: https://en.wikipedia.org/wiki/Copy_elision
+[23]: http://en.cppreference.com/w/cpp/language/constant_expression
+[40]: https://en.wikipedia.org/wiki/Data_definition_language
+[60]: https://support.hdfgroup.org/HDF5/Tutor/compound.html#def
+[100]: http://test.h5cpp.ca:10000/
 
-**to build documentation, examples and profile code install:**
-
-```shell
-apt install build-essential libhdf5-serial-dev
-apt install google-perftools kcachegrind
-apt install doxygen doxygen-gui markdown
-```
-
-TODO:
------
-1. statistical profiling of read|write|create operations, and visualization
-2. replace macro generics with templates, resulting clean c++11 experience
-3. support for [eigen3][6], [boost matrix library][7]
-4. sparse matrix support: [compressed sparse row][9], [compressed sparse column][10]
-5. implement  complex numbers, `std::vector<bool>`
-
-20. read data into posix shared mem
-21. MPI/parallel file system support
-
-98. optional pre-compiled libraries (libh5cpp.so|libh5cpp.a)
-99. add more test cases [in progress]
-
-<div style="text-align: right">
-**Copyright (c) 2018 vargaconsulting, Toronto,ON Canada** <steven@vargaconsulting.ca>
-</div>
-
-[1]: http://en.cppreference.com/w/cpp/container/vector
-[2]: http://arma.sourceforge.net
-[3]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html
-[4]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5Front.html
-[5]: https://support.hdfgroup.org/HDF5/release/obtain5.html
-[6]: http://eigen.tuxfamily.org/index.php?title=Main_Page
-[7]: http://www.boost.org/doc/libs/1_65_1/libs/numeric/ublas/doc/matrix.htm
-[8]: https://julialang.org/
-[9]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_.28CSR.2C_CRS_or_Yale_format.29
-[10]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29
-
-[40]: https://support.hdfgroup.org/HDF5/Tutor/HDF5Intro.pdf
