@@ -31,8 +31,7 @@ all: $(apps)
 harness: harness.o 
 	$(CXX) $^ $(LIBS) -o $@	
 
-test: harness
-	test-rowvec-write
+test:  test-rowvec-write
 
 test-rowvec-write: harness
 	#grid-row: size  grdi-col: iteration

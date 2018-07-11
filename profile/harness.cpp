@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 	std::map<std::string,std::function<void(const std::string& name, size_t grid_rows,size_t grid_cols)>> dispatch;
 
 	dispatch["arma-rowvec-write"]  = harness<VectorWriteTest<arma::rowvec>>;
-	dispatch["arma-rowvec-read"]   = harness<VectorReadTest<arma::rowvec>>;
+	//dispatch["arma-rowvec-read"]   = harness<VectorReadTest<arma::rowvec>>;
 	//dispatch["arma-stlvec-write"]  = harness<VectorWriteTest<std::vector<double>>>;
 	//dispatch["arma-stlvec-read"]   = harness<VectorReadTest<std::vector<double>>>;
 
