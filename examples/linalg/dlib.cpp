@@ -5,43 +5,28 @@
 using namespace std;
 
 template<class T> using Matrix = dlib::matrix<T>;
-
-
+/* DLIB fails from stock install 2018 july 11
+* /usr/include/dlib/matrix/matrix.h:1608:38: error: ISO C++17 does not allow dynamic exception specifications
+*/
 int main(){
 	{ // CREATE - WRITE
-		Matrix<double> M(4,5); 				// create a matrix
-		hid_t fd = h5::create("dlib.h5"); 	// and a file
-			h5::write(fd,"dlib/M",M); 		// save dataset
-		h5::close(fd); 						// close fd
+		Matrix<short> M(2,3); 							            // create a matrix
+		h5::fd_t fd = h5::create("linalg.h5",H5F_ACC_TRUNC); 	// and a file
+		h5::ds_t ds = h5::create<short>(fd,"create then write"
+				,h5::current_dims{10,20}
+				,h5::max_dims{10,H5S_UNLIMITED}
+				,h5::chunk{2,3} | h5::fill_value<short>{3} |  h5::gzip{9}
+		);
+		h5::write( ds,  M, h5::offset{2,2}, h5::stride{1,3}  );
 	}
-	{ // CREATE - READ 
-		hid_t fd = h5::open("dlib.h5", H5F_ACC_RDWR); 				// you can have multiple fd open with H5F_ACC_RDONLY, but single write
-			hid_t ds = h5::create<double>(fd,"dataset",{3,2});		// create dataset, default to NaN-s
-			auto M = h5::read<Matrix<double>>( ds ); 				// read data back as matrix
-			std::cout << M <<std::endl;
-		h5::close(fd); 												// close fd
-	}
-	{ // READ
-		Matrix<double> M = h5::read<Matrix<double>>("dlib.h5","dlib/M"); 	// read entire dataset back with a single read
-		std::cout << M<<std::endl;
-	}
-	{
-		// PARTIAL READ
-		hid_t fd = h5::create("dlib-partial.h5");
-		Matrix<float> data(5,1);  for( int i=0; i<5; i++ ) data(i,1) = i;
-		hid_t ds = h5::create<float>(fd,"/dlib/data",{5,5,1,2});
 
-		// offset - where to start within the array, in this case is {0,0,0,0}
-		// count  - how many elements we would like to write: {a,b,c} 
-		h5::write(ds, data, {0,0,0,0},{1,5,1,1} ); 			//
-		// we only want 3 elements back from offset 1, the rank must be 4
-		auto M  = h5::read<Matrix<double>>(ds,{0,1,0,0},{1,3,1,1});
-		std::cout << M << std::endl;
-
-		H5Dclose(ds);
-		h5::close(fd);
+	{ // CREATE - READ: we're reading back the dataset created in the very first step
+	  // note that data is only data, can be reshaped, cast to any format and content be modified through filtering 
+		auto fd = h5::open("linalg.h5", H5F_ACC_RDWR,           // you can have multiple fd open with H5F_ACC_RDONLY, but single write
+				h5::fclose_degree_strong | h5::sec2); 		   // and able to set various properties  
+	}
+	{ // READ: 
+		Matrix<short> M = h5::read<Matrix<short>>("linalg.h5","create then write"); // read entire dataset back with a single read
 	}
 }
-
-
 

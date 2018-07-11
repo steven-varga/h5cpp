@@ -11,5 +11,7 @@ sudo apt-get install gcc-8 g++-8
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 100 --slave /usr/bin/g++ g++ /usr/bin/g++-8
 
 #lin-alg 
-sudo apt-get install -y libitpp-dev libblitz0-dev libarmadillo-dev libeigen3-dev libdlib-dev
+sudo apt-get install -y libitpp-dev libblitz0-dev  libeigen3-dev libdlib-dev
+
+# be sure to install armadillo and eigen from source 
 

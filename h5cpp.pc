@@ -1,9 +1,9 @@
 
 Name: h5cpp
-Description: C++11 template library between STL|armadillo and HDF5 objects
+Description: C++17 template library and compiler for  STL| major linear algebra packages and HDF5 objects
 URL: h5cpp.ca
-Version: 1.0.0
+Version: 1.10.2
 Requires: hdf5
-Cflags: -I/usr/local/include/h5cpp -std=c++11
-Libs:  -lhdf5 -lhdf5_hl -lz -ldl -lm  -lpthread
+Cflags: -I/usr/local/include/h5cpp -std=c++17
+Libs:  -lhdf5 -lz -ldl -lm
 

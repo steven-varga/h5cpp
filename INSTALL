@@ -1,9 +1,18 @@
 
 
-installing HDF5 API v1.10  from source:
+This distribution contains two packages: an c++17 template library for major linear algebra packages and a source code transformation tool that help you to generate HDF5 compound datatype descriptors from valid C/C++ include files. 
 
-./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110 --enable-hl
-
+1. donwload and install HDF5 v1.10.2 from https://www.hdfgroup.org/downloads/hdf5/source-code/
+from the source tree execute.:
+./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110
 make -j4
 sudo make install
+
+2. The compiler is based on clang 7.0 libtooling, and the latest patter matching, therefor it requires the llvm 7.0 installed from source with clang++ support. The provided make will produce 'h5cpp' source code transformation tool, which has 'include' dependency in the supplied 'h5cpp-llvm' directory. The produced standalone binary has no other dependency other than 'h5cpp-llvm' includes, you are free to install it to other similar systems without clang++ and llvm.
+
+cd compiler
+make
+sudo make install
+
+
 

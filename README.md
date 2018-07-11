@@ -1,5 +1,5 @@
 <!---
- Copyright (c) 2017 vargaconsulting, Toronto,ON Canada
+ Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
  Author: Varga, Steven <steven@vargaconsulting.ca>
 --->
 
@@ -149,24 +149,14 @@ while( having_a_good_day ){
 
 Requirements:
 ------------
-c++17 capable compiler or above until backporting to c++14 is completed. For ubuntu 16.04 the following will download and 
-install and set to default gcc 8.0
-[update: 2018-july-02 jonathan's gcc-8 binary is currently broken, author has been informed]
-[**update: 2018-july-05 jonathan's gcc-8 binary has been fixed**]
+c++17 capable compiler or above until backporting to c++14 is completed. The following instructions will help you to
+install and set to default gcc 8.0 on ubuntu 16.04 LTS 
 ```bash
 sudo add-apt-repository ppa:jonathonf/gcc-8.0 
 sudo apt-get update
-sudo apt-get install build-essential
 sudo apt-get install gcc-8 g++-8
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 100 --slave /usr/bin/g++ g++ /usr/bin/g++-8
 ```
-or you may specify compiler version directly `CXX=gcc-8 make example`
-
-<!--
-DONE:
------
-* [eigen3][102], [ublas][101], [itpp][104] [blitz][103] [blaze][106]  added
--->
 
 <div style="text-align: right">
 **Copyright (c) 2018 vargaconsulting, Toronto,ON Canada** <steven@vargaconsulting.ca>

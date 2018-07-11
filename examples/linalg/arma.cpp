@@ -12,9 +12,7 @@ int main(){
 				,h5::max_dims{10,H5S_UNLIMITED}
 				,h5::chunk{2,3} | h5::fill_value<short>{3} |  h5::gzip{9}
 		);
-		std::cout <<"------------------\n";
 		h5::write( ds,  M, h5::offset{2,2}, h5::stride{1,3}  );
-		std::cout <<"------------------\n";
 	}
 
 	{
@@ -23,8 +21,7 @@ int main(){
 		h5::write( "arma.h5", "one shot create write",  V);
 		// what if you want to position a matrix inside a higher dimension with some added complexity?	
 		h5::write( "arma.h5", "arma vec inside matrix",  V // object contains 'count' and rank being written
-			//,h5::count{4,1} FIXME: must be compile error
-			//,h5::current_dims{40,50}  // control file_space directly where you want to place vector
+			,h5::current_dims{40,50}  // control file_space directly where you want to place vector
 			,h5::offset{5,0}            // when no explicit current dimension given current dimension := offset .+ object_dim .* stride (hadamard product)  
  			,h5::stride{4,4}, h5::block{3,3}
 			,h5::max_dims{40,H5S_UNLIMITED}  // wouldn't it be nice to have unlimited dimension? if no explicit chunk is set, then the object dimension 
