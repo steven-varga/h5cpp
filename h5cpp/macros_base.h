@@ -23,8 +23,7 @@
 #define H5CPP_CTOR_SPEC( T,container, container_rank, ... ) 										\
 		template<> inline container<T> ctor<container<T>>(hsize_t hdf5_rank, const hsize_t* hdf5_dims ){ 	\
 			/* it possible to have an HDF5 file space higher rank then of the container  					\
-			 * we're mapping it to. let's collapse dimensions which exceed rank of output container 
-			 *  
+			 * we're mapping it to. let's collapse dimensions which exceed rank of output container         \ 
 			 * */																							\
 			hsize_t dims[container_rank];																	\
 			hsize_t i=0; 																					\
@@ -35,7 +34,7 @@
 					case H5CPP_RANK_VEC: /*easy: multiply them all*/										\
 							for(;i<hdf5_rank;i++) dims[0] *= hdf5_dims[i]; 									\
 						break; 																				\
-					case H5CPP_RANK_MAT: /*return the first dimensions which are not equal to 1 \
+					case H5CPP_RANK_MAT: /*return the first dimensions which are not equal to 1             \
 										   then collapse the tail                        */					\
 							for(; hdf5_dims[i] <= 1 && i<hdf5_rank;i++); dims[0] = hdf5_dims[i++]; 			\
 							for(;i<hdf5_rank;i++) dims[1] *= hdf5_dims[i]; 									\
@@ -53,15 +52,25 @@
 		} 																									\
 
 
-/* ----------------------------- END META TEMPLATE -----------------------------------------*/ 				\
+/* TODO: rework so all const | ref | ptr | will execute 
+ * ----------------------------- END META TEMPLATE -----------------------------------------*/ 				\
 #define H5CPP_BASE_TEMPLATE_SPEC( T, container, address, n_elem, R, ... )									\
+		template<> struct base<container<T>&> {																\
+			typedef T type; 																				\
+			constexpr static const size_t rank = R;															\
+		}; 																									\
 		template<> struct base<container<T>> {																\
 			typedef T type; 																				\
-			static const size_t rank=R; 																	\
+			constexpr static const size_t rank = R;															\
 		};																									\
 		inline hsize_t get_size( const container<T>&ref ){													\
-			return n_elem; 																				\
+			return n_elem; 						 															\
 		} 																									\
+		inline h5::count_t get_count( const container<T>& ref ){ 											\
+			h5::count_t count( __VA_ARGS__ ); 																\
+			count.rank = R; 																				\
+			return count;   																				\
+		} 						 																			\
 		inline std::array<hsize_t,R> get_dims( const container<T>& ref ){									\
 			return __VA_ARGS__; 																			\
 		} 						 																			\
@@ -71,7 +80,5 @@
 		inline const T* get_ptr( const container<T>& ref ){													\
 			return address;  																				\
 		} 																									\
-
-
 
 #endif

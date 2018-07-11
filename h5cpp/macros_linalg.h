@@ -39,8 +39,8 @@
 	#define  H5CPP_ARMA_TEMPLATE_SPEC(T) 																				        \
 	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Row, ref.memptr(), ref.n_elem, H5CPP_RANK_VEC,  {ref.n_elem} ) 							\
 	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Col, ref.memptr(), ref.n_elem, H5CPP_RANK_VEC,  {ref.n_elem} ) 							\
-	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Mat, ref.memptr(), ref.n_elem, H5CPP_RANK_MAT,  {ref.n_cols, ref.n_rows} ) 				\
-	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Cube,ref.memptr(), ref.n_elem, H5CPP_RANK_CUBE, {ref.n_slices, ref.n_cols, ref.n_rows} ) 	\
+	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Mat, ref.memptr(), ref.n_elem, H5CPP_RANK_MAT,  {ref.n_rows, ref.n_cols} ) 				\
+	H5CPP_BASE_TEMPLATE_SPEC(T, arma::Cube,ref.memptr(), ref.n_elem, H5CPP_RANK_CUBE, {ref.n_rows, ref.n_cols, ref.n_slices} ) 	\
 	H5CPP_CTOR_SPEC(T, arma::Row,  H5CPP_RANK_VEC,  (dims[0]) )															\
 	H5CPP_CTOR_SPEC(T, arma::Col,  H5CPP_RANK_VEC,  (dims[0]) )															\
 	H5CPP_CTOR_SPEC(T, arma::Mat,  H5CPP_RANK_MAT,  (dims[1],dims[0]) )													\

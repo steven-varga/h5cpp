@@ -4,6 +4,9 @@
 
  */
 
+#ifndef H5CPP_CONFIG_H
+#define H5CPP_CONFIG_H
+
 #ifndef H5CPP_MAX_RANK
 	#define H5CPP_MAX_RANK 7 //< maximum dimensions of stored arrays
 #endif
@@ -43,18 +46,6 @@
 #include <complex>
 #include <hdf5.h>
 
-namespace h5{
-	using cx_double =  std::complex<double>; /**< scientific type */
-	using cx_float = std::complex<float>;    /**< scientific type */
-	using chunk_t = std::initializer_list<hsize_t>; /**< */
-	using dims_t = std::initializer_list<hsize_t>;
-	using count_t = std::initializer_list<hsize_t>;
-	using offset_t = std::initializer_list<hsize_t>;
-	using offset_t = std::initializer_list<hsize_t>;
-}
-
-
-
 
 /**
  
@@ -79,53 +70,57 @@ namespace h5{
 @example dlib.cpp
 */
 
-/** @defgroup io-wrap h5::fd_t,  h5::ds_t,  h5::at_t, h5::gr_t, h5::ob_t, h5::cpl_t, h5::apl_t, h5::tpl_t  
- * \brief thin [std::unique_ptr] like type safe wraps for CAPI **hid_t**,**herr_t** types which upon destruction call
- * [H5Dclose]|[H5Dclose]  facilitating [RAII]. Automatic/implicit conversion between CAPI and H5CPP equivalent 
- * allow transparent integration with existing CAPI code. 
- * `H5CPP_CAPI_CONVERSION_EXPLICIT` preprocessor directive provided to deny implicit conversion requiring explicit 
- * type cast: static_cast<hid_t>( fd_t ) or compile time error. 
- * \hdf5_links
+
+/** @defgroup io-create template <typename T> ds_t create( file, path, space [,lcpl] [,dcpl] [,acpl] );
+ * \brief **fd** - open file descriptor or path to hdf5 file,   **path** - how you reach dataset within file, 
+ * **space** -- describes the current and maximum dimensions of dataset, 
+ * [h5::lcpl | h5::dcpl h5::dapl](@ref link_property_lists) are to fine tune link,dataset properties.
  */
 
-
-
-
-/** @defgroup file-io h5::open | h5::create | h5::mute
- *  \brief The  **open** | **close**, **create**  operations  are to create/manipulate a place holder, an hdf5 file, of datasets. 
- *  In POSIX sense the HDF5 container is an entire **image** of a file system and the **dataset** is a document within. The datasets can be manipulated
- *  with **Create|Read|Write|Append** operations. 
- *  File IO operations are straight maps from already existing CAPI HDF5 calls, with the addition of type safety, and 
- *  [RAII idiom](@ref link_raii_idiom) to aid productivity. 
- *  How the  returned managed handles may be passed to CAPI calls is governed by H5CPP conversion policy 
- *  [and you can read on the topic further on here](@ref link_conversion_policy) 
- *  \hdf5_links
- */
-
-
-/** @defgroup io-create h5::create(fd, path, max_dims, chunk_dims, deflate );
- * \brief **fd** - file descriptor, **path** - how you reach dataset within file, **max_dims** -- tells the size of dataset, 
- * the value **H5S_UNLIMITED** marks given dimension **extendable**, **chunk_dims** tells the size of elementary IO operations 
- * if specified the rank of **max_dims** and **chunk_dims** must match.  
- * Empty set:{} indicates no-chunked operations.  And finally **deflate** controls the level of GZIP compression. 
- */
-
-/** @defgroup io-read h5::read<T>( [ds | path], {offset}, {size} ); 
- * \brief Templated [full|partial] READ operations for T:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> objects 
- * from opened **ds** [dataset] descriptor or **path**.  Returned objects are [RVO] optimized and for calls within loops
- * **raw pointer** templates provide means to load  [dataset]s from **offset** and given **size**.  
- * [RVO]: http://en.cppreference.com/w/cpp/language/copy_elision
+/** @defgroup io-read h5::read<T>( [ds | path] [,offset] [,stride] [,count] [,dxpl] ); 
+ * \brief Templated full or partial IO READ operations that help you to have access to [dataset]s by either returning 
+ * [supported linear algebra](@ref link_linalg_template_types) and [STL containers](@ref link_stl_template_types) 
+ * or updating the content of already existing objects by passing reference or pointer 
+ * to them.  The provided implementations rely on compile time constexpr evaluations, SFINEA pattern matching as 
+ * well as static_assert compile time error handling where ever was permitted. Optional [runtime error mechanism](@ref link_error_handler)
+ * added with HDF5 error stack unwinding otherwise. 
+ * Starting from the  most convenient implementation, where you only have to point at a dataset and the right size object is returned, you find 
+ * calls which operate on pre-allocated objects. In case the objects are unsupported there is efficient implementation for raw pointers.
+ * When objects are passed then the number of elements are computed from the size of the object, therefore specifying **h5::count** is 
+ * compile time error. On the other hand when working with classes and  raw pointers, **h5::count** is the only way to tell how much data you're to retrieve,
+ * hence it is required.   
+ * The first group of function arguments are mandatory whereas the optional arguments may be specified in any order, 
+ * or omitted entirely.
+ *
  * [dataset]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html#Intro-PMRdWrPortion 
  */
 
-/** @defgroup io-write h5::write<T>( [ds | path], Object<T>, {offset},{size} );
+/** @defgroup io-write herr_t h5::write<T>( [ds | path], Object<T> [,offset] [ ,stride ] [,count] [,dxpl] );
  *  \brief Templated WRITE operations Object:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> 
  */
 
-/** @defgroup io-append h5::append(context, record);
+/** @defgroup io-append h5::append( pt , record);
  *  \brief dataset APPEND operations for streamed data access with examples
-  */
+ */
 
+/** @defgroup io-wrap [  handle | type_id ] -s with RAII
+ * \brief thin std::unique_ptr like type safe thin wrap-s for CAPI **hid_t**,**herr_t** types which upon destruction, or being passed to 
+ * HDF5 CAPI functions will do the right thing. 
+ * \hdf5_links
+ */
+
+/** @defgroup file-io h5::open | h5::create | h5::mute | h5::unmute
+ *  \brief These  h5::open | h5::close | h5::create  operations  are to create/manipulate an hdf5 container. 
+ *  In POSIX sense HDF5 container is an entire **image** of a file system and the **dataset** is a document within. Datasets may be manipulated
+ *  with h5::create | h5::read | h5::write | h5::append operations. While File IO operations are straight maps from already existing CAPI HDF5 calls, 
+ *  they are furnished with [RAII](@ref link_raii_idiom), and type safety to aid productivity. 
+ *  How the  returned managed handles may be passed to CAPI calls is [governed by H5CPP conversion policy](@ref link_conversion_policy) 
+ *  h5::mute | h5::unmute are miscellaneous thread safe calls for those rare occasions when you need to turn HDF5 CAPI error handler output
+ *  **off** and **on**.  Typically used when failure is information: checking existence of [dataset|path] by call-fail pattern, etc...  
+ *  \hdf5_links
+ */
+
+#endif
 
 
 

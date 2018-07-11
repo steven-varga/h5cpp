@@ -21,15 +21,20 @@
 #else
 	#define H5CPP__EXPLICIT explicit
 #endif
-
 namespace h5 { namespace impl { namespace detail {
-	template <class T, auto capi_call, bool,bool>
+	// base template with T type, the capi_close function, and 
+	// whether you allow conversion from_capi and to_capi of the hid_t type
+	template <class T, auto capi_close,
+	// conversion policy is controlled by template specialization
+	// from_capi, to_capi whether you want capi hid_t converted to h5cpp typed hid_t<T> classes
+			 bool from_capi, bool to_capi, bool is_property>
 	struct hid_t final {
 		hid_t()=delete;
 	};
-
-	template<class T, auto capi_call>
-	struct hid_t<T,capi_call, true,true> {
+	// actual implementation with full conversion allowed
+	template<class T, auto capi_close>
+	struct hid_t<T,capi_close, true,true,false> {
+		using hidtype = T;
 		// from CAPI
 		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
 			if( H5Iis_valid( handle_ ) )
@@ -42,52 +47,81 @@ namespace h5 { namespace impl { namespace detail {
         hid_t( std::initializer_list<::hid_t> fd )
 		   : handle( *fd.begin()){
 		}
-		hid_t() = delete;
+		//TODO: have default constructor such that can initialize properties
+		// see 'create.hpp line 164:  h5::dcpl_t dcpl = h5::dcpl_t {H5Pcreate(H5P_DATASET_CREATE)};
+		// which is awkward
+		hid_t() : handle(H5I_UNINIT){};
+		hid_t( const hid_t& ref) {
+			this->handle = ref.handle;
+			H5Iinc_ref( handle );
+		}
+		hid_t& operator =( const hid_t& ref) {
+			handle = ref.handle;
+			H5Iinc_ref( handle );
+			return *this;
+		}
 		/* move ctor must invalidate old handle */
-		hid_t( hid_t<T,capi_call,true,true>&& ref ){
+		hid_t( hid_t<T,capi_close,true,true,false>&& ref ){
 			handle = ref.handle;
 			ref.handle = H5I_UNINIT;
 		}
 		~hid_t(){
 			::herr_t err = 0;
 			if( H5Iis_valid( handle ) )
-				err = capi_call( handle );
+				err = capi_close( handle );
 		}
 		private:
 		::hid_t handle;
 	};
+
 	// disable from CAPI and TOCAPI conversions 
-	// TODO: reestablish selective conversions 
-	template<class T, auto capi_call>
-	struct hid_t<T,capi_call, false, false> : hid_t<T,capi_call,true,true> {
-		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) = delete;
-		H5CPP__EXPLICIT operator ::hid_t() = delete;
-		hid_t( hid_t<T,capi_call, false, false>&& ref ) = default;
-		hid_t( std::initializer_list<::hid_t> fd ) = default;
-		~hid_t() = default;
+	//conversion ctor to packet table enabled, used for h5::impl::ds_t
+	template<class T, auto capi_close>
+	struct hid_t<T,capi_close, false,false,false> : private hid_t<T,capi_close,true,true,false> {
+		using parent = hid_t<T,capi_close,true,true,false>;
+		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
+		using hidtype = T;
+	};
+	/*property id*/
+	template<class T, auto capi_close>
+	struct hid_t<T,capi_close, true,true,true> : public hid_t<T,capi_close,true,true,false> {
+		using parent = hid_t<T,capi_close,true,true,false>;
+		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
+		using hidtype = T;
+
+		hid_t& operator |=( const hid_t& ref){
+			return *this;
+		}
+
+		hid_t& operator |( const hid_t& ref){
+			return *this;
+		}
 	};
 }}}
 
 namespace h5 { namespace impl {
-	template <class T, auto capi_call > using hid_t = detail::hid_t<T,capi_call, true,true>;
+	// redefine this to disable conversion
+	template <class T, auto capi_call> using hid_t = detail::hid_t<T,capi_call, true,true,false>;
+	template <class T, auto capi_call> using pid_t = detail::hid_t<T,capi_call, true,true,true>;
 }}
-
 /*hide details */
-
-
 namespace h5 {
 	/*base template with no default ctors to prevent instantiation*/
 	#define H5CPP__defhid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::hid_t<impl::T_,D_>;
-	H5CPP__defhid_t(fd_t, H5Fclose) 	H5CPP__defhid_t(ds_t, H5Dclose) 	H5CPP__defhid_t(pt_t, H5PTclose)
+	#define H5CPP__defpid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::pid_t<impl::T_,D_>;
+	/*file:  */ H5CPP__defhid_t(fd_t, H5Fclose) /*dataset:*/	H5CPP__defhid_t(ds_t, H5Dclose) /* <- packet table: is specialization enabled */
+	/*attrib:*/ H5CPP__defhid_t(at_t, H5Aclose) /*group:  */	H5CPP__defhid_t(gr_t, H5Gclose) /*object:*/	H5CPP__defhid_t(ob_t, H5Oclose)
+	/*space: */ H5CPP__defhid_t(sp_t, H5Sclose)
 
-	H5CPP__defhid_t(acpl_t,H5Pclose) 
-	H5CPP__defhid_t(dapl_t,H5Pclose) H5CPP__defhid_t(dxpl_t,H5Pclose) H5CPP__defhid_t(dcpl_t,H5Pclose)
-	H5CPP__defhid_t(tapl_t,H5Pclose) H5CPP__defhid_t(tcpl_t,H5Pclose)
-	H5CPP__defhid_t(fapl_t,H5Pclose) H5CPP__defhid_t(fcpl_t,H5Pclose) H5CPP__defhid_t(fmpl_t,H5Pclose)
-	H5CPP__defhid_t(gapl_t,H5Pclose) H5CPP__defhid_t(gcpl_t,H5Pclose)
-	H5CPP__defhid_t(lapl_t,H5Pclose) H5CPP__defhid_t(lcpl_t,H5Pclose)
-	H5CPP__defhid_t(ocrl_t,H5Pclose) H5CPP__defhid_t(ocpl_t,H5Pclose)
-	H5CPP__defhid_t(scpl_t,H5Pclose)
+	H5CPP__defpid_t(acpl_t,H5Pclose)
+	H5CPP__defpid_t(dapl_t,H5Pclose) H5CPP__defpid_t(dxpl_t,H5Pclose) H5CPP__defpid_t(dcpl_t,H5Pclose)
+	H5CPP__defpid_t(tapl_t,H5Pclose) H5CPP__defpid_t(tcpl_t,H5Pclose)
+	H5CPP__defpid_t(fapl_t,H5Pclose) H5CPP__defpid_t(fcpl_t,H5Pclose) H5CPP__defpid_t(fmpl_t,H5Pclose)
+	H5CPP__defpid_t(gapl_t,H5Pclose) H5CPP__defpid_t(gcpl_t,H5Pclose)
+	H5CPP__defpid_t(lapl_t,H5Pclose) H5CPP__defpid_t(lcpl_t,H5Pclose)
+	H5CPP__defpid_t(ocrl_t,H5Pclose) H5CPP__defpid_t(ocpl_t,H5Pclose)
+	H5CPP__defpid_t(scpl_t,H5Pclose)
+	#undef H5CPP__defpid_t
 	#undef H5CPP__defhid_t
 }
 
@@ -110,36 +144,45 @@ namespace h5 { namespace impl {
 namespace h5 { namespace impl {
 	template <class Derived, class phid_t, auto& prop_id, auto capi_call>
 	struct prop_base {
-		prop_base() : handle( H5Pcreate(prop_id) ){}
+		prop_base() : handle( H5Pcreate( prop_id ) ){
+		}
 		~prop_base(){
-			H5Pclose( handle );
+			if( H5Iis_valid( handle ) ){
+				H5Pclose( handle );
+			}
 	  	}
-		template <class R> 	prop_base<Derived, phid_t, prop_id, capi_call>&
-		operator|(const R& rhs ){
+
+		template <class R> 	const prop_base<Derived, phid_t, prop_id, capi_call>&
+		operator|( const R& rhs ) const {
 			rhs.copy( handle );
 			return *this;
-		}
+		 }
+
 		void copy(::hid_t handle_) const { /*CRTP idiom*/
 			static_cast<const Derived*>(this)->copy_impl( handle_ );
 		}
 		/*transfering ownership to managed handle*/
-		operator phid_t( ){
+		operator phid_t( ) const {
+			static_cast<const Derived*>(this)->copy_impl( handle );
 			H5Iinc_ref( handle ); /*keep this alive */
-			static_cast<Derived*>(this)->copy_impl( handle );
 			return phid_t{handle};
 		}
 		::hid_t handle;
+		using type = phid_t;
 	};
+	/*property with a capi function call with some arguments, also is the base for other properties */
 	template <class phid_t, auto& prop_id, auto capi_call, class... args_t>
 	struct prop_t : prop_base<prop_t<phid_t,prop_id,capi_call,args_t...>,phid_t,prop_id,capi_call>{
 		prop_t( args_t... values ) : args(
-											std::tuple<args_t...>(values...) ){}
-
+											std::tuple<args_t...>(values...) ){
+		}
 		void copy_impl(::hid_t id) const {
 			/*CAPI needs `this` hid_t id passed along */
 			auto capi_args = std::tuple_cat( std::tie(id), args );
-			std::experimental::apply(capi_call, capi_args);
+			std::experimental::apply(capi_call, capi_args); // TODO: back port to c++14
 		}
+
+		using type = phid_t;
 		std::tuple<args_t...> args;
 	};
 	#define H5CPP__capicall( name ) template <auto capi_call, class... args_t>                              \
@@ -155,13 +198,14 @@ namespace h5 { namespace impl {
 	 * const void* pointer type. This is reflected by templating `prop_t` 
 	 */ 
 	template <class phid_t, auto& prop_id, auto capi_call, class T>
-	struct tprop_t : prop_t<phid_t,prop_id,capi_call,::hid_t,const void*> {
+	struct tprop_t final : prop_t<phid_t,prop_id,capi_call,::hid_t,const void*> {
 		tprop_t( T value ) : base_t( utils::h5type<T>(), &this->value ), value(value) {
 		}
 		~tprop_t(){ // don't forget that the first argument is a HDF5 type info, that needs closing
-			H5Tclose( std::get<0>(this->args) );
+			if( H5Iis_valid( std::get<0>(this->args) ) )
+				H5Tclose( std::get<0>(this->args) );
 		}
-
+		using type = phid_t;
 		using base_t = prop_t<phid_t,prop_id,capi_call,::hid_t,const void*>;
 		T value;
 	};
@@ -172,12 +216,13 @@ namespace h5 { namespace impl {
 	/* takes an arbitrary length of hsize_t sequence and calls H5Pset_xxx
 	 */
 	template <class phid_t, auto& prop_id, auto capi_call, class... args_t>
-	struct aprop_t : prop_t<phid_t,prop_id,capi_call, args_t...> {
+	struct aprop_t final : prop_t<phid_t,prop_id,capi_call, args_t...> {
 		aprop_t( std::initializer_list<hsize_t> values )
 			: base_t( values.size(), this->values ) {
 			std::copy( std::begin(values), std::end(values), this->values);
 		}
 		hsize_t values[H5CPP_MAX_RANK];
+		using type = phid_t;
 		using base_t =  prop_t<phid_t,prop_id,capi_call, args_t...>;
 	};
 	// only data control property list set_chunk has this pattern, lets allow to define CAPI argument lists 
@@ -185,7 +230,6 @@ namespace h5 { namespace impl {
 	template <auto capi_call, class... args_t>
 		using dcpl_acall = aprop_t<h5::dcpl_t, impl::dcpl_id, capi_call, args_t... >;
 }}
-
 
 /** impl::property_group<H5Pset_property, args...> args... ::= all argument types except the first `this` hid_t prop_ID
  *  since it is implicitly passed by template class. 
@@ -222,16 +266,17 @@ using metadata_read_attempts   = impl::fapl_call<H5Pset_metadata_read_attempts, 
 using mdc_config               = impl::fapl_call<H5Pset_mdc_config, H5AC_cache_config_t *>;
 using mdc_image_config         = impl::fapl_call<H5Pset_mdc_image_config, H5AC_cache_image_config_t*>;
 using mdc_log_options          = impl::fapl_call<H5Pset_mdc_log_options, hbool_t,const char*,hbool_t>;
+using libver_bounds            = impl::fapl_call<H5Pset_libver_bounds, H5F_libver_t,H5F_libver_t>;
 namespace flag {
 	using fapl_sec2                = impl::fapl_call<H5Pset_fapl_sec2>;
 	using fapl_stdio               = impl::fapl_call<H5Pset_fapl_stdio>;
 }
-static thread_local flag::fapl_sec2  sec2{};
-static thread_local flag::fapl_stdio stdio{};
-static thread_local h5::fclose_degree fclose_degree_weak{H5F_CLOSE_WEAK};
-static thread_local h5::fclose_degree fclose_degree_semi{H5F_CLOSE_SEMI};
-static thread_local h5::fclose_degree fclose_degree_strong{H5F_CLOSE_STRONG};
-static thread_local h5::fclose_degree fclose_degree_default{H5F_CLOSE_DEFAULT	};
+const static flag::fapl_sec2  sec2{};
+const static flag::fapl_stdio stdio{};
+const static h5::fclose_degree fclose_degree_weak{H5F_CLOSE_WEAK};
+const static h5::fclose_degree fclose_degree_semi{H5F_CLOSE_SEMI};
+const static h5::fclose_degree fclose_degree_strong{H5F_CLOSE_STRONG};
+const static h5::fclose_degree fclose_degree_default{H5F_CLOSE_DEFAULT	};
 // GROUP CREATION PROPERTY LISTS
 using local_heap_size_hint     = impl::gcpl_call<H5Pset_local_heap_size_hint, size_t>;
 using link_creation_order      = impl::gcpl_call<H5Pset_link_creation_order, unsigned>;
@@ -241,9 +286,9 @@ using link_phase_change        = impl::gcpl_call<H5Pset_link_phase_change,unsign
 // LINK CREATION PROPERTY LISTS
 using char_encoding            = impl::lcpl_call<H5Pset_char_encoding,H5T_cset_t>;
 using create_intermediate_group= impl::lcpl_call<H5Pset_create_intermediate_group, unsigned>;
-static h5::char_encoding ascii{H5T_CSET_ASCII};
-static h5::char_encoding utf8{H5T_CSET_UTF8};
-static h5::create_intermediate_group create_path{1};
+const static h5::char_encoding ascii{H5T_CSET_ASCII};
+const static h5::char_encoding utf8{H5T_CSET_UTF8};
+const static h5::create_intermediate_group create_path{1};
 // LINK ACCESS PROPERTY LISTS
 using nlinks                   = impl::lapl_call<H5Pset_nlinks, size_t>;
 using elink_cb                 = impl::lapl_call<H5Pset_elink_cb, H5L_elink_traverse_t, void*>;
@@ -257,7 +302,6 @@ using gzip                     = deflate;
 using fill_time                = impl::dcpl_call<H5Pset_fill_time, H5D_fill_time_t>;
 using alloc_time               = impl::dcpl_call<H5Pset_alloc_time, H5D_alloc_time_t>;
 using chunk_opts               = impl::dcpl_call<H5Pset_chunk_opts, unsigned>;
-using deflate                  = impl::dcpl_call<H5Pset_deflate, unsigned>;
 template<class T>
 using fill_value               = impl::dcpl_tcall<H5Pset_fill_value, T>;                /*tcall ::= templated call with T*/
 using chunk                    = impl::dcpl_acall<H5Pset_chunk,  int,  const hsize_t*>; /*acall ::= array call of hsize_t */
@@ -266,23 +310,23 @@ namespace flag{
 	using shuffle              = impl::dcpl_call<H5Pset_shuffle>;
 	using nbit                 = impl::dcpl_call<H5Pset_nbit>;
 }
-static thread_local flag::fletcher32 fletcher32{};
-static thread_local flag::shuffle shuffle{};
-static thread_local flag::nbit nbit{};
-static thread_local h5::layout layout_compact{H5D_COMPACT};
-static thread_local h5::layout layout_contigous{H5D_CONTIGUOUS};
-static thread_local h5::layout layout_chunked{H5D_CHUNKED};
-static thread_local h5::layout layout_virtual{H5D_VIRTUAL};
-static thread_local h5::fill_time fill_time_ifset{H5D_FILL_TIME_IFSET};
-static thread_local h5::fill_time fill_time_alloc{H5D_FILL_TIME_ALLOC};
-static thread_local h5::fill_time fill_time_never{H5D_FILL_TIME_NEVER};
-static thread_local h5::alloc_time alloc_time_default{H5D_ALLOC_TIME_DEFAULT};
-static thread_local h5::alloc_time alloc_time_early{H5D_ALLOC_TIME_EARLY};
-static thread_local h5::alloc_time alloc_time_incr{H5D_ALLOC_TIME_INCR};
-static thread_local h5::alloc_time alloc_time_late{H5D_ALLOC_TIME_LATE};
-static thread_local h5::chunk_opts dont_filter_partial_chunks{H5D_CHUNK_DONT_FILTER_PARTIAL_CHUNKS};
+const static flag::fletcher32 fletcher32{};
+const static flag::shuffle shuffle{};
+const static flag::nbit nbit{};
+const static h5::layout layout_compact{H5D_COMPACT};
+const static h5::layout layout_contigous{H5D_CONTIGUOUS};
+const static h5::layout layout_chunked{H5D_CHUNKED};
+const static h5::layout layout_virtual{H5D_VIRTUAL};
+const static h5::fill_time fill_time_ifset{H5D_FILL_TIME_IFSET};
+const static h5::fill_time fill_time_alloc{H5D_FILL_TIME_ALLOC};
+const static h5::fill_time fill_time_never{H5D_FILL_TIME_NEVER};
+const static h5::alloc_time alloc_time_default{H5D_ALLOC_TIME_DEFAULT};
+const static h5::alloc_time alloc_time_early{H5D_ALLOC_TIME_EARLY};
+const static h5::alloc_time alloc_time_incr{H5D_ALLOC_TIME_INCR};
+const static h5::alloc_time alloc_time_late{H5D_ALLOC_TIME_LATE};
+const static h5::chunk_opts dont_filter_partial_chunks{H5D_CHUNK_DONT_FILTER_PARTIAL_CHUNKS};
 // DATA ACCESS PROPERTY LISTS
-using  chunk_cache             = impl::fapl_call<H5Pset_chunk_cache, size_t, size_t, double>;
+using chunk_cache              = impl::fapl_call<H5Pset_chunk_cache, size_t, size_t, double>;
 using efile_prefix             = impl::fapl_call<H5Pset_efile_prefix, const char*>;
 using virtual_view             = impl::fapl_call<H5Pset_virtual_view, H5D_vds_view_t>;
 using virtual_printf_gap       = impl::fapl_call<H5Pset_virtual_printf_gap, hsize_t>;
@@ -303,12 +347,13 @@ using attr_creation_order        = impl::ocrl_call<H5Pset_attr_creation_order, u
 // OBJECT COPY PROPERTY LISTS
 using copy_object                = impl::ocpl_call<H5Pset_copy_object, unsigned>;
 using mcdt_search_cb             = impl::ocpl_call<H5Pset_mcdt_search_cb, H5O_mcdt_search_cb_t , void*>;
-static thread_local h5::copy_object shallow_hierarchy{H5O_COPY_SHALLOW_HIERARCHY_FLAG};
-static thread_local h5::copy_object expand_soft_link{H5O_COPY_EXPAND_SOFT_LINK_FLAG};
-static thread_local h5::copy_object expand_ext_link{H5O_COPY_EXPAND_EXT_LINK_FLAG};
-static thread_local h5::copy_object expand_reference{H5O_COPY_EXPAND_REFERENCE_FLAG};
-static thread_local h5::copy_object copy_without_attr{H5O_COPY_WITHOUT_ATTR_FLAG};
-static thread_local h5::copy_object merge_commited_dtype{H5O_COPY_MERGE_COMMITTED_DTYPE_FLAG};
+const static h5::copy_object shallow_hierarchy{H5O_COPY_SHALLOW_HIERARCHY_FLAG};
+const static h5::copy_object expand_soft_link{H5O_COPY_EXPAND_SOFT_LINK_FLAG};
+const static h5::copy_object expand_ext_link{H5O_COPY_EXPAND_EXT_LINK_FLAG};
+const static h5::copy_object expand_reference{H5O_COPY_EXPAND_REFERENCE_FLAG};
+const static h5::copy_object copy_without_attr{H5O_COPY_WITHOUT_ATTR_FLAG};
+const static h5::copy_object merge_commited_dtype{H5O_COPY_MERGE_COMMITTED_DTYPE_FLAG};
+
 
 #ifdef H5_HAVE_PARALLEL
 using fapl_mpio                  = impl::fapl_call<H5Pset_fapl_mpio, MPI_Comm, MPI_Info>;
@@ -316,7 +361,6 @@ using all_coll_metadata_ops      = impl::fapl_call<H5Pset_all_coll_metadata_ops,
 using coll_metadata_write        = impl::fapl_call<H5Pset_coll_metadata_write, hbool_t>;
 using gc_reference               = impl::fapl_call<H5Pset_gc_reference, unsigned>;
 using small_data_block_size      = impl::fapl_call<H5Pset_small_data_block_size, hsize_t>;
-using libver_bounds              = impl::fapl_call<H5Pset_libver_bounds, H5F_libver_t,H5F_libver_t>;
 using object_flush_cb            = impl::fapl_call<H5Pset_object_flush_cb, H5F_flush_cb_t,void*>;
 using all_coll_metadata_ops      = impl::fapl_call<H5Pset_all_coll_metadata_ops, hbool_t.;
 using all_coll_metadata_ops,     = impl::lapl_call<H5Pset_all_coll_metadata_ops, hbool_t>;
@@ -333,7 +377,6 @@ using mpio_no_collective_cause   = impl::dxpl_call<H5Pset_mpio_no_collective_cau
 #endif
 }
 
-
 namespace h5 { namespace notimplemented_yet { // OBJECT COPY PROPERTY LISTS
 	//using char_encoding_ =              = impl::fapl_call<H5Pset_char_encoding, H5T_cset_t)
 	//static h5::char_encoding_ ascii{H5T_CSET_ASCII};
@@ -345,4 +388,22 @@ namespace h5 { namespace notimplemented_yet { // OBJECT COPY PROPERTY LISTS
 	//MISSING:	H5CPP__PROPERTYLIST_FLAG(fapl, fapl_windows)
 	//MISSING:	using file_image_callbacks, H5_file_image_callbacks_t* >;
 }}
+
+namespace h5 {
+	const static h5::dapl_t default_dapl = static_cast<h5::dapl_t>( H5P_DEFAULT );
+	const static h5::dcpl_t default_dcpl = static_cast<h5::dcpl_t>( H5P_DEFAULT );
+	const static h5::dxpl_t default_dxpl = static_cast<h5::dxpl_t>( H5P_DEFAULT );
+	const static h5::lcpl_t default_lcpl = h5::char_encoding{H5T_CSET_UTF8} | h5::create_intermediate_group{1};
+
+
+	const static h5::fapl_t default_fapl = static_cast<h5::fapl_t>( H5P_DEFAULT );
+	const static h5::fcpl_t default_fcpl = static_cast<h5::fcpl_t>( H5P_DEFAULT );
+
+	const static h5::dapl_t dapl = static_cast<h5::dapl_t>( H5P_DEFAULT );
+	const static h5::dcpl_t dcpl = static_cast<h5::dcpl_t>( H5Pcreate( H5P_DATATYPE_CREATE ));
+	const static h5::dxpl_t dxpl = static_cast<h5::dxpl_t>( H5P_DEFAULT );
+	const static h5::lcpl_t lcpl = h5::char_encoding{H5T_CSET_UTF8} | h5::create_intermediate_group{1};
+	const static h5::fapl_t fapl = static_cast<h5::fapl_t>( H5P_DEFAULT );
+	const static h5::fcpl_t fcpl = static_cast<h5::fcpl_t>( H5P_DEFAULT );
+}
 #endif

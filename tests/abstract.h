@@ -35,12 +35,12 @@ public:
 		this->fd = h5::open("test.h5", H5F_ACC_RDWR );
 	}
 	void TearDown() {
-		H5Fclose(fd);
+		h5::close(fd);
 	}
 	std::string type;
 	std::string name;
 	std::string dir;
-	hid_t fd; //< file descriptor
+	h5::fd_t fd; //< file descriptor
 };
 
 herr_t gtest_hdf5_error_handler (int a, void *unused) {
@@ -60,8 +60,11 @@ herr_t gtest_hdf5_error_handler (int a, void *unused) {
 	unsigned char, unsigned short, unsigned int, unsigned long 	\
 	long int, char,short, int, long long int, float, double 	\
 
+//#define H5CPP_TEST_STL_VECTOR_TYPES H5CPP_TEST_PRIMITIVE_TYPES
+//TODO: verify std::string
 #define H5CPP_TEST_STL_VECTOR_TYPES H5CPP_TEST_PRIMITIVE_TYPES, std::string
-#define H5CPP_TEST_ARMADILLO_TYPES H5CPP_TEST_PRIMITIVE_TYPES
+#define H5CPP_TEST_ARMADILLO_TYPES float
+//#define H5CPP_TEST_ARMADILLO_TYPES H5CPP_TEST_PRIMITIVE_TYPES
 
 
 #define H5CPP_TEST_RUNNER( ARGC, ARGV ) 															\
@@ -74,10 +77,10 @@ int main( ARGC, ARGV) { 		 																	\
   	listeners.Append(new MinimalistPrinter( argv[0] ) ); 											\
 																									\
 	/* make sure dataset exists, and is zapped */ 													\
-  	hid_t fd = h5::create("test.h5");   h5::close(fd); 												\
+	{ h5::create("test.h5", H5F_ACC_TRUNC); }        												\
 	/* install error handler that captures any h5 error 	*/ 										\
 	hid_t es = H5Eget_current_stack(); 																\
-	/*H5Eset_auto(H5E_DEFAULT,gtest_hdf5_error_handler, nullptr ); */									\
+	/*H5Eset_auto(H5E_DEFAULT,gtest_hdf5_error_handler, nullptr ); */								\
 																									\
   	/* will create/read/write/append to datasets in fd */ 											\
 	return RUN_ALL_TESTS(); 																		\

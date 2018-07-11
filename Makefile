@@ -1,20 +1,20 @@
 #  _____________________________________________________________________________
 #
-#  Copyright (c) <2015> <copyright Steven Istvan Varga, Toronto, On>
+#  Copyright (c) <2018> <copyright Steven Varga, Toronto, On>
 #
 #  Contact: Steven Varga
-#           steven.varga@gmail.com
-#           2015 Toronto, On Canada
+#           steven@vargaconsulting.ca
+#           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 #
 
 PREFIX = /usr/local
 
-DIRS =  tests profiling/gperf profiling/grid-engine examples doxy
+DIRS =  tests doxy examples profile compiler
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
-TESTDIRS = $(DIRS:%=test-%)
+TESTDIRS  = $(DIRS:%=test-%)
 
 all: $(BUILDDIRS)
 $(DIRS): $(BUILDDIRS)
@@ -39,4 +39,9 @@ $(CLEANDIRS):
 .PHONY: subdirs $(CLEANDIRS)
 .PHONY: all install clean tests
 
-
+upload:
+	ssh ubuntu@master "rm -fr /usr/local/include/h5cpp"
+	ssh ubuntu@master "sudo rm -fr /tmp/examples"
+	scp -r h5cpp ubuntu@master:/usr/local/include/
+	scp -r examples ubuntu@master:/tmp/ 
+	ssh ubuntu@master "sudo chown -R test001:test001 /tmp/examples"

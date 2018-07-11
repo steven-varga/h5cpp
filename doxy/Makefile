@@ -23,12 +23,12 @@ all: Doxyfile
 test:
 
 upload: all
-	rsync -a  ../docs/html/ osaka.vargaconsulting.ca:h5cpp.ca
-	rsync -a  ../docs/pix/ osaka.vargaconsulting.ca:h5cpp.ca/pix
+	rsync -a  ../docs/html/ osaka.vargaconsulting.ca:sandbox/h5cpp.ca
+	rsync -a  ../docs/pix/ osaka.vargaconsulting.ca:sandbox/h5cpp.ca/pix
 view: all
 	xdg-open ../docs/html/index.html
 clean:
-	$(RM) -rf ../docs/html
+	$(RM) -rf ../docs/html ../docs/latex
 
 
 

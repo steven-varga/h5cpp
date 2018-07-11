@@ -18,13 +18,17 @@
 		template<typename T> static inline hid_t h5type( ){ return 0; } // must apply 'H5Tclose' to return value to prevent resource leakage
 		template<typename T> inline std::string type_name( ){ return "n/a"; }
 		template<typename T> inline std::string h5type_name( ){ return "n/a"; }
-		template<> inline hid_t h5type<std::string>(){ // std::string is variable length
+		template<> inline std::string type_name<std::string>(){ return "std::string";}
+		template<> inline hid_t h5type<char*>(){ // std::string is variable length
 				hid_t type = H5Tcopy (H5T_C_S1);
 				H5Tset_size (type,H5T_VARIABLE);
 				return type;
-		}  // ditto! call H5Tclose on returned type
+		}
+		template<> inline hid_t h5type<std::string>(){ // std::string is variable length
+				return h5::utils::h5type<char*>();
+		}
 	}}
-	// generate mapt from C/C++ typename to std::string
+	// generate map from C/C++ typename to std::string
 #define H5CPP_FUNDAMENTAL_TYPE( T, H )  \
 	template<> inline std::string type_name<T>(){ return #T; }  	\
 	template<> inline std::string h5type_name<T>(){ return #H; }   \
@@ -36,8 +40,6 @@
 #define H5CPP_STL_TEMPLATE_SPEC(T) 																			\
 	H5CPP_BASE_TEMPLATE_SPEC(T, std::vector, ref.data(), ref.size(), H5CPP_RANK_VEC,  {ref.size()})  		\
 	H5CPP_CTOR_SPEC(T, std::vector, H5CPP_RANK_VEC, (dims[0]))												\
-
-
 
 /* BEGIN:
  * template specialization group for all linear algebra package object types */

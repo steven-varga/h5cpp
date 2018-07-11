@@ -5,10 +5,9 @@
 
 #ifndef  H5CPP_IO_H
 #define H5CPP_IO_H
-	
 	#include "create.hpp"
-//	#include "read.hpp"
-//	#include "write.hpp"
-//	#include "append.hpp"
+	#include "read.hpp"
+	#include "write.hpp"
+	#include "append.hpp"
 #endif	
 

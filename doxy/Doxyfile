@@ -32,12 +32,15 @@ LAYOUT_FILE            = DoxygenLayout.xml
 CITE_BIB_FILES         = 
 WARN_FORMAT            = "$file:$line: $text"
 
-INPUT                  = ../h5cpp ../README.md ../profiling/README.md ../docs/pages/objects.md ../docs/pages/conversion.md ../docs/pages/property_lists.md
+INPUT                  = ../h5cpp ../README.md ../docs/pages/profiling.md \
+../docs/pages/conversion.md	../docs/pages/error_handling.md ../docs/pages/objects.md  ../docs/pages/property_lists.md \
+../docs/pages/compiler.md ../docs/pages/compiler_trial.md ../docs/pages/exceptions.md ../docs/pages/linalg.md ../docs/pages/blog.md
+
 
 FILE_PATTERNS          = *.cpp *.hpp *.h
 RECURSIVE              = YES
 
-EXAMPLE_PATH           = ../examples ../test ../profiling/gperf ../profiling/grid-engine
+EXAMPLE_PATH           = ../examples ../tests ../profiling/gperf ../profiling/grid-engine
 
 EXAMPLE_PATTERNS       = *
 EXAMPLE_RECURSIVE      = YES
