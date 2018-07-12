@@ -5,7 +5,6 @@
 #define H5CPP_PROPERTYLISTS_H
 
 #include <hdf5.h>
-#include <hdf5_hl.h> //TODO: H5PTclose ???? 
 
 #include <initializer_list>
 #include <functional>
