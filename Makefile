@@ -24,7 +24,7 @@ $(BUILDDIRS):
 install: 
 	cp -rf h5cpp $(PREFIX)/include
 	cp -rf h5cpp-llvm $(PREFIX)/include
-	cp h5cpp.pc  $(PREFIX)/lib/pkgconfig
+	cp h5cpp.pc  $(PREFIX)/lib/pkgconfig/
 
 test: $(TESTDIRS) all
 $(TESTDIRS): 

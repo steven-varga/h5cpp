@@ -1,46 +1,32 @@
 
- 
-Few years back then, I was looking for data container with low latency access to stored objects, and possibly support for linear algebra as well as streams. While protocol buffers offered stream support, it was lacking of indexed block access. Soon I realized I was looking for something like TIFF, a container with file system like properties. When examined HDF5 I got very close to what I needed to store financial engineering datasets. In 2011 HDF5 had good support for full and partial read write for high dimensional extendable datasets with optional compression. Also scientific platforms such as Matlab and R supported HDF5 and most importantly worked across various operating systems.
 
-Custom storage for each data format has the advantage of focusing on components which is needed; in the past we've seen various image formats, databases for 3d meshes and so on; machine learning / data science is an emerging field where data-storage is a necessary part but not the main attraction.  Which requires a general, fast, block and sequential access, capable of storing the observations used for model building. HDF5 does provide basic building blocks for the role, but there is a gap between what it offerred and what was needed.
+1) 
+Few years back then, I was looking for data container with low latency access to stored objects, and possibly support for linear algebra as well as streams. While protocol buffers offered stream support, was lacking of indexed block access. Soon I realized I was looking for something like TIFF, a container with file system like properties. When examined HDF5 I got very close to what I needed to store financial engineering datasets. In 2011 HDF5 had good support for full and partial read write for high dimensional extendable datasets with optional compression. Also scientific platforms such as Matlab and R supported HDF5 and most importantly worked across various operating systems.
+
+Custom storage for each data format has the advantage of focusing on components which is needed; in the past we've seen various image formats, databases for 3d meshes and so on; machine learning / data science is an emerging field where data-storage is a necessary part but not the main attraction.  Which requires a general fast, block and sequential access, capable of storing the observations used for model building. HDF5 does provide basic building blocks for the role, but there is a gap between what offers and what was needed.
 
 Researchers and engineers working directly with popular linear algebra libraries, complex POD structures or time series with tight bounds on latency and throughput benefit from using H5CPP template libraries, while engineers who need fast storage solution for arbitrary complex POD struct types already available in C/C++ header files benefit from H5CPP clang based compiler technology.
 
-The current C++ HDF5 approach considers C++ as a different language from C, and reproduces the CAPI calls, adding only marginal value. Also  existing C/C++ library is lacking of high performance packet writing capability, seamless POD structure transformation to HDF5 compound types and has no support for popular matrix algebra libraries and STL containers. In fact HDF5 C++ doesn't consider  C++ templates at all; whereas modern C++ is about templates, and template meta-programming paradigms.
+2) The current C++ HDF5 approach considers C++ as a different language from C, and reproduces the CAPI calls, adding only marginal value. Also  existing C/C++ library is lacking of high performance packet writing capability, seamless POD structure transformation to HDF5 compound types and has no support for popular matrix algebra libraries and STL containers. In fact HDF5 C++ doesn't consider  C++ templates at all; whereas modern C++ is about templates, and template meta-programming paradigms.
 
-The original design criteria was to implement an intuitive, easy to use template based library that supports most major linear algebra systems,  with read, write and append operations. This work may be freely downloaded from my [GitHub page][1], and doxygen based documentation is published [here][2].
-However in the in the past few month, in co-operation with [Gerd Heber, HDFGroup][3],  I've been  engaged with a design and [implementation of new, unique interface][4]: a mixture of Gerd's idea of having something python-ishly flexible ,devilishly easy to use, but instead of using dictionary based named argument passing mechanism, I proposed sexy [EBNF grammar][6], implemented in C++ template meta programming.
+The original design criteria was to implement an intuitive, easy to use template based library that supports most major linear algebra systems,  with read, write and append operations. This work may be freely downloaded from my [GitHub page][1], and doxygen based documentation is  [here][2].
+However in the in the past few month, in co-operation with [Gerd Heber, HDFGroup][3],  I've been  engaged with a design and [implementation of new, unique interface][4]: a mixture of Gerd's idea of having something python-ishly flexible, but instead of using dictionary based named argument passing mechanism, I proposed sexy [EBNF grammar][6], implemented in C++ template meta programming.
 This unique C++ API  gets you to start coding without any knowledge of HDF5 API, yet it provides extensive support for the details when you're ready for it.
 
-The type system is hidden behind templates, and IO calls will do the right thing. In addition to templates, an [optional clang based compiler][5] scans your project source files, detects all C/C++ POD structs being referenced by H5CPP calls, then from the topologically sorted nodes produces the HDF5 Compound type transformations. The [HDF5 DDL][60], or Data Definition  is required to do operations with HDF5 Compound datatypes, and can be a tedious process to do this in the  old fashioned way. Especially when you have a large complex project or you want to focus on the idea, and ignore the details. If you heard of protocolbuffer or thift, which produces source code from [DDL][40] -- what you see here is the exact opposite:
-	the compiler takes arbitrary C/C++ source code and produces HDF5 Compound type DDL.
+The type system is hidden behind templates, and IO calls will do the right thing. In addition to templates, an [optional clang based compiler][5] scans your project source files, detects all C/C++ POD structs being referenced by H5CPP calls, then from the topologically sorted nodes produces the HDF5 Compound type transformations. The HDF5 DDL is required to do operations with HDF5 Compound datatypes, and can be a tedious process to do the old fashioned way when you have a large complex project. If you know protocolbuffer or thift, which produces source code from DDL -- what you see here is the exact opposite:
+	the compiler takes arbitrary C/C++ source code and produces HDF5 Compound type DDL. [DDL stands for Data Description Language]
 The above mechanism works with arbitrary depth of fundamental, array types and POD struct types.
 
-After hearing so many great things wouldn't it be nice to have a sneak peak? By  [clicking on this link][100] you're dropped into bash shell. In `compiler` directory you find the current `h5cpp` version and a brief demonstration of complex C/C++ POD struct being converted to HDF5 Compound type. Feel free to edit to your liking, then run `make` to compile and run the project.
-`h5dump -Hp example.h5` can help you to examine the final result.
+Other design considerations: 
 
-The `new api` directory `file.cpp` contains examples of property lists, and demonstrates the level of control, whereas `arma.cpp` gives a glimps how easy persisting linear algebra objects can be with this state of the art HDF5 C++ library. 
-```bash
-cd 'new\ api'      #enter directory
-make               #compile and run 
-h5dump -pH file.h5 #dump header and properties of an HDF5 file
-```
-
-
-design considerations:
-- high throughput, low latency stream and block IO
-- guaranteed thread safe design
-- extending and not replacing CAPI
-- compile time error over runtime error whenever possible
-- intelligent compile time error messages from using [SFINEA][] 
 - RAII idiom for [resource management][10] prevents leakage 
 - [conversion policy][11] how software writers can reach CAPI from seamless integration to restricted explicit conversion
 - error handling policy: exceptions or no-excpetions
 - [static polymorphism][20] (CRTP idiom) instead of [runtime polymorphism][21]
 - [compile time expressions][23], [copy elision][22] and return value optimization
-- polished easy to maintain well documented terse codebase 
+- polished design
 
-It would be too early to speak of future of a not yet completed project,  but most likely it will follow the law of economics: increased demand will positively affect production.
+3) It would be too early to speak of future of a not yet completed project,  but most likely it will follow the law of economics: increased demand will positively affect production.
 
 
 [1]: http://github.com/steven-varga/h5cpp
@@ -55,7 +41,4 @@ It would be too early to speak of future of a not yet completed project,  but mo
 [21]: https://en.wikipedia.org/wiki/Virtual_method_table
 [22]: https://en.wikipedia.org/wiki/Copy_elision
 [23]: http://en.cppreference.com/w/cpp/language/constant_expression
-[40]: https://en.wikipedia.org/wiki/Data_definition_language
-[60]: https://support.hdfgroup.org/HDF5/Tutor/compound.html#def
-[100]: http://test.h5cpp.ca:10000/
 
