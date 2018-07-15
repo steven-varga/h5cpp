@@ -152,8 +152,9 @@ Requirements:
 c++17 capable compiler or above until backporting to c++14 is completed. The following instructions will help you to
 install and set to default gcc 8.0 on ubuntu 16.04 LTS 
 ```bash
-sudo add-apt-repository ppa:jonathonf/gcc-8.0 
-sudo apt-get update
+sudo add-apt-repository ppa:jonathonf/gcc-8.1 
+sudo apt-get update 
+sudo apt-get upgrade
 sudo apt-get install gcc-8 g++-8
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 100 --slave /usr/bin/g++ g++ /usr/bin/g++-8
 ```

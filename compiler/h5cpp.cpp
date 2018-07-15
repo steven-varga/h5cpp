@@ -40,7 +40,7 @@ StatementMatcher h5templateMatcher = callExpr( allOf(
 	hasDescendant( declRefExpr( to( varDecl().bind("variableDecl")  ) ) ),
 	hasDescendant( declRefExpr( to(
 		functionDecl( allOf(
-			eachOf( hasName("h5::write"), hasName("h5::create"), hasName("h5::read") ),
+			eachOf( hasName("h5::write"), hasName("h5::create"), hasName("h5::read"), hasName("append") ),
 			/* locate T template argument, and declarations of T
 			 * h5::write<T>( ... ) 
 			 */
@@ -69,7 +69,7 @@ static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
 /* the actual program */
 int main(int argc, const char **argv) {
-
+	//FIXME: last argument is the generated file, this could be improved upon
 	std::string arg( strdup( argv[argc-1]) );
 	std::string path = arg.substr(2);
 	argc --;
@@ -85,6 +85,7 @@ int main(int argc, const char **argv) {
 	// in first pass h5::operators trip, as template specializations are not yet generated
 	// for now the entire diagnostic messages are disabled and error diagnostics left for final
 	// compile phase. 
+	std::cout<<"................";
 	return  Tool.run( newFrontendActionFactory (&Finder).get());
 }
 
