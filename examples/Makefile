@@ -6,7 +6,7 @@
 #  _____________________________________________________________________________
 #
 
-DIRS = basics before-after transform packet-table struct raw_memory linalg
+DIRS = basics before-after transform packet-table compound raw_memory linalg
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
