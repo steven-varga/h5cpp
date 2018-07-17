@@ -71,7 +71,7 @@
 */
 
 
-/** @defgroup io-create template <typename T> ds_t create( file, path, space [,lcpl] [,dcpl] [,acpl] );
+/** @defgroup io-create template <T> ds_t create( file, path, space [,lcpl] [,dcpl] [,acpl] );
  * \brief **fd** - open file descriptor or path to hdf5 file,   **path** - how you reach dataset within file, 
  * **space** -- describes the current and maximum dimensions of dataset, 
  * [h5::lcpl | h5::dcpl h5::dapl](@ref link_property_lists) are to fine tune link,dataset properties.
@@ -95,11 +95,11 @@
  * [dataset]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html#Intro-PMRdWrPortion 
  */
 
-/** @defgroup io-write herr_t h5::write<T>( [ds | path], Object<T> [,offset] [ ,stride ] [,count] [,dxpl] );
- *  \brief Templated WRITE operations Object:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> 
+/** @defgroup io-write herr_t h5::write<T>( [ds | path], object<T> [,offset] [ ,stride ] [,count] [,dxpl] );
+ *  \brief Templated WRITE operations object:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> | raw_ptr 
  */
 
-/** @defgroup io-append h5::append( pt , record);
+/** @defgroup io-append h5::append<T>( pt , T object);
  *  \brief dataset APPEND operations for streamed data access with examples
  */
 

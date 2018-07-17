@@ -68,9 +68,32 @@ SGE can be downloaded from here: TODO add link
 LINALG:
 
 ```bash 
-wget http://sourceforge.net/projects/arma/files/armadillo-8.600.0.tar.xz
-tar -xvzf armadillo-8.600.0.tar.xz 
+sudo apt install libboost-math-dev # ublas support
 ```
+The best practice is to install all linear algebra systems from sources, starting with BLAS/LAPACK: 
+[INTEL MKL][100] | [AMD CML][101] | [ATLAS][102] | [openBLAS][103] | [NETLIB][104] Then following with your C++ LinearAlgebra/scientific library. Be sure that the optimized BLAS/LAPACK is picked up during configuration. In addition to standard functionality you may be interested in 
+[SuperLU][200], [Metis][201], [Pardiso][202], [SuiteSparse, UmfPack, Cholmod][203].
+
+Here is the list of C++ supported Scientific/Linear Algebra libraries:
+[armadillo][10] [eigen3][12] [blitz][13] [blaze][16] [dlib][15] [itpp][14] [boost: ublas][11] and [ETL][17] will be added soon. If I left your favourite out or lacking of functionality please shoot me an email.
 
 
+[10]: http://arma.sourceforge.net/
+[11]: http://www.boost.org/doc/libs/1_66_0/libs/numeric/ublas/doc/index.html
+[12]: http://eigen.tuxfamily.org/index.php?title=Main_Page#Documentation
+[13]: https://sourceforge.net/projects/blitz/
+[14]: https://sourceforge.net/projects/itpp/
+[15]: http://dlib.net/linear_algebra.html
+[16]: https://bitbucket.org/blaze-lib/blaze
+[17]: https://github.com/wichtounet/etl
+
+[100]: https://software.intel.com/en-us/mkl
+[101]: https://en.wikipedia.org/wiki/AMD_Core_Math_Library
+[102]: http://math-atlas.sourceforge.net/
+[103]: https://www.openblas.net/
+[104]: http://www.netlib.org/blas/
+[200]: http://crd-legacy.lbl.gov/~xiaoye/SuperLU/
+[201]: http://glaros.dtc.umn.edu/gkhome/metis/metis/overview
+[202]: https://www.pardiso-project.org/
+[203]: http://faculty.cse.tamu.edu/davis/suitesparse.html
 

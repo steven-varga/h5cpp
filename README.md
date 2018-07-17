@@ -150,7 +150,7 @@ while( having_a_good_day ){
 Requirements:
 ------------
 c++17 capable compiler or above until backporting to c++14 is completed. The following instructions will help you to
-install and set to default gcc 8.0 on ubuntu 16.04 LTS 
+install and set to default gcc 8.0 on ubuntu 16.04 LTS, whereas [this document will help you with details](@ref link_h5cpp_install)
 ```bash
 sudo add-apt-repository ppa:jonathonf/gcc-8.1 
 sudo apt-get update 

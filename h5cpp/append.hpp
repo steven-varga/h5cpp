@@ -97,12 +97,12 @@ void h5::pt_t::save2file( ){
 namespace h5 {
 	/** @ingroup io-append
 	 * @brief extends HDF5 dataset along the first/slowest growing dimension, then writes passed object to the newly created space
-	 * @param ctx context for dataset @see context
+	 * @param pt packet_table descriptor
 	 * @param ref T type const reference to object appended
 	 * @tparam T dimensions must match the dimension of HDF5 space upto rank-1 
 	 */ 
-	template<typename T> inline void append( h5::pt_t& ds, const T& ref){
-		ds.append( ref );
+	template<typename T> inline void append( h5::pt_t& pt, const T& ref){
+		pt.append( ref );
 	}
 }
 #endif
