@@ -74,6 +74,13 @@ int main(int argc, const char **argv) {
 	std::string path = arg.substr(2);
 	argc --;
 
+	std::cerr <<
+		"H5CPP: Copyright (c) 2018     , VargaConsulting, Toronto,ON Canada\n"
+	   	"LLVM : Copyright (c) 2003-2010, University of Illinois at Urbana-Champaign.\n"
+		"HDF5 : Copyright (c) 2006-2018, The HDF Group.\n"
+		"       Copyright (c) 1998-2006, The Board of Trustees of the University of Illinois.\n\n"
+	;
+
 	CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
 	ClangTool Tool(OptionsParser.getCompilations(),
 				 OptionsParser.getSourcePathList());

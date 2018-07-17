@@ -8,9 +8,11 @@
 #  _____________________________________________________________________________
 #
 
+
+## edit to your liking
 PREFIX = /usr/local
 
-DIRS =  tests doxy examples profile/grid_engine profile/gperf compiler
+DIRS = compiler tests doxy examples profile/grid_engine profile/gperf
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
@@ -46,3 +48,5 @@ upload:
 	scp -r h5cpp ubuntu@master:/usr/local/include/
 	scp -r examples ubuntu@master:/tmp/ 
 	ssh ubuntu@master "sudo chown -R test001:test001 /tmp/examples"
+
+
