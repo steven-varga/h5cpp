@@ -49,25 +49,23 @@
 
 /**
  
-@example file.cpp
-@example properties.cpp
-
-@example arma-partial.cpp
-@example raw.cpp
-@example stl.cpp
-@example string.cpp
+@example basics.cpp
+@example compound.cpp
+@example compound.c
+@example compound.h
 @example struct.cpp
-@example arma-perf.cpp
-@example stl-perf.cpp
-@example struct-perf.cpp
-
+@example struct.h
 @example arma.cpp
-@example eigen3.cpp
-@example ublas.cpp
-@example itpp.cpp
-@example blitz.cpp
 @example blaze.cpp
+@example blitz.cpp
 @example dlib.cpp
+@example eigen3.cpp
+@example itpp.cpp
+@example ublas.cpp
+@example packettable.cpp
+@example raw.cpp
+@example transform.cpp
+
 */
 
 
@@ -77,7 +75,7 @@
  * [h5::lcpl | h5::dcpl h5::dapl](@ref link_property_lists) are to fine tune link,dataset properties.
  */
 
-/** @defgroup io-read h5::read<T>( [ds | path] [,offset] [,stride] [,count] [,dxpl] ); 
+/** @defgroup io-read h5::read<T>( ds | path [,offset] [,stride] [,count] [,dxpl] ); 
  * \brief Templated full or partial IO READ operations that help you to have access to [dataset]s by either returning 
  * [supported linear algebra](@ref link_linalg_template_types) and [STL containers](@ref link_stl_template_types) 
  * or updating the content of already existing objects by passing reference or pointer 
@@ -95,7 +93,7 @@
  * [dataset]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html#Intro-PMRdWrPortion 
  */
 
-/** @defgroup io-write herr_t h5::write<T>( [ds | path], object<T> [,offset] [ ,stride ] [,count] [,dxpl] );
+/** @defgroup io-write herr_t h5::write<T>( ds | path, object<T> [,offset] [ ,stride ] [,count] [,dxpl] );
  *  \brief Templated WRITE operations object:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> | raw_ptr 
  */
 

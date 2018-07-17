@@ -7,7 +7,7 @@
 AWS EC2 Cluster setup for Parallel HDF5 as well as serial HDF5 on Ubuntu 16.04LTS systems {#link_h5cpp_install}
 ====================================================================================================
 
-H5CPP for now has a strict C++17 requirements, which in time will be dropped to c++14. The easiest way to start is to [obtain a generic ubuntu LTS image](https://cloud-images.ubuntu.com/locator/ec2/) go through the following:
+H5CPP for now has a strict C++17 requirements, which in time will be dropped to c++14. The easiest way to start is to [obtain a generic ubuntu LTS image](https://cloud-images.ubuntu.com/locator/ec2/) then go through the following steps:
 
 GCC-8  from binary, courtesy of [Jonathon F](https://launchpad.net/~jonathonf)
 ```bash
