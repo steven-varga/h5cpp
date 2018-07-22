@@ -69,7 +69,10 @@ namespace h5{ namespace arg {
 namespace h5 {
  	/** \func_create_hdr
 	* \code
-	* auto err = h5::create( "path/to/file.h5", "path/to/dataset", myvec, h5::offset{5,0} );	
+	* examples:
+	* //creates a dataset with 2*myvec.size() + offset
+	* auto ds = h5::create( "path/to/file.h5", "path/to/dataset", myvec, h5::offset{5}, h5::stride{2} );
+	* // explicit dataset spec	
 	* \endcode  
 	* \par_file_path \par_dataset_path \par_current_dims \par_max_dims 
 	* \par_lcpl \par_dcpl \par_dapl  \tpar_T \returns_ds

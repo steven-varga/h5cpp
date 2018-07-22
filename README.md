@@ -3,8 +3,8 @@
  Author: Varga, Steven <steven@vargaconsulting.ca>
 --->
 
-Easy to use  [HDF5][hdf5] C++17 compiler assisted templates for HDF5   
----------------------------------------------------------------------------
+Easy to use  [HDF5][hdf5] C++17 compiler assisted templates for HDF5  [with live trial](cgi/redirect.py)
+----------------------------------------------------------------------------------------------------
 
 [Hierarchical Data Format][hdf5] prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and stream operations on standardized or custom binary/text objects. Scientific computing platforms such as Python, R, Matlab, Fortran,  Julia [and many more...] come with the necessary libraries to read write HDF5 dataset. This edition simplifies interactions with popular linear algebra libraries, provides [compiler assisted seamless object persistence](@ref link_h5cpp_compiler), Standard Template Library support.
 
