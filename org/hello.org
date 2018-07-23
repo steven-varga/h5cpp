@@ -39,20 +39,21 @@
 
 * Get This
 
-Go ahead and place the cursor inside the source code block below,
-and hit ~C-c C-c~ ! If your installation/configuration adds up, the output
- shouldn't surprise you.
+  Go ahead and place the cursor inside the source code block below,
+  and hit ~C-c C-c~ ! If your installation/configuration adds up, the output
+  shouldn't surprise you.
 
-#+begin_src C++ :includes <iostream> :namespaces std :results output :tangle yes
-cout << "Hello, scripting world!\n";
-#+end_src
+  #+begin_src C++ :includes <iostream> :namespaces std :results output :tangle yes
+  cout << "Hello, scripting world!\n";
+  #+end_src
 
-Create a full C++ program by tangling the source block: Place the cursor
-inside the source block and hit ~C-c C-v t~.
+  Create a full C++ program by tangling the source block: Place the cursor
+  inside the source block and hit ~C-c C-v t~. ~hello.cpp~ will be created next
+  to this Org file.
 
 * References
   
   - [[https://orgmode.org/][Org mode for Emacs]]
   - [[https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-C.html][C, C++, D Source Code Blocks in Org Mode]]
-
   - [[http://ehneilsen.net/notebook/orgExamples/org-examples.html][Emacs org-mode examples and cookbook]]
+  - [[https://www.wisdomandwonder.com/article/10597/remove-every-source-block-results][Remove Every Source Block Results]]
