@@ -1,0 +1,103 @@
+
+* Dataset Creation
+
+** Contiguous Layout
+
+   #+BEGIN_SRC C++ :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   h5::fd_t fd = h5::create("000.h5", H5F_ACC_TRUNC);
+
+   h5::create<short>(fd, "/type/short/tree_0", h5::current_dims{10,20});
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -pH -d "/type/short/tree_0" 000.h5
+   #+END_SRC
+
+** Chunked Layout w/ Options
+
+   - Unlimited second dimension
+   - Create missing path intermediaries (default)
+   - Use UTF-8 encoding for link names (default)
+   - Use 2x3 chunks and a fill value of 42
+   - Use Gzip compression at level 9
+
+   #+BEGIN_SRC C++ :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   h5::fd_t fd = h5::open("000.h5", H5F_ACC_RDWR);
+
+   h5::create<short>
+   (
+    fd,
+    std::string(u8"/typo/sh0rt/ΔЙ๗あ叶葉말"),
+    h5::current_dims{10,20},
+    h5::max_dims{10,H5S_UNLIMITED},
+    h5::chunk{2,3} | h5::fill_value<short>{42} | h5::gzip{9} // dcpl
+   );
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -pH -d "/typo/sh0rt/ΔЙ๗あ叶葉말" 000.h5
+   #+END_SRC
+
+** An Explicit ~dcpl~
+
+   #+BEGIN_SRC C++ :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   h5::fd_t fd = h5::open("000.h5", H5F_ACC_RDWR);
+
+   h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value<short>{42} |
+                     h5::fletcher32 | h5::gzip{9};
+
+   h5::create<short>
+   (
+     fd,
+     "/type/short/tree_1",
+     h5::current_dims{10,20},
+     h5::max_dims{10,H5S_UNLIMITED},
+     dcpl
+   );
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -pH -d "/type/short/tree_1" 000.h5
+   #+END_SRC
+
+** Explicit Default Property Lists
+
+   #+BEGIN_SRC C++ :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   h5::fd_t fd = h5::open("000.h5", H5F_ACC_RDWR);
+
+   h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value<short>{42} |
+                     h5::fletcher32 | h5::gzip{9};
+
+   h5::create<short>
+   (
+     fd,
+     "/type/short/tree_2",
+     h5::current_dims{10,20},
+     h5::max_dims{10,H5S_UNLIMITED},
+     h5::default_lcpl,
+     dcpl,
+     h5::default_dapl
+   );
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -pH -d "/type/short/tree_2" 000.h5
+   #+END_SRC
+
+** Inferred Current Dimensions
+
+   #+BEGIN_SRC C++ :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   h5::fd_t fd = h5::open("000.h5", H5F_ACC_RDWR);
+
+   h5::create<short>
+   (
+     fd,
+     "/type/short/max_dims",
+     h5::max_dims{10,H5S_UNLIMITED},  // h5::current_dims{10,0} inferred
+     h5::chunk{10,1} | h5::gzip{9}
+   );
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -pH -d "/type/short/max_dims" 000.h5
+   #+END_SRC
