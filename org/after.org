@@ -1,0 +1,68 @@
+* After
+
+  Using the new C++ API, a simple record stream such as this:
+
+  #+NAME: compound.h
+  #+BEGIN_EXAMPLE
+  /* We write this. */
+  typedef struct s1_t {
+    int    a_name;
+    float  b_name;
+    double c_name;
+  } s1_t;
+
+  /* ... and read this. */
+  typedef struct s2_t {
+    double c_name;
+    int    a_name;
+  } s2_t;
+  #+END_EXAMPLE
+
+  Can be written and read back as follows:
+
+ (**Tangle this!**)
+
+  #+BEGIN_SRC C++ :tangle after.cpp :exports code :eval never
+  #include "compound.h"
+  #include <h5cpp/core>
+  #include "generated.h"
+  #include <h5cpp/io>
+  #include <iostream>
+  #include <algorithm>
+  int
+  main()
+  {
+    std::vector<s1_t> s1(10);
+
+    std::generate( std::begin(s1), std::end(s1), [i=-1]() mutable {
+        return s1_t{++i,static_cast<float>(i*i), 1.0/(i+1)}; 
+      });
+
+    auto fd = h5::create("after.h5", H5F_ACC_TRUNC,  h5::default_fcpl, h5::default_fapl);
+
+    h5::write(fd, "ArrayOfStructures", s1);
+
+    auto data = h5::read< std::vector<s2_t> >(fd, "ArrayOfStructures");
+
+    std::cout << "reading back data previously written:\n\t";
+    for (auto r:data)
+      std::cout << r.c_name << " ";
+    std::cout << std::endl;
+
+    return 0;
+  }
+  #+END_SRC
+
+  We need to go through ~clang~ and have a few extra moves:
+
+  #+BEGIN_SRC shell :results output :exports both
+  h5cpp after.cpp -- -std=c++17 -I/usr/local/include -I/usr/local/h5cpp-llvm \
+        -Dgenerated.h
+  g++ -std=c++17 -I/usr/local/include -I/usr/local/h5cpp-llvm after.cpp \
+      -lhdf5 -lz -ldl -lm -o after
+  ./after
+  #+END_SRC
+
+  #+BEGIN_SRC shell :results output :exports both
+  h5dump after.h5
+  #+END_SRC
