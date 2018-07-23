@@ -46,8 +46,6 @@
 
    h5::write(ds, col, h5::offset{3,0}, h5::block{2,1}, h5::count{5,1},
 	     h5::stride{3,1});
-
-   h5::write(ds, col, h5::offset{4}, h5::stride{2});
    #+END_SRC
 
    #+BEGIN_SRC shell :results output :exports both
