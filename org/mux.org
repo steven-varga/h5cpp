@@ -1,0 +1,87 @@
+
+* A "Multiplexer"
+
+   #+HEADERS: :results output :exports code
+   #+BEGIN_SRC C++ :includes '(<h5cpp/all> <cstdint> <iostream> <numeric> <random> <vector>) :flags "-std=c++17" :libs "-lhdf5" :tangle yes
+   std::random_device rd;
+   std::mt19937 gen(rd());
+
+   // Four channels
+   std::uniform_int_distribution<uint8_t> chn_dist(0, 3);
+   auto gen_chn = [&chn_dist, &gen](){
+     return chn_dist(gen);
+   };
+   std::vector<uint8_t> chn(100);
+   generate(begin(chn), end(chn), gen_chn);
+
+   // Random block sizes
+   std::uniform_int_distribution<uint8_t> blk_dist(0, 128);
+   auto gen_blk = [&blk_dist, &gen](){
+     return blk_dist(gen);
+   };
+   std::vector<uint8_t> blk(100);
+   generate(begin(blk), end(blk), gen_blk);
+
+   h5::fd_t fd = h5::create("mux.h5", H5F_ACC_TRUNC);
+
+   // Three columns
+   h5::pt_t pt_chn = h5::create<uint8_t>
+     (fd, "channel", h5::max_dims{H5S_UNLIMITED}, h5::chunk{256});
+   h5::pt_t pt_blk = h5::create<uint8_t>
+     (fd, "block_size", h5::max_dims{H5S_UNLIMITED}, h5::chunk{256});
+   h5::pt_t pt_val = h5::create<float>
+     (fd, "values", h5::max_dims{H5S_UNLIMITED}, h5::chunk{2048});
+
+   std::uniform_real_distribution<float> val_dist(0, 1);
+   auto gen_val = [&val_dist, &gen](){
+     return val_dist(gen);
+   };
+   std::vector<float> val(128);
+
+   float sum;
+   for(auto i = 0; i < chn.size(); ++i)
+     {
+       h5::append(pt_chn, chn[i]);
+       h5::append(pt_blk, blk[i]);
+
+       // Burst of channel values
+       val.resize(blk[i]);
+       generate(begin(val), end(val), gen_val);
+       for (auto x : val)
+         h5::append(pt_val, x);
+
+       sum = std::accumulate(val.begin(), val.end(), sum);
+     }
+
+   std::cout << "Checksum: " << sum << std::endl;
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -pH mux.h5
+   #+END_SRC
+
+* A "Demultiplexer"
+
+   #+HEADERS: :results output :exports code
+   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all> <cstdint> <iostream>) :flags "-std=c++17" :libs "-lhdf5"
+   h5::fd_t fd = h5::open("mux.h5", H5F_ACC_RDONLY);
+
+   auto chn = h5::read<arma::Col<uint8_t>>(fd, "channel");
+   auto blk = h5::read<arma::Col<uint8_t>>(fd, "block_size");
+
+   float sum{0.0};
+   hsize_t offset{0};
+   for (auto i = 0; i < chn.size(); ++i)
+     {
+       uint8_t channel = chn[i];
+       hsize_t count = (hsize_t)blk[i];
+       auto val = h5::read<arma::Col<float>>
+         (fd, "values", h5::offset{offset}, h5::count{count});
+
+       // Do something useful w/ channel values...
+
+       sum += arma::sum(val);
+       offset += count;
+     }
+   std::cout << "Checksum: " << sum << std::endl;
+   #+END_SRC
