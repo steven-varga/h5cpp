@@ -18,16 +18,16 @@
   } s2_t;
   #+END_EXAMPLE
 
-  Can be written and read back as follows:
+  Can be written and read back as follows.
 
-  #+HEADERS: :results output :exports both
+** Writing Records
+
+  #+HEADERS: :results output silent :exports both
   #+HEADERS: :includes '(<compound.h> <hdf5.h>) :flags "-I./" :libs "-lhdf5"
   #+BEGIN_SRC C
-  s1_t       s1[10];               /* buffer to be written */
-  s2_t       s2[10];               /* read buffer */
-  hid_t      s1_tid, s2_tid;       /* Memory datatype handle */
-  hid_t      file, dataset, space; /* Handles */
-  hsize_t    dim[] = {10};         /* Dataspace dimensions */
+  s1_t       s1[10];                       /* Buffer to be written */
+  hid_t      file, s1_tid, space, dataset; /* Handles */
+  hsize_t    dim[] = {10};                 /* Dataspace dimensions */
   size_t     i;
 
   /* Create the file. */
@@ -54,15 +54,38 @@
   /* Write data to the dataset; */
   H5Dwrite(dataset, s1_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, s1);
 
-  /*  Release the datatype and dataspace resources */
+  /*  Release resources */
+  H5Dclose(dataset);
   H5Tclose(s1_tid);
   H5Sclose(space);
+  H5Fclose(file);
+  #+END_SRC
 
-  /* Read it back */
+  #+BEGIN_SRC shell :results output :exports both
+  h5dump before.h5
+  #+END_SRC
+
+** Reading Records
+
+  #+HEADERS: :results output :exports both
+  #+HEADERS: :includes '(<compound.h> <hdf5.h>) :flags "-I./" :libs "-lhdf5"
+  #+BEGIN_SRC C
+  s2_t       s2[10];                /* Read buffer */
+  hid_t      file, s2_tid, dataset; /* Handles */
+  size_t     i;
+
+  /* Open the file. */
+  file = H5Fopen("before.h5", H5F_ACC_RDONLY, H5P_DEFAULT);
+
+  /* Open the dataset. */
+  dataset = H5Dopen2(file, "ArrayOfStructures", H5P_DEFAULT);
+
+  /* Construct the in-memory type */
   s2_tid = H5Tcreate (H5T_COMPOUND, sizeof(s2_t));
   H5Tinsert(s2_tid, "c_name", HOFFSET(s2_t, c_name), H5T_NATIVE_DOUBLE);
   H5Tinsert(s2_tid, "a_name", HOFFSET(s2_t, a_name), H5T_NATIVE_INT);
 
+  /* Read it back */
   H5Dread(dataset, s2_tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, s2);
 
   printf("reading back data previously written:\n\t");
@@ -70,11 +93,8 @@
       printf("%g ", s2[i].c_name);
   printf("\n");
 
-  /*  Release the datatype and dataspace resources */
+  /*  Release resources */
+  H5Tclose(s2_tid);
   H5Dclose(dataset);
   H5Fclose(file);
-  #+END_SRC
-
-  #+BEGIN_SRC shell :results output :exports both
-  h5dump before.h5
   #+END_SRC
