@@ -11,6 +11,7 @@
 // packet table template specialization with inheritence
 namespace h5 {
 	struct pt_t {
+		pt_t();
 		pt_t( const h5::ds_t& handle );
 		~pt_t();
 
@@ -32,8 +33,9 @@ namespace h5 {
 	};
 }
 
-//size_t H5Tget_size( hid_t dtype_id )
+inline h5::pt_t::pt_t() : ds(H5I_UNINIT){} 
 
+inline
 h5::pt_t::pt_t( const h5::ds_t& handle ) : ds( static_cast<hid_t>( handle) ){
 	H5Iinc_ref(ds); // be sure you keep this alive
 	hid_t file_space = H5Dget_space(ds);
@@ -55,7 +57,7 @@ h5::pt_t::pt_t( const h5::ds_t& handle ) : ds( static_cast<hid_t>( handle) ){
 	mem_space = H5Screate_simple(1, &chunk_size, NULL );
 	H5Sselect_all(mem_space);
 }
-
+inline
 h5::pt_t::~pt_t(){
 		flush();
 		H5Sclose(mem_space);
@@ -72,7 +74,7 @@ void h5::pt_t::append( const T& ref ){
 	if( k == chunk_size - 1  )
 		*count=chunk_size, save2file();
 }
-
+inline
 void h5::pt_t::flush(){
 	*count = *current_dims % chunk_size;
 	if( *count ){ // there is left over then flush it
@@ -82,6 +84,7 @@ void h5::pt_t::flush(){
 	}
 }
 
+inline
 void h5::pt_t::save2file( ){
 
 	H5Dset_extent(ds, current_dims ); 		// make space
