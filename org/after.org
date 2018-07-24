@@ -18,51 +18,80 @@
   } s2_t;
   #+END_EXAMPLE
 
-  Can be written and read back as follows:
+  Can be written and read back as shown below.
 
- (**Tangle this!**)
+** Writing Records
 
-  #+BEGIN_SRC C++ :tangle after.cpp :exports code :eval never
-  #include "compound.h"
-  #include <h5cpp/core>
-  #include "generated.h"
-  #include <h5cpp/io>
-  #include <iostream>
-  #include <algorithm>
-  int
-  main()
-  {
-    std::vector<s1_t> s1(10);
+   *Tangle this!* (~C-u C-c C-v t~)
 
-    std::generate( std::begin(s1), std::end(s1), [i=-1]() mutable {
-        return s1_t{++i,static_cast<float>(i*i), 1.0/(i+1)}; 
-      });
+   #+BEGIN_SRC C++ :tangle record_writer.cpp :exports code :eval never
+   #include "compound.h"
+   #include <h5cpp/core>
+   #include "generated1.h"
+   #include <h5cpp/io>
+   #include <algorithm>
+   int
+   main()
+   {
+     std::vector<s1_t> s1(10);
 
-    auto fd = h5::create("after.h5", H5F_ACC_TRUNC,  h5::default_fcpl, h5::default_fapl);
+     std::generate( std::begin(s1), std::end(s1), [i=-1]() mutable {
+         return s1_t{++i,static_cast<float>(i*i), 1.0/(i+1)}; 
+       });
 
-    h5::write(fd, "ArrayOfStructures", s1);
+     auto fd = h5::create("after.h5", H5F_ACC_TRUNC,  h5::default_fcpl, h5::default_fapl);
 
-    auto data = h5::read< std::vector<s2_t> >(fd, "ArrayOfStructures");
+     h5::write(fd, "ArrayOfStructures", s1);
 
-    std::cout << "reading back data previously written:\n\t";
-    for (auto r:data)
-      std::cout << r.c_name << " ";
-    std::cout << std::endl;
+     return 0;
+   }
+   #+END_SRC
 
-    return 0;
-  }
-  #+END_SRC
+   We need to go through ~clang~ and have a few extra moves:
 
-  We need to go through ~clang~ and have a few extra moves:
+   #+BEGIN_SRC shell :results output silent :exports both
+   h5cpp record_writer.cpp -- -std=c++17 -I/usr/local/include \
+         -I/usr/local/h5cpp-llvm -Dgenerated1.h
+   g++ -std=c++17 -I/usr/local/include -I/usr/local/h5cpp-llvm \
+       record_writer.cpp -lhdf5 -lz -ldl -lm -o record_writer
+   ./record_writer
+   #+END_SRC
 
-  #+BEGIN_SRC shell :results output :exports both
-  h5cpp after.cpp -- -std=c++17 -I/usr/local/include -I/usr/local/h5cpp-llvm \
-        -Dgenerated.h
-  g++ -std=c++17 -I/usr/local/include -I/usr/local/h5cpp-llvm after.cpp \
-      -lhdf5 -lz -ldl -lm -o after
-  ./after
-  #+END_SRC
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump after.h5
+   #+END_SRC
 
-  #+BEGIN_SRC shell :results output :exports both
-  h5dump after.h5
-  #+END_SRC
+   *Tangle this!*
+
+   #+BEGIN_SRC C++ :tangle record_reader.cpp :exports code :eval never
+   #include "compound.h"
+   #include <h5cpp/core>
+   #include "generated2.h"
+   #include <h5cpp/io>
+   #include <iostream>
+
+   int
+   main()
+   {
+     auto fd = h5::open("after.h5", H5F_ACC_RDONLY, h5::default_fapl);
+
+     auto data = h5::read< std::vector<s2_t> >(fd, "ArrayOfStructures");
+
+     std::cout << "reading back data previously written:\n\t";
+     for (auto r:data)
+       std::cout << r.c_name << " ";
+     std::cout << std::endl;
+
+     return 0;
+   }
+   #+END_SRC
+
+   Run that:
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5cpp record_reader.cpp -- -std=c++17 -I/usr/local/include \
+         -I/usr/local/h5cpp-llvm -Dgenerated2.h
+   g++ -std=c++17 -I/usr/local/include -I/usr/local/h5cpp-llvm \
+       record_reader.cpp -lhdf5 -lz -ldl -lm -o record_reader
+   ./record_reader
+   #+END_SRC
