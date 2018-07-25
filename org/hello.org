@@ -43,9 +43,13 @@
   and hit ~C-c C-c~ ! If your installation/configuration adds up, the output
   shouldn't surprise you.
 
-  #+begin_src C++ :includes <iostream> :namespaces std :results output :tangle yes
+  #+HEADERS: :includes <iostream> :namespaces std
+  #+BEGIN_SRC C++ :results output :tangle yes
   cout << "Hello, scripting world!\n";
-  #+end_src
+  #+END_SRC
+
+  #+RESULTS:
+  : Hello, scripting world!
 
   Create a full C++ program by tangling the source block: Place the cursor
   inside the source block and hit ~C-c C-v t~. ~hello.cpp~ will be created next

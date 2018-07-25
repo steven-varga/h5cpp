@@ -22,9 +22,8 @@
 
 ** Writing Records
 
-   #+HEADERS: :results output silent :exports both
    #+HEADERS: :includes '(<compound.h> <hdf5.h>) :flags "-I./" :libs "-lhdf5"
-   #+BEGIN_SRC C
+   #+BEGIN_SRC C :results output silent :exports both
    s1_t       s1[10];                       /* Buffer to be written */
    hid_t      file, s1_tid, space, dataset; /* Handles */
    hsize_t    dim[] = {10};                 /* Dataspace dimensions */
@@ -67,9 +66,8 @@
 
 ** Reading Records
 
-   #+HEADERS: :results output :exports both
    #+HEADERS: :includes '(<compound.h> <hdf5.h>) :flags "-I./" :libs "-lhdf5"
-   #+BEGIN_SRC C
+   #+BEGIN_SRC C :results output :exports both
    s2_t       s2[10];                /* Read buffer */
    hid_t      file, s2_tid, dataset; /* Handles */
    size_t     i;

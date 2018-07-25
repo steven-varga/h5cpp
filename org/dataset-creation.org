@@ -3,7 +3,8 @@
 
 ** Contiguous Layout
 
-   #+BEGIN_SRC C++ :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   #+HEADERS: :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    h5::fd_t fd = h5::create("000.h5", H5F_ACC_TRUNC);
 
    h5::create<short>(fd, "/type/short/tree_0", h5::current_dims{10,20});
@@ -21,7 +22,8 @@
    - Use 2x3 chunks and a fill value of 42
    - Use Gzip compression at level 9
 
-   #+BEGIN_SRC C++ :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   #+HEADERS: :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    h5::fd_t fd = h5::open("000.h5", H5F_ACC_RDWR);
 
    h5::create<short>
@@ -40,7 +42,8 @@
 
 ** An Explicit ~dcpl~
 
-   #+BEGIN_SRC C++ :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   #+HEADERS: :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    h5::fd_t fd = h5::open("000.h5", H5F_ACC_RDWR);
 
    h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value<short>{42} |
@@ -62,7 +65,8 @@
 
 ** Explicit Default Property Lists
 
-   #+BEGIN_SRC C++ :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   #+HEADERS: :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    h5::fd_t fd = h5::open("000.h5", H5F_ACC_RDWR);
 
    h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value<short>{42} |
@@ -86,7 +90,8 @@
 
 ** Inferred Current Dimensions
 
-   #+BEGIN_SRC C++ :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   #+HEADERS: :includes <h5cpp/all> :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    h5::fd_t fd = h5::open("000.h5", H5F_ACC_RDWR);
 
    h5::create<short>

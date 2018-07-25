@@ -3,8 +3,9 @@
 
 ** Create and Write a Column Vector
 
-   #+HEADERS: :results output silent
-   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all>) :flags "-std=c++17" :libs "-lhdf5"
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    arma::colvec col = arma::linspace<arma::colvec>(0,9,10);
    h5::fd_t fd = h5::create("arma.h5", H5F_ACC_TRUNC);
    h5::write(fd, "col", col);
@@ -17,8 +18,9 @@
 
 ** Write a Column w/ Offset and Stride
 
-   #+HEADERS: :results output silent
-   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all>) :flags "-std=c++17" :libs "-lhdf5"
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    arma::colvec col = arma::linspace<arma::colvec>(0,9,10);
    h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
 
@@ -36,8 +38,9 @@
 
 ** Write an HDF5 Pseudo Column
 
-   #+HEADERS: :results output silent
-   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all>) :flags "-std=c++17" :libs "-lhdf5"
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    arma::colvec col = arma::linspace<arma::colvec>(0,9,10);
    h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
 
@@ -54,7 +57,9 @@
 
 ** Create and Write a Row Vector
 
-   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all>) :flags "-std=c++17" :libs "-lhdf5" :results output silent
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    arma::rowvec row = arma::linspace<arma::rowvec>(100,109,10);
    h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
    h5::write(fd, "row", row);
@@ -69,8 +74,9 @@
 
    ~M~ is the ~3x3~ identity matrix.
 
-   #+HEADERS: :results output silent
-   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all>) :flags "-std=c++17" :libs "-lhdf5"
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    arma::mat M(3,3); M.eye();
    h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
 
@@ -86,8 +92,9 @@
 
 ** One Shot Write
 
-   #+HEADERS: :results output silent
-   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all>) :flags "-std=c++17" :libs "-lhdf5"
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    arma::mat M(3,3); M.eye();
    h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
 
@@ -103,8 +110,9 @@
 
 ** Matrix: One Shot Write
 
-   #+HEADERS: :results output silent
-   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all>) :flags "-std=c++17" :libs "-lhdf5"
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    arma::mat M(3,3); M.eye();
    h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
    h5::write(fd, "I_3", M);
@@ -117,8 +125,9 @@
 
 ** Write a Matrix w/ Offset and Stride
 
-   #+HEADERS: :results output silent
-   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all>) :flags "-std=c++17" :libs "-lhdf5"
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    arma::mat M(3,3); M.eye();
    h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
 
@@ -137,8 +146,9 @@
 
 ** Matrix to 1D via Vectorize
 
-   #+HEADERS: :results output silent
-   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all>) :flags "-std=c++17" :libs "-lhdf5"
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    arma::mat M(3,3); M.eye();
    h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
 
@@ -156,8 +166,9 @@
 
 ** Matrix to 1D as Memory Buffer
 
-   #+HEADERS: :results output silent
-   #+BEGIN_SRC C++ :includes '(<armadillo> <h5cpp/all>) :flags "-std=c++17" :libs "-lhdf5"
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
    arma::mat M(3,3); M.eye();
    h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
 
