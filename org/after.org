@@ -39,7 +39,7 @@
          return s1_t{++i,static_cast<float>(i*i), 1.0/(i+1)}; 
        });
 
-     auto fd = h5::create("after.h5", H5F_ACC_TRUNC,  h5::default_fcpl, h5::default_fapl);
+     auto fd = h5::create("after.h5", H5F_ACC_TRUNC);
 
      h5::write(fd, "ArrayOfStructures", s1);
 
