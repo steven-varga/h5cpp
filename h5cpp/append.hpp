@@ -33,7 +33,7 @@ namespace h5 {
 	};
 }
 
-inline h5::pt_t::pt_t() : ds(H5I_UNINIT){} 
+inline h5::pt_t::pt_t() : ds(H5I_UNINIT){}
 
 inline
 h5::pt_t::pt_t( const h5::ds_t& handle ) : ds( static_cast<hid_t>( handle) ){
@@ -59,6 +59,8 @@ h5::pt_t::pt_t( const h5::ds_t& handle ) : ds( static_cast<hid_t>( handle) ){
 }
 inline
 h5::pt_t::~pt_t(){
+	if( !H5Iis_valid( ds )) return;
+
 		flush();
 		H5Sclose(mem_space);
 		H5Tclose(file_type);
