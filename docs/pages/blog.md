@@ -39,7 +39,6 @@ H5cpp aims to solve real life problems you as a software writer, engineer, scien
 Steven Varga is an independent researcher in machine learning and computational finance, providing convex approximations for combinatorial problems, models sequential, categorical data and writes software for high performance computing in C++,Julia, Python or R.
 
 
-
 [1]: http://github.com/steven-varga/h5cpp11
 [2]: http://h5cpp.ca
 [3]: https://github.com/gheber
