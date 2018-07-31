@@ -12,7 +12,7 @@
 ## edit to your liking
 PREFIX = /usr/local
 
-DIRS = compiler tests doxy examples profile/grid_engine profile/gperf
+DIRS = compiler doxy examples profile/grid_engine profile/gperf
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)

@@ -11,8 +11,65 @@
 // packet table template specialization with inheritence
 namespace h5 {
 	struct pt_t {
+		pt_t();
 		pt_t( const h5::ds_t& handle );
+		pt_t( const h5::pt_t& pt ){
+			rank = pt.rank; chunk_size = pt.chunk_size;
+			type_size = pt.type_size; ds = pt.ds;
+			H5Iinc_ref(ds); // keep it alive
+			for(int i=0; i<rank; i++){
+				current_dims[i] = pt.current_dims[i];
+				max_dims[i] = pt.max_dims[i];
+				chunk_dims[i] = pt.chunk_dims[i];
+				offset[i] = pt.offset[i];
+				count[i] = pt.count[i];
+			}
+
+			file_type = H5Dget_type(ds);
+			ptr = calloc( chunk_size, type_size );
+			mem_space = H5Screate_simple(1, &chunk_size, NULL );
+			H5Sselect_all(mem_space);
+		};
+
 		~pt_t();
+		pt_t& operator=( const h5::pt_t& pt ){
+			rank = pt.rank; chunk_size = pt.chunk_size;
+			type_size = pt.type_size; ds = pt.ds;
+			H5Iinc_ref(ds); // keep it alive
+			for(int i=0; i<rank; i++){
+				current_dims[i] = pt.current_dims[i];
+				max_dims[i] = pt.max_dims[i];
+				chunk_dims[i] = pt.chunk_dims[i];
+				offset[i] = pt.offset[i];
+				count[i] = pt.count[i];
+			}
+
+			file_type = H5Dget_type(ds);
+			ptr = calloc( chunk_size, type_size );
+			mem_space = H5Screate_simple(1, &chunk_size, NULL );
+			H5Sselect_all(mem_space);
+
+			return *this;
+		};
+		pt_t& operator=( const h5::pt_t&& pt ){
+			rank = pt.rank; chunk_size = pt.chunk_size;
+			type_size = pt.type_size; ds = pt.ds;
+			H5Iinc_ref(ds); // keep it alive
+			for(int i=0; i<rank; i++){
+				current_dims[i] = pt.current_dims[i];
+				max_dims[i] = pt.max_dims[i];
+				chunk_dims[i] = pt.chunk_dims[i];
+				offset[i] = pt.offset[i];
+				count[i] = pt.count[i];
+			}
+
+			file_type = H5Dget_type(ds);
+			ptr = calloc( chunk_size, type_size );
+			mem_space = H5Screate_simple(1, &chunk_size, NULL );
+			H5Sselect_all(mem_space);
+
+			return *this;
+		};
 
 		template<typename T>
 		friend void append( h5::pt_t& ds, const T& ref);
@@ -21,7 +78,6 @@ namespace h5 {
 		template <class T> void append( const T& ref );
 		void flush();
 		void save2file();
-
 		void* ptr;
 		hid_t ds, mem_type, file_type, mem_space, file_space;
 		hsize_t current_dims[H5CPP_MAX_RANK],
@@ -32,9 +88,12 @@ namespace h5 {
 	};
 }
 
-//size_t H5Tget_size( hid_t dtype_id )
+inline h5::pt_t::pt_t() : ds(H5I_UNINIT){}
 
+inline
 h5::pt_t::pt_t( const h5::ds_t& handle ) : ds( static_cast<hid_t>( handle) ){
+	if( !H5Iis_valid(ds) ) return;
+
 	H5Iinc_ref(ds); // be sure you keep this alive
 	hid_t file_space = H5Dget_space(ds);
 		rank = H5Sget_simple_extent_dims(file_space, current_dims, max_dims);
@@ -51,12 +110,15 @@ h5::pt_t::pt_t( const h5::ds_t& handle ) : ds( static_cast<hid_t>( handle) ){
 	file_type = H5Dget_type(ds);
 	type_size =  H5Tget_size( file_type );
 	ptr = calloc( chunk_size, type_size );
-
 	mem_space = H5Screate_simple(1, &chunk_size, NULL );
 	H5Sselect_all(mem_space);
+
 }
 
+inline
 h5::pt_t::~pt_t(){
+	if( !H5Iis_valid( ds )) return;
+
 		flush();
 		H5Sclose(mem_space);
 		H5Tclose(file_type);
@@ -66,13 +128,12 @@ h5::pt_t::~pt_t(){
 
 template <class T>
 void h5::pt_t::append( const T& ref ){
-
-	size_t k = (++*current_dims -1)% chunk_size;
+	size_t k = (++*current_dims -1) % chunk_size;
 	static_cast<T*>(ptr)[k] = ref;
 	if( k == chunk_size - 1  )
 		*count=chunk_size, save2file();
 }
-
+inline
 void h5::pt_t::flush(){
 	*count = *current_dims % chunk_size;
 	if( *count ){ // there is left over then flush it
@@ -82,6 +143,7 @@ void h5::pt_t::flush(){
 	}
 }
 
+inline
 void h5::pt_t::save2file( ){
 
 	H5Dset_extent(ds, current_dims ); 		// make space

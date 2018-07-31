@@ -34,8 +34,6 @@ int main(){
 	{ // creates + writes entire object tree
 		std::vector<sn::example::Record> vec = h5::utils::get_test_data<sn::example::Record>(20);
 		h5::write(fd, "orm/partial/vector one_shot", vec );
-		h5::write(fd, "orm/partial/vector offset|stride|block", vec,
-									h5::offset{5}, h5::stride{3}, h5::block{2});
 		// dimensions and other properties specified additional argument 
 		h5::write(fd, "orm/partial/vector custom_dims", vec,
 				h5::current_dims{100}, h5::max_dims{H5S_UNLIMITED}, h5::gzip{9} | h5::chunk{20} );
