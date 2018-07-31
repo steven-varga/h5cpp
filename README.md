@@ -12,7 +12,7 @@ update on [LIVE DEMO][999]:
 ----------------------------
 If the [live demo link][999] doesn't work for you either due to saturation or other reasons use this AWS-EC2 public image:  **ami-38726547** with `h5cpp1.10.2` tag. Once you logged into your instance with `ssh -i your_private_key.pem ubuntu@your.instance.ip` you find the relevant examples, all supported linear algebra systems, the **h5cpp**,  clang++7.0.0 and gcc8.1.0 compilers.
 
-The first time execution of HFT example will be terrible slow, once the instance caches the dataset locally it will improve to 22MB/sec which is the throughput on the receiving end. The 'real' throughput is roughly the input file /  running time:  `1.2GB/30sec = 400MB/sec`. Because of the limited time profilers are not installed, if interested to verify my results please install gprof and cachegrind.
+The first time execution of HFT example will be terrible slow, once the instance caches the dataset locally it will improve to 22MB/sec which is the throughput on the receiving end. 
 
 Templates:
 ----------
