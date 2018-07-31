@@ -1,0 +1,184 @@
+
+* Basic Armadillo Objects
+
+** Create and Write a Column Vector
+
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
+   arma::colvec col = arma::linspace<arma::colvec>(0,9,10);
+   h5::fd_t fd = h5::create("arma.h5", H5F_ACC_TRUNC);
+   h5::write(fd, "col", col);
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -p -d "/col" arma.h5
+   #+END_SRC
+
+
+** Write a Column w/ Offset and Stride
+
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
+   arma::colvec col = arma::linspace<arma::colvec>(0,9,10);
+   h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
+
+   h5::ds_t ds = h5::create<short>
+	(fd, "col + offset & stride", h5::current_dims{23},
+	 h5::fill_value<short>{-1});
+
+   h5::write(ds, col, h5::offset{4}, h5::stride{2});
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -p -d "/col + offset & stride" arma.h5
+   #+END_SRC
+
+
+** Write an HDF5 Pseudo Column
+
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
+   arma::colvec col = arma::linspace<arma::colvec>(0,9,10);
+   h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
+
+   h5::ds_t ds = h5::create<short>(fd, "col^T", h5::current_dims{20,1},
+				     h5::fill_value<short>{-1});
+
+   h5::write(ds, col, h5::offset{3,0}, h5::block{2,1}, h5::count{5,1},
+	     h5::stride{3,1});
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -p -d "/col^T" arma.h5
+   #+END_SRC
+
+** Create and Write a Row Vector
+
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
+   arma::rowvec row = arma::linspace<arma::rowvec>(100,109,10);
+   h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
+   h5::write(fd, "row", row);
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -p -d "row" arma.h5
+   #+END_SRC
+
+
+** Write a Matrix to a 1D Dataset
+
+   ~M~ is the ~3x3~ identity matrix.
+
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
+   arma::mat M(3,3); M.eye();
+   h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
+
+   h5::ds_t ds = h5::create<short>
+      (fd, "Mat -> 1D", h5::current_dims{10}, h5::fill_value<short>{-1});
+   h5::write(ds, M, h5::offset{2}, h5::count{6});
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -p -d "Mat -> 1D" arma.h5
+   #+END_SRC
+
+
+** One Shot Write
+
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
+   arma::mat M(3,3); M.eye();
+   h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
+
+   h5::write<double>(fd,"Mat (mem buffer) -> 1D", M.memptr(),
+		     h5::current_dims{11}, h5::fill_value<short>{-1},
+		     h5::offset{2}, h5::block{3}, h5::count{2}, h5::stride{5});
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -p -d "Mat (mem buffer) -> 1D" arma.h5
+   #+END_SRC
+
+
+** Matrix: One Shot Write
+
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
+   arma::mat M(3,3); M.eye();
+   h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
+   h5::write(fd, "I_3", M);
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -p -d "I_3" arma.h5
+   #+END_SRC
+
+
+** Write a Matrix w/ Offset and Stride
+
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
+   arma::mat M(3,3); M.eye();
+   h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
+
+   h5::ds_t ds = h5::create<short>(fd, "matrix -> 2D : offset + stride",
+				   h5::current_dims{6,15},
+				   h5::max_dims{10,H5S_UNLIMITED},
+				   h5::chunk{2,3} | h5::fill_value<short>{2}
+				   |  h5::gzip{9});
+   h5::write(ds, M, h5::offset{2,2}, h5::stride{1,3});
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -p -d "matrix -> 2D : offset + stride" arma.h5
+   #+END_SRC
+
+
+** Matrix to 1D via Vectorize
+
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
+   arma::mat M(3,3); M.eye();
+   h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
+
+   h5::ds_t ds = h5::create<short>(fd, "matrix -> 1D : vectorize",
+				    h5::current_dims{20},
+				    h5::fill_value<short>{3});
+   arma::colvec v = arma::vectorise(M);
+   h5::write(ds, v, h5::offset{2}, h5::stride{4}, h5::block{2}, h5::count{4});
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -p -d "matrix -> 1D : vectorize" arma.h5
+   #+END_SRC
+
+
+** Matrix to 1D as Memory Buffer
+
+   #+HEADERS: :includes '(<armadillo> <h5cpp/all>)
+   #+HEADERS: :flags "-std=c++17" :libs "-lhdf5"
+   #+BEGIN_SRC C++ :results output silent
+   arma::mat M(3,3); M.eye();
+   h5::fd_t fd = h5::open("arma.h5", H5F_ACC_RDWR);
+
+   h5::ds_t ds = h5::create<short>(fd, "matrix -> 1D : memptr",
+				   h5::current_dims{20},
+				   h5::fill_value<short>{3});
+   h5::write<double>(ds, M.memptr(), h5::offset{2}, h5::stride{4},
+		     h5::block{2}, h5::count{4});
+   #+END_SRC
+
+   #+BEGIN_SRC shell :results output :exports both
+   h5dump -p -d "matrix -> 1D : memptr" arma.h5
+   #+END_SRC
