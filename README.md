@@ -157,6 +157,8 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 100 --slave /
 ```
 
 [hdf5]: https://support.hdfgroup.org/HDF5/doc/H5.intro.html
+
+
 [1]: http://en.cppreference.com/w/cpp/container/vector
 [2]: http://arma.sourceforge.net
 [4]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5Front.html
@@ -168,7 +170,11 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 100 --slave /
 [10]: https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_.28CSC_or_CCS.29
 [11]: https://en.wikipedia.org/wiki/List_of_numerical_libraries#C++
 [12]: http://en.cppreference.com/w/cpp/concept/StandardLayoutType
+
 [40]: https://support.hdfgroup.org/HDF5/Tutor/HDF5Intro.pdf
+
+
+
 [99]: https://en.wikipedia.org/wiki/C_(programming_language)#Pointers
 [100]: http://arma.sourceforge.net/
 [101]: http://www.boost.org/doc/libs/1_66_0/libs/numeric/ublas/doc/index.html
@@ -178,13 +184,27 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 100 --slave /
 [105]: http://dlib.net/linear_algebra.html
 [106]: https://bitbucket.org/blaze-lib/blaze
 [107]: https://github.com/wichtounet/etl
+
+
 [200]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_profiling_README.html
 [201]: http://h5cpp.ca/examples.html
 [202]: http://h5cpp.ca/modules.html
+
 [300]: @ref link_h5cpp_compiler
 [301]: @ref link_conversion_policy
 [302]: @ref link_exception_policy
 [305]: md__home_steven_Documents_projects_h5cpp_docs_pages_compiler_trial.html#link_try_compiler
+
 [999]: http://h5cpp.ca/cgi/redirect.py
+<!--
+Community Edition vs. [Professional and Enterprise Edition][305]
+--------------------------------------------------------------------------------------
+
+|      | linalg | STL         | python objects| Rcpp | [ compiler][300]  | [type][301] and [exception][302] policy | MPI | throughput optimizer | support       |
+|------|--------|-------------|-----|---------|------|-----------------------------|-----------|---------------------|---------------|
+| CE   | yes    | std::vector |N/A  | N/A     |N/A   | N/A               | N/A     | N/A       | N/A                 |
+| PE   | yes    | full        | yes | yes     |yes   | optional          | optional| optional  | optional            |
+| EE   | yes    | full        | yes | yes     |yes   | yes               | yes     | yes       | email,chat, phone   |
+-->
 
 
