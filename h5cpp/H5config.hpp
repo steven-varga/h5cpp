@@ -26,9 +26,6 @@
 	#define H5CPP_RANK_CUBE 3
 #endif
 
-#ifndef H5CPP_SMART_POINTERS_ONLY
-#endif
-
 // implicit conversion enabled by default `-DH5CPP_CONVERSION_EXPLICIT` to disable 
 #ifndef H5CPP_CONVERSION_EXPLICIT
 	#define H5CPP_CONVERSION_IMPLICIT
@@ -41,11 +38,6 @@
 #ifndef H5CPP_CONVERSION_TO_CAPI_DISABLED
 	#define H5CPP_CONVERSION_TO_CAPI
 #endif
-
-
-#include <complex>
-#include <hdf5.h>
-
 
 /**
  

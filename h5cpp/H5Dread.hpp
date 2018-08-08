@@ -3,15 +3,9 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
-#include <hdf5.h>
-#include "macros.h"
-#include <initializer_list>
-#include <tuple>
-#include <type_traits>
-
-#ifndef  H5CPP_READ_H 
-#define  H5CPP_READ_H
-
+#ifndef  H5CPP_DREAD_HPP
+#define  H5CPP_DREAD_HPP
+#include "H5Dopen.hpp"
 namespace h5 {
 /***************************  REFERENCE *****************************/
 
@@ -89,7 +83,7 @@ namespace h5 {
 	* \par_file_path \par_dataset_path \par_ptr \par_offset \par_stride \par_count \par_block \par_dxpl \tpar_T \returns_err
  	*/ 
 	template<class T, class... args_t>
-	h5::herr_t read( hid_t fd, const std::string& dataset_path,T* ptr, args_t&&... args ){
+	h5::herr_t read( const h5::fd_t& fd, const std::string& dataset_path, T* ptr, args_t&&... args ){
 		h5::ds_t ds = h5::open(fd, dataset_path );
 		return h5::read<T>(ds, ptr, args...);
 	}

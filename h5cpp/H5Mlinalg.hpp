@@ -3,8 +3,8 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
-#ifndef  H5CPP_LINALG_MACROS_H 
-#define H5CPP_LINALG_MACROS_H
+#ifndef  H5CPP_MLINALG_HPP 
+#define H5CPP_MLINALG_HPP
 
 
 /**************************************************************************************************************************************/

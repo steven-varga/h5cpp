@@ -3,15 +3,8 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
-#include <hdf5.h>
-#include "macros.h"
-#include "create.hpp"
-#include <initializer_list>
-#include <tuple>
-#include <type_traits>
-
-#ifndef  H5CPP_WRITE_H 
-#define H5CPP_WRITE_H
+#ifndef  H5CPP_DWRITE_HPP
+#define H5CPP_DWRITE_HPP
 
 namespace h5 {
     inline h5::fd_t open(const std::string& path,  unsigned flags, const h5::fapl_t& fapl );
@@ -201,6 +194,4 @@ namespace h5 {
 		return h5::write( fd, dataset_path, args...);
 	}
 }
-
-
 #endif

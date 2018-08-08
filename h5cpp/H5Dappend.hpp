@@ -4,11 +4,10 @@
  
  */
 
-#include <memory>
-#ifndef  H5CPP_APPEND_H 
-#define H5CPP_APPEND_H
+#ifndef  H5CPP_DAPPEND_HPP
+#define H5CPP_DAPPEND_HPP
 
-// packet table template specialization with inheritence
+// packet table template specialization with inheritance
 namespace h5 {
 	struct pt_t {
 		pt_t();

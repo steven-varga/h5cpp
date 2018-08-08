@@ -3,11 +3,22 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
+
 #ifndef  H5CPP_IO_H
 #define H5CPP_IO_H
-	#include "create.hpp"
-	#include "read.hpp"
-	#include "write.hpp"
-	#include "append.hpp"
+	#include "H5Fcreate.hpp"
+	#include "H5Fopen.hpp"
+	
+	#include "H5Dcreate.hpp"
+	#include "H5Dopen.hpp"
+	#include "H5Dwrite.hpp"
+	#include "H5Dread.hpp"
+	#include "H5Dappend.hpp"
+	
+	#include "H5Acreate.hpp"
+	#include "H5Aopen.hpp"
+	#include "H5Awrite.hpp"
+	#include "H5Adelete.hpp"
+
 #endif	
 

@@ -3,13 +3,8 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
-#include <hdf5.h>
-#include "config.h"
-#include <array>
-#include <vector>
-
-#ifndef  H5CPP_MACROS_H 
-#define  H5CPP_MACROS_H
+#ifndef  H5CPP_MACROS_HPP 
+#define  H5CPP_MACROS_HPP
 
 	namespace h5 { namespace utils {
 
@@ -34,8 +29,8 @@
 	template<> inline std::string h5type_name<T>(){ return #H; }   \
  	template<> inline hid_t h5type<T>(){ return  H5Tcopy(H); }     \
 
-#include "macros_base.h"
-#include "macros_linalg.h"
+#include "H5Mbase.hpp"
+#include "H5Mlinalg.hpp"
 
 #define H5CPP_STL_TEMPLATE_SPEC(T) 																			\
 	H5CPP_BASE_TEMPLATE_SPEC(T, std::vector, ref.data(), ref.size(), H5CPP_RANK_VEC,  {ref.size()})  		\

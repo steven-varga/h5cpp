@@ -1,14 +1,11 @@
 /*
  * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
+ *
  */
 
-#include <hdf5.h>
-#include <string>
-#include <iostream>
-
-#ifndef  H5CPP_SPACE_HPP
-#define H5CPP_SPACE_HPP
+#ifndef  H5CPP_SALL_HPP
+#define  H5CPP_SALL_HPP
 
 namespace h5{ namespace impl {
 	struct max_dims_t{}; struct current_dims_t{};
@@ -45,6 +42,7 @@ namespace h5{ namespace impl {
 	};
 }}
 
+/*PUBLIC CALLS*/
 namespace h5 {
 	using max_dims_t       = impl::array<impl::max_dims_t>;
 	using current_dims_t   = impl::array<impl::current_dims_t>;
@@ -63,5 +61,7 @@ namespace h5 {
 	using current_dims   = current_dims_t;
 	using max_dims       = max_dims_t;
 }
+
+
 #endif
 

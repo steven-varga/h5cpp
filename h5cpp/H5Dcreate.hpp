@@ -3,23 +3,8 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  *
  */
-
-#include <hdf5.h>
-#include "macros.h"
-#include <limits>
-#include <initializer_list>
-
-#ifndef  H5CPP_CREATE_H 
-#define  H5CPP_CREATE_H
-
-namespace h5 {
-	inline h5::sp_t create_simple( const h5::current_dims& current_dims  ){
-		return h5::sp_t{H5Screate_simple( current_dims.size(), current_dims.begin(), nullptr )};
-	}
-	inline h5::sp_t create_simple( const h5::current_dims& current_dims, const h5::max_dims& max_dims  ){
-		return h5::sp_t{H5Screate_simple( current_dims.size(), current_dims.begin(), max_dims.begin() )};
-	}
-}
+#ifndef  H5CPP_DCREATE_HPP 
+#define  H5CPP_DCREATE_HPP
 
 
 namespace h5{ namespace arg {

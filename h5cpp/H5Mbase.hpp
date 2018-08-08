@@ -3,8 +3,8 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
-#ifndef  H5CPP_MACRO_BASE_H 
-#define H5CPP_MACRO_BASE_H
+#ifndef  H5CPP_MBASE_HPP
+#define H5CPP_MBASE_HPP
 
 
 

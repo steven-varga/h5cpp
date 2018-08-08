@@ -4,7 +4,7 @@
  */
 
 #include "struct.h"
-#include <h5cpp/mock.hpp>
+#include <h5cpp/H5misc.hpp>
 
 namespace h5 { namespace utils {
 	// template specialization 
