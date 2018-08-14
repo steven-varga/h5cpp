@@ -65,8 +65,8 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	std::enable_if_t<!std::is_same<T,char**>::value,
-	h5::herr_t> write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ){
+	typename std::enable_if<!std::is_same<T,char**>::value,
+	h5::herr_t>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ){
 	// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double | std::string
 		using element_t = typename utils::base<T>::type;
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;

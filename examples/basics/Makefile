@@ -8,12 +8,12 @@
 
 apps = basics
 
-CXXFLAGS =  -std=c++17 -Wno-deprecated
+CXXFLAGS =  -std=c++11 -Wno-deprecated
 LIBS =  -lhdf5  -lz -ldl -lm
 
 test: $(apps)
 	@./basics
-	h5dump -pH 004.h5
+	#h5dump -pH 004.h5
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX)   -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^

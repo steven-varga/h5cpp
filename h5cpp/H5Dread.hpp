@@ -24,8 +24,8 @@ namespace h5 {
  	*/ 
 
 	template<class T, class... args_t>
-	std::enable_if_t<!std::is_same<T,char*>::value,
-	h5::herr_t> read( const h5::ds_t& ds, T* ptr, args_t&&... args ){
+	typename std::enable_if<!std::is_same<T,char*>::value,
+	h5::herr_t>::type read( const h5::ds_t& ds, T* ptr, args_t&&... args ){
 		using toffset  = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
 		using tcount   = typename arg::tpos<const h5::count_t&,const args_t&...>;

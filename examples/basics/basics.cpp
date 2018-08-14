@@ -28,8 +28,8 @@ int main(){
 		// flags := H5F_ACC_TRUNC | H5F_ACC_EXCL either to truncate or open file exclusively
 		// you may pass CAPI property list descriptors daisy chained with '|' operator 
 		auto fd = h5::create("002.h5", H5F_ACC_TRUNC, 
-				h5::file_space_page_size{4096} | h5::userblock{512},  // file creation properties
-			   	h5::fclose_degree_weak | h5::fapl_core{2048,1} );     // file access properties
+				h5::file_space_page_size{4096} | h5::userblock{512} );  // file creation properties
+			   	//,h5::fclose_degree_weak | h5::fapl_core{2048,1} );     // file access properties
 		// or the c++11 wrapped smart pointer equivalent h5::AP_DEFAULT
 		h5::create("003.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
 		// file is closed when returning h5::create function, convenient if we don't proceed with
@@ -55,5 +55,6 @@ int main(){
 		auto ds_3 = h5::create<short>(fd,"/type/short/max_dims", h5::max_dims{10,H5S_UNLIMITED}, // [10 X 0]  
 			  h5::chunk{10,1} | h5::gzip{9} );
 	}
+
 }
 

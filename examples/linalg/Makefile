@@ -7,7 +7,7 @@
 #
 apps = arma eigen3 itpp blaze ublas
 
-CXXFLAGS =  -std=c++17 -Wno-deprecated  -Wall
+CXXFLAGS = -Wno-deprecated  -Wall
 LIBS =  -lhdf5 -lz -ldl -lm
 INCLUDES=/usr/include/eigen3
 
@@ -18,30 +18,35 @@ test: $(apps)
 	@./blaze
 	@./ublas
 
-
-%.o : $(SRC_DIR)/%.cpp 
-	$(CXX)   -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
-
 all: $(apps)
 
-arma: arma.o
+arma: arma.cpp
+	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
 	$(CXX) $^ $(LIBS) -o $@
-blaze: blaze.o
+
+blaze: blaze.cpp
+	$(CXX)   -o $@  -std=c++14 $(CXXFLAGS) -c $^
 	$(CXX) $^ $(LIBS) -o $@
-itpp: itpp.o
+
+itpp: itpp.cpp
+	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
 	$(CXX) $^ $(LIBS) -litpp -o $@
-eigen3: eigen3.o
-	$(CXX) $^ $(LIBS)  -o $@
-ublas: ublas.o
+
+eigen3: eigen3.cpp
+	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
 	$(CXX) $^ $(LIBS)  -o $@
 
-## btlitz fails: incompletetype	 2018 july 11
-#blitz: blitz.o
-#	$(CXX) $^ $(LIBS)  -o $@
+ublas: ublas.cpp
+	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
+	$(CXX) $^ $(LIBS)  -o $@
 
-## dlib fails on C++17 with /usr/include/dlib/matrix/matrix.h:1608:38: error: ISO C++17 does not allow dynamic exception specifications 
-#dlib: dlib.o
-#	$(CXX) $^ $(LIBS)  -o $@
+blitz: blitz.cpp
+	$(CXX)   -o $@  -std=c++14 $(CXXFLAGS) -c $^
+	$(CXX) $^ $(LIBS)  -o $@
+
+dlib: dlib.cpp
+	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
+	$(CXX) $^ $(LIBS)  -o $@
 
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)

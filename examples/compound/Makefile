@@ -5,7 +5,7 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
-CXXFLAGS =  -std=c++17  -I/usr/local/include -I/usr/local/h5cpp-llvm
+CXXFLAGS =  -std=c++14  -I/usr/local/include -I/usr/local/h5cpp-llvm
 LIBS =  -lhdf5  -lz -ldl -lm
 
 test: struct

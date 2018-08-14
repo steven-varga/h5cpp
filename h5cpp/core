@@ -25,7 +25,7 @@
 		using herr_t = int;
 	}
 	#include "H5config.hpp"
-
+	#include "compat.hpp"
 	#include "H5misc.hpp"
 	#include "H5Sall.hpp"
 	#include "H5Mall.hpp"

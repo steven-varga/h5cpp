@@ -20,7 +20,7 @@ int main(){
 	{ // READ back, pass conversion handler -- if internal conversion fails, and a 
 	  // data transform expression 	
 		auto m = h5::read<arma::fmat>("arma.h5","transform", 
-			 h5::type_conv_cb{ handler, nullptr } | h5::data_transform{"x/2 + 1"});
+			 h5::type_conv_cb{ {handler, nullptr} } | h5::data_transform{"x/2 + 1"});
 		m.print();
 	}
 

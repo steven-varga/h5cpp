@@ -38,14 +38,16 @@ namespace h5{ namespace arg {
 	template<class S, class... args_t > struct tpos
 		: detail::tuple_pos<const S&,-1,0,false, void, std::tuple<args_t...>>{ };
 
-	template <class S, class... args_t, 
+	template <class S, class... args_t,
 			 class idx = tpos</*search: */const S&,/*args: */ const args_t&...,const S&>>
-	auto& get( const S& def, args_t&&... args ){
+	typename idx::type& 
+	get( const S& def, args_t&&... args ){
 		auto tuple = std::forward_as_tuple(args..., def );
 		return std::get<idx::value>( tuple );
 	}
 	template <int idx, class... args_t>
-	auto& getn(args_t&&... args ){
+	typename std::tuple_element<idx, std::tuple<args_t...> >::type&
+	getn(args_t&&... args ){
 		auto tuple = std::forward_as_tuple(args...);
 		return std::get<idx>( tuple );
 	}
