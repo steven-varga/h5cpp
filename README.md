@@ -186,8 +186,6 @@ while( having_a_good_day ){
 [400]: https://www.meetup.com/Chicago-C-CPP-Users-Group/events/250655716/
 [401]: https://www.hdfgroup.org/2018/07/cpp-has-come-a-long-way-and-theres-plenty-in-it-for-users-of-hdf5/
 [999]: http://h5cpp.ca/cgi/redirect.py
-
-[300]: @ref link_h5cpp_compiler
 [301]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_conversion.html
 [302]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_exceptions.html
 [303]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_compiler.html
