@@ -182,11 +182,11 @@ while( having_a_good_day ){
 [200]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_profiling_README.html
 [201]: http://h5cpp.ca/examples.html
 [202]: http://h5cpp.ca/modules.html
-[300]: @ref link_h5cpp_compiler
-[301]: @ref link_conversion_policy
-[302]: @ref link_exception_policy
 [305]: md__home_steven_Documents_projects_h5cpp_docs_pages_compiler_trial.html#link_try_compiler
 [400]: https://www.meetup.com/Chicago-C-CPP-Users-Group/events/250655716/
 [401]: https://www.hdfgroup.org/2018/07/cpp-has-come-a-long-way-and-theres-plenty-in-it-for-users-of-hdf5/
 [999]: http://h5cpp.ca/cgi/redirect.py
+[300]: @ref link_h5cpp_compiler
+[301]: @ref link_conversion_policy
+[302]: @ref link_exception_policy
 
