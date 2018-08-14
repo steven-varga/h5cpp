@@ -8,13 +8,13 @@ Easy to use  [HDF5][hdf5] **C++11** compiler assisted templates for HDF5 with [L
 
 
 
-[Hierarchical Data Format][hdf5] prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and stream operations on standardized or custom binary/text objects. Scientific computing platforms such as Python, R, Matlab, Fortran,  Julia [and many more...] come with the necessary libraries to read write HDF5 dataset. This edition simplifies interactions with popular linear algebra libraries, provides [compiler assisted seamless object persistence](@ref link_h5cpp_compiler), Standard Template Library support.
+[Hierarchical Data Format][hdf5] prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and stream operations on standardized or custom binary/text objects. Scientific computing platforms such as Python, R, Matlab, Fortran,  Julia [and many more...] come with the necessary libraries to read write HDF5 dataset. This edition simplifies interactions with [popular linear algebra libraries][304], provides [compiler assisted seamless object persistence][303], Standard Template Library support.
 
 NEWS:
 ------------
 
 - **2018-aug-13** The backporting of the template library to c++11 has been completed the templates are pure c++11 with no higher requirements. 
-- **2018-aug-01** [H5CPP presentation at Chicago C++ UsersGroup][200] with Dave Pearah and Gerd Heber, HDFGroup
+- **2018-aug-01** [H5CPP presentation at Chicago C++ UsersGroup][200] with David Pearah and Gerd Heber, HDFGroup
 - **2018-jul-30** [HDFGroup Blog post: ][401] the short story of h5cpp
 - **2018-jun-01** pythonic syntax and h5cpp compiler prototyped with c++17 requirements
 - **2018-apr-12** cooperation with Gerd Heber, HDFGroup
@@ -65,8 +65,8 @@ template <typename T> h5::err_t write( dataset,  const T& ref
 template <typename T> void h5::append(h5::pt_t& ds, const T& ref) [noexcept];
 ```
 
-All **file and dataset io** descriptors implement [raii idiom](@ref link_raii_idiom) and close underlying resource when going out of scope, 
-and may be seamlessly passed to HDF5 CAPI calls when implicit conversion enabled. Similarly templates can take CAPI `hid_t` identifiers as arguments where applicable provided conversion policy allows. See [conversion policy](@ref link_conversion_policy) for details.
+All **file and dataset io** descriptors implement [raii idiom][301] and close underlying resource when going out of scope, 
+and may be seamlessly passed to HDF5 CAPI calls when implicit conversion enabled. Similarly templates can take CAPI `hid_t` identifiers as arguments where applicable provided conversion policy allows. See [conversion policy][301] for details.
 
 how to use:
 -----------
@@ -76,7 +76,7 @@ There is no other dependency than hdf5 libraries and include files. However to a
 #define [ H5CPP_USE_BLAZE | H5CPP_USE_ARMADILLO | H5CPP_USE_EIGEN3 | H5CPP_USE_UBLAS_MATRIX 
 	| H5CPP_USE_UBLAS_VECTOR | H5CPP_USE_ITPP_MATRIX | H5CPP_USE_ITPP_VECTOR | H5CPP_USE_BLITZ | H5CPP_USE_DLIB | H5CPP_USE_ETL ]
 ```
-
+if you're interested in `h5cpp` compiler please [visit this page][305] to recreate the required clang7.0 toolchain. 
 
 supported classes:
 ----------------------
@@ -186,7 +186,11 @@ while( having_a_good_day ){
 [400]: https://www.meetup.com/Chicago-C-CPP-Users-Group/events/250655716/
 [401]: https://www.hdfgroup.org/2018/07/cpp-has-come-a-long-way-and-theres-plenty-in-it-for-users-of-hdf5/
 [999]: http://h5cpp.ca/cgi/redirect.py
+
 [300]: @ref link_h5cpp_compiler
-[301]: @ref link_conversion_policy
-[302]: @ref link_exception_policy
+[301]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_conversion.html
+[302]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_exceptions.html
+[303]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_compiler.html
+[304]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_linalg.html
+[305]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_install.html
 
