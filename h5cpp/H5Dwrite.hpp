@@ -7,11 +7,6 @@
 #define H5CPP_DWRITE_HPP
 
 namespace h5 {
-    inline h5::fd_t open(const std::string& path,  unsigned flags, const h5::fapl_t& fapl );
-    inline h5::ds_t open(const  fd_t& fd, const std::string& path, const h5::dapl_t& dapl );
-}
-
-namespace h5 {
  	/** \func_write_hdr
  	*  TODO: write doxy for here  
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
@@ -23,6 +18,7 @@ namespace h5 {
 		hid_t type = utils::h5type<T>();
 		h5::herr_t err = H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
 		H5Tclose(type);
+		//TODO: error handler
 		return 0;
 	}
  	/** \func_write_hdr
@@ -57,6 +53,7 @@ namespace h5 {
 		H5Sselect_hyperslab(file_space, H5S_SELECT_SET, *offset, *stride, *count, *block);
 			herr_t err = h5::write<T>(ds,mem_space, file_space, dxpl, ptr);
 		H5Sclose(mem_space); H5Sclose(file_space);
+		//TODO: error handler
 		return 0; // err;
 	}
 
@@ -85,6 +82,7 @@ namespace h5 {
 			;
 		}  else
 			h5::write<element_t>(ds, utils::get_ptr(ref), count, args...  );
+		//TODO: error handler
 		return 0;
 	}
 
@@ -122,12 +120,9 @@ namespace h5 {
 			}
 		}
 		const h5::current_dims_t& current_dims  = arg::get(def_current_dims, args... );
-
-		h5::ds_t ds{-1};
 		h5::mute();
-		if( (ds = h5::open( fd, dataset_path, h5::default_dapl)) < 0 ){
-			ds =  h5::create<T>(fd, dataset_path, args..., current_dims );
-		}
+		h5::ds_t ds = ( H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT ) > 0 ) ?
+			h5::open( fd, dataset_path, h5::default_dapl) : h5::create<T>(fd, dataset_path, args..., current_dims );
 		h5::unmute();
  		return h5::write<T>(ds, ptr,  args...);
 	}
@@ -173,12 +168,9 @@ namespace h5 {
 			}
 		}
 		const h5::current_dims_t& current_dims  = arg::get(def_current_dims, args... );
-
-		h5::ds_t ds{-1};
 		h5::mute();
-		if( (ds = h5::open( fd, dataset_path, h5::default_dapl)) < 0 ){
-			ds =  h5::create<element_t>(fd, dataset_path, args..., current_dims );
-		}
+		h5::ds_t ds = ( H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT ) > 0 ) ?
+			h5::open( fd, dataset_path, h5::default_dapl) : h5::create<element_t>(fd, dataset_path, args..., current_dims );
 		h5::unmute();
  		return h5::write<T>(ds, ref,  args...);
 	}

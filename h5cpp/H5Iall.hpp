@@ -119,7 +119,7 @@ namespace h5 {
 	#define H5CPP__defpid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::pid_t<impl::T_,D_>;
 	/*file:  */ H5CPP__defhid_t(fd_t, H5Fclose) /*dataset:*/	H5CPP__defhid_t(ds_t, H5Dclose) /* <- packet table: is specialization enabled */
 	/*attrib:*/ H5CPP__defhid_t(at_t, H5Aclose) /*group:  */	H5CPP__defhid_t(gr_t, H5Gclose) /*object:*/	H5CPP__defhid_t(ob_t, H5Oclose)
-	/*space: */ H5CPP__defhid_t(sp_t, H5Sclose)
+	/*space: */ H5CPP__defhid_t(sp_t, H5Sclose) /*datatype:*/   H5CPP__defhid_t(dt_t, H5Tclose)
 
 	/*each of these properties has a distinct proxy object to handle the details*/
 	H5CPP__defpid_t(acpl_t,H5Pclose)

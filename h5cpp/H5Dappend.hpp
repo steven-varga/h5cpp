@@ -111,7 +111,6 @@ h5::pt_t::pt_t( const h5::ds_t& handle ) : ds( static_cast<hid_t>( handle) ){
 	ptr = calloc( chunk_size, type_size );
 	mem_space = H5Screate_simple(1, &chunk_size, NULL );
 	H5Sselect_all(mem_space);
-
 }
 
 inline

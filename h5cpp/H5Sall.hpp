@@ -61,7 +61,5 @@ namespace h5 {
 	using current_dims   = current_dims_t;
 	using max_dims       = max_dims_t;
 }
-
-
 #endif
 

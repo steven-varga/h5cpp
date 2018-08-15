@@ -12,7 +12,6 @@ Easy to use  [HDF5][hdf5] **C++11** compiler assisted templates for HDF5 with [L
 
 NEWS:
 ------------
-
 - **2018-aug-13** The backporting of the template library to c++11 has been completed the templates are pure c++11 with no higher requirements. 
 - **2018-aug-01** [H5CPP presentation at Chicago C++ UsersGroup][200] with David Pearah and Gerd Heber, HDFGroup
 - **2018-jul-30** [HDFGroup Blog post: ][401] the short story of h5cpp
