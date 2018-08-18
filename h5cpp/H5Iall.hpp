@@ -35,13 +35,13 @@ namespace h5 { namespace impl { namespace detail {
 	template <class T, capi_close_t capi_close,
 	// conversion policy is controlled by template specialization
 	// from_capi, to_capi whether you want capi hid_t converted to h5cpp typed hid_t<T> classes
-			 bool from_capi, bool to_capi, bool is_property>
+			 bool from_capi, bool to_capi, bool is_property, bool has_attribute>
 	struct hid_t final {
 		hid_t()=delete;
 	};
 	// actual implementation with full conversion allowed
 	template<class T, capi_close_t capi_close>
-	struct hid_t<T,capi_close, true,true,false> {
+	struct hid_t<T,capi_close, true,true,false,false> {
 		using hidtype = T;
 		// from CAPI
 		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
@@ -69,7 +69,7 @@ namespace h5 { namespace impl { namespace detail {
 			return *this;
 		}
 		/* move ctor must invalidate old handle */
-		hid_t( hid_t<T,capi_close,true,true,false>&& ref ){
+		hid_t( hid_t<T,capi_close,true,true,false,false>&& ref ){
 			handle = ref.handle;
 			ref.handle = H5I_UNINIT;
 		}
@@ -85,15 +85,15 @@ namespace h5 { namespace impl { namespace detail {
 	// disable from CAPI and TOCAPI conversions 
 	//conversion ctor to packet table enabled, used for h5::impl::ds_t
 	template<class T, capi_close_t capi_close>
-	struct hid_t<T,capi_close, false,false,false> : private hid_t<T,capi_close,true,true,false> {
-		using parent = hid_t<T,capi_close,true,true,false>;
+	struct hid_t<T,capi_close, false,false,false,false> : private hid_t<T,capi_close,true,true,false,false> {
+		using parent = hid_t<T,capi_close,true,true,false,false>;
 		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
 	};
 	/*property id*/
 	template<class T, capi_close_t capi_close>
-	struct hid_t<T,capi_close, true,true,true> : public hid_t<T,capi_close,true,true,false> {
-		using parent = hid_t<T,capi_close,true,true,false>;
+	struct hid_t<T,capi_close, true,true,true,false> : public hid_t<T,capi_close,true,true,false,false> {
+		using parent = hid_t<T,capi_close,true,true,false,false>;
 		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
 
@@ -109,16 +109,18 @@ namespace h5 { namespace impl { namespace detail {
 
 namespace h5 { namespace impl {
 	// redefine this to disable conversion
-	template <class T, capi_close_t capi_call> using hid_t = detail::hid_t<T,capi_call, true,true,false>;
-	template <class T, capi_close_t capi_call> using pid_t = detail::hid_t<T,capi_call, true,true,true>;
+	template <class T, capi_close_t capi_call> using aid_t = detail::hid_t<T,capi_call, true,true,false,false>;
+	template <class T, capi_close_t capi_call> using hid_t = detail::hid_t<T,capi_call, true,true,false,false>;
+	template <class T, capi_close_t capi_call> using pid_t = detail::hid_t<T,capi_call, true,true,true,false>;
 }}
 /*hide details */
 namespace h5 {
 	/*base template with no default ctors to prevent instantiation*/
 	#define H5CPP__defhid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::hid_t<impl::T_,D_>;
 	#define H5CPP__defpid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::pid_t<impl::T_,D_>;
-	/*file:  */ H5CPP__defhid_t(fd_t, H5Fclose) /*dataset:*/	H5CPP__defhid_t(ds_t, H5Dclose) /* <- packet table: is specialization enabled */
-	/*attrib:*/ H5CPP__defhid_t(at_t, H5Aclose) /*group:  */	H5CPP__defhid_t(gr_t, H5Gclose) /*object:*/	H5CPP__defhid_t(ob_t, H5Oclose)
+	#define H5CPP__defaid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::aid_t<impl::T_,D_>;
+	/*file:  */ H5CPP__defaid_t(fd_t, H5Fclose) /*dataset:*/	H5CPP__defaid_t(ds_t, H5Dclose) /* <- packet table: is specialization enabled */
+	/*attrib:*/ H5CPP__defhid_t(at_t, H5Aclose) /*group:  */	H5CPP__defaid_t(gr_t, H5Gclose) /*object:*/	H5CPP__defhid_t(ob_t, H5Oclose)
 	/*space: */ H5CPP__defhid_t(sp_t, H5Sclose) /*datatype:*/   H5CPP__defhid_t(dt_t, H5Tclose)
 
 	/*each of these properties has a distinct proxy object to handle the details*/
@@ -130,6 +132,7 @@ namespace h5 {
 	H5CPP__defpid_t(lapl_t,H5Pclose) H5CPP__defpid_t(lcpl_t,H5Pclose)
 	H5CPP__defpid_t(ocrl_t,H5Pclose) H5CPP__defpid_t(ocpl_t,H5Pclose)
 	H5CPP__defpid_t(scpl_t,H5Pclose)
+	#undef H5CPP__defaid_t
 	#undef H5CPP__defpid_t
 	#undef H5CPP__defhid_t
 }
@@ -169,7 +172,7 @@ namespace h5 { namespace impl {
 	template <class phid_t, defprop_t init, class capi, typename capi::fn_t capi_call> struct prop_t;
 	/* CAPI macros are sequence calls: (H5OPEN, register_property_class), these are all meant to be read only/copied from,
 	 */
-	#define H5CPP__capicall( name, default_id ) ::hid_t default_##name(){ return default_id; } 									\
+	#define H5CPP__capicall( name, default_id ) ::hid_t inline default_##name(){ return default_id; } 									\
 			template <class capi, typename capi::fn_t capi_call>  \
 				using name##_call = prop_t<h5::name##_t, default_##name,  capi, capi_call>; 	\
 			template <class... args> using name##_args = impl::capi_t<args...>; 								\
@@ -235,10 +238,6 @@ namespace h5 { namespace impl {
 		using type = phid_t;
 		using base_t =  prop_t<phid_t,init,capi,capi_call>;
 	};
-
-	::hid_t get_aaa(){
-		return 0;
-	}
 
 	// only data control property list set_chunk has this pattern, lets allow to define CAPI argument lists 
 	// the same way as with others
