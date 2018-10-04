@@ -25,9 +25,6 @@ int main(int argc, char **argv) {
 	 		<< " sustained throughput: " << (data_size/running_time) / 1'000'000 <<" Mbyte/sec"	<< std::endl;
 	}
 	ProfilerStop();
-
-	H5Dclose(ds);
-	h5::close(fd);
 }
 
 

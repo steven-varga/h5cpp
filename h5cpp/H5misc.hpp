@@ -11,24 +11,6 @@ namespace h5{
 	using cx_float = std::complex<float>;    /**< scientific type */
 }
 
-namespace h5 { namespace utils {
-	inline static herr_t h5_callback( hid_t g_id, const char *name, 
-			const H5L_info_t *info, void *op_data){
-
-		std::vector<std::string> *data =  static_cast<std::vector<std::string>* >(op_data); 
-		data->push_back( std::string(name) );
-		return 0;
-	}
-/*
-    inline std::vector<std::string> list_directory(const h5::fd_t& fd,  const std::string& directory ){
-        hid_t group_id = H5Gopen( static_cast<hid_t>(fd), directory.c_str(), H5P_DEFAULT );
-        std::vector<std::string> files;
-            H5Literate( group_id, H5_INDEX_NAME, H5_ITER_INC, 0, &h5_callback, &files );
-		H5Gclose(group_id);
-        return files;
-    }*/
-}}
-
 
 
 

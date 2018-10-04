@@ -25,7 +25,6 @@ namespace h5 { namespace impl {
 		using args_t = std::tuple<args_tt...>;
 		using type = std::tuple<::hid_t,args_tt...>;
 	};
-
 }}
 
 namespace h5 { namespace impl { namespace detail {

@@ -1,5 +1,5 @@
 #include <hdf5.h>
-#include <h5cpp/mock.hpp>
+#include <h5cpp/H5misc.hpp>
 
 namespace SomeNameSpace {
 	typedef struct StructType {

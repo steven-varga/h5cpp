@@ -16,7 +16,6 @@
 #include <tuple>
 #include <type_traits>
 #include <functional>
-#include <experimental/tuple>
 #include <complex>
 
 #ifndef  H5CPP_CORE_H
@@ -33,7 +32,7 @@
 	#include "H5Mall.hpp"
 	#include "H5Iall.hpp"
 	#include "H5Pall.hpp"
-
+	#include "H5Ialgorithm.hpp"
 namespace h5 {
 	inline h5::sp_t create_simple( const h5::current_dims& current_dims  ){
 		return h5::sp_t{H5Screate_simple( current_dims.size(), current_dims.begin(), nullptr )};
@@ -43,6 +42,5 @@ namespace h5 {
 	}
 }
 
-	#include "H5Eall.hpp"
 #endif	
 
