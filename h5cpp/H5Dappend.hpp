@@ -13,60 +13,19 @@ namespace h5 {
 		pt_t();
 		pt_t( const h5::ds_t& handle );
 		pt_t( const h5::pt_t& pt ){
-			rank = pt.rank; chunk_size = pt.chunk_size;
-			type_size = pt.type_size; ds = pt.ds;
-			H5Iinc_ref(ds); // keep it alive
-			for(int i=0; i<rank; i++){
-				current_dims[i] = pt.current_dims[i];
-				max_dims[i] = pt.max_dims[i];
-				chunk_dims[i] = pt.chunk_dims[i];
-				offset[i] = pt.offset[i];
-				count[i] = pt.count[i];
-			}
-
-			file_type = H5Dget_type(ds);
-			ptr = calloc( chunk_size, type_size );
-			mem_space = H5Screate_simple(1, &chunk_size, NULL );
-			H5Sselect_all(mem_space);
+			init_ref( pt );
+			init_space();
 		};
 
 		~pt_t();
 		pt_t& operator=( const h5::pt_t& pt ){
-			rank = pt.rank; chunk_size = pt.chunk_size;
-			type_size = pt.type_size; ds = pt.ds;
-			H5Iinc_ref(ds); // keep it alive
-			for(int i=0; i<rank; i++){
-				current_dims[i] = pt.current_dims[i];
-				max_dims[i] = pt.max_dims[i];
-				chunk_dims[i] = pt.chunk_dims[i];
-				offset[i] = pt.offset[i];
-				count[i] = pt.count[i];
-			}
-
-			file_type = H5Dget_type(ds);
-			ptr = calloc( chunk_size, type_size );
-			mem_space = H5Screate_simple(1, &chunk_size, NULL );
-			H5Sselect_all(mem_space);
-
+			init_ref( pt );
+			init_space();
 			return *this;
 		};
 		pt_t& operator=( const h5::pt_t&& pt ){
-			rank = pt.rank; chunk_size = pt.chunk_size;
-			type_size = pt.type_size; ds = pt.ds;
-			H5Iinc_ref(ds); // keep it alive
-			for(int i=0; i<rank; i++){
-				current_dims[i] = pt.current_dims[i];
-				max_dims[i] = pt.max_dims[i];
-				chunk_dims[i] = pt.chunk_dims[i];
-				offset[i] = pt.offset[i];
-				count[i] = pt.count[i];
-			}
-
-			file_type = H5Dget_type(ds);
-			ptr = calloc( chunk_size, type_size );
-			mem_space = H5Screate_simple(1, &chunk_size, NULL );
-			H5Sselect_all(mem_space);
-
+			init_ref( pt );
+			init_space();
 			return *this;
 		};
 
@@ -77,6 +36,9 @@ namespace h5 {
 		template <class T> void append( const T& ref );
 		void flush();
 		void save2file();
+		void init_ref( const h5::pt_t& pt );
+		void init_space();
+		void cleanup();
 		void* ptr;
 		hid_t ds, mem_type, file_type, mem_space, file_space;
 		hsize_t current_dims[H5CPP_MAX_RANK],
@@ -93,35 +55,32 @@ inline
 h5::pt_t::pt_t( const h5::ds_t& handle ) : ds( static_cast<hid_t>( handle) ){
 	if( !H5Iis_valid(ds) ) return;
 
-	H5Iinc_ref(ds); // be sure you keep this alive
+	if( H5Iinc_ref(ds) < 0 ) throw h5::error::io::dataset::misc(H5CPP_ERROR_MSG("reference counting failure..."));
+	// be sure you keep this alive
 	hid_t file_space = H5Dget_space(ds);
-		rank = H5Sget_simple_extent_dims(file_space, current_dims, max_dims);
+	if( file_space < 0) throw h5::error::io::dataset::open(H5CPP_ERROR_MSG("invalid filespace..."));
+	rank = H5Sget_simple_extent_dims(file_space, current_dims, max_dims);
+	if( rank < 0  )
+		H5Sclose(file_space), throw h5::error::io::dataset::open(H5CPP_ERROR_MSG("invalid rank..."));
 	H5Sclose(file_space);
 
-
 	hid_t plist =  H5Dget_create_plist(ds);
-		H5Pget_chunk(plist,rank, chunk_dims );
+		if( H5Pget_chunk(plist,rank, chunk_dims ) < 0 ) H5Sclose(file_space), H5Pclose(plist),
+			throw h5::error::io::dataset::open(H5CPP_ERROR_MSG("invalid chunk dimensions..."));
 	H5Pclose(plist);
 
 	for(int i=0;i<rank;i++) count[i]=1,offset[i]=0;
 	chunk_size=1; for(int i=0;i<rank;i++) chunk_size*=chunk_dims[i];
 
-	file_type = H5Dget_type(ds);
-	type_size =  H5Tget_size( file_type );
-	ptr = calloc( chunk_size, type_size );
-	mem_space = H5Screate_simple(1, &chunk_size, NULL );
-	H5Sselect_all(mem_space);
+	init_space();
 }
 
 inline
 h5::pt_t::~pt_t(){
-	if( !H5Iis_valid( ds )) return;
-
-		flush();
-		H5Sclose(mem_space);
-		H5Tclose(file_type);
-		H5Dclose(ds);
-		free(ptr);
+	if( !H5Iis_valid( ds )) 
+		return;
+	flush();
+	cleanup();
 }
 
 template <class T>
@@ -153,6 +112,54 @@ void h5::pt_t::save2file( ){
 	H5Sclose(file_space);
 	*current_dims += *count;
 }
+
+inline void h5::pt_t::init_ref( const h5::pt_t& pt ){
+	rank = pt.rank; chunk_size = pt.chunk_size;
+	type_size = pt.type_size; ds = pt.ds;
+	// we don't have an object yet, nothing to clean up
+	if( H5Iinc_ref(ds) < 0 ) throw h5::error::io::dataset::misc(H5CPP_ERROR_MSG("reference counting failure..."));
+
+	for(int i=0; i<rank; i++){
+		current_dims[i] = pt.current_dims[i];
+		max_dims[i] = pt.max_dims[i];
+		chunk_dims[i] = pt.chunk_dims[i];
+		offset[i] = pt.offset[i];
+		count[i] = pt.count[i];
+	}
+
+}
+
+inline void h5::pt_t::init_space( ){
+	file_type = H5Dget_type(ds);
+	if( file_type < 0 )
+		throw h5::error::io::dataset::open(H5CPP_ERROR_MSG("couldn't obtain datatype of dataset..."));
+	type_size =  H5Tget_size( file_type );
+	if( type_size < 0 )
+	throw h5::error::io::dataset::open(H5CPP_ERROR_MSG("couldn't obtain datatype size..."));
+
+	ptr = calloc( chunk_size, type_size );
+	if( ptr == NULL )
+		throw h5::error::io::dataset::misc(H5CPP_ERROR_MSG("memory allocation failure, too large chunk?..."));
+
+	mem_space = H5Screate_simple(1, &chunk_size, NULL );
+	if ( mem_space < 0 ) free(ptr),
+		throw h5::error::io::dataset::open(H5CPP_ERROR_MSG("invalid memory space..."));
+	if ( H5Sselect_all(mem_space) < 0 ) free(ptr),
+		throw h5::error::io::dataset::open(H5CPP_ERROR_MSG("invalid memory space..."));
+}
+
+inline void h5::pt_t::cleanup(){
+	// start here, and go by priority, leaving dataset closure for last, as it is the most likely to fail
+	free(ptr);
+
+	if( H5Sclose(mem_space) < 0 )
+		throw h5::error::io::dataset::close(H5CPP_ERROR_MSG("unable to close dataspace..."));
+	if( H5Tclose(file_type) < 0 )
+		throw h5::error::io::dataset::close(H5CPP_ERROR_MSG("unable to close dataset type..."));
+	if( H5Dclose(ds) < 0 ) 
+		throw h5::error::io::dataset::close(H5CPP_ERROR_MSG("unable to close dataset..."));
+}
+
 
 namespace h5 {
 	/** @ingroup io-append
