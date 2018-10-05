@@ -23,11 +23,7 @@
 
 #include <gtest/gtest.h>
 #include <armadillo>
-#include <h5cpp/core>
-#include <h5cpp/mock.hpp>
-#include <h5cpp/create.hpp>
-#include <h5cpp/read.hpp>
-#include <h5cpp/write.hpp>
+#include <h5cpp/all>
 
 #include "event_listener.hpp"
 #include "abstract.h"

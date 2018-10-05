@@ -21,7 +21,7 @@
  */
 
 #include <gtest/gtest.h>
-#include <h5cpp/core>
+#include <h5cpp/all>
 #include "event_listener.hpp"
 
 
@@ -35,7 +35,7 @@ public:
 		this->fd = h5::open("test.h5", H5F_ACC_RDWR );
 	}
 	void TearDown() {
-		h5::close(fd);
+		// h5::close(fd);
 	}
 	std::string type;
 	std::string name;

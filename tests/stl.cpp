@@ -8,13 +8,10 @@
 #include <gtest/gtest.h>
 #include <armadillo>
 #include <h5cpp/core>
-#include <h5cpp/mock.hpp>
 
 #include "event_listener.hpp"
 #include "abstract.h"
-#include <h5cpp/create.hpp>
-//#include <h5cpp/read.hpp>
-#include <h5cpp/write.hpp>
+#include <h5cpp/io>
 
 template <typename T> class STLTest : public AbstractTest<T>{};
 typedef ::testing::Types<H5CPP_TEST_STL_VECTOR_TYPES> StlTypes;
