@@ -1,0 +1,16 @@
+image: ubuntu1804
+  
+init:
+- sh: sudo apt -yq update > /dev/null
+- sh: sudo apt install -yq --no-install-suggests --no-install-recommends build-essential gcc-8 g++8 automake libtool-bin libgtest-dev libarmadillo-dev > /dev/null
+- sh: git clone https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git
+- sh: cd hdf5
+- sh: autogen.sh
+
+build:
+- sh: ./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110 --enable-hl
+- sh: make -j2
+- sh: sudo make install
+
+test_script:
+- sh: make test
