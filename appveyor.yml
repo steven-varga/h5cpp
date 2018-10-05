@@ -11,6 +11,7 @@ build_script:
 - sh: cd hdf5
 - sh: ./autogen.sh
 - sh: ./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110
+- sh: make -j2 &> build.out
   
 test_script:
 - sh: make test
