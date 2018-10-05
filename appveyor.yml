@@ -3,4 +3,4 @@ image: ubuntu1804
 build: off
   
 test_script:
-- sh: echo Howdy! 
+- sh: make test
