@@ -1,4 +1,6 @@
 image: ubuntu1804
+
+build: off
   
 init:
 - sh: sudo apt -yq update > /dev/null
@@ -7,7 +9,7 @@ init:
 - sh: cd hdf5
 - sh: autogen.sh
 
-build:
+install:
 - sh: ./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110 --enable-hl
 - sh: make -j2
 - sh: sudo make install
