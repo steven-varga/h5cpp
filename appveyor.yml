@@ -2,20 +2,5 @@ image: ubuntu1804
 
 build: off
   
-init:
-- sh: sudo apt -yq update > /dev/null
-- sh: sudo apt install -yq --no-install-suggests --no-install-recommends build-essential > /dev/null
-- sh: sudo apt install -yq --no-install-suggests --no-install-recommends gcc-8 > /dev/null
-- sh: sudo apt install -yq --no-install-suggests --no-install-recommends g++8 > /dev/null
-- sh: sudo apt install -yq --no-install-suggests --no-install-recommends automake > /dev/null
-- sh: sudo apt install -yq --no-install-suggests --no-install-recommends libtool-bin > /dev/null
-- sh: sudo apt install -yq --no-install-suggests --no-install-recommends libgtest-dev > /dev/null
-- sh: sudo apt install -yq --no-install-suggests --no-install-recommends libarmadillo-dev > /dev/null
-- sh: git clone -b develop https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git
-- sh: ls -al 
-
-install:
-- sh: ps -ef
-
 test_script:
 - sh: echo Howdy! 
