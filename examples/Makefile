@@ -7,7 +7,7 @@
 #
 
 #DIRS = basics before-after compound packet-table  raw_memory linalg transform
-DIRS = basics raw_memory transform
+DIRS = basics raw_memory linalg transform
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
