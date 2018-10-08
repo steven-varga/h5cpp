@@ -12,9 +12,9 @@ install:
 - sh: sudo apt-get --yes install libc++-7-dev libc++abi-7-dev libomp-7-dev
 - sh: sudo apt-get --yes install libgtest-dev
 - sh: sudo apt-get --yes install libarmadillo-dev
-- sh: sudo apt-get install libeigen3-dev
+- sh: sudo apt-get --yes install libeigen3-dev
 - sh: sudo ln -s /usr/include/eigen3/Eigen /usr/include/Eigen
-- sh: sudo apt-get install libitpp-dev
+- sh: sudo apt-get --yes install libitpp-dev
 - sh: git clone https://bitbucket.org/blaze-lib/blaze.git
 - sh: git clone -b develop https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git
 
