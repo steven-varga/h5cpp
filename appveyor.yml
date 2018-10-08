@@ -1,7 +1,7 @@
 image: ubuntu1804
 
 install:
-- sh: sudo apt-get update
+- sh: sudo apt-get update --fix-missing
 - sh: wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key|sudo apt-key add -
 - sh: sudo sh -c  'echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" >> /etc/apt/sources.list'
 - sh: sudo sh -c  'echo "deb-src http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" >> /etc/apt/sources.list'
