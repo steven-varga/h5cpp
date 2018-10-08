@@ -4,21 +4,21 @@
 apps = h5cpp
 
 PREFIX = /usr/local
-CXXFLAGS =  -I../  `llvm-config --cxxflags` -std=c++17
-LDFLAGS = `llvm-config --ldflags`
+CXXFLAGS =  -I../  `llvm-config-7 --cxxflags` -std=c++17
+LDFLAGS = `llvm-config-7 --ldflags`
 LIBS =  -lclangFrontend -lclangSerialization -lclangDriver \
 		-lclangTooling -lclangParse -lclangSema -lclangAnalysis \
 		-lclangRewrite -lclangRewriteFrontend \
 		-lclangEdit -lclangAST -lclangASTMatchers -lclangLex -lclangBasic \
-		`llvm-config --libs` -Wl,-Bdynamic `llvm-config --system-libs`
+		`llvm-config-7 --libs` -Wl,-Bdynamic `llvm-config-7 --system-libs`
 
-%.o : $(SRC_DIR)/%.cpp 
+%.o : $(SRC_DIR)/%.cpp
 	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
 
 all: $(apps)
 
-h5cpp: h5cpp.o 
-	$(CXX)  $^  $(LIBS)  -o $@	
+h5cpp: h5cpp.o
+	$(CXX)  $^ $(LDFLAGS)  $(LIBS)  -o $@
 upload: h5cpp
 	scp -i ~/.ssh/analytics.pem h5cpp ubuntu@cluster.h5cpp.ca:/tmp/h5cpp
 
@@ -31,4 +31,3 @@ install: h5cpp
 	cp ../h5cpp.pc  $(PREFIX)/lib/pkgconfig
 
 .PHONY: test
-

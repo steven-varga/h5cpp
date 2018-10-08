@@ -7,7 +7,9 @@ install:
 - sh: sudo sh -c  'echo "deb-src http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" >> /etc/apt/sources.list'
 - sh: sudo apt-get update
 - sh: sudo apt-get --yes install build-essential automake libtool-bin
-- sh: sudo apt-get --yes install clang-7 libllvm7 llvm-7 llvm-7-dev llvm-7-runtime libc++-7-dev libc++abi-7-dev libomp-7-dev
+- sh: sudo apt-get --yes install libllvm7 llvm-7 llvm-7-dev llvm-7-runtime
+- sh: sudo apt-get --yes install clang-7 clang-tools-7 libclang-common-7-dev libclang-7-dev libclang1-7 clang-format-7
+- sh: sudo apt-get --yes install libc++-7-dev libc++abi-7-dev libomp-7-dev
 - sh: sudo apt-get --yes install libgtest-dev
 - sh: sudo apt-get --yes install libarmadillo-dev
 - sh: git clone -b develop https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git
@@ -17,6 +19,9 @@ build_script:
 - sh: ./autogen.sh
 - sh: ./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110
 - sh: make -j2 &> build.out
+- sh: sudo make install
+- sh: cd ../h5cpp/compiler
+- sh: make
 - sh: sudo make install
 
 test_script:
