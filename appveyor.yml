@@ -15,14 +15,14 @@ install:
 - sh: sudo apt-get --yes install libeigen3-dev
 - sh: sudo ln -s /usr/include/eigen3/Eigen /usr/include/Eigen
 - sh: sudo apt-get --yes install libitpp-dev
-- sh: git clone https://bitbucket.org/blaze-lib/blaze.git
-- sh: git clone -b develop https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git
+- sh: git clone https://bitbucket.org/blaze-lib/blaze.git /home/appveyor/projects/blaze
+- sh: git clone -b develop https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git /home/appveyor/projects/hdf5
 
 build_script:
-- sh: cd /home/appveyor/blaze
+- sh: cd /home/appveyor/projects/blaze
 - sh: cmake -DCMAKE_INSTALL_PREFIX=/usr/local/
 - sh: sudo make install
-- sh: cd /home/appveyor/hdf5
+- sh: cd /home/appveyor/projects/hdf5
 - sh: ./autogen.sh
 - sh: ./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110
 - sh: make -j2 &> build.out
