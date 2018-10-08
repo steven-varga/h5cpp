@@ -25,7 +25,7 @@ CXXFLAGS = -Werror -I../ -I../external -std=c++17 -DDEBUG
 LIBS = -lprofiler -lglog -lgtest -lgtest_main -lboost_date_time -lhdf5 -lhdf5_hl -lz -ldl -lm  -lpthread
 flags =  --gtest_print_time=0 --gtest_color=auto
 
-apps = integral stl armadillo
+apps = integral packettable stl armadillo
 all: $(apps)
 
 %.o : $(SRC_DIR)/%.cpp 
@@ -35,21 +35,25 @@ preprocessor: preprocessor.cpp
 	$(CXX) -I/usr/include/eigen3 -E -std=c++14 preprocessor.cpp
 
 integral:  integral.o 
+	$(CXX) $^ $(LIBS) -o $@
+packettable:  packettable.o 
 	$(CXX) $^ $(LIBS) -o $@	
 armadillo: armadillo.o
 	$(CXX) $^ $(LIBS) -o $@	
-
 stl: stl.o
 	$(CXX) $^ $(LIBS) -o $@	
 
 test-integral: integral
 	./integral $(flags)
+test-packettable: packettable
+	./packettable $(flags) -o $@
+
 test-armadillo: armadillo
 	./armadillo $(flags)
 test-stl: stl
 	./stl $(flags)
 
-test:  test-integral test-stl test-armadillo
+test:  test-integral test-packettable test-stl test-armadillo
 
 #test: test-dlib 
 

@@ -37,7 +37,7 @@ namespace h5{ namespace utils {
 	};
 }}
 
-namespace h5 { namespace utils { // this specializationis not necessary, only used in tests 
+namespace h5 { namespace utils { // this specializations not necessary, only used in tests 
 	template <> std::vector<sn::StructType> get_test_data( size_t n ){
 		std::vector<sn::StructType> data;
 		for(unsigned int i; i<n; i++)
@@ -45,4 +45,5 @@ namespace h5 { namespace utils { // this specializationis not necessary, only us
 		return data;
 	}
 }}
+
 

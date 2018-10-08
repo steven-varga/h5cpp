@@ -90,7 +90,6 @@ TYPED_TEST(ArmadilloTest, BlockReadArmadillo) {
 	h5::write(this->fd,this->name+".mat", M);
 	auto m_ = h5::read<arma::imat>(this->fd,this->name+".mat", h5::stride{3,3}, h5::count{2,2}, h5::block{2,2} );
 	h5::read(this->fd,this->name+".mat", m.memptr(), h5::stride{3,3}, h5::count{2,2}, h5::block{2,2} );
-	m.print();
 }
 
 /*----------- BEGIN TEST RUNNER ---------------*/

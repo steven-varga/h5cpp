@@ -16,6 +16,7 @@ typedef ::testing::Types<float> PrimitiveTypes;
 //typedef ::testing::Types<H5CPP_TEST_PRIMITIVE_TYPES> PrimitiveTypes;
 TYPED_TEST_CASE(IntegralTest, PrimitiveTypes);
 
+
 TYPED_TEST(IntegralTest,create_current_dims) { // checks out!!!
 	h5::dcpl_t dcpl = h5::chunk{2} | h5::gzip{4};
 	// compile error
@@ -182,6 +183,7 @@ TYPED_TEST(IntegralTest, read_simple) {
 	auto vec = h5::read<std::vector<TypeParam>>(this->fd, this->name + "cube");
 
 }
+
 /*----------- BEGIN TEST RUNNER ---------------*/
 H5CPP_TEST_RUNNER( int argc, char**  argv );
 /*----------------- END -----------------------*/

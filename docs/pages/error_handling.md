@@ -137,7 +137,7 @@ h5::error : public std::runtime_error
 			::misc
 </pre>
 
-This is a work in progress, if for any reasons you think it could be improved, or some real life scenerio is not represented please shoot me an email with the use case, a brief working example.
+This is a work in progress, if for any reasons you think it could be improved, or some real life scenario is not represented please shoot me an email with the use case, a brief working example.
 
 
 [1]: https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#S-errors

@@ -56,7 +56,27 @@ namespace h5 { namespace error {
 #endif
 		}
 	};
-
+	namespace msg {
+		const std::string inc_ref   = "couldn't increment reference...";
+		const std::string dec_ref   = "couldn't decrement reference...";
+		const std::string create_memspace = "couldn't create memory space...";
+		const std::string select_memspace = "couldn't do  memory space selection...";
+		const std::string select_hyperslab = "couldn't do hyper-slab  selection...";
+		const std::string get_filespace = "couldn't get file space...";
+		const std::string get_filetype = "couldn't get file type...";
+		const std::string get_filetype_size = "could_t get file type size...";
+		const std::string close_memspace = "could_t close memory space...";
+		const std::string close_filespace = "could_t close file space...";
+		const std::string close_filetype = "could_t close file type...";
+		const std::string close_memtype = "could_t close memory type...";
+		const std::string create_property_list = "couldn't create property list...";
+		const std::string close_property_list = "couldn't close property list...";
+		const std::string get_rank = "couldn't obtain rank...";
+		const std::string get_chunk_dims = "couldn't obtain chunk dimensions...";
+		const std::string mem_alloc = "couldn't allocate memory of requested size...";
+		const std::string set_extent = "couldn't set extent...";
+		const std::string write_dataset = "couldn't write dataset...";
+	}
 }}
 namespace h5 { namespace error { namespace io {
 	struct rollback : public h5::error::rollback {
@@ -137,6 +157,43 @@ namespace h5 { namespace error { namespace io { namespace dataset {
 	struct misc : public h5::error::io::dataset::any {
 		misc() : h5::error::io::dataset::any() {}
 		misc( const std::string& msg ) : h5::error::io::dataset::any( msg ){}
+	};
+}}}}
+namespace h5 { namespace error { namespace io { namespace packet_table {
+	struct rollback : public h5::error::io::rollback {
+		rollback( const std::string& msg ) : h5::error::io::rollback( msg ){}
+	};
+	struct any : public h5::error::io::any {
+		any() : h5::error::io::any() {}
+		any( const std::string& msg ) : h5::error::io::any( msg ){}
+	};
+	struct open : public h5::error::io::packet_table::any {
+		open() : h5::error::io::packet_table::any() {}
+		open( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
+	};
+	struct close : public h5::error::io::packet_table::any {
+		close() : h5::error::io::packet_table::any() {}
+		close( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
+	};
+	struct read : public h5::error::io::packet_table::any {
+		read() : h5::error::io::packet_table::any() {}
+		read( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
+	};
+	struct write : public h5::error::io::packet_table::any {
+		write() : h5::error::io::packet_table::any() {}
+		write( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
+	};
+	struct append : public h5::error::io::packet_table::any {
+		append() : h5::error::io::packet_table::any() {}
+		append( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
+	};
+	struct create : public h5::error::io::packet_table::any {
+		create() : h5::error::io::packet_table::any() {}
+		create( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
+	};
+	struct misc : public h5::error::io::packet_table::any {
+		misc() : h5::error::io::packet_table::any() {}
+		misc( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
 	};
 }}}}
 
