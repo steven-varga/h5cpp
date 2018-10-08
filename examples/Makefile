@@ -6,7 +6,8 @@
 #  _____________________________________________________________________________
 #
 
-DIRS = basics before-after compound packet-table  raw_memory linalg transform 
+#DIRS = basics before-after compound packet-table  raw_memory linalg transform
+DIRS = basics raw_memory transform
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
@@ -17,14 +18,14 @@ $(DIRS): $(BUILDDIRS)
 $(BUILDDIRS):
 	$(MAKE) -C $(@:build-%=%)
 
-install: 
+install:
 
 test: $(TESTDIRS) all
-$(TESTDIRS): 
+$(TESTDIRS):
 	$(MAKE) -C $(@:test-%=%) test
 
 clean: $(CLEANDIRS)
-$(CLEANDIRS): 
+$(CLEANDIRS):
 	$(MAKE) -C $(@:clean-%=%) clean
 
 .PHONY: subdirs $(DIRS)

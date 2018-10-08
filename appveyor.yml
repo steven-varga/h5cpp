@@ -6,7 +6,7 @@ install:
 - sh: sudo sh -c  'echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" >> /etc/apt/sources.list'
 - sh: sudo sh -c  'echo "deb-src http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" >> /etc/apt/sources.list'
 - sh: sudo apt-get update
-- sh: sudo apt-get --yes install build-essential automake libtool-bin
+- sh: sudo apt-get --yes install build-essential automake libtool-bin libz-dev
 - sh: sudo apt-get --yes install libllvm7 llvm-7 llvm-7-dev llvm-7-runtime
 - sh: sudo apt-get --yes install clang-7 clang-tools-7 libclang-common-7-dev libclang-7-dev libclang1-7 clang-format-7
 - sh: sudo apt-get --yes install libc++-7-dev libc++abi-7-dev libomp-7-dev
@@ -23,6 +23,9 @@ build_script:
 - sh: cd /home/appveyor/projects/h5cpp/compiler
 - sh: make
 - sh: sudo make install
+- sh: sudo ln -s /home/appveyor/projects/h5cpp/h5cpp /usr/local/include/h5cpp
 
 test_script:
-- sh: make test
+- sh: cd /home/appveyor/projects/h5cpp/examples
+- sh: export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+- sh: make

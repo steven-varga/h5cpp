@@ -17,6 +17,7 @@
 #include <type_traits>
 #include <functional>
 #include <complex>
+#include <cstring>
 
 #ifndef  H5CPP_CORE_H
 #define H5CPP_CORE_H
@@ -42,5 +43,4 @@ namespace h5 {
 	}
 }
 
-#endif	
-
+#endif
