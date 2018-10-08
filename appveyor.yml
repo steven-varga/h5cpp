@@ -6,16 +6,23 @@ install:
 - sh: sudo sh -c  'echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" >> /etc/apt/sources.list'
 - sh: sudo sh -c  'echo "deb-src http://apt.llvm.org/bionic/ llvm-toolchain-bionic-7 main" >> /etc/apt/sources.list'
 - sh: sudo apt-get update
-- sh: sudo apt-get --yes install build-essential automake libtool-bin libz-dev
+- sh: sudo apt-get --yes install build-essential automake cmake libtool-bin libz-dev
 - sh: sudo apt-get --yes install libllvm7 llvm-7 llvm-7-dev llvm-7-runtime
 - sh: sudo apt-get --yes install clang-7 clang-tools-7 libclang-common-7-dev libclang-7-dev libclang1-7 clang-format-7
 - sh: sudo apt-get --yes install libc++-7-dev libc++abi-7-dev libomp-7-dev
 - sh: sudo apt-get --yes install libgtest-dev
 - sh: sudo apt-get --yes install libarmadillo-dev
+- sh: sudo apt-get install libeigen3-dev
+- sh: sudo ln -s /usr/include/eigen3/Eigen /usr/include/Eigen
+- sh: sudo apt-get install libitpp-dev
+- sh: git clone https://bitbucket.org/blaze-lib/blaze.git
 - sh: git clone -b develop https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git
 
 build_script:
-- sh: cd hdf5
+- sh: cd /home/appveyor/blaze
+- sh: cmake -DCMAKE_INSTALL_PREFIX=/usr/local/
+- sh: sudo make install
+- sh: cd /home/appveyor/hdf5
 - sh: ./autogen.sh
 - sh: ./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110
 - sh: make -j2 &> build.out
