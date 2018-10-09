@@ -38,6 +38,12 @@
 #ifndef H5CPP_CONVERSION_TO_CAPI_DISABLED
 	#define H5CPP_CONVERSION_TO_CAPI
 #endif
+// redefine to your liking
+#ifndef H5CPP_ERROR_MSG
+	#define H5CPP_ERROR_MSG( msg ) std::string( __FILE__ ) + " line#  " + std::to_string( __LINE__ ) + " : " + msg
+#endif
+
+
 
 /**
  

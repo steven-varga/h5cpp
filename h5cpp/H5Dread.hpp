@@ -176,7 +176,7 @@ namespace h5 {
 	* auto vec = h5::read<std::vector<float>>( fd, "path/to/dataset",	h5::count{10,10}, h5::offset{5,0} );	
 	* \endcode  
 	* \par_ds \par_offset \par_stride \par_count \par_block \tpar_T \returns_object 
- 	*/ 
+ 	*/
 	template<class T,  class... args_t>
 	T read( const h5::ds_t& ds, args_t&&... args ){
 	// if 'count' isn't specified use the one inside the hdf5 file, once it is obtained
@@ -213,7 +213,7 @@ namespace h5 {
 	* auto vec = h5::read<std::vector<float>>( fd, "path/to/dataset",	h5::count{10,10}, h5::offset{5,0} );	
 	* \endcode  
 	* \par_fd \par_dataset_path \par_offset \par_stride \par_count \par_block \tpar_T \returns_object 
- 	*/ 
+ 	*/
 	template<class T, class... args_t> // dispatch to above
 	T read( hid_t fd, const std::string& dataset_path, args_t&&... args ){
 		h5::ds_t ds = h5::open(fd, dataset_path );
@@ -227,7 +227,7 @@ namespace h5 {
 	* auto vec = h5::read<std::vector<float>>( "myfile.h5","path/to/dataset", h5::count{10,10}, h5::offset{5,0} );	
 	* \endcode  
 	* \par_file_path \par_dataset_path \par_offset \par_stride  \par_count \par_block \tpar_T \returns_object 
- 	*/ 
+ 	*/
 	template<class T, class... args_t> // dispatch to above
 	T read(const std::string& file_path, const std::string& dataset_path, args_t&&... args ){
 		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR, h5::default_fapl );

@@ -6,11 +6,7 @@
 
 #include <gtest/gtest.h>
 #include <armadillo>
-#include <h5cpp/core>
-#include <h5cpp/mock.hpp>
-#include <h5cpp/create.hpp>
-#include <h5cpp/read.hpp>
-#include <h5cpp/write.hpp>
+#include <h5cpp/all>
 
 #include "event_listener.hpp"
 #include "abstract.h"
@@ -19,6 +15,7 @@ template <typename T> class IntegralTest : public AbstractTest<T>{};
 typedef ::testing::Types<float> PrimitiveTypes;
 //typedef ::testing::Types<H5CPP_TEST_PRIMITIVE_TYPES> PrimitiveTypes;
 TYPED_TEST_CASE(IntegralTest, PrimitiveTypes);
+
 
 TYPED_TEST(IntegralTest,create_current_dims) { // checks out!!!
 	h5::dcpl_t dcpl = h5::chunk{2} | h5::gzip{4};
@@ -97,8 +94,8 @@ TYPED_TEST(IntegralTest,create_write_dxpl) {
 	std::array<TypeParam,120> arr{};
 	for( auto& i:arr) i = 22;
 	if( h5::write<TypeParam>(this->fd, this->name + " 1d hyper_vec", arr.data(), h5::count{50}, h5::hyper_vector_size{512} ) < 0 ) ADD_FAILURE();
-	if( h5::write<TypeParam>(this->fd, this->name + " 1d hyper_vec | btreeratio", arr.data(), h5::count{50}, 
-				h5::hyper_vector_size{512} | h5::btree_ratios{1.,1.,1.}) < 0 ) ADD_FAILURE();
+//	if( h5::write<TypeParam>(this->fd, this->name + " 1d hyper_vec | btreeratio", arr.data(), h5::count{50}, 
+//				h5::hyper_vector_size{512} | h5::btree_ratios{1.,1.,1.}) < 0 ) ADD_FAILURE();
 }
 
 
@@ -186,6 +183,7 @@ TYPED_TEST(IntegralTest, read_simple) {
 	auto vec = h5::read<std::vector<TypeParam>>(this->fd, this->name + "cube");
 
 }
+
 /*----------- BEGIN TEST RUNNER ---------------*/
 H5CPP_TEST_RUNNER( int argc, char**  argv );
 /*----------------- END -----------------------*/

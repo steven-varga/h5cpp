@@ -25,8 +25,8 @@
 		using herr_t = int;
 	}
 	#include "H5config.hpp"
-	#include "compat.hpp"
-	#include "H5Eall.hpp"
+	#include "compat.hpp"  /* */
+	#include "H5Eall.hpp"  /* all methods throwing exceptions must be included after */
 	#include "H5misc.hpp"
 	#include "H5meta.hpp"
 	#include "H5Sall.hpp"
