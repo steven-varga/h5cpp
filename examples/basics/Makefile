@@ -8,8 +8,8 @@
 
 apps = basics
 
-CXXFLAGS =  -std=c++11 -Wno-deprecated
-LIBS =  -lhdf5  -lz -ldl -lm
+CXXFLAGS =  -std=c++11 -I/usr/local/include `pkg-config --cflags hdf5`
+LIBS =  `pkg-config --libs hdf5`
 
 test: $(apps)
 	@./basics

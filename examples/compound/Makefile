@@ -5,8 +5,8 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
-CXXFLAGS =  -std=c++14  -I/usr/local/include -I/usr/local/h5cpp-llvm
-LIBS =  -lhdf5  -lz -ldl -lm
+CXXFLAGS =  -std=c++14  -I/usr/local/include `pkg-config --cflags hdf5`
+LIBS =  `pkg-config --libs hdf5`
 
 test: struct
 	./struct

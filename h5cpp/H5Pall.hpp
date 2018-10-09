@@ -14,7 +14,7 @@ namespace h5 {
 // FILE CREATION PROPERTY LISTS
 using userblock                = impl::fcpl_call< impl::fcpl_args<hid_t,hsize_t>,           H5Pset_userblock>;
 using istore_k                 = impl::fcpl_call< impl::fcpl_args<hid_t,unsigned>,          H5Pset_istore_k>;
-using file_space_page_size     = impl::fcpl_call< impl::fcpl_args<hid_t,hsize_t>,           H5Pset_file_space_page_size>;
+////using file_space_page_size     = impl::fcpl_call< impl::fcpl_args<hid_t,hsize_t>,           H5Pset_file_space_page_size>;
 using shared_mesg_nindexes     = impl::fcpl_call< impl::fcpl_args<hid_t,unsigned>,          H5Pset_shared_mesg_nindexes>;
 using sizes                    = impl::fcpl_call< impl::fcpl_args<hid_t,size_t,size_t>,     H5Pset_sizes>;
 using sym_k                    = impl::fcpl_call< impl::fcpl_args<hid_t,unsigned,unsigned>, H5Pset_sym_k>;
@@ -31,15 +31,15 @@ using multi_type               = impl::fapl_call< impl::fapl_args<hid_t,H5FD_mem
 using fapl_split               = impl::fapl_call< impl::fapl_args<hid_t,const char*, hid_t,const char*,hid_t>,H5Pset_fapl_split>;
 using file_image               = impl::fapl_call< impl::fapl_args<hid_t,void*,size_t>,H5Pset_file_image>;
 using meta_block_size          = impl::fapl_call< impl::fapl_args<hid_t,hsize_t>,H5Pset_meta_block_size>;
-using page_buffer_size         = impl::fapl_call< impl::fapl_args<hid_t,size_t,unsigned,unsigned>,H5Pset_page_buffer_size>;
+////using page_buffer_size         = impl::fapl_call< impl::fapl_args<hid_t,size_t,unsigned,unsigned>,H5Pset_page_buffer_size>;
 using sieve_buf_size           = impl::fapl_call< impl::fapl_args<hid_t,size_t>,H5Pset_sieve_buf_size>;
 using alignment                = impl::fapl_call< impl::fapl_args<hid_t,hsize_t, hsize_t>,H5Pset_alignment>;
 using cache                    = impl::fapl_call< impl::fapl_args<hid_t,int,size_t,size_t,double>,H5Pset_cache>;
 using elink_file_cache_size    = impl::fapl_call< impl::fapl_args<hid_t,unsigned>,H5Pset_elink_file_cache_size>;
-using evict_on_close           = impl::fapl_call< impl::fapl_args<hid_t,hbool_t>,H5Pset_evict_on_close>;
+//using evict_on_close           = impl::fapl_call< impl::fapl_args<hid_t,hbool_t>,H5Pset_evict_on_close>;
 using metadata_read_attempts   = impl::fapl_call< impl::fapl_args<hid_t,unsigned>,H5Pset_metadata_read_attempts>;
 using mdc_config               = impl::fapl_call< impl::fapl_args<hid_t,H5AC_cache_config_t *>,H5Pset_mdc_config>;
-using mdc_image_config         = impl::fapl_call< impl::fapl_args<hid_t,H5AC_cache_image_config_t*>,H5Pset_mdc_image_config>;
+////using mdc_image_config         = impl::fapl_call< impl::fapl_args<hid_t,H5AC_cache_image_config_t*>,H5Pset_mdc_image_config>;
 using mdc_log_options          = impl::fapl_call< impl::fapl_args<hid_t,hbool_t,const char*,hbool_t>,H5Pset_mdc_log_options>;
 using libver_bounds            = impl::fapl_call< impl::fapl_args<hid_t, H5F_libver_t,H5F_libver_t>,H5Pset_libver_bounds>;
 namespace flag {

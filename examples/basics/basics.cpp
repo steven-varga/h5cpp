@@ -10,7 +10,7 @@ int main(){
 		std::cout << sizeof( dcpl ) << " " << sizeof(hid_t) << "\n";
 	}
 	{ // property lists can bae daisy chained with | operator
-		h5::fcpl_t fcpl = h5::file_space_page_size{4096} | h5::userblock{512};
+	////???	h5::fcpl_t fcpl = h5::file_space_page_size{4096} | h5::userblock{512};
 		h5::fapl_t fapl = h5::fclose_degree_weak | h5::stdio ;
 		h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value<short>{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9};
 		h5::lcpl_t lcpl = h5::create_path | h5::utf8;
@@ -28,7 +28,7 @@ int main(){
 		// flags := H5F_ACC_TRUNC | H5F_ACC_EXCL either to truncate or open file exclusively
 		// you may pass CAPI property list descriptors daisy chained with '|' operator 
 		auto fd = h5::create("002.h5", H5F_ACC_TRUNC, 
-				h5::file_space_page_size{4096} | h5::userblock{512} );  // file creation properties
+				/* ??? h5::file_space_page_size{4096} | */ h5::userblock{512} );  // file creation properties
 			   	//,h5::fclose_degree_weak | h5::fapl_core{2048,1} );     // file access properties
 		// or the c++11 wrapped smart pointer equivalent h5::AP_DEFAULT
 		h5::create("003.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );
