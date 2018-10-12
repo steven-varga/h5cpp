@@ -31,6 +31,7 @@
 
 #include "H5Mbase.hpp"
 #include "H5Mlinalg.hpp"
+#include "H5Meigen.hpp"
 
 #define H5CPP_STL_TEMPLATE_SPEC(T) 																			\
 	H5CPP_BASE_TEMPLATE_SPEC(T, std::vector, ref.data(), ref.size(), H5CPP_RANK_VEC,  {ref.size()})  		\

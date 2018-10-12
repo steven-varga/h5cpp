@@ -17,7 +17,7 @@
 		template<class T> using rowvec = blaze::DynamicVector<T,blaze::rowVector>;
 		template<class T> using colvec = blaze::DynamicVector<T,blaze::columnVector>;
 	}
-/* definitions for armadillo containers */
+/* definitions for blaze containers */
 	#define  H5CPP_BLAZE_TEMPLATE_SPEC(T) 																				             \
 	H5CPP_BASE_TEMPLATE_SPEC(T,::blaze::rowvec, ref.data(), ref.size(), H5CPP_RANK_VEC,  {ref.size()} ) 					         \
 	H5CPP_BASE_TEMPLATE_SPEC(T,::blaze::colvec, ref.data(), ref.size(), H5CPP_RANK_VEC,  {ref.size()} ) 					         \
@@ -29,7 +29,7 @@
 	H5CPP_CTOR_SPEC(T,::blaze::colmat,   H5CPP_RANK_MAT,  (dims[0],dims[1]) )											\
 
 #else
-	#define H5CPP_BLAZE_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
+	#define H5CPP_BLAZE_TEMPLATE_SPEC(T) /* empty definition on purpose as <blaze> is not included */
 #endif
 /**************************************************************************************************************************************/
 /* ARMADILLO                                                                                                                          */
@@ -50,37 +50,6 @@
 	#define H5CPP_ARMA_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
 #endif
 
-/**************************************************************************************************************************************/
-/* EIGEN3: doesn use versioning                                                                                                       */
-/**************************************************************************************************************************************/
-#if defined(EIGEN_CORE_H) || defined(H5CPP_USE_EIGEN3)
-	namespace eigen {
-		template<class T> using amat 	= Eigen::Array<T,Eigen::Dynamic,Eigen::Dynamic>;
-		template<class T> using arowvec = Eigen::Array<T,1,Eigen::Dynamic>;
-		template<class T> using acolvec = Eigen::Array<T,Eigen::Dynamic,1>;
-
-		template<class T> using mat    = Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>;
-		template<class T> using rowvec = Eigen::Matrix<T,1,Eigen::Dynamic>;
-		template<class T> using colvec = Eigen::Matrix<T,Eigen::Dynamic,1>;
-	}
-	#define H5CPP_EIGEN_TEMPLATE_SPEC(T) \
-	H5CPP_BASE_TEMPLATE_SPEC(T, eigen::rowvec, ref.data(), ref.size(), H5CPP_RANK_VEC,  { (hsize_t) ref.size()} )						\
-	H5CPP_BASE_TEMPLATE_SPEC(T, eigen::colvec, ref.data(), ref.size(), H5CPP_RANK_VEC,  { (hsize_t) ref.size()} )						\
-	H5CPP_BASE_TEMPLATE_SPEC(T, eigen::mat,    ref.data(), ref.size(), H5CPP_RANK_MAT,  { (hsize_t) ref.cols(), (hsize_t) ref.rows()} )	\
-	H5CPP_CTOR_SPEC(T, eigen::rowvec,  H5CPP_RANK_VEC,  (dims[0]) )																        \
-	H5CPP_CTOR_SPEC(T, eigen::colvec,  H5CPP_RANK_VEC,  (dims[0]) )																        \
-	H5CPP_CTOR_SPEC(T, eigen::mat,     H5CPP_RANK_MAT,  (dims[1], dims[0]) )													        \
-	\
-	H5CPP_BASE_TEMPLATE_SPEC(T, eigen::arowvec, ref.data(), ref.size(), H5CPP_RANK_VEC,  { (hsize_t) ref.size()} )						\
-	H5CPP_BASE_TEMPLATE_SPEC(T, eigen::acolvec, ref.data(), ref.size(), H5CPP_RANK_VEC,  { (hsize_t) ref.size()} )						\
-	H5CPP_BASE_TEMPLATE_SPEC(T, eigen::amat,    ref.data(), ref.size(), H5CPP_RANK_MAT,  { (hsize_t) ref.cols(), (hsize_t) ref.rows()} )\
-	H5CPP_CTOR_SPEC(T, eigen::arowvec,  H5CPP_RANK_VEC,  (dims[0]) )																    \
-	H5CPP_CTOR_SPEC(T, eigen::acolvec,  H5CPP_RANK_VEC,  (dims[0]) )																    \
-	H5CPP_CTOR_SPEC(T, eigen::amat,     H5CPP_RANK_MAT,  (dims[1], dims[0]) )														    \
-
-#else
-	#define H5CPP_EIGEN_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
-#endif
 
 /**************************************************************************************************************************************/
 /* BOOST MATRIX                                                                                                                       */
@@ -105,7 +74,7 @@
 	H5CPP_CTOR_SPEC(T, ::ublas::vector,     H5CPP_RANK_VEC,  (dims[0]) ) 													\
 
 #else
-	#define H5CPP_UBLASV_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
+	#define H5CPP_UBLASV_TEMPLATE_SPEC(T) /* empty definition on purpose as <ublas> is not included */
 #endif
 #define H5CPP_UBLAS_TEMPLATE_SPEC(T) H5CPP_UBLASM_TEMPLATE_SPEC(T) H5CPP_UBLASV_TEMPLATE_SPEC(T)
 
@@ -127,7 +96,7 @@
 	H5CPP_CTOR_SPEC(T, itpp::Vec,     H5CPP_RANK_VEC,  (dims[0]) ) 													\
 
 #else
-	#define H5CPP_ITPPV_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
+	#define H5CPP_ITPPV_TEMPLATE_SPEC(T) /* empty definition on purpose as <IT++> is not included */
 #endif
 #define H5CPP_ITPP_TEMPLATE_SPEC(T) H5CPP_ITPPM_TEMPLATE_SPEC(T) H5CPP_ITPPV_TEMPLATE_SPEC(T)
 
@@ -153,7 +122,7 @@
 	H5CPP_CTOR_SPEC(T, ::blitz::qube,     H5CPP_RANK_CUBE, (dims[2], dims[1], dims[0]) )										\
 
 #else
-	#define H5CPP_BLITZ_TEMPLATE_SPEC(T) /* empty definition on purpose as <armadillo> is not included */
+	#define H5CPP_BLITZ_TEMPLATE_SPEC(T) /* empty definition on purpose as <blitz> is not included */
 #endif
 
 /**************************************************************************************************************************************/

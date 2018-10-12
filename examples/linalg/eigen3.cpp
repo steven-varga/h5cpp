@@ -4,8 +4,13 @@
 
 using namespace std;
 // EIGEN3 templates are unusually complex, let's use our template definitions
-template<class T> using Matrix = Eigen::Matrix<T,Eigen::Dynamic,Eigen::Dynamic>;
-template<class T> using Colvec = Eigen::Matrix<T,Eigen::Dynamic,1>;
+template<class T> using Matrix   = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>;
+template<class T> using Colvec 	 = Eigen::Matrix<T, Eigen::Dynamic, 1, Eigen::ColMajor>;
+
+template <class T> using ArrayX1D = Eigen::Array<T, Eigen::Dynamic, 1, Eigen::ColMajor>;
+template <class T> using ArrayX3D = Eigen::Array<T, Eigen::Dynamic, 3, Eigen::RowMajor>;
+
+
 
 // only EIGEN::DYNAMIC [ARRAY|MATRIX|VECTOR] are supported
 // in other words Eigen::Matrix<T,S,S>  where S \in unsigned will not work, rather cast static allocation  into Dynamic (heap memory) structure
@@ -42,6 +47,15 @@ int main(){
 	}
 	{ // READ: 
 		Matrix<short> M = h5::read<Matrix<short>>("linalg.h5","create then write"); // read entire dataset back with a single read
+	}
+	{
+		ArrayX1D<double> res = ArrayX1D<double>::Zero(10);
+    	h5::fd_t fd = h5::create("eigen.h5",H5F_ACC_TRUNC);
+    	h5::write(fd, "/res",  res);
+    	ArrayX3D<float> res2 = ArrayX3D<float>::Zero(10, 3);
+    	h5::write(fd, "/res2",  res2);
+    	auto ds_3 = h5::create<float>(fd,"/type/short max_dims", h5::max_dims{ static_cast<hsize_t>( res2.rows() ), 3});
+    	h5::write(fd, "/res2",  res2,h5::current_dims{ static_cast<hsize_t>( res2.rows() ), 3});
 	}
 }
 
