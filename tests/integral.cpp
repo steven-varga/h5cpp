@@ -73,16 +73,19 @@ TYPED_TEST(IntegralTest,create_write_dcpl) {
 	for( auto& i:arr) i = 22;
 	// compile error: count_t{ ... } must be present
 	// if( h5::write<TypeParam>(this->fd, this->name + " 1d", arr.data() ) < 0 ) ADD_FAILURE();
-	if( h5::write<TypeParam>(this->fd, this->name + " 1d", arr.data(), h5::count{50} ) < 0 ) ADD_FAILURE();
-	if( h5::write<TypeParam>(this->fd, this->name + " 1d, chunk, max_dims", arr.data(), h5::count{50}, h5::chunk{5}, h5::max_dims{400} ) < 0 ) ADD_FAILURE();
-	if( h5::write<TypeParam>(this->fd, this->name + " 1d, chunk|gzip|shuffle", arr.data(),
-				h5::count{50}, h5::chunk{5} | h5::gzip{5} | h5::shuffle  ) < 0 ) ADD_FAILURE();
-	if( h5::write<TypeParam>(this->fd, this->name + " count", arr.data(), h5::count{50} ) < 0 ) ADD_FAILURE();
-	if( h5::write<TypeParam>(this->fd, this->name + " count max_dims{200}", arr.data(), h5::count{50}, h5::max_dims{200} ) < 0 ) ADD_FAILURE();
-	if( h5::write<TypeParam>(this->fd, this->name + " count, max_dims{inf}", arr.data(), h5::count{50}, h5::max_dims{H5S_UNLIMITED} ) < 0 ) ADD_FAILURE();
+	try {
+		h5::write<TypeParam>(this->fd, this->name + " 1d", arr.data(), h5::count{50} );
+		h5::write<TypeParam>(this->fd, this->name + " 1d, chunk, max_dims", arr.data(), h5::count{50}, h5::chunk{5}, h5::max_dims{400} );
+		h5::write<TypeParam>(this->fd, this->name + " 1d, chunk|gzip|shuffle", arr.data(),
+				h5::count{50}, h5::chunk{5} | h5::gzip{5} | h5::shuffle  );
+		h5::write<TypeParam>(this->fd, this->name + " count", arr.data(), h5::count{50} );
+		h5::write<TypeParam>(this->fd, this->name + " count max_dims{200}", arr.data(), h5::count{50}, h5::max_dims{200} );
+		h5::write<TypeParam>(this->fd, this->name + " count, max_dims{inf}", arr.data(), h5::count{50}, h5::max_dims{H5S_UNLIMITED} );
 //	can't merge properties inside funcion call, chunks must be specified if other dcpl properties are!!!
-	if( h5::write<TypeParam>(this->fd, this->name + " count, max_dims{inf} gzip | nbit", arr.data(), h5::count{50}, h5::max_dims{H5S_UNLIMITED},
-			   h5::chunk{5} | h5::gzip{4} | h5::nbit	) < 0 ) ADD_FAILURE();
+		h5::write<TypeParam>(this->fd, this->name + " count, max_dims{inf} gzip | nbit", arr.data(), h5::count{50}, h5::max_dims{H5S_UNLIMITED},
+			   h5::chunk{5} | h5::gzip{4} | h5::nbit	);
+	} catch( ... ){
+	   	ADD_FAILURE(); }
 
 //	if( h5::write<TypeParam>(this->fd, this->name + " count, UL gzip | nbit, dapl", arr.data(), h5::count{50} 
 //			, h5::max_dims{H5S_UNLIMITED}
@@ -93,7 +96,9 @@ TYPED_TEST(IntegralTest,create_write_dcpl) {
 TYPED_TEST(IntegralTest,create_write_dxpl) {
 	std::array<TypeParam,120> arr{};
 	for( auto& i:arr) i = 22;
-	if( h5::write<TypeParam>(this->fd, this->name + " 1d hyper_vec", arr.data(), h5::count{50}, h5::hyper_vector_size{512} ) < 0 ) ADD_FAILURE();
+	try{ 
+		h5::write<TypeParam>(this->fd, this->name + " 1d hyper_vec", arr.data(), h5::count{50}, h5::hyper_vector_size{512} );
+	} catch( ... ) { ADD_FAILURE(); }
 //	if( h5::write<TypeParam>(this->fd, this->name + " 1d hyper_vec | btreeratio", arr.data(), h5::count{50}, 
 //				h5::hyper_vector_size{512} | h5::btree_ratios{1.,1.,1.}) < 0 ) ADD_FAILURE();
 }
@@ -104,32 +109,40 @@ TYPED_TEST(IntegralTest,create_write_multidim) {
 	for( auto& i:arr) i = 22;
 	// compile error: count_t{ ... } must be present
 	// if( h5::write<TypeParam>(this->fd, this->name + " 1d", arr.data() ) < 0 ) ADD_FAILURE();
-	if( h5::write<TypeParam>( 
+	try{
+		h5::write<TypeParam>( 
 				this->fd, this->name +  " 3d"            // path 
 				,arr.data(), h5::count{5,10,1}            // in memory properties
 				,h5::offset{0,0,0}, h5::stride{1,2,1}      // file props
 				//, h5::chunk{5,10,1}
 				, h5::max_dims{100,100,H5S_UNLIMITED}
-			   	) < 0 ) ADD_FAILURE();
+			   	);
+	} catch( ... ) { ADD_FAILURE(); }
 }
 
 TYPED_TEST(IntegralTest,write_block) {
 	std::array<TypeParam,1200> arr{};
 	int j=1; for( auto& i:arr) i = j++;
 	h5::ds_t ds = h5::create<TypeParam>(this->fd, this->name + " 2d", h5::current_dims{100,100} );
-	if( h5::write<TypeParam>(ds, arr.data()
+	try{
+		h5::write<TypeParam>(ds, arr.data()
 				,h5::count{2,4},  h5::block{3,2}       // in memory properties
 				,h5::offset{0,0}, h5::stride{4,3}      // stride >= block size or overlap happens
-			   	) < 0 ) ADD_FAILURE();
+			   	);
+	} catch( ... ) {
+			ADD_FAILURE();
+	}
 }
 TYPED_TEST(IntegralTest,create_write_block) {
 	std::array<TypeParam,1200> arr{};
 	int j=1; for( auto& i:arr) i = j++;
 	//h5::ds_t ds = h5::create<TypeParam>(this->fd, this->name + " 2d", h5::current_dims{100,100} );
-	if( h5::write<TypeParam>(this->fd, this->name + " 2d", arr.data()
+	try { 
+		h5::write<TypeParam>(this->fd, this->name + " 2d", arr.data()
 				,h5::count{2,4},  h5::block{3,2}       // in memory properties
 				,h5::offset{0,0}, h5::stride{4,3}      // stride >= block size or overlap happens
-			   	) < 0 ) ADD_FAILURE();
+			   	);
+	} catch( ... ){ ADD_FAILURE(); }
 }
 
 

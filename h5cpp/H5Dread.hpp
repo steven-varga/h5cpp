@@ -5,7 +5,19 @@
 
 #ifndef  H5CPP_DREAD_HPP
 #define  H5CPP_DREAD_HPP
-#include "H5Dopen.hpp"
+#include "H5Dopen.hpp" // be sure this precedes error handling macro-s !!!
+
+#define H5CPP_CHECK_NZ( call, msg ) if( call < 0 ) throw h5::error::io::dataset::write(  \
+		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
+
+// possible bug in capi: H5Iis_valid( H5P_DEFAULT ) returns 0, use this instead
+#define H5CPP_CHECK_PROP( id, msg ) if( static_cast<::hid_t>( id ) < 0 ) throw h5::error::io::dataset::open(  \
+		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
+
+#define H5CPP_CHECK_ID( id, msg ) if( !static_cast<::hid_t>( id ) ) throw h5::error::io::dataset::open(  \
+		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
+
+
 namespace h5 {
 /***************************  REFERENCE *****************************/
 
@@ -25,7 +37,7 @@ namespace h5 {
 
 	template<class T, class... args_t>
 	typename std::enable_if<!std::is_same<T,char*>::value,
-	h5::herr_t>::type read( const h5::ds_t& ds, T* ptr, args_t&&... args ){
+	void>::type read( const h5::ds_t& ds, T* ptr, args_t&&... args ){
 		using toffset  = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
 		using tcount   = typename arg::tpos<const h5::count_t&,const args_t&...>;
@@ -52,21 +64,24 @@ namespace h5 {
 
 		const h5::dxpl_t& dxpl = arg::get( h5::default_dxpl, args...);
 
-		hid_t file_space = H5Dget_space(ds);
-        hsize_t rank = H5Sget_simple_extent_ndims(file_space);
+		hid_t mem_type, mem_space, file_space;
+        hsize_t rank;
+
+		H5CPP_CHECK_NZ( (file_space = H5Dget_space(ds)), h5::error::msg::file_space);
+	   	H5CPP_CHECK_NZ( (rank = H5Sget_simple_extent_ndims(file_space)), h5::error::msg::get_rank );
 		//TODO: error handler
-		if( rank != count.rank ) return -1;
+		if( rank != count.rank ) throw h5::error::io::dataset::read( h5::error::msg::rank_mismatch );
 
-		hid_t mem_type = utils::h5type<T>();
-		hid_t mem_space  = H5Screate_simple(rank, *size, NULL);
-		H5Sselect_all(mem_space);
-		H5Sselect_hyperslab(file_space, H5S_SELECT_SET, *offset, *stride, *count, *block);
+	   	H5CPP_CHECK_NZ( (mem_type = utils::h5type<T>()), h5::error::msg::get_memtype);
+		H5CPP_CHECK_NZ( (mem_space = H5Screate_simple(rank, *size, NULL)),h5::error::msg::get_memspace);
+		H5CPP_CHECK_NZ( H5Sselect_all(mem_space), h5::error::msg::select_memspace);
+		H5CPP_CHECK_NZ( H5Sselect_hyperslab(file_space, H5S_SELECT_SET, *offset, *stride, *count, *block),
+				h5::error::msg::select_hyperslab);
 
-		H5Dread(ds, mem_type, mem_space, file_space, dxpl, ptr );
-		H5Tclose(mem_type); H5Sclose(file_space); H5Sclose(mem_space);
-
-		//TODO: check error state
-		return 0;
+		H5CPP_CHECK_NZ( H5Dread(ds, mem_type, mem_space, file_space, dxpl, ptr ), h5::error::msg::read_dataset);
+		H5CPP_CHECK_NZ( H5Tclose(mem_type), h5::error::msg::close_memtype);
+	   	H5CPP_CHECK_NZ( H5Sclose(file_space), h5::error::msg::close_filespace);
+		H5CPP_CHECK_NZ( H5Sclose(mem_space), h5::error::msg::close_memspace);
 	}
 
  	/** \func_read_hdr
@@ -83,9 +98,9 @@ namespace h5 {
 	* \par_file_path \par_dataset_path \par_ptr \par_offset \par_stride \par_count \par_block \par_dxpl \tpar_T \returns_err
  	*/ 
 	template<class T, class... args_t>
-	h5::herr_t read( const h5::fd_t& fd, const std::string& dataset_path, T* ptr, args_t&&... args ){
-		h5::ds_t ds = h5::open(fd, dataset_path );
-		return h5::read<T>(ds, ptr, args...);
+	void read( const h5::fd_t& fd, const std::string& dataset_path, T* ptr, args_t&&... args ){
+		h5::ds_t ds = h5::open(fd, dataset_path ); // will throw its exception
+		h5::read<T>(ds, ptr, args...);
 	}
 
  	/** \func_read_hdr
@@ -101,9 +116,9 @@ namespace h5 {
 	* \par_file_path \par_dataset_path \par_ptr \par_offset \par_stride \par_count \par_block \tpar_T \returns_err
  	*/ 
 	template<class T, class... args_t>
-	h5::herr_t read( const std::string& file_path, const std::string& dataset_path,T* ptr, args_t&&... args ){
+	void read( const std::string& file_path, const std::string& dataset_path,T* ptr, args_t&&... args ){
 		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR, h5::default_fapl );
-		return h5::read( fd, dataset_path, ptr, args...);
+		h5::read( fd, dataset_path, ptr, args...);
 	}
 
 
@@ -121,7 +136,7 @@ namespace h5 {
 	* \par_ds \par_ref \par_offset \par_stride  \par_block \tpar_T \returns_err
  	*/ 
 	template<class T,  class... args_t>
-		h5::herr_t read( const h5::ds_t& ds, T& ref, args_t&&... args ){
+		void read( const h5::ds_t& ds, T& ref, args_t&&... args ){
 	// passed 'ref' contains memory size and element type, let's extract them
 	// and delegate forward  
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
@@ -132,7 +147,7 @@ namespace h5 {
 		// get 'count' and underlying type 
 		h5::count_t count = utils::get_count(ref);
 		element_type* ptr = utils::get_ptr(ref);
-		return read<element_type>(ds, ptr, count, args...);
+		read<element_type>(ds, ptr, count, args...);
 	}
  	/** \func_read_hdr
  	*  Updates the content of passed **ref** reference, which must have enough memory space to receive data.
@@ -146,9 +161,9 @@ namespace h5 {
 	* \par_fd \par_dataset_path \par_ref \par_offset \par_stride  \par_block \tpar_T \returns_err
  	*/ 
 	template<class T,  class... args_t> // dispatch to above
-		h5::herr_t read( const h5::fd_t& fd,  const std::string& dataset_path, T& ref, args_t&&... args ){
+		void read( const h5::fd_t& fd,  const std::string& dataset_path, T& ref, args_t&&... args ){
 		h5::ds_t ds = h5::open(fd, dataset_path );
-		return h5::read<T>(ds, ref, args...);
+		h5::read<T>(ds, ref, args...);
 	}
  	/** \func_read_hdr
  	*  Updates the content of passed **ref** reference, which must have enough memory space to receive data.
@@ -161,9 +176,9 @@ namespace h5 {
 	* \par_file_path \par_dataset_path \par_ref \par_offset \par_stride \par_block \tpar_T \returns_err
  	*/ 
 	template<class T, class... args_t> // dispatch to above
-	h5::herr_t read( const std::string& file_path, const std::string& dataset_path, T& ref, args_t&&... args ){
+	void read( const std::string& file_path, const std::string& dataset_path, T& ref, args_t&&... args ){
 		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR, h5::default_fapl );
-		return h5::read( fd, dataset_path, ref, args...);
+		h5::read( fd, dataset_path, ref, args...);
 	}
 
 /***************************  OBJECT *****************************/
@@ -192,8 +207,12 @@ namespace h5 {
 		const h5::block_t& block = arg::get( default_block, args...);
 
 		if constexpr( !tcount::present ){ // read count ::= current_dim of file space 
-			h5::sp_t file_space = h5::sp_t{H5Dget_space(ds)};
-			size.rank = H5Sget_simple_extent_dims(static_cast<hid_t>(file_space), *size, NULL);
+			hid_t fp_id;
+			H5CPP_CHECK_NZ( (fp_id = H5Dget_space(ds) ), h5::error::msg::file_space);
+			h5::sp_t file_space = h5::sp_t{fp_id};
+
+			H5CPP_CHECK_NZ( (size.rank = H5Sget_simple_extent_dims(static_cast<hid_t>(file_space), *size, NULL)),
+					h5::error::msg::get_dims);
 		} else {
 			for(int i=0;i<count.rank;i++) size[i] = count[i] * block[i];
 			size.rank = count.rank;
@@ -201,7 +220,7 @@ namespace h5 {
 		T ref = utils::ctor<T>( count.rank, *size );
 		element_type *ptr = utils::get_ptr( ref );
 
-		h5::herr_t err = read<element_type>(ds, ptr, count, args...);
+		read<element_type>(ds, ptr, count, args...);
 		return ref;
 	}
  	/** \func_read_hdr
@@ -234,4 +253,7 @@ namespace h5 {
 		return h5::read<T>( fd, dataset_path, args...);
 	}
 }
+#undef H5CPP_CHECK_NZ
+#undef H5CPP_CHECK_PROP
+#undef H5CPP_CHECK_ID
 #endif

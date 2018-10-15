@@ -63,19 +63,41 @@ namespace h5 { namespace error {
 		const std::string select_memspace = "couldn't do  memory space selection...";
 		const std::string select_hyperslab = "couldn't do hyper-slab  selection...";
 		const std::string get_filespace = "couldn't get file space...";
+		const std::string get_memspace = "couldn't get memory space...";
+		const std::string get_memtype = "couldn't get mem type...";
 		const std::string get_filetype = "couldn't get file type...";
 		const std::string get_filetype_size = "could_t get file type size...";
 		const std::string close_memspace = "could_t close memory space...";
 		const std::string close_filespace = "could_t close file space...";
 		const std::string close_filetype = "could_t close file type...";
 		const std::string close_memtype = "could_t close memory type...";
-		const std::string create_property_list = "couldn't create property list...";
 		const std::string close_property_list = "couldn't close property list...";
+		const std::string close_group = "couldn't close group/directory...";
 		const std::string get_rank = "couldn't obtain rank...";
 		const std::string get_chunk_dims = "couldn't obtain chunk dimensions...";
+		const std::string get_dims = "couldn't obtain data dimensions...";
 		const std::string mem_alloc = "couldn't allocate memory of requested size...";
 		const std::string set_extent = "couldn't set extent...";
+		const std::string set_chunk = "couldn't set chunk...";
 		const std::string write_dataset = "couldn't write dataset...";
+		const std::string read_dataset = "couldn't read dataset...";
+		const std::string create_dataset = "couldn't create dataset...";
+		const std::string create_file = "couldn't create file...";
+		const std::string create_property_list = "couldn't create property list...";
+		const std::string create_dims = "couldn't create dimension descriptor...";
+		const std::string link_check = "checking if object exists fails...";
+		const std::string open_dataset = "opening dataset failed...";
+		const std::string open_file = "opening hdf5 container failed...";
+		const std::string open_group = "opening directory failed...";
+		const std::string dataset_descriptor = "invalid dataset descriptor ...";
+		const std::string file_descriptor = "invalid file descriptor ...";
+		const std::string file_space = "invalid file space ...";
+		const std::string prop_descriptor = "invalid file descriptor ...";
+		const std::string list_directory = "error traversing directory ...";
+		const std::string rank_mismatch = "rank of file space and mem space must match ...";
+		const std::string get_simple_extent_dims = "???? ...";
+		const std::string get_dataset_type = "???? ...";
+		const std::string create_dcpl = "???? ...";
 	}
 }}
 namespace h5 { namespace error { namespace io {

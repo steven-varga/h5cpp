@@ -12,7 +12,6 @@
 #include "utils.hpp"
 
 int main(){
-
 	try { // centrally used error handling
 		std::vector<sn::example::Record> stream = h5::utils::get_test_data<sn::example::Record>(200);
 		h5::fd_t fd = h5::create("example.h5",H5F_ACC_TRUNC);

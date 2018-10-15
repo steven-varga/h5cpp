@@ -45,13 +45,13 @@ namespace h5 { namespace impl { namespace detail {
 		// from CAPI
 		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
 			if( H5Iis_valid( handle_ ) )
-				int count = H5Iinc_ref( handle_ );
+				H5Iinc_ref( handle_ );
 		}
 		// TO CAPI
 		H5CPP__EXPLICIT operator ::hid_t() const {
 			return  handle;
 		}
-        hid_t( std::initializer_list<::hid_t> fd )
+        hid_t( std::initializer_list<::hid_t> fd ) // direct  initialization doesn't increment handle
 		   : handle( *fd.begin()){
 		}
 		//TODO: have default constructor such that can initialize properties
@@ -60,11 +60,13 @@ namespace h5 { namespace impl { namespace detail {
 		hid_t() : handle(H5I_UNINIT){};
 		hid_t( const hid_t& ref) {
 			this->handle = ref.handle;
-			H5Iinc_ref( handle );
+			if( H5Iis_valid( handle ) )
+				H5Iinc_ref( handle );
 		}
 		hid_t& operator =( const hid_t& ref) {
 			handle = ref.handle;
-			H5Iinc_ref( handle );
+			if( H5Iis_valid( handle ) )
+				H5Iinc_ref( handle );
 			return *this;
 		}
 		/* move ctor must invalidate old handle */

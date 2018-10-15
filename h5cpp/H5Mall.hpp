@@ -6,6 +6,8 @@
 #ifndef  H5CPP_MACROS_HPP 
 #define  H5CPP_MACROS_HPP
 
+/*ERROR CHECKS: CAPI calls must be (and are) checked on caller side*/
+
 	namespace h5 { namespace utils {
 
 		template<typename T> struct base;

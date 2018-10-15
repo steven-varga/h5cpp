@@ -6,6 +6,18 @@
 
 #ifndef  H5CPP_DOPEN_HPP 
 #define  H5CPP_DOPEN_HPP
+
+#define H5CPP_CHECK_NZ( call, msg ) if( call < 0 ) throw h5::error::io::dataset::open(  \
+		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
+
+#define H5CPP_CHECK_ID( id, msg ) if( !static_cast<::hid_t>( id ) ) throw h5::error::io::dataset::open(  \
+		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
+
+// possible bug in capi: H5Iis_valid( H5P_DEFAULT ) returns 0, use this instead
+#define H5CPP_CHECK_PROP( id, msg ) if( static_cast<::hid_t>( id ) < 0 ) throw h5::error::io::dataset::open(  \
+		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
+
+
 namespace h5{
 	/** \ingroup file-io 
 
@@ -20,10 +32,20 @@ namespace h5{
 	 * 	}	                                                  // ds and fd closes automatically 
 	 * @endcode 
 	 */
-    inline h5::ds_t open(const  h5::fd_t& fd, const std::string& path, const h5::dapl_t& dapl=h5::default_dapl ){
-		hid_t ds = H5Dopen( static_cast<hid_t>(fd), path.data(), static_cast<hid_t>(dapl) );
+    inline h5::ds_t open(const  h5::fd_t& fd, const std::string& path, const h5::dapl_t& dapl = h5::default_dapl ){
+		H5CPP_CHECK_ID(fd, h5::error::msg::file_descriptor );
+		// possible bug in capi: H5Iis_valid( H5P_DEFAULT ) returns 0
+		H5CPP_CHECK_PROP(dapl, h5::error::msg::prop_descriptor ); 
+
+		hid_t ds;
+	   	H5CPP_CHECK_NZ(( ds = H5Dopen( static_cast<hid_t>(fd), path.data(), static_cast<hid_t>(dapl))),
+				   h5::error::msg::open_dataset	);
      	return  h5::ds_t{ds};
     }
 }
+#undef H5CPP_CHECK_PROP
+#undef H5CPP_CHECK_ID
+#undef H5CPP_CHECK_NZ
+
 #endif
 

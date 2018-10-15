@@ -5,7 +5,9 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 #
-apps = arma eigen3 itpp blaze ublas
+apps = arma eigen3 blaze itpp ublas dlib
+
+#FIXME: dlib
 
 CXXFLAGS = -Wno-deprecated  -Wall
 LIBS =  -lhdf5 -lz -ldl -lm
@@ -17,6 +19,7 @@ test: $(apps)
 	@./itpp
 	@./blaze
 	@./ublas
+	@./dlib
 
 all: $(apps)
 

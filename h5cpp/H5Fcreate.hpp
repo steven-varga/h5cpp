@@ -5,6 +5,10 @@
 
 #ifndef  H5CPP_FCREATE_HPP
 #define H5CPP_FCREATE_HPP
+
+#define H5CPP_CHECK_NZ( call, msg ) if( call < 0 ) throw h5::error::io::file::create(  \
+		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
+
 /**  
  * @namespace h5
  * @brief public namespace
@@ -46,11 +50,14 @@ namespace h5{
 	 * @endcode
 	 */
     inline h5::fd_t create( const std::string& path, unsigned flags,
-			const h5::fcpl_t& fcpl=h5::default_fcpl, const h5::fapl_t& fapl=h5::default_fapl ) noexcept {
+			const h5::fcpl_t& fcpl=h5::default_fcpl, const h5::fapl_t& fapl=h5::default_fapl ) {
 
-        hid_t fd = H5Fcreate(path.data(), flags, static_cast<hid_t>( fcpl ), static_cast<hid_t>( fapl ) );
+        hid_t fd;
+	   	H5CPP_CHECK_NZ(
+					(fd = H5Fcreate(path.data(), flags, static_cast<hid_t>( fcpl ), static_cast<hid_t>( fapl ) )),h5::error::msg::create_file);
         return fd_t{fd};
     }
 }
+#undef H5CPP_CHECK_NZ
 #endif
 

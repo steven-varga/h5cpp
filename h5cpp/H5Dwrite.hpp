@@ -6,27 +6,40 @@
 #ifndef  H5CPP_DWRITE_HPP
 #define H5CPP_DWRITE_HPP
 
+#define H5CPP_CHECK_NZ( call, msg ) if( call < 0 ) throw h5::error::io::dataset::write(  \
+		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
+
+// possible bug in capi: H5Iis_valid( H5P_DEFAULT ) returns 0, use this instead
+#define H5CPP_CHECK_PROP( id, msg ) if( static_cast<::hid_t>( id ) < 0 ) throw h5::error::io::dataset::open(  \
+		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
+
+#define H5CPP_CHECK_ID( id, msg ) if( !static_cast<::hid_t>( id ) ) throw h5::error::io::dataset::open(  \
+		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
+
 namespace h5 {
  	/** \func_write_hdr
  	*  TODO: write doxy for here  
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T>
-	h5::herr_t write( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, const T* ptr  ){
-		//static_assert( utils::is_supported<T>, H5CPP_supported_elementary_types );
-
-		hid_t type = utils::h5type<T>();
-		h5::herr_t err = H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
-		H5Tclose(type);
-		//TODO: error handler
-		return 0;
+	void write( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, const T* ptr  ){
+		H5CPP_CHECK_ID( ds, h5::error::msg::dataset_descriptor );
+		H5CPP_CHECK_ID( file_space, h5::error::msg::file_space );
+		H5CPP_CHECK_PROP( dxpl, h5::error::msg::prop_descriptor );
+		hid_t type;
+	   	H5CPP_CHECK_NZ( ( type = utils::h5type<T>() ), h5::error::msg::get_memtype );
+		H5CPP_CHECK_NZ(
+				H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr), h5::error::msg::write_dataset);
+		H5CPP_CHECK_NZ( H5Tclose(type), h5::error::msg::close_memtype );
 	}
  	/** \func_write_hdr
  	*  TODO: write doxy for here  
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	h5::herr_t write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ){
+	void write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ){
+
+		H5CPP_CHECK_ID( ds, h5::error::msg::dataset_descriptor );
 	// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
@@ -36,8 +49,9 @@ namespace h5 {
 		const h5::count_t& count = std::get<tcount::value>( tuple );
 		const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
 
-		hid_t file_space = H5Dget_space( static_cast<::hid_t>(ds) );
-		int rank =  H5Sget_simple_extent_ndims(file_space);
+		hid_t file_space, mem_space; int rank;
+	   	H5CPP_CHECK_NZ( (file_space = H5Dget_space( static_cast<::hid_t>(ds) )), h5::error::msg::get_filespace );
+	   	H5CPP_CHECK_NZ( (rank = H5Sget_simple_extent_ndims(file_space)), h5::error::msg::get_rank);
 
 		h5::offset_t  default_offset{0,0,0,0,0,0,0};
 		const h5::offset_t& offset = arg::get( default_offset, args...);
@@ -47,23 +61,31 @@ namespace h5 {
 		const h5::block_t& block = arg::get( default_block, args...);
 
 		hsize_t size = 1;for(int i=0;i<rank;i++) size *= count[i] * block[i];
-		hid_t mem_space = H5Screate_simple(1, &size, NULL );
-		H5Sselect_all(mem_space);
-
-		H5Sselect_hyperslab(file_space, H5S_SELECT_SET, *offset, *stride, *count, *block);
-			herr_t err = h5::write<T>(ds,mem_space, file_space, dxpl, ptr);
-		H5Sclose(mem_space); H5Sclose(file_space);
-		//TODO: error handler
-		return 0; // err;
+		H5CPP_CHECK_NZ( (mem_space = H5Screate_simple(1, &size, NULL )), h5::error::msg::create_memspace );
+		H5CPP_CHECK_NZ( H5Sselect_all(mem_space), h5::error::msg::select_memspace );
+		H5CPP_CHECK_NZ(
+				H5Sselect_hyperslab(file_space, H5S_SELECT_SET, *offset, *stride, *count, *block), h5::error::msg::select_hyperslab );
+		// this can throw exception
+		try{
+			h5::write<T>(ds, mem_space, file_space, dxpl, ptr);
+		} catch ( ... ){
+			// try to clean up if possible
+			H5CPP_CHECK_NZ( H5Sclose(mem_space), h5::error::msg::close_memspace );
+			H5CPP_CHECK_NZ( H5Sclose(file_space), h5::error::msg::close_filespace );
+			throw; //re-throw excption
+		}
+		H5CPP_CHECK_NZ( H5Sclose(mem_space), h5::error::msg::close_memspace );
+		H5CPP_CHECK_NZ( H5Sclose(file_space), h5::error::msg::close_filespace );
 	}
-
  	/** \func_write_hdr
  	*  TODO: write doxy for here  
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
 	typename std::enable_if<!std::is_same<T,char**>::value,
-	h5::herr_t>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ){
+	void>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ){
+
+		H5CPP_CHECK_ID( ds, h5::error::msg::dataset_descriptor );
 	// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double | std::string
 		using element_t = typename utils::base<T>::type;
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
@@ -75,26 +97,30 @@ namespace h5 {
 		// std::string is variable length
 		if constexpr( std::is_same<std::string,element_t>::value ){
 			std::vector<char*> ptr;
-			for( const auto& reference:ref)
-            	ptr.push_back( strdup( reference.data()) );
+			try {
+				for( const auto& reference:ref)
+            		ptr.push_back( strdup( reference.data()) );
+			} catch( ... ){
+				throw h5::error::io::dataset::write( h5::error::msg::mem_alloc );
+			}
+			// will throw it's own
  			h5::write(ds, ptr.data(), count, args...);
         	for( auto p:ptr ) free(p);
-			;
-		}  else
+		}  else // ditto, throws error
 			h5::write<element_t>(ds, utils::get_ptr(ref), count, args...  );
-		//TODO: error handler
-		return 0;
 	}
-
 	/** \func_write_hdr
  	*  TODO: write doxy for here  
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	h5::herr_t write( const h5::fd_t& fd, const std::string& dataset_path, const T* ptr,  args_t&&... args  ){
+	void write( const h5::fd_t& fd, const std::string& dataset_path, const T* ptr,  args_t&&... args  ){
+
+		H5CPP_CHECK_ID( fd, h5::error::msg::file_descriptor );
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
+		using tblock = typename arg::tpos<const h5::block_t&,const args_t&...>;
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
 
 		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
@@ -103,7 +129,7 @@ namespace h5 {
 
 		auto tuple = std::forward_as_tuple(args...);
 		const h5::count_t& count = std::get<tcount::value>( tuple );
-		int rank =  def_current_dims.rank =  count.rank;
+		int rank = def_current_dims.rank =  count.rank;
 
 		if constexpr( !tcurrent_dims::present ){
 			for(int i =0; i < rank; i++ )
@@ -120,11 +146,14 @@ namespace h5 {
 			}
 		}
 		const h5::current_dims_t& current_dims  = arg::get(def_current_dims, args... );
+
 		h5::mute();
-		h5::ds_t ds = ( H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT ) > 0 ) ?
+		//NOTE: this call is unchecked on purpose, return value -1 means the path doesn't exist along to 
+		//queried leaf node. The missing path will be created by h5::create 
+		h5::ds_t ds = (H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT ) > 0) ? // will throw error
 			h5::open( fd, dataset_path, h5::default_dapl) : h5::create<T>(fd, dataset_path, args..., current_dims );
 		h5::unmute();
- 		return h5::write<T>(ds, ptr,  args...);
+ 		h5::write<T>(ds, ptr,  args...);
 	}
 
  	/** \func_write_hdr
@@ -132,8 +161,8 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	h5::herr_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
-
+	void write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
+		H5CPP_CHECK_ID( fd, h5::error::msg::file_descriptor );
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
@@ -169,10 +198,12 @@ namespace h5 {
 		}
 		const h5::current_dims_t& current_dims  = arg::get(def_current_dims, args... );
 		h5::mute();
+		//NOTE: this call is unchecked on purpose, return value -1 means the path doesn't exist along to 
+		//queried leaf node. The missing path will be created by h5::create 
 		h5::ds_t ds = ( H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT ) > 0 ) ?
 			h5::open( fd, dataset_path, h5::default_dapl) : h5::create<element_t>(fd, dataset_path, args..., current_dims );
 		h5::unmute();
- 		return h5::write<T>(ds, ref,  args...);
+ 		h5::write<T>(ds, ref,  args...);
 	}
 
    /** \func_write_hdr
@@ -180,10 +211,15 @@ namespace h5 {
 	*  \par_offset \par_stride \par_count \par_block  \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class... args_t>
-	h5::herr_t write( const std::string& file_path, const std::string& dataset_path, args_t&&... args  ){
+	void write( const std::string& file_path, const std::string& dataset_path, args_t&&... args  ){
 		//TODO: check if exists create if doesn't
 		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR, h5::default_fapl );
-		return h5::write( fd, dataset_path, args...);
+		h5::write( fd, dataset_path, args...);
 	}
 }
+
+#undef H5CPP_CHECK_NZ
+#undef H5CPP_CHECK_PROP
+#undef H5CPP_CHECK_ID
+
 #endif

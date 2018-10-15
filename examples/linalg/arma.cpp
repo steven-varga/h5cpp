@@ -2,7 +2,6 @@
 #include <h5cpp/all>
 
 
-
 int main(){
 	{ // CREATE - WRITE
 		arma::mat M(2,3); M.ones();				            // create a matrix
@@ -14,16 +13,17 @@ int main(){
 		);
 		h5::write( ds,  M, h5::offset{2,2}, h5::stride{1,3}  );
 	}
-
 	{
-		arma::vec V(4); V.ones();	                  // create a vector
+		arma::vec V( {1.,2.,3.,4.,5.,6.,7.,8.}); 	// create a vector
 		// simple one shot write that computes current dimensions and saves matrix
 		h5::write( "arma.h5", "one shot create write",  V);
 		// what if you want to position a matrix inside a higher dimension with some added complexity?	
 		h5::write( "arma.h5", "arma vec inside matrix",  V // object contains 'count' and rank being written
 			,h5::current_dims{40,50}  // control file_space directly where you want to place vector
 			,h5::offset{5,0}            // when no explicit current dimension given current dimension := offset .+ object_dim .* stride (hadamard product)  
- 			,h5::stride{4,4}, h5::block{3,3}
+ 			,h5::count{1,1}
+			,h5::stride{3,5}
+			,h5::block{2,4}
 			,h5::max_dims{40,H5S_UNLIMITED}  // wouldn't it be nice to have unlimited dimension? if no explicit chunk is set, then the object dimension 
 							 // is used as unit chunk
 		);

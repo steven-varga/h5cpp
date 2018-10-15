@@ -26,16 +26,15 @@ int main(){
 		);
 		h5::write( ds,  M, h5::offset{2,2}, h5::stride{1,3}  );
 	}
-
 	{
-		Colvec<float> V(4); 			                  // create a vector
+		Colvec<float> V(8); 			                  // create a vector
 		// simple one shot write that computes current dimensions and saves matrix
 		h5::write( "linalg.h5", "one shot create write",  V);
 		// what if you want to position a matrix inside a higher dimension with some added complexity?	
 		h5::write( "linalg.h5", "arma vec inside matrix",  V // object contains 'count' and rank being written
 			,h5::current_dims{40,50}  // control file_space directly where you want to place vector
 			,h5::offset{5,0}            // when no explicit current dimension given current dimension := offset .+ object_dim .* stride (hadamard product)  
- 			,h5::stride{4,4}, h5::block{3,3}
+ 			,h5::count{1,1}, h5::stride{4,4}, h5::block{3,3}
 			,h5::max_dims{40,H5S_UNLIMITED}  // wouldn't it be nice to have unlimited dimension? if no explicit chunk is set, then the object dimension 
 							 // is used as unit chunk
 		);
@@ -48,14 +47,12 @@ int main(){
 	{ // READ: 
 		Matrix<short> M = h5::read<Matrix<short>>("linalg.h5","create then write"); // read entire dataset back with a single read
 	}
-	{
-		ArrayX1D<double> res = ArrayX1D<double>::Zero(10);
-    	h5::fd_t fd = h5::create("eigen.h5",H5F_ACC_TRUNC);
-    	h5::write(fd, "/res",  res);
-    	ArrayX3D<float> res2 = ArrayX3D<float>::Zero(10, 3);
-    	h5::write(fd, "/res2",  res2);
-    	auto ds_3 = h5::create<float>(fd,"/type/short max_dims", h5::max_dims{ static_cast<hsize_t>( res2.rows() ), 3});
-    	h5::write(fd, "/res2",  res2,h5::current_dims{ static_cast<hsize_t>( res2.rows() ), 3});
+	{ // fixed/compile time  length arrays/matrices upto size 4 
+		auto fd = h5::open("linalg.h5", H5F_ACC_RDWR);
+		ArrayX1D<double> x1d = ArrayX1D<double>::Zero(10);
+    	h5::write(fd, "/x1d ",  x1d);
+    	ArrayX3D<float> x3d = ArrayX3D<float>::Zero(10,3); // first dimension is fixed size
+    	h5::write(fd, "/x3d",  x3d);
 	}
 }
 

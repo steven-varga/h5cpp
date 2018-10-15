@@ -28,8 +28,14 @@ namespace h5{ namespace impl {
 		const hsize_t* operator*() const { return data; }
 
 		friend std::ostream & operator<<(std::ostream& cout, const array& arr){
-			int i=0;
-			cout << "{"; for(;i<arr.rank-1; i++) cout << arr[i] << ","; cout << arr[i] << "}";
+			cout << "{";
+				for(int i=0;i<arr.rank; i++){
+					char sep = i != arr.rank - 1  ? ',' : '}';
+				  	if( arr[i] < std::numeric_limits<hsize_t>::max() )
+						cout << arr[i] << sep;
+					else
+						cout << "max" << sep;
+				}
 			return cout;
 		}
 
@@ -61,5 +67,7 @@ namespace h5 {
 	using current_dims   = current_dims_t;
 	using max_dims       = max_dims_t;
 }
+
+
 #endif
 

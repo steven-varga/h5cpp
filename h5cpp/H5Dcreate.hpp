@@ -6,6 +6,7 @@
 #ifndef  H5CPP_DCREATE_HPP 
 #define  H5CPP_DCREATE_HPP
 
+//TODO: if constexpr(..){} >= c++17
 namespace h5 {
  	/** \func_create_hdr
 	* \code
@@ -19,6 +20,7 @@ namespace h5 {
  	*/ 
 	template<class T, class... args_t>
 	h5::ds_t create( const h5::fd_t& fd, const std::string& dataset_path, args_t&&... args ){
+
 		// compile time check of property lists: 
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
 		using tmax_dims 	= typename arg::tpos<const h5::max_dims_t&,const args_t&...>;
@@ -31,15 +33,16 @@ namespace h5 {
 		const h5::lcpl_t& lcpl = arg::get(h5::default_lcpl, args...);
 		const h5::dcpl_t& dcpl = arg::get(default_dcpl, args...);
 		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
-		// and dimensions
 
+		// and dimensions
 		h5::current_dims_t current_dims_default{0}; // if no current dims_present 
 		// this mutable value will be referenced
 		const h5::current_dims_t& current_dims = arg::get(current_dims_default, args...);
-		const h5::max_dims_t&     max_dims =     arg::get(h5::max_dims_t{0}, args... );
+		const h5::max_dims_t& max_dims = arg::get(h5::max_dims_t{0}, args... );
 		bool has_unlimited_dimension = false;
 		size_t rank = 0;
-		h5::sp_t space_id{-1}; // 
+		h5::sp_t space_id{H5I_UNINIT}; // set to invalid state 
+		h5::ds_t ds{H5I_UNINIT};
 
 		if constexpr( tmax_dims::present ){
 			rank = max_dims.size();
@@ -53,21 +56,21 @@ namespace h5 {
 		} else static_assert( tcurrent_dims::present,"current or max dimensions must be present in order to create a dataset!" );
 
 		if( !tdcpl::present && ( has_unlimited_dimension || (tcurrent_dims::present && tmax_dims::present)) ){
-			current_dims_t chunk{0}; chunk.rank = current_dims.rank;
+			chunk_t chunk{0}; chunk.rank = current_dims.rank;
 			for(hsize_t i=0; i<rank; i++)
 				chunk[i] = current_dims[i] ? current_dims[i] : 1;
-			H5Pset_chunk(static_cast<::hid_t>(default_dcpl), chunk.rank, chunk.begin() );
+			h5::set_chunk(default_dcpl, chunk );
 		}
-
-		// use move semantics to set space
-		space_id =  tmax_dims::present ?
-			std::move( h5::create_simple( current_dims, max_dims ) ) :  std::move( h5::create_simple( current_dims ) );
-
-		hid_t type = utils::h5type<T>();
-		::hid_t ds = H5Dcreate2( static_cast<hid_t>(fd), dataset_path.data(), type, static_cast<hid_t>(space_id),
-								static_cast<hid_t>(lcpl), static_cast<hid_t>(dcpl), static_cast<hid_t>(dapl) );
-		H5Tclose(type);
-		return h5::ds_t{ds};
+		try {
+			// use move semantics to set space
+			space_id =  tmax_dims::present ?
+				std::move( h5::create_simple( current_dims, max_dims ) ) :  std::move( h5::create_simple( current_dims ) );
+			h5::dt_t type{ utils::h5type<T>() };
+			ds = std::move( h5::createds(fd, dataset_path, type, space_id, lcpl, dcpl, dapl));
+		} catch( const std::runtime_error& err ) {
+			throw h5::error::io::dataset::create( err.what() );
+		}
+		return ds;
 	}
 	// delegate to h5::fd_t 
 	template<class T, class... args_t>

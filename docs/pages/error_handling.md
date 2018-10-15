@@ -80,9 +80,15 @@ usage:
 	}
 ```
 
+**Design criteria**
+- All HDF5 CAPI calls are checked with the only exception of `H5Lexsists` where the failure carries information, that the path does not exist yet. 
+- Callbacks of CAPI routines doesn't throw any exceptions, honoring the HDF5 CAPI contract, hence allowing the CAPI call to clean up
+- Error messages currently are collected in `H5Eall.hpp` may be customized
+- Thrown exceptions are hierarchial
+- Before Exceptions thrown within CTOR-s if memory reserved freed, then CAPI resources are released in the order of likelihood not generating further errors. While cascading errors can't be entirely prevented, if it happens one can **creash** the software or cactching `h5::error::rollbback` exception can decide to go on at risking small CAPI memory leak. The possibility of this leak can not be reduced further.
 
 
-exception hierarchy is embedded in namespaces, the chart should be interpreted as tree, for instance a file create exception is
+Exception hierarchy is embedded in namespaces, the chart should be interpreted as tree, for instance a file create exception is
 `h5::error::io::file::create`. Keep in mind [namespace aliasing][3] allow you customization should you find the long names inconvenient:
 ```cpp
 using file_error = h5::error::io::file
@@ -138,6 +144,23 @@ h5::error : public std::runtime_error
 </pre>
 
 This is a work in progress, if for any reasons you think it could be improved, or some real life scenario is not represented please shoot me an email with the use case, a brief working example.
+
+
+Diagnostics   {#link_diagnostics}
+==================================
+On occasions it comes handy to dump internal state of objects, while currently only `h5::sp_t` data-space descriptor and dimensions supported
+in time most of HDF5 CAPI diagnostics/information calls will be added.
+
+```cpp
+	h5::ds_t ds =  ... ; 				// obtained by h5::open | h5::create call
+	h5::sp_t sp = h5::get_space( ds );  // get the file space descriptor for hyperslab selection
+	h5::select_hyperslab(sp,  ... );    // some complicated selection that may fail, and you want to debug
+	std::cerr << sp << std::endl;       // prints out the available space
+	try { 
+		H5Dwrite(ds, ... );            // direct CAPI call fails for with invalid selection
+	catch( ... ){
+	}
+```
 
 
 [1]: https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#S-errors

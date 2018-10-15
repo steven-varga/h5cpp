@@ -1,5 +1,15 @@
 #include <h5cpp/all>
 #include <cstddef>
+/*
+
+basics.cpp:15:74: error: no matching function for call to 
+‘h5::impl::prop_t<
+	h5::impl::detail::hid_t<h5::impl::fapl_t, H5Pclose, true, true, true, false>, 
+	h5::impl::default_fapl, 
+	h5::impl::capi_t<long int, H5F_libver_t, H5F_libver_t>, 
+	H5Pset_libver_bounds>
+	::prop_t(H5F_libver_t, H5F_libver_t)’
+*/
 
 int main(){
 	{
@@ -11,7 +21,9 @@ int main(){
 	}
 	{ // property lists can bae daisy chained with | operator
 		h5::fcpl_t fcpl = h5::file_space_page_size{4096} | h5::userblock{512};
-		h5::fapl_t fapl = h5::fclose_degree_weak | h5::stdio ;
+		h5::fapl_t fapl = h5::fclose_degree_weak | h5::stdio;
+		auto some_prop = h5::libver_bounds({H5F_LIBVER_LATEST, H5F_LIBVER_LATEST});
+		h5::page_buffer_size{{1024,0,0}};
 		h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value<short>{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9};
 		h5::lcpl_t lcpl = h5::create_path | h5::utf8;
 		// and come with sensible default setting: h5::default_xxxl where xxx ::= hdf5 property name 
@@ -27,7 +39,7 @@ int main(){
 	{ // file create example: 
 		// flags := H5F_ACC_TRUNC | H5F_ACC_EXCL either to truncate or open file exclusively
 		// you may pass CAPI property list descriptors daisy chained with '|' operator 
-		auto fd = h5::create("002.h5", H5F_ACC_TRUNC, 
+		auto fd = h5::create("002.h5", H5F_ACC_TRUNC,
 				h5::file_space_page_size{4096} | h5::userblock{512} );  // file creation properties
 			   	//,h5::fclose_degree_weak | h5::fapl_core{2048,1} );     // file access properties
 		// or the c++11 wrapped smart pointer equivalent h5::AP_DEFAULT
