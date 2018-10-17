@@ -25,8 +25,6 @@ void test_02( const h5::fd_t& fd ){// create a Matrix of STRUCT with chunked and
 	// upto 7 dimensions/extents are supported
 	h5::create<sn::example::Record>(fd, "/orm/chunked_2D", 
 		h5::current_dims{NROWS,NCOLS}, h5::chunk{1,CHUNK_SIZE} | h5::gzip{8} );
-	//FIXME: defaults to unit chunk, which may not the best setting, yet chunking is required for unlimted
-	// should we have some plausable value: 1024 instead?
 	h5::create<sn::typecheck::Record>(fd, "/orm/typecheck",	h5::max_dims{H5S_UNLIMITED} );
 }
 

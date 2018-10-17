@@ -14,5 +14,4 @@ namespace h5 { namespace utils {
 			vec[i].idx = i;
 		return vec;
 	}
-
 }}

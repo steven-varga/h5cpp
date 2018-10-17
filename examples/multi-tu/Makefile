@@ -5,6 +5,9 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
+
+# you must include the path to LLVM version specific files  conveniently installed:
+# -I/usr/local/h5cpp-llvm
 CXXFLAGS =  -std=c++14  -I/usr/local/include -I/usr/local/h5cpp-llvm
 LIBS =  -lhdf5  -lz -ldl -lm
 
@@ -21,6 +24,7 @@ test: app
 # <h5cpp/core> and <h5cpp/io>
 
 # invoke `h5cpp` compiler separately for any given TU translation unit
+# to produce tu_0?.h header file which must be included exactly once in each given TU. 
 tu_01.h: struct.h
 	h5cpp  tu_01.cpp -- $(CXXFLAGS)  -Dtu_01.h
 tu_02.h: struct.h
