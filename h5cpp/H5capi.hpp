@@ -7,9 +7,6 @@
 #ifndef  H5CPP_CAPI_HPP
 #define  H5CPP_CAPI_HPP
 
-#define H5CPP_CHECK_NZ( call, msg ) if( call < 0 ) throw std::runtime_error( msg );
-#define H5CPP_CHECK_NULL( call, msg ) if( call == NULL  ) throw std::runtime_error( msg );
-
 /* rules:
  * h5::id_t{ hid_t } or direct initialization  doesn't increment reference count
  */ 
@@ -28,77 +25,107 @@ namespace h5 { namespace impl {
 
 
 namespace h5{
-	template<class T> bool is_valid( const T& v ){
+	template<class T> 
+	inline bool is_valid( const T& v ){
 		int val;
-		H5CPP_CHECK_NZ( (val = H5Iis_valid( static_cast<hid_t>( v ))), h5::error::msg::inc_ref );
+		H5CPP_CHECK_NZ( (val = H5Iis_valid( static_cast<hid_t>( v ))), std::runtime_error, h5::error::msg::inc_ref );
 		return val;
 	}
 
-	h5::sp_t get_space( const ds_t& ds ){
+	inline h5::sp_t get_space( const ds_t& ds ){
 		hid_t ds_ = static_cast<hid_t>(ds );
 		hid_t file_space;
-		H5CPP_CHECK_NZ( (file_space = H5Dget_space( ds_ )),  h5::error::msg::get_filespace );
+		H5CPP_CHECK_NZ( (file_space = H5Dget_space( ds_ )), std::runtime_error,	 h5::error::msg::get_filespace );
 		return h5::sp_t{file_space}; // direct initialization doesn't make copy
 	}
 
-	unsigned get_simple_extent_dims( const h5::sp_t&file_space, h5::current_dims& current_dims, h5::max_dims_t& max_dims ){
+	inline unsigned get_simple_extent_dims( const h5::sp_t&file_space, h5::current_dims& current_dims, h5::max_dims_t& max_dims ){
 		int rank;
 		H5CPP_CHECK_NZ( (rank = H5Sget_simple_extent_dims(static_cast<hid_t>( file_space ), *current_dims, *max_dims)),
-				h5::error::msg::get_simple_extent_dims );
+				std::runtime_error, h5::error::msg::get_simple_extent_dims );
 		// don't forget to set rank
 		current_dims.rank = max_dims.rank = rank;
 		return static_cast<unsigned>( rank );
 	}
+	template <class T>
+	inline unsigned get_simple_extent_dims( const h5::sp_t& file_space, T& current_dims ){
+		int rank;
+		H5CPP_CHECK_NZ( (rank = H5Sget_simple_extent_dims(static_cast<hid_t>( file_space ), *current_dims, NULL )),
+				std::runtime_error, h5::error::msg::get_simple_extent_dims );
+		// don't forget to set rank
+		current_dims.rank = rank;
+		return rank;
+	}
+	inline unsigned get_simple_extent_ndims( const h5::sp_t&file_space ){
+		int rank;
+		H5CPP_CHECK_NZ( (rank = H5Sget_simple_extent_ndims(static_cast<hid_t>( file_space ) )),
+				std::runtime_error, h5::error::msg::get_simple_extent_dims );
+		return static_cast<unsigned>( rank );
+	}
 
-	h5::dcpl_t create_dcpl( const h5::ds_t& ds ){
+
+	inline h5::dcpl_t create_dcpl( const h5::ds_t& ds ){
 		hid_t dcpl;
 		H5CPP_CHECK_NZ(
-				(dcpl =  H5Dget_create_plist( static_cast<hid_t>(ds))), h5::error::msg::create_dcpl );
+				(dcpl =  H5Dget_create_plist( static_cast<hid_t>(ds))),std::runtime_error, h5::error::msg::create_dcpl );
 		return h5::dcpl_t{ dcpl };
 	}
 
-	void get_chunk_dims( const h5::dcpl_t& dcpl,  h5::chunk_t& chunk_dims ){
-		H5CPP_CHECK_NZ( H5Pget_chunk( static_cast<hid_t>(dcpl), chunk_dims.rank, *chunk_dims ), 
+	inline void get_chunk_dims( const h5::dcpl_t& dcpl,  h5::chunk_t& chunk_dims ){
+		H5CPP_CHECK_NZ( H5Pget_chunk( static_cast<hid_t>(dcpl), chunk_dims.rank, *chunk_dims ), std::runtime_error,
 					h5::error::msg::get_chunk_dims );
 	}
-	h5::chunk_t get_chunk_dims( const h5::dcpl_t& dcpl ){
+	inline h5::chunk_t get_chunk_dims( const h5::dcpl_t& dcpl ){
 		h5::chunk_t chunk_dims;
 		get_chunk_dims( dcpl, chunk_dims );
 		return chunk_dims;
 	}
-	h5::dt_t get_type(const h5::ds_t& ds ){
+	inline h5::dt_t get_type(const h5::ds_t& ds ){
 		hid_t dataset_type;
-		H5CPP_CHECK_NZ( (dataset_type = H5Dget_type( static_cast<hid_t>(ds))), h5::error::msg::get_dataset_type );
+		H5CPP_CHECK_NZ( (dataset_type = H5Dget_type( static_cast<hid_t>(ds))), std::runtime_error, h5::error::msg::get_dataset_type );
 		return h5::dt_t{ dataset_type };
 	}
-
-	size_t get_size( const h5::dt_t& type ){
+	inline size_t get_size( const h5::dt_t& type ){
 		size_t size;
-		H5CPP_CHECK_NZ( (size =  H5Tget_size( static_cast<hid_t>(type) )), h5::error::msg::get_filetype_size );
+		H5CPP_CHECK_NZ( (size =  H5Tget_size( static_cast<hid_t>(type) )), std::runtime_error, h5::error::msg::get_filetype_size );
 		return size;
 	}
-	h5::sp_t create_simple( const hsize_t dim ){
+
+	inline h5::sp_t create_simple( const hsize_t dim ){
 		hid_t mem_space;
-		H5CPP_CHECK_NZ( (mem_space = H5Screate_simple(1, &dim, NULL )), h5::error::msg::create_memspace);
+		H5CPP_CHECK_NZ( (mem_space = H5Screate_simple(1, &dim, nullptr )), std::runtime_error, h5::error::msg::create_memspace);
 		return h5::sp_t{mem_space};
 	}
-	void select_all(const h5::sp_t& sp){
-		H5CPP_CHECK_NZ(
-				H5Sselect_all(static_cast<hid_t>(sp)), h5::error::msg::select_memspace );
+	template <class T>
+	inline h5::sp_t create_simple( const T& dim ){
+		hid_t mem_space;
+		H5CPP_CHECK_NZ( (mem_space = H5Screate_simple(dim.rank, *dim, nullptr )), std::runtime_error, h5::error::msg::create_memspace);
+		return h5::sp_t{mem_space};
 	}
-	void select_hyperslab(const h5::sp_t& sp, const h5::offset_t& offset, const h5::count_t& count ){
-		H5CPP_CHECK_NZ(
-				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET,
-									*offset, NULL, *count, NULL), h5::error::msg::select_hyperslab);
+	inline h5::sp_t create_simple( const h5::current_dims& current_dims, const h5::max_dims& max_dims  ){
+		return h5::sp_t{H5Screate_simple( current_dims.size(), current_dims.begin(), max_dims.begin() )};
 	}
-	void select_hyperslab(const h5::sp_t& sp, const h5::current_dims_t& offset, const h5::count_t& count ){
+
+
+	inline void select_all(const h5::sp_t& sp){
 		H5CPP_CHECK_NZ(
-				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET,
-									*offset, NULL, *count, NULL), h5::error::msg::select_hyperslab);
+				H5Sselect_all(static_cast<hid_t>(sp)), std::runtime_error,	 h5::error::msg::select_memspace );
 	}
-	void set_extent(const h5::ds_t& ds, const h5::current_dims_t& dims ){
+	template<class T>
+	inline void select_hyperslab(const h5::sp_t& sp, const T& offset, const h5::count_t& count ){
 		H5CPP_CHECK_NZ(
-				H5Dset_extent( static_cast<hid_t>(ds), *dims ), h5::error::msg::set_extent);
+				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, NULL, *count, NULL),
+			   std::runtime_error,	h5::error::msg::select_hyperslab);
+	}
+	inline void select_hyperslab(const h5::sp_t& sp, const h5::offset_t& offset, const h5::stride_t& stride,
+		   const h5::count_t& count, const h5::block_t& block ){
+		H5CPP_CHECK_NZ(
+				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, *stride, *count, *block),
+			   std::runtime_error,	h5::error::msg::select_hyperslab);
+	}
+	inline void set_extent(const h5::ds_t& ds, const h5::current_dims_t& dims ){
+		H5CPP_CHECK_NZ(
+				H5Dset_extent( static_cast<hid_t>(ds), *dims ),std::runtime_error,	 h5::error::msg::set_extent);
 	}
 
 	inline void writeds(const h5::ds_t& ds,
@@ -106,23 +133,28 @@ namespace h5{
 			const void* ptr ){
 		H5CPP_CHECK_NZ(
 				H5Dwrite(static_cast<hid_t>(ds), static_cast<hid_t>(file_type),
-					static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space),  H5P_DEFAULT, ptr ), h5::error::msg::write_dataset );
+					static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space),  H5P_DEFAULT, ptr ), 
+				std::runtime_error,	h5::error::msg::write_dataset );
 	}
 
-	void set_chunk( h5::dcpl_t& dcpl, const h5::chunk_t& chunk ){
+
+	inline void set_chunk( h5::dcpl_t& dcpl, const h5::chunk_t& chunk ){
 		H5CPP_CHECK_NZ(
-				H5Pset_chunk(static_cast<::hid_t>(dcpl), chunk.rank, *chunk ), h5::error::msg::set_chunk );
+				H5Pset_chunk(static_cast<::hid_t>(dcpl), chunk.rank, *chunk ), std::runtime_error,	 h5::error::msg::set_chunk );
 	}
-	h5::ds_t createds(const h5::fd_t& fd, const std::string& path, const h5::dt_t& type,
+
+	inline h5::ds_t createds(const h5::fd_t& fd, const std::string& path, const h5::dt_t& type,
 		  const h5::sp_t& sp, const h5::lcpl_t& lcpl, const h5::dcpl_t& dcpl, const h5::dapl_t& dapl ){
 		hid_t ds;
 		H5CPP_CHECK_NZ(( ds = H5Dcreate2( static_cast<hid_t>(fd), path.data(), type, static_cast<hid_t>(sp),
-								static_cast<hid_t>(lcpl), static_cast<hid_t>(dcpl), static_cast<hid_t>(dapl) )), h5::error::msg::create_dataset );
+								static_cast<hid_t>(lcpl), static_cast<hid_t>(dcpl), static_cast<hid_t>(dapl) )),
+			   std::runtime_error,	h5::error::msg::create_dataset );
 		return h5::ds_t{ds};
 	}
 
 }
 
+inline
 std::ostream &operator<<(std::ostream &os, const h5::sp_t& sp) {
 	//htri_t H5Sis_regular_hyperslab( hid_t space_id ) 1.10.0
 	//herr_t H5Sget_select_bounds(hid_t space_id, hsize_t *start, hsize_t *end )
@@ -148,7 +180,7 @@ std::ostream &operator<<(std::ostream &os, const h5::sp_t& sp) {
 
 	h5::impl::unique_ptr<hsize_t> buffer{
 			static_cast<hsize_t*>( std::calloc( ncoordinates, sizeof(hsize_t))) };
-	H5CPP_CHECK_NZ( H5Sget_select_hyper_blocklist(id, 0, nblocks, buffer.get() ),
+	H5CPP_CHECK_NZ( H5Sget_select_hyper_blocklist(id, 0, nblocks, buffer.get() ), std::runtime_error,	
 			"couldn't retrieve selected block");
 	os << "[selected block count]\t" << nblocks <<std::endl;
 	os << "[selected blocks]\t";
@@ -160,11 +192,5 @@ std::ostream &operator<<(std::ostream &os, const h5::sp_t& sp) {
 	}
 	return os;
 }
-
-
-
-#undef H5CPP_CHECK_NZ
-#undef H5CPP_CHECK_NULL
-
 #endif
 

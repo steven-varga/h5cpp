@@ -7,9 +7,6 @@
 #ifndef  H5CPPI_ALGORITHM_HPP
 #define  H5CPPI_ALGORITHM_HPP
 
-#define H5CPP_CHECK_NZ( call, msg ) if( call < 0 ) throw h5::error::io::file::misc(  \
-		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
-
 namespace h5 { namespace impl {
 	inline static herr_t iterate_callback( ::hid_t gid, const char *name, const H5L_info_t *info, void *op_data){
 		// this must not throw error, CAPI has to clean up
@@ -28,10 +25,10 @@ namespace h5 {
     inline std::vector<std::string> ls(const h5::fd_t& fd,  const std::string& directory ){
         hid_t group_id;
 		H5CPP_CHECK_NZ(
-				(group_id = H5Gopen( static_cast<hid_t>(fd), directory.c_str(), H5P_DEFAULT )), h5::error::msg::open_group );
+				(group_id = H5Gopen( static_cast<hid_t>(fd), directory.c_str(), H5P_DEFAULT )), std::runtime_error,	 h5::error::msg::open_group );
         std::vector<std::string> files;
-        H5CPP_CHECK_NZ( H5Literate( group_id, H5_INDEX_NAME, H5_ITER_INC, 0, &impl::iterate_callback, &files ), h5::error::msg::list_directory );
-		H5CPP_CHECK_NZ( H5Gclose(group_id), h5::error::msg::close_group);
+        H5CPP_CHECK_NZ( H5Literate( group_id, H5_INDEX_NAME, H5_ITER_INC, 0, &impl::iterate_callback, &files ), std::runtime_error,	h5::error::msg::list_directory );
+		H5CPP_CHECK_NZ( H5Gclose(group_id), std::runtime_error,	 h5::error::msg::close_group);
         return files;
     }
 	//FIXME: to be implemented
@@ -44,6 +41,5 @@ namespace h5 {
         return files;
     }
 }
-#undef H5CPP_CHECK_NZ
 #endif
 

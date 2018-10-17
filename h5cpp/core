@@ -21,9 +21,6 @@
 
 #ifndef  H5CPP_CORE_H
 #define H5CPP_CORE_H
-	namespace h5{
-		using herr_t = int;
-	}
 	#include "H5config.hpp"
 	#include "compat.hpp"  /* */
 	#include "H5Eall.hpp"  /* all methods throwing exceptions must be included after */
@@ -35,14 +32,5 @@
 	#include "H5Pall.hpp"
 	#include "H5Ialgorithm.hpp"
 	#include "H5capi.hpp"
-namespace h5 {
-	inline h5::sp_t create_simple( const h5::current_dims& current_dims  ){
-		return h5::sp_t{H5Screate_simple( current_dims.size(), current_dims.begin(), nullptr )};
-	}
-	inline h5::sp_t create_simple( const h5::current_dims& current_dims, const h5::max_dims& max_dims  ){
-		return h5::sp_t{H5Screate_simple( current_dims.size(), current_dims.begin(), max_dims.begin() )};
-	}
-}
-
 #endif	
 

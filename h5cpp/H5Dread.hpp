@@ -7,17 +7,6 @@
 #define  H5CPP_DREAD_HPP
 #include "H5Dopen.hpp" // be sure this precedes error handling macro-s !!!
 
-#define H5CPP_CHECK_NZ( call, msg ) if( call < 0 ) throw h5::error::io::dataset::write(  \
-		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
-
-// possible bug in capi: H5Iis_valid( H5P_DEFAULT ) returns 0, use this instead
-#define H5CPP_CHECK_PROP( id, msg ) if( static_cast<::hid_t>( id ) < 0 ) throw h5::error::io::dataset::open(  \
-		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
-
-#define H5CPP_CHECK_ID( id, msg ) if( !static_cast<::hid_t>( id ) ) throw h5::error::io::dataset::open(  \
-		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
-
-
 namespace h5 {
 /***************************  REFERENCE *****************************/
 
@@ -64,24 +53,18 @@ namespace h5 {
 
 		const h5::dxpl_t& dxpl = arg::get( h5::default_dxpl, args...);
 
-		hid_t mem_type, mem_space, file_space;
-        hsize_t rank;
+		h5::sp_t file_space = h5::get_space(ds);
+	   	int rank = h5::get_simple_extent_ndims( file_space );
 
-		H5CPP_CHECK_NZ( (file_space = H5Dget_space(ds)), h5::error::msg::file_space);
-	   	H5CPP_CHECK_NZ( (rank = H5Sget_simple_extent_ndims(file_space)), h5::error::msg::get_rank );
-		//TODO: error handler
-		if( rank != count.rank ) throw h5::error::io::dataset::read( h5::error::msg::rank_mismatch );
+		if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
+		h5::dt_t mem_type { utils::h5type<T>()};
+		h5::sp_t mem_space = h5::create_simple( size );
+		h5::select_all( mem_space );
+		h5::select_hyperslab( file_space, offset, stride, count, block);
 
-	   	H5CPP_CHECK_NZ( (mem_type = utils::h5type<T>()), h5::error::msg::get_memtype);
-		H5CPP_CHECK_NZ( (mem_space = H5Screate_simple(rank, *size, NULL)),h5::error::msg::get_memspace);
-		H5CPP_CHECK_NZ( H5Sselect_all(mem_space), h5::error::msg::select_memspace);
-		H5CPP_CHECK_NZ( H5Sselect_hyperslab(file_space, H5S_SELECT_SET, *offset, *stride, *count, *block),
-				h5::error::msg::select_hyperslab);
-
-		H5CPP_CHECK_NZ( H5Dread(ds, mem_type, mem_space, file_space, dxpl, ptr ), h5::error::msg::read_dataset);
-		H5CPP_CHECK_NZ( H5Tclose(mem_type), h5::error::msg::close_memtype);
-	   	H5CPP_CHECK_NZ( H5Sclose(file_space), h5::error::msg::close_filespace);
-		H5CPP_CHECK_NZ( H5Sclose(mem_space), h5::error::msg::close_memspace);
+		H5CPP_CHECK_NZ( H5Dread(
+					static_cast<hid_t>( ds ), static_cast<hid_t>(mem_type), static_cast<hid_t>(mem_space), 
+					static_cast<hid_t>(file_space),	static_cast<hid_t>(dxpl), ptr ), h5::error::io::dataset::read, h5::error::msg::read_dataset);
 	}
 
  	/** \func_read_hdr
@@ -207,12 +190,8 @@ namespace h5 {
 		const h5::block_t& block = arg::get( default_block, args...);
 
 		if constexpr( !tcount::present ){ // read count ::= current_dim of file space 
-			hid_t fp_id;
-			H5CPP_CHECK_NZ( (fp_id = H5Dget_space(ds) ), h5::error::msg::file_space);
-			h5::sp_t file_space = h5::sp_t{fp_id};
-
-			H5CPP_CHECK_NZ( (size.rank = H5Sget_simple_extent_dims(static_cast<hid_t>(file_space), *size, NULL)),
-					h5::error::msg::get_dims);
+			h5::sp_t file_space = h5::get_space( ds );
+			h5::get_simple_extent_dims(file_space, size);
 		} else {
 			for(int i=0;i<count.rank;i++) size[i] = count[i] * block[i];
 			size.rank = count.rank;
@@ -253,7 +232,4 @@ namespace h5 {
 		return h5::read<T>( fd, dataset_path, args...);
 	}
 }
-#undef H5CPP_CHECK_NZ
-#undef H5CPP_CHECK_PROP
-#undef H5CPP_CHECK_ID
 #endif

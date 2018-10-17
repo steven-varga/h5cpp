@@ -19,13 +19,11 @@ namespace h5 {
 		pt_t& operator=( h5::pt_t& pt ) = default;
 		constexpr pt_t& operator=( h5::pt_t&& pt ) = delete;
 
-		template<typename T>
-		friend void append( h5::pt_t& ds, const T& ref);
-		template<typename T>
-		friend void flush( h5::pt_t& ds);
+		template<typename T> friend void append( h5::pt_t& ds, const T& ref);
+
+		void flush();
 		private:
 		template <class T> void append( const T& ref );
-		void flush();
 		void save2file();
 
 		impl::unique_ptr<void> ptr; // will call std::free on dtor
@@ -75,12 +73,12 @@ h5::pt_t::pt_t( const h5::ds_t& handle ) : pt_t() {
 		mem_space = h5::create_simple( chunk_size );
 		h5::select_all( mem_space );
 	} catch ( ... ){
-		throw h5::error::io::packet_table::misc( "CTOR: unable to create handle from dataset..." );
+		throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("CTOR: unable to create handle from dataset..."));
 	}
 
 	ptr = std::move( impl::unique_ptr<void>{calloc( chunk_size, type_size )} );
 	if( ptr.get() == NULL)
-	   	throw h5::error::io::dataset::open("CTOR: couldn't allocate memory for caching chunks, invalid/check size?");
+	   	throw h5::error::io::dataset::open( H5CPP_ERROR_MSG("CTOR: couldn't allocate memory for caching chunks, invalid/check size?"));
 }
 
 inline
@@ -133,9 +131,9 @@ namespace h5 {
 	template<typename T> inline void append( h5::pt_t& pt, const T& ref){
 		pt.append( ref );
 	}
-	template<typename T> inline void flush( h5::pt_t& pt, const T& ref){
+	inline void flush( h5::pt_t& pt){
 		try {
-			pt.flush( ref );
+			pt.flush( );
 		} catch ( const std::runtime_error& e){
 			throw h5::error::io::dataset::close( e.what() );
 		}

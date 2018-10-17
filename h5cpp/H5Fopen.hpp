@@ -6,9 +6,6 @@
 #ifndef  H5CPP_FOPEN_HPP
 #define  H5CPP_FOPEN_HPP
 
-#define H5CPP_CHECK_NZ( call, msg ) if( call < 0 ) throw h5::error::io::file::open(  \
-		std::string( __FILE__ ) + " line# " + std::to_string( __LINE__ ) + " " + msg ) ; \
-
 /**  
  * @namespace h5
  * @brief public namespace
@@ -28,10 +25,10 @@ namespace h5{
 	 */ 
     inline h5::fd_t open(const std::string& path,  unsigned flags, const h5::fapl_t& fapl = h5::default_fapl ){
         hid_t fd;
-	   	H5CPP_CHECK_NZ( (fd = H5Fopen(path.data(), flags,  static_cast<hid_t>(fapl))), h5::error::msg::open_file );
+	   	H5CPP_CHECK_NZ( (fd = H5Fopen(path.data(), flags,  static_cast<hid_t>(fapl))),
+			   h5::error::io::file::open, h5::error::msg::open_file );
 		return  h5::fd_t{fd};
     }
 }
-#undef H5CPP_CHECK_NZ
 #endif
 

@@ -19,7 +19,7 @@ namespace h5 { namespace impl {
 	using capi_close_t = ::herr_t(*)(::hid_t);
 	using defprop_t = ::hid_t(*)();
 
-	template<class hid, class... args_tt> 
+	template<class hid, class... args_tt>
 	struct capi_t {
 		using fn_t = herr_t (*)(::hid_t, args_tt... );
 		using args_t = std::tuple<args_tt...>;
