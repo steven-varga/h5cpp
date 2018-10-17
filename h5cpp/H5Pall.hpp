@@ -166,7 +166,7 @@ namespace h5 { namespace notimplemented_yet { // OBJECT COPY PROPERTY LISTS
 }}
 
 namespace h5 {
-	const static h5::dapl_t dapl = static_cast<h5::dapl_t>( H5P_LINK_CREATE_DEFAULT );
+	const static h5::dapl_t dapl = static_cast<h5::dapl_t>( H5P_DEFAULT );
 	const static h5::dcpl_t dcpl = static_cast<h5::dcpl_t>( H5P_DEFAULT);
 	const static h5::dxpl_t dxpl = static_cast<h5::dxpl_t>( H5P_DEFAULT );
 	const static h5::lcpl_t lcpl = h5::char_encoding{H5T_CSET_UTF8} | h5::create_intermediate_group{1};

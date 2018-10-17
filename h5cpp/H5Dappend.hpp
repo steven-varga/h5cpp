@@ -90,16 +90,15 @@ h5::pt_t::~pt_t(){
 }
 
 template <class T>
-void h5::pt_t::append( const T& ref ){
-	try {
-		size_t k = (++ current_dims[0] -1) % chunk_size;
-		static_cast<T*>(ptr.get())[k] = ref;
-		if( k == chunk_size - 1  )
-			count[0] = chunk_size, save2file();
-	} catch( const std::runtime_error& err ){
-		throw h5::error::io::dataset::append( err.what() );
-	}
+void h5::pt_t::append( const T& ref ) try {
+	size_t k = (++ current_dims[0] -1) % chunk_size;
+	static_cast<T*>(ptr.get())[k] = ref;
+	if( k == chunk_size - 1  )
+		count[0] = chunk_size, save2file();
+} catch( const std::runtime_error& err ){
+	throw h5::error::io::dataset::append( err.what() );
 }
+
 inline
 void h5::pt_t::flush(){
 	count[0] = current_dims[0] % chunk_size;
@@ -131,13 +130,10 @@ namespace h5 {
 	template<typename T> inline void append( h5::pt_t& pt, const T& ref){
 		pt.append( ref );
 	}
-	inline void flush( h5::pt_t& pt){
-		try {
-			pt.flush( );
-		} catch ( const std::runtime_error& e){
-			throw h5::error::io::dataset::close( e.what() );
-		}
+	inline void flush( h5::pt_t& pt) try {
+		pt.flush( );
+	} catch ( const std::runtime_error& e){
+		throw h5::error::io::dataset::close( e.what() );
 	}
-
 }
 #endif

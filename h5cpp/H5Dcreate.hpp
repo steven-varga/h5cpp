@@ -19,8 +19,7 @@ namespace h5 {
 	* \par_lcpl \par_dcpl \par_dapl  \tpar_T \returns_ds
  	*/ 
 	template<class T, class... args_t>
-	h5::ds_t create( const h5::fd_t& fd, const std::string& dataset_path, args_t&&... args ){
-
+	h5::ds_t create( const h5::fd_t& fd, const std::string& dataset_path, args_t&&... args ) try {
 		// compile time check of property lists: 
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
 		using tmax_dims 	= typename arg::tpos<const h5::max_dims_t&,const args_t&...>;
@@ -33,6 +32,10 @@ namespace h5 {
 		const h5::lcpl_t& lcpl = arg::get(h5::default_lcpl, args...);
 		const h5::dcpl_t& dcpl = arg::get(default_dcpl, args...);
 		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+
+		H5CPP_CHECK_PROP( lcpl, h5::error::property_list::misc, "invalid list control property" );
+		H5CPP_CHECK_PROP( dcpl, h5::error::property_list::misc, "invalid data control property" );
+		H5CPP_CHECK_PROP( dapl, h5::error::property_list::misc, "invalid data access property" );
 
 		// and dimensions
 		h5::current_dims_t current_dims_default{0}; // if no current dims_present 
@@ -61,17 +64,16 @@ namespace h5 {
 				chunk[i] = current_dims[i] ? current_dims[i] : 1;
 			h5::set_chunk(default_dcpl, chunk );
 		}
-		try {
-			// use move semantics to set space
-			space_id =  tmax_dims::present ?
-				std::move( h5::create_simple( current_dims, max_dims ) ) :  std::move( h5::create_simple( current_dims ) );
-			h5::dt_t type{ utils::h5type<T>() };
-			ds = std::move( h5::createds(fd, dataset_path, type, space_id, lcpl, dcpl, dapl));
-		} catch( const std::runtime_error& err ) {
+		// use move semantics to set space
+		space_id =  tmax_dims::present ?
+			std::move( h5::create_simple( current_dims, max_dims ) ) :  std::move( h5::create_simple( current_dims ) );
+		h5::dt_t type{ utils::h5type<T>() };
+		return h5::createds(fd, dataset_path, type, space_id, lcpl, dcpl, dapl);
+
+	} catch( const std::runtime_error& err ) {
 			throw h5::error::io::dataset::create( err.what() );
-		}
-		return ds;
 	}
+
 	// delegate to h5::fd_t 
 	template<class T, class... args_t>
 	inline h5::ds_t create( const std::string& file_path, const std::string& dataset_path, args_t&&... args ){

@@ -154,8 +154,21 @@ namespace h5{
 
 }
 
+template <class T>
+inline std::ostream& operator<<(std::ostream& os, const h5::impl::array<T>& arr){
+	os << "{";
+		for(int i=0;i<arr.rank; i++){
+			char sep = i != arr.rank - 1  ? ',' : '}';
+			if( arr[i] < std::numeric_limits<hsize_t>::max() )
+				os << arr[i] << sep;
+			else
+				os << "max" << sep;
+		}
+	return os;
+}
+
 inline
-std::ostream &operator<<(std::ostream &os, const h5::sp_t& sp) {
+std::ostream& operator<<(std::ostream &os, const h5::sp_t& sp) {
 	//htri_t H5Sis_regular_hyperslab( hid_t space_id ) 1.10.0
 	//herr_t H5Sget_select_bounds(hid_t space_id, hsize_t *start, hsize_t *end )
 	// hssize_t H5Sget_select_npoints( hid_t space_id )

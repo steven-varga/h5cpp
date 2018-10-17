@@ -194,16 +194,19 @@ namespace h5 { namespace impl {
 	template <class phid_t, defprop_t init, class capi, typename capi::fn_t capi_call>
 	struct prop_t : prop_base<prop_t<phid_t,init,capi,capi_call>,phid_t> {
 		prop_t( typename capi::args_t values ) : args( values ) {
-			this->handle = H5Pcreate(init());
+			H5CPP_CHECK_NZ( (this->handle = H5Pcreate(init())),
+				   h5::error::property_list::misc, "failed to create property");
 		}
 		prop_t(){
-			this->handle = H5Pcreate(init());
+			H5CPP_CHECK_NZ( (this->handle = H5Pcreate(init())),
+				   h5::error::property_list::misc, "failed to create property");
 		}
 		void copy_impl(::hid_t id) const {
 			//int i = capi_call + 1;
 			/*CAPI needs `this` hid_t id passed along */
 			capi_t capi_args = std::tuple_cat( std::tie(id), args );
-			compat::apply(capi_call, capi_args);
+			H5CPP_CHECK_NZ( compat::apply(capi_call, capi_args),
+					h5::error::property_list::argument,"failed to parse arguments...");
 		}
 		using base_t =  prop_base<prop_t<phid_t,init,capi,capi_call>,phid_t>;
 		using args_t = typename capi::args_t;

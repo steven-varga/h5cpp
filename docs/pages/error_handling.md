@@ -7,7 +7,8 @@
 Error handling  {#link_error_handler}
 ============================================================
 
-Error handling follows the C++ [Guidline][1] and the philosophy H5CPP library is built around, that is to  help you to start without reading much of the documentation, and providing ample of room for more should you require it. The root of exception tree is: `h5::error::any` derived from std::`runtime_exception` in accordance with C++ guidelines [custom exceptions][2]. All HDF5 CAPI calls are considered as resource, and in case of error H5CPP aims to roll back to last known stable state, cleaning up all resource allocations between the call entry and thrown error.
+Error handling follows the C++ [Guidline][1] and the philosophy H5CPP library is built around, that is to  help you to start without reading much of the documentation, and providing ample of room for more should you require it. The root of exception tree is: `h5::error::any` derived from std::`runtime_exception` in accordance with C++ guidelines [custom exceptions][2]. 
+All HDF5 CAPI calls are considered as resource, and in case of error H5CPP aims to roll back to last known stable state, cleaning up all resource allocations between the call entry and thrown error. This mechanism is guaranteed by RAII. 
 
 For granularity `io::[file|dataset|attribute]` exceptions provided, with the pattern to capture the entire subset by `::any`.
 Exceptions thrown with error massages  \__FILE\__ and \__LINE\__ relevant to H5CPP template library with a brief description to help the developer to investigate. This error reporting mechanism uses a macro found inside **h5cpp/config.h** and maybe redefined:
@@ -84,9 +85,8 @@ usage:
 - All HDF5 CAPI calls are checked with the only exception of `H5Lexsists` where the failure carries information, that the path does not exist yet. 
 - Callbacks of CAPI routines doesn't throw any exceptions, honoring the HDF5 CAPI contract, hence allowing the CAPI call to clean up
 - Error messages currently are collected in `H5Eall.hpp` may be customized
-- Thrown exceptions are hierarchial
-- Before Exceptions thrown within CTOR-s if memory reserved freed, then CAPI resources are released in the order of likelihood not generating further errors. While cascading errors can't be entirely prevented, if it happens one can **creash** the software or cactching `h5::error::rollbback` exception can decide to go on at risking small CAPI memory leak. The possibility of this leak can not be reduced further.
-
+- Thrown exceptions are hierarchical
+- Only RAII capable/wrapped objects used, guaranteed cleanup through stack unrolling
 
 Exception hierarchy is embedded in namespaces, the chart should be interpreted as tree, for instance a file create exception is
 `h5::error::io::file::create`. Keep in mind [namespace aliasing][3] allow you customization should you find the long names inconvenient:
@@ -100,17 +100,10 @@ try{
 ```
 <pre>
 h5::error : public std::runtime_error
-  ::rollback          - when exception thrown system state is preserved by rolling back to last known state
-                        which itself could throw an error during releasing already allocated resource(s). 
-						In the default case, H5CPP_HARD_ERROR = TRUE, the software triggers an exit, preventing 
-						an inconsistent state. Redifining the macro will result in a second excetion thrown
-						leaving the H5CPP stack in inconsistent state, and allowing you to catch the exception and 
-						take action what suits you the best. 
   ::any               - captures ALL H5CPP runtime errors with the exception of `rollback`
   ::io::              - namespace: IO related error, see aliasing
   ::io::any           - collective capture of IO errors within this namespace/block recursively
       ::file::        - namespace: file related errors
-	        ::rollback
 	        ::any     - captures all exceptions within this namespace/block
             ::create  - create failed
 			::open    - check if the object, in this case file exists at all, retry if networked resource
@@ -119,7 +112,6 @@ h5::error : public std::runtime_error
 			::write   - is it read only? is recource still available since opening? 
 			::misc    - errors which are not covered otherwise: start investigating from reported file/line
        ::dataset::    -
-	   		::rollback
 			::any
 			::create
 			::open
@@ -129,7 +121,6 @@ h5::error : public std::runtime_error
 			::append
 			::misc
       ::attribute::
-	  		::rollback
 			::any
 			::create
 			::open
@@ -137,10 +128,11 @@ h5::error : public std::runtime_error
 			::read
 			::write
 			::misc
-      ::property_list::
-	  		::rollback
-            ::any
-			::misc
+    ::property_list::
+	  ::rollback
+      ::any
+	  ::misc
+	  ::argument
 </pre>
 
 This is a work in progress, if for any reasons you think it could be improved, or some real life scenario is not represented please shoot me an email with the use case, a brief working example.

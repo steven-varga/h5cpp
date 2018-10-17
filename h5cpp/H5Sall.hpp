@@ -27,18 +27,6 @@ namespace h5{ namespace impl {
 		hsize_t* operator*() { return data; }
 		const hsize_t* operator*() const { return data; }
 
-		friend std::ostream & operator<<(std::ostream& cout, const array& arr){
-			cout << "{";
-				for(int i=0;i<arr.rank; i++){
-					char sep = i != arr.rank - 1  ? ',' : '}';
-				  	if( arr[i] < std::numeric_limits<hsize_t>::max() )
-						cout << arr[i] << sep;
-					else
-						cout << "max" << sep;
-				}
-			return cout;
-		}
-
 		using type = T;
 		size_t size() const { return rank; }
 		const hsize_t* begin()const { return data; }

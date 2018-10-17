@@ -48,6 +48,8 @@ namespace h5{
 	 */
     inline h5::fd_t create( const std::string& path, unsigned flags,
 			const h5::fcpl_t& fcpl=h5::default_fcpl, const h5::fapl_t& fapl=h5::default_fapl ) {
+		H5CPP_CHECK_PROP( fcpl,  h5::error::io::file::create, "invalid file control property list" );
+		H5CPP_CHECK_PROP( fapl,  h5::error::io::file::create, "invalid file access property list" );
 
         hid_t fd;
 	   	H5CPP_CHECK_NZ(

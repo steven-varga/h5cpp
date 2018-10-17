@@ -23,6 +23,8 @@ namespace h5{
 	 */
     inline h5::ds_t open(const  h5::fd_t& fd, const std::string& path, const h5::dapl_t& dapl = h5::default_dapl ){
 
+		H5CPP_CHECK_PROP( dapl, h5::error::io::dataset::open, "invalid data access property" );
+
 		hid_t ds;
 	   	H5CPP_CHECK_NZ((
 			ds = H5Dopen( static_cast<hid_t>(fd), path.data(), static_cast<hid_t>(dapl))),

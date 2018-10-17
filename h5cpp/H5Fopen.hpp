@@ -24,6 +24,8 @@ namespace h5{
 	 * @endcode
 	 */ 
     inline h5::fd_t open(const std::string& path,  unsigned flags, const h5::fapl_t& fapl = h5::default_fapl ){
+		H5CPP_CHECK_PROP( fapl,  h5::error::io::file::create, "invalid file access property list" );
+
         hid_t fd;
 	   	H5CPP_CHECK_NZ( (fd = H5Fopen(path.data(), flags,  static_cast<hid_t>(fapl))),
 			   h5::error::io::file::open, h5::error::msg::open_file );

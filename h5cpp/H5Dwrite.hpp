@@ -13,6 +13,9 @@ namespace h5 {
  	*/ 
 	template <class T>
 	void write( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, const T* ptr  ){
+		H5CPP_CHECK_PROP( dxpl, h5::error::io::dataset::write, "invalid data transfer property" );
+
+
 		h5::dt_t type{ utils::h5type<T>()};
 		H5CPP_CHECK_NZ(
 			H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
@@ -23,44 +26,43 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	void write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ){
-		try {
-			// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double
-			using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
-			static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
-			//static_assert( utils::is_supported<T>, "error: " H5CPP_supported_elementary_types );
+	void write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ) try {
+		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double
+		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
+		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
+		//static_assert( utils::is_supported<T>, "error: " H5CPP_supported_elementary_types );
 
-			auto tuple = std::forward_as_tuple(args...);
-			const h5::count_t& count = std::get<tcount::value>( tuple );
-			const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+		auto tuple = std::forward_as_tuple(args...);
+		const h5::count_t& count = std::get<tcount::value>( tuple );
+		const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
 
-			h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
-			int rank = h5::get_simple_extent_ndims( file_space );
-			h5::offset_t  default_offset{0,0,0,0,0,0,0};
-			const h5::offset_t& offset = arg::get( default_offset, args...);
-			h5::stride_t  default_stride{1,1,1,1,1,1,1};
-			const h5::stride_t& stride = arg::get( default_stride, args...);
-			h5::block_t  default_block{1,1,1,1,1,1,1};
+		h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
+		int rank = h5::get_simple_extent_ndims( file_space );
+		h5::offset_t  default_offset{0,0,0,0,0,0,0};
+		const h5::offset_t& offset = arg::get( default_offset, args...);
+		h5::stride_t  default_stride{1,1,1,1,1,1,1};
+		const h5::stride_t& stride = arg::get( default_stride, args...);
+		h5::block_t  default_block{1,1,1,1,1,1,1};
 			const h5::block_t& block = arg::get( default_block, args...);
 
-			hsize_t size = 1;for(int i=0;i<rank;i++) size *= count[i] * block[i];
-			h5::sp_t mem_space = h5::create_simple( size );
-			h5::select_all( mem_space );
-			h5::select_hyperslab( file_space, offset, stride, count, block);
-			// this can throw exception
+		hsize_t size = 1;for(int i=0;i<rank;i++) size *= count[i] * block[i];
+		h5::sp_t mem_space = h5::create_simple( size );
+		h5::select_all( mem_space );
+		h5::select_hyperslab( file_space, offset, stride, count, block);
+		// this can throw exception
 
-			h5::write<T>(ds, mem_space, file_space, dxpl, ptr);
-		} catch ( const std::exception& err ){
-			throw h5::error::io::dataset::write(H5CPP_ERROR_MSG( err.what() ));
-		}
+		h5::write<T>(ds, mem_space, file_space, dxpl, ptr);
+	} catch ( const std::exception& err ){
+		throw h5::error::io::dataset::write( err.what() );
 	}
+
  	/** \func_write_hdr
  	*  TODO: write doxy for here  
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
 	typename std::enable_if<!std::is_same<T,char**>::value,
-	void>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ){
+	void>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ) try {
 
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double | std::string
 		using element_t = typename utils::base<T>::type;
@@ -84,6 +86,8 @@ namespace h5 {
         	for( auto p:ptr ) free(p);
 		}  else // ditto, throws error
 			h5::write<element_t>(ds, utils::get_ptr(ref), count, args...  );
+	} catch ( const std::runtime_error& err ){
+		throw h5::error::io::dataset::write( err.what() );
 	}
 	/** \func_write_hdr
  	*  TODO: write doxy for here  

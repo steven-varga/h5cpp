@@ -26,7 +26,7 @@ namespace h5 {
 
 	template<class T, class... args_t>
 	typename std::enable_if<!std::is_same<T,char*>::value,
-	void>::type read( const h5::ds_t& ds, T* ptr, args_t&&... args ){
+	void>::type read( const h5::ds_t& ds, T* ptr, args_t&&... args ) try {
 		using toffset  = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
 		using tcount   = typename arg::tpos<const h5::count_t&,const args_t&...>;
@@ -52,6 +52,7 @@ namespace h5 {
 		size.rank = count.rank;
 
 		const h5::dxpl_t& dxpl = arg::get( h5::default_dxpl, args...);
+		H5CPP_CHECK_PROP( dxpl, h5::error::property_list::misc, "invalid data transfer property" );
 
 		h5::sp_t file_space = h5::get_space(ds);
 	   	int rank = h5::get_simple_extent_ndims( file_space );
@@ -63,8 +64,10 @@ namespace h5 {
 		h5::select_hyperslab( file_space, offset, stride, count, block);
 
 		H5CPP_CHECK_NZ( H5Dread(
-					static_cast<hid_t>( ds ), static_cast<hid_t>(mem_type), static_cast<hid_t>(mem_space), 
+					static_cast<hid_t>( ds ), static_cast<hid_t>(mem_type), static_cast<hid_t>(mem_space),
 					static_cast<hid_t>(file_space),	static_cast<hid_t>(dxpl), ptr ), h5::error::io::dataset::read, h5::error::msg::read_dataset);
+	} catch ( const std::runtime_error& err ){
+		throw h5::error::io::dataset::read( err.what() );
 	}
 
  	/** \func_read_hdr

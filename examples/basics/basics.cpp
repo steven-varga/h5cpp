@@ -19,6 +19,15 @@ int main(){
 		dcpl0 |= dcpl1;
 		std::cout << sizeof( dcpl ) << " " << sizeof(hid_t) << "\n";
 	}
+	// error handling
+	{
+		try {
+			h5::dcpl_t dcpl_0 = h5::gzip{79798}; // invalid argument
+		} catch ( const h5::error::any& err ){
+			std::cerr << err.what(); 
+		}
+	}
+
 	{ // property lists can bae daisy chained with | operator
 		h5::fcpl_t fcpl = h5::file_space_page_size{4096} | h5::userblock{512};
 		h5::fapl_t fapl = h5::fclose_degree_weak | h5::stdio;
