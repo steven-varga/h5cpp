@@ -28,8 +28,20 @@ attrib  := [acpl_t
 
 C/C++ type map to HDF5 file space  						{#link_base_template_types}
 ==================================
+```yacc
+integral 		:= [ unsigned | signed ] [int_8 | int_16 | int_32 | int_64 | float | double ] 
+vectors  		:=  *integral
+rugged_arrays 	:= **integral
+string 			:= **char
+linalg 			:= armadillo | eigen | 
+scalar 			:= integral | pod_struct | string
 
-TODO: write detailed description of supported types, and how memory space is mapped to file space
+# not handled yet: long double, complex, specialty types
+```
+
+**scalars:** are integral types and take up a 
+
+
 
 Support for STL                                          {#link_stl_template_types}
 =========================================
@@ -40,8 +52,23 @@ TODO: write detailed description of supported types, and how memory space is map
 
 Support for Popular Scientific Libraries                {#link_linalg_template_types}
 =========================================
+operations [create | read | write] has been implemented with zero-copy whenever passed by reference. In case of **direct read** operations when the requested object is assigned, the object is created only once, because of [copy elision](https://en.cppreference.com/w/cpp/language/copy_elision).
+ this mechanism is useful when sketching out idea's and your focus is on the flow as opposed to performance.
+```cpp
+// copy-elision or return value optimization:RVO
+arma::mat rvo = h5::read<arma::mat>(fd, "path_to_object");
+```
 
-TODO: write detailed description of supported types, and how memory space is mapped to file space
+For high performance operations: within loops or sub routines, choose the function prototypes that takes reference to already created objects, then update the content with partial IO call.
+```cpp
+	h5::ds_t ds = h5::open( ... ) 		// open dataset
+	arma::mat M(n_rows,n_cols);   		// create placeholder, data-space is reserved on the heap
+	h5::count_t  count{n_rows,n_cols}; 	// describe the memory region you are reading into
+	h5::offset_t offset{0,0}; 			// position we reasing data from
+	// high performance loop with minimal memory operations
+	for( auto i: column_indices )
+		h5::read(ds, M, count, offset); // count, offset and other proeprties may be speciefied in any order
+```
 
 
 ```yacc
@@ -62,3 +89,16 @@ ptr 	:= T*
 accept 	:= ref | ptr 
 ```
 
+Here is the chart how supported linalg systems implement acessors, memory layout
+
+```
+		data            num elements  vec   mat:rm               mat:cm                   cube
+-------------------------------------------------------------------------------------------------------------------------
+eigen {.data()}          {size()}          {rows():1,cols():0}   {cols():0,rows():1}     {n/a}
+arma  {.memptr()}        {n_elem}                                {n_cols:0,n_rows:1}     {slices:2,rows:0,cols:1}
+blaze {.data()}          {n/a}             {cols():1,rows():0}   {rows():0,columns():1}  {n/a}
+blitz {.data()}          {size()}          {cols:1,  rows:0}                             {slices:2,cols:1,rows:0}
+itpp  {._data()}         {length()}        {cols():1,rows():0}
+ublas {.data().begin()}  {n/a}             {size2():1, size1():0}
+dlib  {&ref(0,0)}        {size()}          {nc():1,    nr():0}
+```
