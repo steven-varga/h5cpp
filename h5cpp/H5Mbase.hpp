@@ -52,7 +52,8 @@
 		} 																									\
 
 
-/* TODO: rework so all const | ref | ptr | will execute 
+/* TODO: rework so all const | ref | ptr | will execute
+ * applied only on containers: stl::vector, arma::xxx, eigen::xxx, ... 
  * ----------------------------- END META TEMPLATE -----------------------------------------*/ 				\
 #define H5CPP_BASE_TEMPLATE_SPEC( T, container, address, n_elem, R, ... )									\
 		template<> struct base<container<T>&> {																\
@@ -70,9 +71,6 @@
 			h5::count_t count( __VA_ARGS__ ); 																\
 			count.rank = R; 																				\
 			return count;   																				\
-		} 						 																			\
-		inline std::array<hsize_t,R> get_dims( const container<T>& ref ){									\
-			return __VA_ARGS__; 																			\
 		} 						 																			\
 		inline T* get_ptr( container<T>& ref ){																\
 			return address;  																				\

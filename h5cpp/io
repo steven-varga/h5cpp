@@ -19,7 +19,7 @@
 	#include "H5Acreate.hpp"
 	#include "H5Aopen.hpp"
 	#include "H5Awrite.hpp"
-	#include "H5Adelete.hpp"
+	#include "H5Aread.hpp"
 
 #endif	
 

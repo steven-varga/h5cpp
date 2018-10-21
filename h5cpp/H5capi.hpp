@@ -98,9 +98,14 @@ namespace h5{
 	}
 	template <class T>
 	inline h5::sp_t create_simple( const T& dim ){
-		hid_t mem_space;
-		H5CPP_CHECK_NZ( (mem_space = H5Screate_simple(dim.rank, *dim, nullptr )), std::runtime_error, h5::error::msg::create_memspace);
-		return h5::sp_t{mem_space};
+		hid_t space;
+
+		if( dim.rank > 0 ){
+			H5CPP_CHECK_NZ( (space = H5Screate_simple(dim.rank, *dim, nullptr )), std::runtime_error, h5::error::msg::create_memspace);
+		}else{ // scalar space
+			H5CPP_CHECK_NZ( (space = H5Screate( H5S_SCALAR )), std::runtime_error, h5::error::msg::create_memspace);
+		}
+		return h5::sp_t{space};
 	}
 	inline h5::sp_t create_simple( const h5::current_dims& current_dims, const h5::max_dims& max_dims  ){
 		return h5::sp_t{H5Screate_simple( current_dims.size(), current_dims.begin(), max_dims.begin() )};

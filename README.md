@@ -10,9 +10,12 @@ Easy to use  [HDF5][hdf5] **C++11** compiler assisted templates for HDF5
 
 NEWS:
 ------------
-- **2018-oct-??** public AWS image for your convenience
-- **2018-oct-??** Continuous Integration for Linux and Windows 
-- **2018-oct-??** comprehensive [error handling][400] system added
+- **2018-dec-??** public AWS image for your convenience
+- **2018-dec-??** Continuous Integration for Linux and Windows
+- **2018-oct-??** attributes with operators: ds["some attribute"] = arma::vec{1,2,3};
+- **2018-oct-21** attributes: acreate, awrite, aread added for scalars, vectors, matrices and cubes
+- **2018-oct-??** replaced macro meta-programming with template meta-programming
+- **2018-oct-21** comprehensive [error handling][400] system added
 - **2018-aug-13** The backporting of the template library to c++11 has been completed the templates are pure c++11 with no higher requirements. 
 - **2018-aug-01** [H5CPP presentation at Chicago C++ UsersGroup][200] with David Pearah and Gerd Heber, HDFGroup
 - **2018-jul-30** [HDFGroup Blog post: ][401] the short story of h5cpp

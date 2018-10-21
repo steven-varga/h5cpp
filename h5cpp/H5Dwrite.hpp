@@ -26,7 +26,7 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	void write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ) try {
+	h5::ds_t write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ) try {
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
@@ -52,6 +52,7 @@ namespace h5 {
 		// this can throw exception
 
 		h5::write<T>(ds, mem_space, file_space, dxpl, ptr);
+		return ds;
 	} catch ( const std::exception& err ){
 		throw h5::error::io::dataset::write( err.what() );
 	}
@@ -62,7 +63,7 @@ namespace h5 {
  	*/ 
 	template <class T, class... args_t>
 	typename std::enable_if<!std::is_same<T,char**>::value,
-	void>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ) try {
+	h5::ds_t>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ) try {
 
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double | std::string
 		using element_t = typename utils::base<T>::type;
@@ -85,7 +86,7 @@ namespace h5 {
  			h5::write(ds, ptr.data(), count, args...);
         	for( auto p:ptr ) free(p);
 		}  else // ditto, throws error
-			h5::write<element_t>(ds, utils::get_ptr(ref), count, args...  );
+			return h5::write<element_t>(ds, utils::get_ptr(ref), count, args...  );
 	} catch ( const std::runtime_error& err ){
 		throw h5::error::io::dataset::write( err.what() );
 	}
@@ -94,7 +95,7 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	void write( const h5::fd_t& fd, const std::string& dataset_path, const T* ptr,  args_t&&... args  ){
+	h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T* ptr,  args_t&&... args  ){
 
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
@@ -133,6 +134,7 @@ namespace h5 {
 			h5::open( fd, dataset_path, h5::default_dapl) : h5::create<T>(fd, dataset_path, args..., current_dims );
 		h5::unmute();
  		h5::write<T>(ds, ptr,  args...);
+		return ds;
 	}
 
  	/** \func_write_hdr
@@ -140,7 +142,7 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	void write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
+	h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
@@ -181,7 +183,7 @@ namespace h5 {
 		h5::ds_t ds = ( H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT ) > 0 ) ?
 			h5::open( fd, dataset_path, h5::default_dapl) : h5::create<element_t>(fd, dataset_path, args..., current_dims );
 		h5::unmute();
- 		h5::write<T>(ds, ref,  args...);
+ 		return h5::write<T>(ds, ref,  args...);
 	}
 
    /** \func_write_hdr
@@ -189,10 +191,10 @@ namespace h5 {
 	*  \par_offset \par_stride \par_count \par_block  \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class... args_t>
-	void write( const std::string& file_path, const std::string& dataset_path, args_t&&... args  ){
+	h5::ds_t write( const std::string& file_path, const std::string& dataset_path, args_t&&... args  ){
 		//TODO: check if exists create if doesn't
 		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR, h5::default_fapl );
-		h5::write( fd, dataset_path, args...);
+		return h5::write( fd, dataset_path, args...);
 	}
 }
 #endif

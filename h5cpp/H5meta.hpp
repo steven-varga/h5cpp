@@ -51,4 +51,12 @@ namespace h5{ namespace arg {
 		return std::get<idx>( tuple );
 	}
 }}
+
+namespace h5 { namespace impl {
+	//<public domain code> borrowed from c++ library reference: to lower c+14 to c++11
+	template<bool B, class T, class F> struct conditional { typedef T type; };
+	template<class T, class F> struct conditional<false, T, F> { typedef F type; };
+}}
+
+
 #endif

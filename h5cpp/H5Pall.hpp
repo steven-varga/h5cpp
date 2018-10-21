@@ -166,6 +166,7 @@ namespace h5 { namespace notimplemented_yet { // OBJECT COPY PROPERTY LISTS
 }}
 
 namespace h5 {
+	const static h5::acpl_t acpl = static_cast<h5::acpl_t>( H5P_DEFAULT );
 	const static h5::dapl_t dapl = static_cast<h5::dapl_t>( H5P_DEFAULT );
 	const static h5::dcpl_t dcpl = static_cast<h5::dcpl_t>( H5P_DEFAULT);
 	const static h5::dxpl_t dxpl = static_cast<h5::dxpl_t>( H5P_DEFAULT );
@@ -173,6 +174,7 @@ namespace h5 {
 	const static h5::fapl_t fapl = static_cast<h5::fapl_t>( H5P_DEFAULT );
 	const static h5::fcpl_t fcpl = static_cast<h5::fcpl_t>( H5P_DEFAULT );
 
+	const static h5::acpl_t default_acpl = static_cast<h5::acpl_t>( H5P_DEFAULT );
 	const static h5::dapl_t default_dapl = static_cast<h5::dapl_t>( H5P_DEFAULT );
 	const static h5::dcpl_t default_dcpl = static_cast<h5::dcpl_t>( H5P_DEFAULT );
 	const static h5::dxpl_t default_dxpl = static_cast<h5::dxpl_t>( H5P_DEFAULT );

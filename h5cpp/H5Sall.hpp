@@ -11,17 +11,52 @@ namespace h5{ namespace impl {
 	struct max_dims_t{}; struct current_dims_t{};
 	struct dims_t{}; struct chunk_t{};  struct offset_t{}; struct stride_t{};  struct count_t{}; struct block_t{};
 
-	template <typename T>
+	template <typename T, int N=H5CPP_MAX_RANK>
 	struct array  {
 
-		array( const std::initializer_list<hsize_t> list  ) : rank( list.size() ) {
+		array( const std::initializer_list<size_t> list  ) : rank( list.size() ) {
 			for(int i=0; i<rank; i++) data[i] = *(list.begin() + i);
 		}
-		array() = default;
+		// support linalg objects upto 3 dimensions or cubes
+		array( const std::array<size_t,0> l ) : rank(0), data{} {}
+		array( const std::array<size_t,1> l ) : rank(1), data{l[0]} {}
+		array( const std::array<size_t,2> l ) : rank(2), data{l[0],l[1]} {}
+		array( const std::array<size_t,3> l ) : rank(3), data{l[0],l[1],l[2]} {}
+		// automatic conversion to std::array means to collapse tail dimensions
+		operator const std::array<size_t,0> () const {
+			return {};
+		}
+		operator const std::array<size_t,1> () const {
+			size_t a = data[0];
+			for(int i=1;i<rank;i++) a*=data[i]; 
+			return {a};
+		}
+		operator const std::array<size_t,2> () const {
+			size_t a,b;	a = data[0]; b = data[1];
+			for(int i=2;i<rank;i++) b*=data[i];
+			return {a,b};
+		}
+		operator const std::array<size_t,3> () const {
+			size_t a,b,c;	a = data[0]; b = data[1]; c = data[2];
+			for(int i=3;i<rank;i++) c*=data[i];
+			return {a,b,c};
+		}
+
+
+
+		array() : rank(0){};
 		array( array&& arg ) = default;
 		array( array& arg ) = default;
 		array& operator=( array&& arg ) = default;
 		array& operator=( array& arg ) = default;
+		template<class C>
+		explicit operator array<C>(){
+			array<C> arr;
+			arr.rank = rank;
+			for( int i=0; i<rank; i++) arr[i] = data[i];
+			return arr;
+		}
+
 		hsize_t& operator[](size_t i){ return *(data + i); }
 		const hsize_t& operator[](size_t i) const { return *(data + i); }
 		hsize_t* operator*() { return data; }
@@ -32,7 +67,7 @@ namespace h5{ namespace impl {
 		const hsize_t* begin()const { return data; }
 		hsize_t* begin() { return data; }
 		int rank;
-		hsize_t data[H5CPP_MAX_RANK];
+		hsize_t data[N];
 	};
 }}
 
