@@ -72,7 +72,7 @@ namespace h5{
 	}
 
 	inline void get_chunk_dims( const h5::dcpl_t& dcpl,  h5::chunk_t& chunk_dims ){
-		H5CPP_CHECK_NZ( H5Pget_chunk( static_cast<hid_t>(dcpl), chunk_dims.rank, *chunk_dims ), std::runtime_error,
+		H5CPP_CHECK_NZ( H5Pget_chunk( static_cast<hid_t>(dcpl), H5CPP_MAX_RANK, *chunk_dims ), std::runtime_error,
 					h5::error::msg::get_chunk_dims );
 	}
 	inline h5::chunk_t get_chunk_dims( const h5::dcpl_t& dcpl ){

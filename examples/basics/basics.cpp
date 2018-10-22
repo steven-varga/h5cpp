@@ -21,11 +21,13 @@ int main(){
 	}
 	// error handling
 	{
+		h5::mute(); // to avoid confusion mute CAPI error messages
 		try {
 			h5::dcpl_t dcpl_0 = h5::gzip{79798}; // invalid argument
 		} catch ( const h5::error::any& err ){
-			std::cerr << err.what(); 
+			std::cerr << err.what() <<std::endl;
 		}
+		h5::unmute();
 	}
 
 	{ // property lists can bae daisy chained with | operator

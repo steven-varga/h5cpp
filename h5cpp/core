@@ -19,6 +19,10 @@
 #include <complex>
 #include <cstring>
 
+#ifdef H5CPP_WITH_GLOG
+   #include <glog/logging.h>
+#endif
+
 #ifndef  H5CPP_CORE_H
 #define H5CPP_CORE_H
 	#include "H5config.hpp"
@@ -27,9 +31,16 @@
 	#include "H5misc.hpp"
 	#include "H5meta.hpp"
 	#include "H5Mstl.hpp"
-	#include "H5Marma.hpp"
 	#include "H5Sall.hpp"
 	#include "H5Mall.hpp"
+	
+	#include "H5Marma.hpp"
+	#include "H5Meig.hpp"
+	#include "H5Mblaze.hpp"
+	#include "H5Mblitz.hpp"
+	#include "H5Mitplus.hpp"
+	#include "H5Mublas.hpp"
+	
 	#include "H5Iall.hpp"
 	#include "H5Pall.hpp"
 	#include "H5Ialgorithm.hpp"

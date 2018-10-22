@@ -62,10 +62,10 @@ h5::pt_t::pt_t( const h5::ds_t& handle ) : pt_t() {
 		ds = handle; // copy handle inc ref, behaves as unique_ptr
 
 		file_space = h5::get_space( handle );
-		rank = h5::get_simple_extent_dims( file_space, current_dims, max_dims );
+		chunk_dims.rank = rank = h5::get_simple_extent_dims( file_space, current_dims, max_dims );
 		dcpl = h5::create_dcpl( ds );
-		chunk_dims = h5::get_chunk_dims( dcpl );
-
+		h5::get_chunk_dims( dcpl, chunk_dims );
+		std::cout << chunk_dims << "\n";
 		// chunk_dims and rank are initialized 
 		chunk_size=1; for(int i=0;i<rank;i++) chunk_size*=chunk_dims[i];
 		file_type = h5::get_type( ds );
@@ -75,7 +75,6 @@ h5::pt_t::pt_t( const h5::ds_t& handle ) : pt_t() {
 	} catch ( ... ){
 		throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("CTOR: unable to create handle from dataset..."));
 	}
-
 	ptr = std::move( impl::unique_ptr<void>{calloc( chunk_size, type_size )} );
 	if( ptr.get() == NULL)
 	   	throw h5::error::io::dataset::open( H5CPP_ERROR_MSG("CTOR: couldn't allocate memory for caching chunks, invalid/check size?"));

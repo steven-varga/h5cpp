@@ -108,9 +108,7 @@
 /**************************************************************************************************************************************/
 #if defined(BZ_ARRAY_ONLY_H) || defined(H5CPP_USE_BLITZ)
 	namespace blitz {
-		template<class T> using vector 	= blitz::Array<T,1>;
 		template<class T> using matrix 	= blitz::Array<T,2>;
-		template<class T> using qube 	= blitz::Array<T,3>;
 	}
 
 	#define H5CPP_BLITZ_TEMPLATE_SPEC(T) \

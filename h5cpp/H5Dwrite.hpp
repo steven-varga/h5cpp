@@ -44,13 +44,12 @@ namespace h5 {
 		const h5::stride_t& stride = arg::get( default_stride, args...);
 		h5::block_t  default_block{1,1,1,1,1,1,1};
 			const h5::block_t& block = arg::get( default_block, args...);
-
+ 
 		hsize_t size = 1;for(int i=0;i<rank;i++) size *= count[i] * block[i];
 		h5::sp_t mem_space = h5::create_simple( size );
 		h5::select_all( mem_space );
 		h5::select_hyperslab( file_space, offset, stride, count, block);
 		// this can throw exception
-
 		h5::write<T>(ds, mem_space, file_space, dxpl, ptr);
 		return ds;
 	} catch ( const std::exception& err ){

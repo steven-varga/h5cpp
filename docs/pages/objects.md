@@ -92,12 +92,12 @@ accept 	:= ref | ptr
 Here is the chart how supported linalg systems implement acessors, memory layout
 
 ```
-		data            num elements  vec   mat:rm               mat:cm                   cube
+		data            num elements  vec   mat:rm                mat:cm                   cube
 -------------------------------------------------------------------------------------------------------------------------
-eigen {.data()}          {size()}          {rows():1,cols():0}   {cols():0,rows():1}     {n/a}
-arma  {.memptr()}        {n_elem}                                {n_cols:0,n_rows:1}     {slices:2,rows:0,cols:1}
-blaze {.data()}          {n/a}             {cols():1,rows():0}   {rows():0,columns():1}  {n/a}
-blitz {.data()}          {size()}          {cols:1,  rows:0}                             {slices:2,cols:1,rows:0}
+eigen {.data()}          {size()}          {rows():1,cols():0}    {cols():0,rows():1}     {n/a}
+arma  {.memptr()}        {n_elem}                                 {n_rows:0,n_cols:1}     {n_slices:2,n_rows:0,n_cols:1}
+blaze {.data()}          {n/a}             {columns():1,rows():0} {rows():0,columns():1}  {n/a}
+blitz {.data()}          {size()}          {cols:1,  rows:0}                              {slices:2, cols:1,rows:0} 
 itpp  {._data()}         {length()}        {cols():1,rows():0}
 ublas {.data().begin()}  {n/a}             {size2():1, size1():0}
 dlib  {&ref(0,0)}        {size()}          {nc():1,    nr():0}
