@@ -30,7 +30,7 @@ template <typename T> class AbstractTest
 public:
 	void SetUp() {
 		dir = ::testing::UnitTest::GetInstance()->current_test_info()->name();
-		type = h5::utils::type_name<T>();
+		type = h5::name<T>::value;
 		name = dir + "/" + type;
 		this->fd = h5::open("test.h5", H5F_ACC_RDWR );
 	}

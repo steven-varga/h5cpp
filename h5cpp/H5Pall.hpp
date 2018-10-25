@@ -6,6 +6,121 @@
 
 #ifndef  H5CPP_PALL_HPP
 #define  H5CPP_PALL_HPP
+
+namespace h5 { namespace impl {
+	/* proxy object that gets converted to property_id with restriction that 
+	 * only same class properties may be daisy chained */
+	template <class Derived, class phid_t>
+	struct prop_base {
+		prop_base(){ }
+		// removed ctor
+		~prop_base(){
+			if( H5Iis_valid( handle ) ){
+				H5Pclose( handle );
+			}
+	  	}
+
+		template <class R> 	const prop_base<Derived, phid_t>&
+		operator|( const R& rhs ) const {
+			rhs.copy( handle );
+			return *this;
+		 }
+
+		void copy(::hid_t handle_) const { /*CRTP idiom*/
+			static_cast<const Derived*>(this)->copy_impl( handle_ );
+		}
+		/*transfering ownership to managed handle*/
+		operator phid_t( ) const {
+			static_cast<const Derived*>(this)->copy_impl( handle );
+			H5Iinc_ref( handle ); /*keep this alive */
+			return phid_t{handle};
+		}
+		::hid_t handle;
+		using type = phid_t;
+	};
+	// definition
+	template <class phid_t, defprop_t init, class capi, typename capi::fn_t capi_call> struct prop_t;
+	/* CAPI macros are sequence calls: (H5OPEN, register_property_class), these are all meant to be read only/copied from,
+	 */
+	#define H5CPP__capicall( name, default_id ) ::hid_t inline default_##name(){ return default_id; } 	\
+			template <class capi, typename capi::fn_t capi_call>                                        \
+				using name##_call = prop_t<h5::name##_t, default_##name,  capi, capi_call>; 	        \
+			template <class... args> using name##_args = impl::capi_t<args...>; 						\
+
+	H5CPP__capicall( acpl, H5P_ATTRIBUTE_CREATE) H5CPP__capicall( dapl, H5P_DATASET_ACCESS )
+	H5CPP__capicall( dxpl, H5P_DATASET_XFER )    H5CPP__capicall( dcpl, H5P_DATASET_CREATE )
+	H5CPP__capicall( tapl, H5P_DATATYPE_ACCESS ) H5CPP__capicall( tcpl, H5P_DATATYPE_CREATE )
+	H5CPP__capicall( fapl, H5P_FILE_ACCESS )     H5CPP__capicall( fcpl, H5P_FILE_CREATE )
+	H5CPP__capicall( fmpl, H5P_FILE_MOUNT )
+
+	H5CPP__capicall( gapl, H5P_GROUP_ACCESS)     H5CPP__capicall( gcpl, H5P_GROUP_CREATE )
+	H5CPP__capicall( lapl, H5P_LINK_ACCESS)      H5CPP__capicall( lcpl, H5P_LINK_CREATE	 )
+	H5CPP__capicall( ocpl, H5P_OBJECT_COPY)      H5CPP__capicall( ocrl, H5P_OBJECT_CREATE )
+	H5CPP__capicall( scpl, H5P_STRING_CREATE)
+	#undef H5CPP__defid
+
+	/*property with a capi function call with some arguments, also is the base for other properties */
+	template <class phid_t, defprop_t init, class capi, typename capi::fn_t capi_call>
+	struct prop_t : prop_base<prop_t<phid_t,init,capi,capi_call>,phid_t> {
+		prop_t( typename capi::args_t values ) : args( values ) {
+			H5CPP_CHECK_NZ( (this->handle = H5Pcreate(init())),
+				   h5::error::property_list::misc, "failed to create property");
+		}
+		prop_t(){
+			H5CPP_CHECK_NZ( (this->handle = H5Pcreate(init())),
+				   h5::error::property_list::misc, "failed to create property");
+		}
+		void copy_impl(::hid_t id) const {
+			//int i = capi_call + 1;
+			/*CAPI needs `this` hid_t id passed along */
+			capi_t capi_args = std::tuple_cat( std::tie(id), args );
+			H5CPP_CHECK_NZ( compat::apply(capi_call, capi_args),
+					h5::error::property_list::argument,"failed to parse arguments...");
+		}
+		using base_t =  prop_base<prop_t<phid_t,init,capi,capi_call>,phid_t>;
+		using args_t = typename capi::args_t;
+		using capi_t = typename capi::type;
+		using type = phid_t;
+		args_t args;
+	};
+
+	/* T prop is much similar to other properties, except the value needs HDF5 type info and passed by
+	 * const void* pointer type. This is reflected by templating `prop_t` 
+	 */
+	template <class phid_t, defprop_t init, class capi, typename capi::fn_t capi_call, class T>
+	struct tprop_t final : prop_t<phid_t,init,capi,capi_call> { // ::hid_t,const void*
+		tprop_t( T value ) : base_t( std::make_tuple( h5::copy<T>( h5::dt_t<T>() ), &this->value) ), value(value) {
+		}
+		~tprop_t(){ // don't forget that the first argument is a HDF5 type info, that needs closing
+			if( H5Iis_valid( std::get<0>(this->args) ) )
+				H5Tclose( std::get<0>(this->args) );
+		}
+		using type = phid_t;
+		using base_t = prop_t<phid_t,init,capi,capi_call>;
+		T value;
+	};
+	/* takes an arbitrary length of hsize_t sequence and calls H5Pset_xxx
+	 */
+	template <class phid_t, defprop_t init, class capi, typename capi::fn_t capi_call>
+	struct aprop_t final : prop_t<phid_t,init,capi,capi_call> {
+		aprop_t( std::initializer_list<hsize_t> values )
+			: base_t( std::make_tuple( values.size(), this->values) ) {
+			std::copy( std::begin(values), std::end(values), this->values);
+		}
+		hsize_t values[H5CPP_MAX_RANK];
+		using type = phid_t;
+		using base_t =  prop_t<phid_t,init,capi,capi_call>;
+	};
+
+	// only data control property list set_chunk has this pattern, lets allow to define CAPI argument lists 
+	// the same way as with others
+	template <class capi, typename capi::fn_t capi_call>
+		using dcpl_acall = aprop_t<h5::dcpl_t,default_dcpl, capi,capi_call>;
+	// only data control property list set_value has this pattern, lets allow to define CAPI argument lists 
+	// the same way as with others
+	template <class capi, typename capi::fn_t capi_call, class T> using dcpl_tcall = tprop_t<h5::dcpl_t,default_dcpl, capi, capi_call, T>;
+}}
+
 /** impl::property_group<H5Pset_property, args...> args... ::= all argument types except the first `this` hid_t prop_ID
  *  since it is implicitly passed by template class. 
  */ 

@@ -4,8 +4,8 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  *
  */
-#ifndef  H5CPP_ITPLUS_HPP 
-#define  H5CPP_ITPLUS_HPP
+#ifndef  H5CPP_ITPP_HPP 
+#define  H5CPP_ITPP_HPP
 
 
 #if defined(MAT_H) || defined(H5CPP_USE_ITPP_MATRIX)

@@ -20,7 +20,7 @@ namespace h5 { namespace impl {
 	template <class Object, class T = typename impl::decay<Object>::type> inline
 	typename std::enable_if< h5::ublas::is_supportedm<Object>::value,
 	const T*>::type data(const Object& ref ){
-			return ref._data();
+			return ref.data().begin();
 	}
 	// read write access
 	template <class Object, class T = typename impl::decay<Object>::type> inline

@@ -38,7 +38,7 @@ TYPED_TEST(STLTest, ReadSTL) {
 	}
 }
 */
-
+/*
 TYPED_TEST(STLTest, stl_create_write_continous) {
 	auto ds = h5::create<TypeParam>(this->fd, this->name, h5::current_dims{20}  );
 	std::vector<TypeParam> vec = h5::utils::get_test_data<TypeParam>(20);
@@ -69,10 +69,8 @@ TYPED_TEST(STLTest, stl_multidim_gzip) {
 	std::vector<TypeParam> vec = h5::utils::get_test_data<TypeParam>(20);
 
 	h5::write(ds, vec, h5::offset{2,3,0}, h5::count{4,5,1});
-
-	H5Dclose(ds);
 }
-
+*/
 
 /*----------- BEGIN TEST RUNNER ---------------*/
 H5CPP_TEST_RUNNER( int argc, char**  argv );

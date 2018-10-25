@@ -7,8 +7,6 @@
 #
 apps = arma eigen3 blaze itpp ublas dlib
 
-#FIXME: dlib
-
 CXXFLAGS = -Wno-deprecated  -Wall
 LIBS =  -lhdf5 -lz -ldl -lm
 INCLUDES=/usr/include/eigen3
@@ -41,10 +39,6 @@ eigen3: eigen3.cpp
 
 ublas: ublas.cpp
 	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
-	$(CXX) $^ $(LIBS)  -o $@
-
-blitz: blitz.cpp
-	$(CXX)   -o $@  -std=c++14 $(CXXFLAGS) -c $^
 	$(CXX) $^ $(LIBS)  -o $@
 
 dlib: dlib.cpp

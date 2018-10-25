@@ -80,12 +80,14 @@ namespace h5{
 		get_chunk_dims( dcpl, chunk_dims );
 		return chunk_dims;
 	}
-	inline h5::dt_t get_type(const h5::ds_t& ds ){
+	template<class T>
+	inline h5::dt_t<T> get_type(const h5::ds_t& ds ){
 		hid_t dataset_type;
 		H5CPP_CHECK_NZ( (dataset_type = H5Dget_type( static_cast<hid_t>(ds))), std::runtime_error, h5::error::msg::get_dataset_type );
-		return h5::dt_t{ dataset_type };
+		return h5::dt_t<T>{ dataset_type };
 	}
-	inline size_t get_size( const h5::dt_t& type ){
+	template<class T>
+	inline size_t get_size( const h5::dt_t<T>& type ){
 		size_t size;
 		H5CPP_CHECK_NZ( (size =  H5Tget_size( static_cast<hid_t>(type) )), std::runtime_error, h5::error::msg::get_filetype_size );
 		return size;
@@ -132,9 +134,9 @@ namespace h5{
 		H5CPP_CHECK_NZ(
 				H5Dset_extent( static_cast<hid_t>(ds), *dims ),std::runtime_error,	 h5::error::msg::set_extent);
 	}
-
+	template <class T>
 	inline void writeds(const h5::ds_t& ds,
-			const h5::dt_t& file_type, const h5::sp_t& mem_space, const h5::sp_t& file_space,
+			const h5::dt_t<T>& file_type, const h5::sp_t& mem_space, const h5::sp_t& file_space,
 			const void* ptr ){
 		H5CPP_CHECK_NZ(
 				H5Dwrite(static_cast<hid_t>(ds), static_cast<hid_t>(file_type),
@@ -147,8 +149,8 @@ namespace h5{
 		H5CPP_CHECK_NZ(
 				H5Pset_chunk(static_cast<::hid_t>(dcpl), chunk.rank, *chunk ), std::runtime_error,	 h5::error::msg::set_chunk );
 	}
-
-	inline h5::ds_t createds(const h5::fd_t& fd, const std::string& path, const h5::dt_t& type,
+	template<class T>
+	inline h5::ds_t createds(const h5::fd_t& fd, const std::string& path, const h5::dt_t<T>& type,
 		  const h5::sp_t& sp, const h5::lcpl_t& lcpl, const h5::dcpl_t& dcpl, const h5::dapl_t& dapl ){
 		hid_t ds;
 		H5CPP_CHECK_NZ(( ds = H5Dcreate2( static_cast<hid_t>(fd), path.data(), type, static_cast<hid_t>(sp),

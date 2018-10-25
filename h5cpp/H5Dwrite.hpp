@@ -15,8 +15,8 @@ namespace h5 {
 	void write( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, const T* ptr  ){
 		H5CPP_CHECK_PROP( dxpl, h5::error::io::dataset::write, "invalid data transfer property" );
 
-
-		h5::dt_t type{ utils::h5type<T>()};
+		using element_t = typename h5::impl::decay<T>::type;
+		h5::dt_t<element_t> type;
 		H5CPP_CHECK_NZ(
 			H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
 							h5::error::io::dataset::write, h5::error::msg::write_dataset);
@@ -65,11 +65,11 @@ namespace h5 {
 	h5::ds_t>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ) try {
 
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double | std::string
-		using element_t = typename utils::base<T>::type;
+		using element_t = typename impl::decay<T>::type;
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		h5::count_t default_count;
 
-		default_count = utils::get_count( ref );
+		default_count = impl::size( ref );
 		const h5::count_t& count = arg::get(default_count, args...);
 
 		// std::string is variable length
@@ -85,7 +85,7 @@ namespace h5 {
  			h5::write(ds, ptr.data(), count, args...);
         	for( auto p:ptr ) free(p);
 		}  else // ditto, throws error
-			return h5::write<element_t>(ds, utils::get_ptr(ref), count, args...  );
+			return h5::write<element_t>(ds, impl::data(ref), count, args...  );
 	} catch ( const std::runtime_error& err ){
 		throw h5::error::io::dataset::write( err.what() );
 	}
@@ -148,11 +148,11 @@ namespace h5 {
 		using tblock = typename arg::tpos<const h5::block_t&,const args_t&...>;
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
 
-		int rank = utils::base<T>::rank;
+		int rank = impl::rank<T>::value;
 
-		using element_t = typename utils::base<T>::type;
+		using element_t = typename impl::decay<T>::type;
 		h5::current_dims_t def_current_dims;
-		h5::count_t count = utils::get_count( ref );
+		h5::count_t count = impl::size( ref );
 
 		rank = def_current_dims.rank = count.rank;
 

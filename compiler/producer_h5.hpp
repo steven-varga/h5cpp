@@ -42,7 +42,7 @@ struct H5Producer : Producer<H5Producer> {
 	private:
 	std::map<const std::string, const std::string> cpp2hid;
 	std::vector<std::string> type_cache;
-	std::string hid_t_record;
+	std::string hid_t_record, record_name;
 	int count;
 };
 
@@ -60,11 +60,11 @@ void H5Producer::file_end_impl(){
 	io << "#endif\n"; //close `include guard`
 }
 void H5Producer::template_decl_impl(const std::string& record){
+	record_name = record;
 	io <<
-	"H5CPP_REGISTER_STRUCT("<< record <<");\n"
-	"namespace h5{ namespace utils {\n"
+	"namespace h5{\n"
 	<<indent<< "//template specialization of " << record << " to create HDF5 COMPOUND type\n"
-	<<indent<< "template<> hid_t h5type<" << record << ">(){\n";
+	<<indent<< "template<> hid_t inline register_struct<" << record << ">(){\n";
 
 	cpp2hid =  std::map <const std::string, const std::string> {
 		{"_Bool",     "H5T_NATIVE_HBOOL"},
@@ -90,8 +90,8 @@ void H5Producer::return_type_impl(const std::string& var ){
 		<<indent<<"    //the returned 'hid_t " << var << "' must be closed: H5Tclose(" << var << ");\n"
 		<<indent<<"    return " << var  << ";\n"
 		<<indent<<"};\n"
-	"}}\n";
-
+	"}\n";
+	io << "H5CPP_REGISTER_STRUCT("<< record_name <<");\n\n";
 }
 
 void H5Producer::array_decl_impl(const std::string&var,  const std::string& type, uint64_t size){

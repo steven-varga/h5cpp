@@ -35,10 +35,12 @@ void test_03( const h5::fd_t& fd ){ // creates + writes entire object tree
 void test_04( const h5::fd_t& fd ){ // read entire dataset back
 
 	using T = std::vector<sn::example::Record>;
+	std::cerr<< "reading data: \n";
 	auto data = h5::read<T>(fd,"/orm/partial/vector one_shot");
 	std::cerr <<"reading back data previously written:\n\t";
 	for( auto r:data )
 		std::cerr << r.idx <<" ";
+
 	std::cerr << std::endl;
 }
 

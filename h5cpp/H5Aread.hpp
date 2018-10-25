@@ -20,7 +20,7 @@ namespace h5 {
 		h5::current_dims_t current_dims;
 		int rank = get_simple_extent_dims(file_space, current_dims );
 		using element_t = typename impl::decay<T>::type;
-		h5::dt_t type{ utils::h5type<element_t>() };
+		h5::dt_t<element_t> type;
 		T object = impl::get<T>::ctor( current_dims );
 		H5CPP_CHECK_NZ( H5Aread( static_cast<hid_t>(attr), static_cast<hid_t>(type), impl::data( object ) ),
 			   h5::error::io::attribute::read, "couldn't read dataset ...");

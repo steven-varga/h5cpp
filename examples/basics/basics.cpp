@@ -12,12 +12,35 @@ basics.cpp:15:74: error: no matching function for call to
 */
 
 int main(){
+	// data type mapped from C/C++ type system to HDF5 through class templates
+	// h5::dt_t<T> hdf5_type_descriptor; 
+	{
+		// default ctor selects H5T_NATIVE_INT through template partial specialization
+		// then obtains an hid_t HDF5 type descriptor through H5copy( H5T_NATIVE_INT )
+		// through template inheritance its behaviour matches the rest of the descriptors
+		// RAII closes resource when leaving scope 
+		h5::dt_t<int> my_int_type;
+		// depending on conversion policy type id may be implicitly or explicitly cast 
+		// to CAPI style HDF5 ID
+		hid_t capi_style_id = static_cast<hid_t>( my_int_type );
+		// for types not yet defined you need to register it with thew following macro call:
+		// H5CPP_REGISTER_TYPE(C_COMPOUND_TYPE, HDF5_COMPOUND_TYPE )
+		// which is a template specialization of for given type, see H5Tall.hpp for details
+		//
+		H5CPP_CHECK_EQ(  H5Tequal( capi_style_id, H5T_NATIVE_INT),
+				std::runtime_error,	"HDF5 type system failure!!! " )
+
+		// types have names at compile + runtime
+		std::cout << h5::name<int>::value << std::endl; // prints out type information
+		std::cout << my_int_type << std::endl; // prints out type information
+	}
 	{
 		h5::dcpl_t dcpl0 = h5::chunk{12} | h5::gzip{2};
 		h5::dcpl_t dcpl1 = h5::chunk{12} | h5::gzip{2};
 		h5::dcpl_t dcpl = dcpl0 | dcpl1;
 		dcpl0 |= dcpl1;
-		std::cout << sizeof( dcpl ) << " " << sizeof(hid_t) << "\n";
+		H5CPP_CHECK_EQ( sizeof(dcpl) == sizeof(hid_t), 
+				std::runtime_error, "HDF5 hid_t are not binary equivalent!!!" )
 	}
 	// error handling
 	{

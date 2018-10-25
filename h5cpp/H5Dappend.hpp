@@ -28,7 +28,7 @@ namespace h5 {
 
 		impl::unique_ptr<void> ptr; // will call std::free on dtor
 		h5::sp_t mem_space,file_space;
-		h5::dt_t mem_type, file_type;
+		h5::dt_t<nullptr_t> mem_type, file_type;
 		h5::ds_t ds;
 		h5::dcpl_t dcpl;
 		h5::current_dims_t current_dims;
@@ -65,10 +65,9 @@ h5::pt_t::pt_t( const h5::ds_t& handle ) : pt_t() {
 		chunk_dims.rank = rank = h5::get_simple_extent_dims( file_space, current_dims, max_dims );
 		dcpl = h5::create_dcpl( ds );
 		h5::get_chunk_dims( dcpl, chunk_dims );
-		std::cout << chunk_dims << "\n";
 		// chunk_dims and rank are initialized 
 		chunk_size=1; for(int i=0;i<rank;i++) chunk_size*=chunk_dims[i];
-		file_type = h5::get_type( ds );
+		file_type = h5::get_type<nullptr_t>( ds );
 		type_size = h5::get_size( file_type );
 		mem_space = h5::create_simple( chunk_size );
 		h5::select_all( mem_space );

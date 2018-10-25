@@ -26,6 +26,7 @@ int main(){
 		);
 		h5::write( ds,  M, h5::offset{2,2}, h5::stride{1,3}  );
 	}
+
 	{
 		Colvec<float> V(8); 			                  // create a vector
 		// simple one shot write that computes current dimensions and saves matrix
@@ -39,6 +40,7 @@ int main(){
 							 // is used as unit chunk
 		);
 	}
+
 	{ // CREATE - READ: we're reading back the dataset created in the very first step
 	  // note that data is only data, can be reshaped, cast to any format and content be modified through filtering 
 		auto fd = h5::open("linalg.h5", H5F_ACC_RDWR,           // you can have multiple fd open with H5F_ACC_RDONLY, but single write
@@ -46,7 +48,9 @@ int main(){
 	}
 	{ // READ: 
 		Matrix<short> M = h5::read<Matrix<short>>("linalg.h5","create then write"); // read entire dataset back with a single read
+		std::cout << M << std::endl;
 	}
+	
 	{ // fixed/compile time  length arrays/matrices upto size 4 
 		auto fd = h5::open("linalg.h5", H5F_ACC_RDWR);
 		ArrayX1D<double> x1d = ArrayX1D<double>::Zero(10);

@@ -58,5 +58,11 @@ namespace h5 { namespace impl {
 	template<class T, class F> struct conditional<false, T, F> { typedef F type; };
 }}
 
+namespace h5 {
+	// type-name helper class for compile time id and printout 
+	template <class T> struct name {
+		static constexpr char const * value = "n/a";
+	};
 
+}
 #endif

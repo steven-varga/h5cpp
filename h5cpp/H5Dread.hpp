@@ -58,7 +58,8 @@ namespace h5 {
 	   	int rank = h5::get_simple_extent_ndims( file_space );
 
 		if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
-		h5::dt_t mem_type { utils::h5type<T>()};
+		using element_t = typename impl::decay<T>::type;
+		h5::dt_t<element_t> mem_type;
 		h5::sp_t mem_space = h5::create_simple( size );
 		h5::select_all( mem_space );
 		h5::select_hyperslab( file_space, offset, stride, count, block);
@@ -126,13 +127,13 @@ namespace h5 {
 	// passed 'ref' contains memory size and element type, let's extract them
 	// and delegate forward  
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
-		using element_type    = typename utils::base<T>::type;
+		using element_type = typename impl::decay<T>::type;
 
 		static_assert( !tcount::present,
 				"h5::count_t{ ... } is already present when passing arg by reference, did you mean to pass by pointer?" );
 		// get 'count' and underlying type 
-		h5::count_t count = utils::get_count(ref);
-		element_type* ptr = utils::get_ptr(ref);
+		h5::count_t count = impl::size(ref);
+		element_type* ptr = impl::data(ref);
 		read<element_type>(ds, ptr, count, args...);
 	}
  	/** \func_read_hdr
@@ -185,7 +186,7 @@ namespace h5 {
 	// update the content by we're good to go, since stride and offset can be processed in the 
 	// update step
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
-		using element_type    = typename utils::base<T>::type;
+		using element_type    = typename impl::decay<T>::type;
 
 		h5::count_t size;
 		const h5::count_t& count = arg::get(size, args...);
@@ -199,8 +200,9 @@ namespace h5 {
 			for(int i=0;i<count.rank;i++) size[i] = count[i] * block[i];
 			size.rank = count.rank;
 		}
-		T ref = utils::ctor<T>( count.rank, *size );
-		element_type *ptr = utils::get_ptr( ref );
+
+		T ref = impl::get<T>::ctor( count );
+		element_type *ptr = impl::data( ref );
 
 		read<element_type>(ds, ptr, count, args...);
 		return ref;

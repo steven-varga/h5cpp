@@ -25,6 +25,7 @@ int main(){
 
 		h5::awrite(ds,"att_02", 42 );
 	}
+
 	{ // open + write -> attribute size must not change
 		arma::mat att_01 = arma::ones(3,4);
 		h5::awrite(ds,"att_01", att_01 );
