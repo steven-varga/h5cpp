@@ -8,21 +8,6 @@ Easy to use  [HDF5][hdf5] **C++11** compiler assisted templates for HDF5
 
 [Hierarchical Data Format][hdf5] prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and stream operations on standardized or custom binary/text objects. Scientific computing platforms such as Python, R, Matlab, Fortran,  Julia [and many more...] come with the necessary libraries to read write HDF5 dataset. This edition simplifies interactions with [popular linear algebra libraries][304], provides [compiler assisted seamless object persistence][303], Standard Template Library support and equipped with novel [error handling architecture][400].
 
-NEWS:
-------------
-- **2018-dec-??** public AWS image for your convenience
-- **2018-dec-??** Continuous Integration for Linux and Windows
-- **2018-oct-??** attributes with operators: ds["some attribute"] = arma::vec{1,2,3};
-- **2018-oct-21** attributes: acreate, awrite, aread added for scalars, vectors, matrices and cubes
-- **2018-oct-??** replaced macro meta-programming with template meta-programming
-- **2018-oct-21** comprehensive [error handling][400] system added
-- **2018-aug-13** The backporting of the template library to c++11 has been completed the templates are pure c++11 with no higher requirements. 
-- **2018-aug-01** [H5CPP presentation at Chicago C++ UsersGroup][200] with David Pearah and Gerd Heber, HDFGroup
-- **2018-jul-30** [HDFGroup Blog post: ][401] the short story of h5cpp
-- **2018-jun-01** pythonic syntax and h5cpp compiler prototyped with c++17 requirements
-- **2018-apr-12** cooperation with Gerd Heber, HDFGroup
-- **2010-jan-06** approach HDFGroup with the idea of h5cpp template library for modern C++
-
 
 How simple can it get?
 ```cpp
@@ -281,16 +266,16 @@ while( having_a_good_day ){
 [105]: http://dlib.net/linear_algebra.html
 [106]: https://bitbucket.org/blaze-lib/blaze
 [107]: https://github.com/wichtounet/etl
-[200]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_profiling_README.html
-[201]: http://h5cpp.ca/examples.html
-[202]: http://h5cpp.ca/modules.html
+[200]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_profiling_README.html
+[201]: http://h5cpp.org/examples.html
+[202]: http://h5cpp.org/modules.html
 [305]: md__home_steven_Documents_projects_h5cpp_docs_pages_compiler_trial.html#link_try_compiler
 [400]: https://www.meetup.com/Chicago-C-CPP-Users-Group/events/250655716/
 [401]: https://www.hdfgroup.org/2018/07/cpp-has-come-a-long-way-and-theres-plenty-in-it-for-users-of-hdf5/
-[999]: http://h5cpp.ca/cgi/redirect.py
-[301]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_conversion.html
-[302]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_exceptions.html
-[303]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_compiler.html
-[304]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_linalg.html
-[305]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_install.html
-[400]: http://h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_error_handling.html
+[999]: http://h5cpp.org/cgi/redirect.py
+[301]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_conversion.html
+[302]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_exceptions.html
+[303]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_compiler.html
+[304]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_linalg.html
+[305]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_install.html
+[400]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_error_handling.html

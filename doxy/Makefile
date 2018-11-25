@@ -8,8 +8,8 @@ all: Doxyfile
 test:
 
 upload: all
-	rsync -a  ../docs/html/ osaka.vargaconsulting.ca:h5cpp.ca
-	rsync -a  ../docs/pix/ osaka.vargaconsulting.ca:h5cpp.ca/pix
+	rsync -a  ../docs/html/ osaka.vargaconsulting.ca:h5cpp.org
+	rsync -a  ../docs/pix/ osaka.vargaconsulting.ca:h5cpp.org/pix
 view: all
 	xdg-open ../docs/html/index.html
 clean:

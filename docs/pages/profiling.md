@@ -35,8 +35,8 @@ such as Son of Grid Engine speeds things up.
 
 
 [1]:  https://github.com/gperftools/gperftools
-[40]: http://h5cpp.ca/pix/perf-struct.png 
-[41]: http://h5cpp.ca/pix/perf-stl.png
-[42]: http://h5cpp.ca/pix/perf-armadillo.png 
+[40]: http://h5cpp.org/pix/perf-struct.png 
+[41]: http://h5cpp.org/pix/perf-stl.png
+[42]: http://h5cpp.org/pix/perf-armadillo.png 
 
 [50]: https://www.hdfgroup.org/

@@ -154,6 +154,24 @@ in time most of HDF5 CAPI diagnostics/information calls will be added.
 	}
 ```
 
+stream operators {#link_stream_operators}
+==========================================
+Some objects implement `operator<<` to furnish you with diagnostics. In time all objects will the functionality added, for now
+only the following objects:
+
+* h5::current_dims_t
+* h5::max_dim_t
+* h5::chunk_t
+* h5::offset_t
+* h5::stride_t
+* h5::count_t
+* h5::block_t
+* h5::dims_t
+* h5::dt_t
+* h5::pt_t
+* h5::sp_t
+* h5::
+
 
 [1]: https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#S-errors
 [2]: https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#Re-exception-types

@@ -40,13 +40,13 @@ Steven Varga is an independent researcher in machine learning and computational 
 
 
 [1]: http://github.com/steven-varga/h5cpp11
-[2]: http://h5cpp.ca
+[2]: http://h5cpp.org
 [3]: https://github.com/gheber
 [4]: http://github.com/steven-varga/h5cpp
-[5]: http://h5cpp.ca/compiler
+[5]: http://h5cpp.org/compiler
 [6]: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
-[10]: http://sandbox.h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_conversion.html#link_raii_idiom
-[11]: http://sandbox.h5cpp.ca/md__home_steven_Documents_projects_h5cpp_docs_pages_conversion.html#link_conversion_policy
+[10]: http://sandbox.h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_conversion.html#link_raii_idiom
+[11]: http://sandbox.h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_conversion.html#link_conversion_policy
 [20]: https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern
 [21]: https://en.wikipedia.org/wiki/Virtual_method_table
 [22]: https://en.wikipedia.org/wiki/Copy_elision
@@ -55,7 +55,7 @@ Steven Varga is an independent researcher in machine learning and computational 
 [30]:https://support.hdfgroup.org/HDF5/doc/cpplus_RM/index.html
 [40]: https://thrift.apache.org/
 [41]: https://en.wikipedia.org/wiki/Protocol_Buffers
-[50]: http://h5cpp.ca/compound_8c-example.html
-[100]: http://h5cpp.ca/cgi/redirect.py
+[50]: http://h5cpp.org/compound_8c-example.html
+[100]: http://h5cpp.org/cgi/redirect.py
 
 
