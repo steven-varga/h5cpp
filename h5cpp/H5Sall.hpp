@@ -18,31 +18,33 @@ namespace h5{ namespace impl {
 			for(int i=0; i<rank; i++) data[i] = *(list.begin() + i);
 		}
 		// support linalg objects upto 3 dimensions or cubes
-		array( const std::array<size_t,0> l ) : rank(0), data{} {}
-		array( const std::array<size_t,1> l ) : rank(1), data{l[0]} {}
-		array( const std::array<size_t,2> l ) : rank(2), data{l[0],l[1]} {}
-		array( const std::array<size_t,3> l ) : rank(3), data{l[0],l[1],l[2]} {}
+		template<class A> array( const std::array<A,0> l ) : rank(0), data{} {}
+		template<class A> array( const std::array<A,1> l ) : rank(1), data{l[0]} {}
+		template<class A> array( const std::array<A,2> l ) : rank(2), data{l[0],l[1]} {}
+		template<class A> array( const std::array<A,3> l ) : rank(3), data{l[0],l[1],l[2]} {}
 		// automatic conversion to std::array means to collapse tail dimensions
-		operator const std::array<size_t,0> () const {
+		template<class A>
+		operator const std::array<A,0> () const {
 			return {};
 		}
-		operator const std::array<size_t,1> () const {
+		template<class A>
+		operator const std::array<A,1> () const {
 			size_t a = data[0];
-			for(int i=1;i<rank;i++) a*=data[i]; 
+			for(int i=1;i<rank;i++) a*=data[i];
 			return {a};
 		}
-		operator const std::array<size_t,2> () const {
+		template<class A>
+		operator const std::array<A,2> () const {
 			size_t a,b;	a = data[0]; b = data[1];
 			for(int i=2;i<rank;i++) b*=data[i];
 			return {a,b};
 		}
-		operator const std::array<size_t,3> () const {
+		template<class A>
+		operator const std::array<A,3> () const {
 			size_t a,b,c;	a = data[0]; b = data[1]; c = data[2];
 			for(int i=3;i<rank;i++) c*=data[i];
 			return {a,b,c};
 		}
-
-
 
 		array() : rank(0){};
 		array( array&& arg ) = default;

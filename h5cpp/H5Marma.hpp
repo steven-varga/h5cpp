@@ -31,7 +31,7 @@ namespace h5 { namespace impl {
 	// get read access to datastaore
 	template <class Object, class T = typename impl::decay<Object>::type> inline
 	typename std::enable_if< h5::arma::is_supported<Object>::value,
-	const T*>::type data(const Object& ref ){
+	const T*>::type data( const Object& ref ){
 			return ref.memptr();
 	}
 

@@ -24,7 +24,10 @@ namespace h5 { namespace impl {
 }}
 
 
-namespace h5{
+namespace h5 {
+	inline ::hid_t get_access_plist( const ds_t& ds ){
+		return ds.prop;
+	}
 	template<class T> 
 	inline bool is_valid( const T& v ){
 		int val;
@@ -47,6 +50,14 @@ namespace h5{
 		current_dims.rank = max_dims.rank = rank;
 		return static_cast<unsigned>( rank );
 	}
+	inline unsigned get_simple_extent_dims( const h5::sp_t&file_space, hsize_t* current_dims, hsize_t* max_dims ){
+		int rank;
+		H5CPP_CHECK_NZ( (rank = H5Sget_simple_extent_dims(static_cast<hid_t>( file_space ), current_dims, max_dims)),
+				std::runtime_error, h5::error::msg::get_simple_extent_dims );
+		return static_cast<unsigned>( rank );
+	}
+
+
 	template <class T>
 	inline unsigned get_simple_extent_dims( const h5::sp_t& file_space, T& current_dims ){
 		int rank;
@@ -64,15 +75,28 @@ namespace h5{
 	}
 
 
-	inline h5::dcpl_t create_dcpl( const h5::ds_t& ds ){
+	inline h5::dcpl_t get_dcpl( const h5::ds_t& ds ){
 		hid_t dcpl;
 		H5CPP_CHECK_NZ(
 				(dcpl =  H5Dget_create_plist( static_cast<hid_t>(ds))),std::runtime_error, h5::error::msg::create_dcpl );
 		return h5::dcpl_t{ dcpl };
 	}
+	inline h5::dapl_t get_dapl( const h5::ds_t& ds ){
+		hid_t dapl;
+		H5CPP_CHECK_NZ(
+				(dapl =  H5Dget_access_plist( static_cast<hid_t>(ds))),std::runtime_error, h5::error::msg::create_dcpl );
+		return h5::dapl_t{ dapl };
+	}
 
-	inline void get_chunk_dims( const h5::dcpl_t& dcpl,  h5::chunk_t& chunk_dims ){
-		H5CPP_CHECK_NZ( H5Pget_chunk( static_cast<hid_t>(dcpl), H5CPP_MAX_RANK, *chunk_dims ), std::runtime_error,
+
+	inline int get_chunk_dims( const h5::dcpl_t& dcpl,  h5::chunk_t& chunk_dims ){
+		int rank;
+		H5CPP_CHECK_NZ( (rank = H5Pget_chunk( static_cast<hid_t>(dcpl), H5CPP_MAX_RANK, *chunk_dims )), std::runtime_error,
+					h5::error::msg::get_chunk_dims );
+		return rank;
+	}
+	inline void get_chunk_dims( const h5::dcpl_t& dcpl,  hsize_t* chunk_dims ){
+		H5CPP_CHECK_NZ( H5Pget_chunk( static_cast<hid_t>(dcpl), H5CPP_MAX_RANK, chunk_dims ), std::runtime_error,
 					h5::error::msg::get_chunk_dims );
 	}
 	inline h5::chunk_t get_chunk_dims( const h5::dcpl_t& dcpl ){
@@ -120,8 +144,9 @@ namespace h5{
 	}
 	template<class T>
 	inline void select_hyperslab(const h5::sp_t& sp, const T& offset, const h5::count_t& count ){
+		hsize_t cnt[] =  {1,1,1,1,1,1,1,1};
 		H5CPP_CHECK_NZ(
-				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, NULL, *count, NULL),
+				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, NULL, cnt, *count),
 			   std::runtime_error,	h5::error::msg::select_hyperslab);
 	}
 	inline void select_hyperslab(const h5::sp_t& sp, const h5::offset_t& offset, const h5::stride_t& stride,
@@ -133,6 +158,10 @@ namespace h5{
 	inline void set_extent(const h5::ds_t& ds, const h5::current_dims_t& dims ){
 		H5CPP_CHECK_NZ(
 				H5Dset_extent( static_cast<hid_t>(ds), *dims ),std::runtime_error,	 h5::error::msg::set_extent);
+	}
+	inline void set_extent(const h5::ds_t& ds, const hsize_t* dims ){
+		H5CPP_CHECK_NZ(
+				H5Dset_extent( static_cast<hid_t>(ds), dims ),std::runtime_error,	 h5::error::msg::set_extent);
 	}
 	template <class T>
 	inline void writeds(const h5::ds_t& ds,
@@ -156,7 +185,27 @@ namespace h5{
 		H5CPP_CHECK_NZ(( ds = H5Dcreate2( static_cast<hid_t>(fd), path.data(), type, static_cast<hid_t>(sp),
 								static_cast<hid_t>(lcpl), static_cast<hid_t>(dcpl), static_cast<hid_t>(dapl) )),
 			   std::runtime_error,	h5::error::msg::create_dataset );
-		return h5::ds_t{ds};
+		//FIXME: hack to carry prop over
+		h5::ds_t ds_{ds};
+
+		switch( H5Pget_layout(static_cast<::hid_t>( dcpl)) ){
+			case H5D_COMPACT: break;
+			case H5D_CONTIGUOUS: break;
+			case H5D_CHUNKED:
+				if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
+					// grab pointer to uninitialized pipeline
+					h5::impl::pipeline_t<impl::basic_pipeline_t>* ptr;
+					H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGPUT, &ptr);
+					hid_t type_id = H5Dget_type( static_cast<::hid_t>(ds) );
+					size_t element_size = H5Tget_size( type_id );
+					ptr->set_cache(dcpl, element_size);
+				}
+				break;
+			case H5D_VIRTUAL: break;
+		}
+
+		ds_.prop = static_cast<::hid_t>( dapl );
+		return ds_;
 	}
 
 }
@@ -164,13 +213,15 @@ namespace h5{
 template <class T>
 inline std::ostream& operator<<(std::ostream& os, const h5::impl::array<T>& arr){
 	os << "{";
+	if( arr.rank )
 		for(int i=0;i<arr.rank; i++){
 			char sep = i != arr.rank - 1  ? ',' : '}';
 			if( arr[i] < std::numeric_limits<hsize_t>::max() )
 				os << arr[i] << sep;
 			else
-				os << "max" << sep;
+				os << "inf" << sep;
 		}
+	else os << "}";
 	return os;
 }
 
@@ -183,6 +234,7 @@ std::ostream& operator<<(std::ostream &os, const h5::sp_t& sp) {
 	#if H5_VERSION_GE(1,10,0)
 
 	#endif
+	h5::mute();
 
 	h5::offset_t start,end;
 	h5::current_dims_t current_dims;
@@ -200,16 +252,17 @@ std::ostream& operator<<(std::ostream &os, const h5::sp_t& sp) {
 
 	h5::impl::unique_ptr<hsize_t> buffer{
 			static_cast<hsize_t*>( std::calloc( ncoordinates, sizeof(hsize_t))) };
-	H5CPP_CHECK_NZ( H5Sget_select_hyper_blocklist(id, 0, nblocks, buffer.get() ), std::runtime_error,	
-			"couldn't retrieve selected block");
-	os << "[selected block count]\t" << nblocks <<std::endl;
-	os << "[selected blocks]\t";
-	for( int i=0; i<nblocks; i++){
-		os << "[{";
-		for( int j=0; j<rank; j++) os << *( buffer.get() + i*2*rank+j ) << (j < rank-1 ? "," : "}{");
-		for( int j=rank; j<2*rank; j++) os << *( buffer.get() + i*2*rank+j ) << ( j < 2*rank-1 ? "," : "}");
-		os << "] ";
+	if( H5Sget_select_hyper_blocklist(id, 0, nblocks, buffer.get() ) >= 0   ){
+		os << "[selected block count]\t" << nblocks <<std::endl;
+		os << "[selected blocks]\t";
+		for( int i=0; i<nblocks; i++){
+			os << "[{";
+			for( int j=0; j<rank; j++) os << *( buffer.get() + i*2*rank+j ) << (j < rank-1 ? "," : "}{");
+			for( int j=rank; j<2*rank; j++) os << *( buffer.get() + i*2*rank+j ) << ( j < 2*rank-1 ? "," : "}");
+			os << "] ";
+		}
 	}
+	h5::unmute();
 	return os;
 }
 #endif

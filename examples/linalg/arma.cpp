@@ -32,9 +32,9 @@ int main(){
 	  // note that data is only data, can be reshaped, cast to any format and content be modified through filtering 
 		auto fd = h5::open("arma.h5", H5F_ACC_RDWR,           // you can have multiple fd open with H5F_ACC_RDONLY, but single write
 				h5::fclose_degree_strong | h5::sec2); 		   // and able to set various properties  
-		//h5::ds_t ds = h5::create<float>(fd,"dataset", h5::current_dims{3,2}, h5::fill_value<float>(NAN));  // create dataset, default to NaN-s
-		//auto M  = h5::read<arma::mat>( fd,"dataset" ); 				   // read data back as matrix
-		//M.print();
+		h5::ds_t ds = h5::create<float>(fd,"dataset", h5::current_dims{3,2}, h5::fill_value<float>(NAN));  // create dataset, default to NaN-s
+		auto M  = h5::read<arma::mat>( fd,"dataset" ); 				   // read data back as matrix
+		M.print();
 	}
 	{ // READ: 
 		arma::mat M = h5::read<arma::mat>("arma.h5","create then write"); // read entire dataset back with a single read

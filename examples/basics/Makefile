@@ -8,7 +8,7 @@
 
 apps = basics
 
-CXXFLAGS =  -std=c++17 -Wno-deprecated
+CXXFLAGS =  -std=c++11 -Wno-deprecated
 LIBS =  -lhdf5  -lz -ldl -lm
 
 test: $(apps)

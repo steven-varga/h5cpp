@@ -6,7 +6,7 @@
 #  _____________________________________________________________________________
 
 CXXFLAGS =  -std=c++11  -I/usr/local/include -I/usr/local/h5cpp-llvm
-LIBS =  -lhdf5  -lz -ldl -lm
+LIBS =  -lhdf5 -lhdf5_hl  -lz -ldl -lm -lblas -llapack
 
 test: packettable
 	./packettable
@@ -29,7 +29,7 @@ packettable: packettable.o
 	$(CXX) $^ $(LIBS) -o $@	
 
 clean:
-	@$(RM) *.o *.h5 $(apps) generated.h packettable
+	@$(RM) *.o *.h5 $(apps)  packettable
 
 .PHONY: test
 

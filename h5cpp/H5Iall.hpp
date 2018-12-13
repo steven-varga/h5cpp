@@ -19,6 +19,8 @@ namespace h5 { namespace impl {
 	using capi_close_t = ::herr_t(*)(::hid_t);
 	using defprop_t = ::hid_t(*)();
 
+	using prop_list_t = std::vector<int>;
+
 	template<class hid, class... args_tt>
 	struct capi_t {
 		using fn_t = herr_t (*)(::hid_t, args_tt... );
@@ -31,7 +33,7 @@ namespace h5 { namespace impl { namespace detail {
 	namespace hdf5 { // fair use of copyrighted HDF5 symbol to ease on reading
 		constexpr int any 		= 0x00;
 		constexpr int property 	= 0x01;
-		constexpr int type = 0x02;
+		constexpr int type 		= 0x02;
 	}
 
 	// base template with T type, the capi_close function, and 
@@ -63,7 +65,7 @@ namespace h5 { namespace impl { namespace detail {
 		//TODO: have default constructor such that can initialize properties
 		// see 'create.hpp line 164:  h5::dcpl_t dcpl = h5::dcpl_t {H5Pcreate(H5P_DATASET_CREATE)};
 		// which is awkward
-		hid_t() : handle(H5I_UNINIT){};
+		hid_t() : handle(H5I_UNINIT),prop{H5I_UNINIT}{};
 		hid_t( const hid_t& ref) {
 			this->handle = ref.handle;
 			if( H5Iis_valid( handle ) )
@@ -85,6 +87,7 @@ namespace h5 { namespace impl { namespace detail {
 			if( H5Iis_valid( handle ) )
 				err = capi_close( handle );
 		}
+		::hid_t prop;
 		private:
 		::hid_t handle;
 	};

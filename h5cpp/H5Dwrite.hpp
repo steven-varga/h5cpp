@@ -14,11 +14,10 @@ namespace h5 {
 	template <class T>
 	void write( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, const T* ptr  ){
 		H5CPP_CHECK_PROP( dxpl, h5::error::io::dataset::write, "invalid data transfer property" );
-
 		using element_t = typename h5::impl::decay<T>::type;
 		h5::dt_t<element_t> type;
 		H5CPP_CHECK_NZ(
-			H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
+				H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
 							h5::error::io::dataset::write, h5::error::msg::write_dataset);
 	}
  	/** \func_write_hdr
@@ -27,6 +26,7 @@ namespace h5 {
  	*/ 
 	template <class T, class... args_t>
 	h5::ds_t write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ) try {
+
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
@@ -35,22 +35,30 @@ namespace h5 {
 		auto tuple = std::forward_as_tuple(args...);
 		const h5::count_t& count = std::get<tcount::value>( tuple );
 		const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
-
 		h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
+
 		int rank = h5::get_simple_extent_ndims( file_space );
 		h5::offset_t  default_offset{0,0,0,0,0,0,0};
 		const h5::offset_t& offset = arg::get( default_offset, args...);
 		h5::stride_t  default_stride{1,1,1,1,1,1,1};
 		const h5::stride_t& stride = arg::get( default_stride, args...);
 		h5::block_t  default_block{1,1,1,1,1,1,1};
-			const h5::block_t& block = arg::get( default_block, args...);
- 
+		const h5::block_t& block = arg::get( default_block, args...);
+
 		hsize_t size = 1;for(int i=0;i<rank;i++) size *= count[i] * block[i];
-		h5::sp_t mem_space = h5::create_simple( size );
-		h5::select_all( mem_space );
-		h5::select_hyperslab( file_space, offset, stride, count, block);
-		// this can throw exception
-		h5::write<T>(ds, mem_space, file_space, dxpl, ptr);
+		hid_t dapl = h5::get_access_plist( ds );
+
+		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
+			h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
+			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGPUT, &filters);
+			filters->write(ds, offset, stride, block, count, dxpl, ptr);
+		}else{
+			h5::sp_t mem_space = h5::create_simple( size );
+			h5::select_all( mem_space );
+			h5::select_hyperslab( file_space, offset, stride, count, block);
+			// this can throw exception
+			h5::write<T>(ds, mem_space, file_space, dxpl, ptr);
+		}
 		return ds;
 	} catch ( const std::exception& err ){
 		throw h5::error::io::dataset::write( err.what() );
@@ -99,7 +107,8 @@ namespace h5 {
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
-		using tblock = typename arg::tpos<const h5::block_t&,const args_t&...>;
+		using tblock  = typename arg::tpos<const h5::block_t&,const args_t&...>;
+		using tdapl   = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
 
 		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
@@ -125,12 +134,13 @@ namespace h5 {
 			}
 		}
 		const h5::current_dims_t& current_dims  = arg::get(def_current_dims, args... );
+		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
 
 		h5::mute();
 		//NOTE: this call is unchecked on purpose, return value -1 means the path doesn't exist along to 
 		//queried leaf node. The missing path will be created by h5::create 
 		h5::ds_t ds = (H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT ) > 0) ? // will throw error
-			h5::open( fd, dataset_path, h5::default_dapl) : h5::create<T>(fd, dataset_path, args..., current_dims );
+			h5::open( fd, dataset_path, dapl) : h5::create<T>(fd, dataset_path, args..., current_dims );
 		h5::unmute();
  		h5::write<T>(ds, ptr,  args...);
 		return ds;
@@ -147,6 +157,7 @@ namespace h5 {
 		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
 		using tblock = typename arg::tpos<const h5::block_t&,const args_t&...>;
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
+		using tdapl   = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
 
 		int rank = impl::rank<T>::value;
 
@@ -176,11 +187,14 @@ namespace h5 {
 			}
 		}
 		const h5::current_dims_t& current_dims  = arg::get(def_current_dims, args... );
+		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+
 		h5::mute();
+
 		//NOTE: this call is unchecked on purpose, return value -1 means the path doesn't exist along to 
 		//queried leaf node. The missing path will be created by h5::create 
 		h5::ds_t ds = ( H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT ) > 0 ) ?
-			h5::open( fd, dataset_path, h5::default_dapl) : h5::create<element_t>(fd, dataset_path, args..., current_dims );
+			h5::open( fd, dataset_path, dapl) : h5::create<element_t>(fd, dataset_path, args..., current_dims );
 		h5::unmute();
  		return h5::write<T>(ds, ref,  args...);
 	}

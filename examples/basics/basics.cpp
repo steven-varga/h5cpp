@@ -39,8 +39,8 @@ int main(){
 		h5::dcpl_t dcpl1 = h5::chunk{12} | h5::gzip{2};
 		h5::dcpl_t dcpl = dcpl0 | dcpl1;
 		dcpl0 |= dcpl1;
-		H5CPP_CHECK_EQ( sizeof(dcpl) == sizeof(hid_t), 
-				std::runtime_error, "HDF5 hid_t are not binary equivalent!!!" )
+		//H5CPP_CHECK_EQ( sizeof(dcpl) == sizeof(hid_t), 
+		//		std::runtime_error, "HDF5 hid_t are not binary equivalent!!!" )
 	}
 	// error handling
 	{
@@ -48,7 +48,7 @@ int main(){
 		try {
 			h5::dcpl_t dcpl_0 = h5::gzip{79798}; // invalid argument
 		} catch ( const h5::error::any& err ){
-			std::cerr << err.what() <<std::endl;
+			std::cerr << "THIS ERROR is on PURPOSE: " << err.what() <<std::endl;
 		}
 		h5::unmute();
 	}
@@ -90,16 +90,17 @@ int main(){
 				h5::chunk{2,3} | h5::fill_value<short>{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9}, // optional dcpl
 				h5::default_dapl ); // optional dapl
 		//** lcpl controls how path (or hdf5 name: links) created, `h5::create_path` makes sure that sub paths are created  
-		h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value<short>{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9};
+		h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value<short>{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{2};
 		// same as above, default values implicit, dcpl explicit
 		auto ds_1 = h5::create<short>(fd,"/type/short/tree_1", h5::current_dims{10,20}, h5::max_dims{10,H5S_UNLIMITED}, dcpl);
 		// same as above, default values explicit
 		auto ds_2 = h5::create<short>(fd,"/type/short/tree_2", h5::current_dims{10,20}, h5::max_dims{10,H5S_UNLIMITED},
 				h5::default_lcpl, dcpl, h5::default_dapl);
 		// if only max_dims specified, the current dims is set to max_dims or zero if the dimension is H5S_UNLIMITED
-		// making it suitable storage for packet table 
+		// making it suitable storage for packet table, compression not specified implies no compression
+		// gzip{0} == lowest level of compression!!!
 		auto ds_3 = h5::create<short>(fd,"/type/short/max_dims", h5::max_dims{10,H5S_UNLIMITED}, // [10 X 0]  
-			  h5::chunk{10,1} | h5::gzip{9} );
+			  h5::chunk{10,1}  );
 	}
 
 }

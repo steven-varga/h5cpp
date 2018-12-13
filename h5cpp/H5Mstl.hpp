@@ -31,8 +31,6 @@ namespace h5 { namespace impl {
 	template <class T> struct decay<std::vector<T*>>{ typedef T* type; };
 	template <class T> struct decay<std::vector<T>>{ typedef T type; };
 
-
-
 	// helpers
 	template <class T>
 		using is_scalar = std::integral_constant<bool,
@@ -48,7 +46,7 @@ namespace h5 { namespace impl {
 	template<class T> struct rank<std::vector<T>>: public std::integral_constant<size_t,1>{};
 
 	// 3.) read access
-	template <class T> inline typename std::enable_if<std::is_integral<T>::value,
+	template <class T> inline typename std::enable_if<std::is_integral<T>::value || std::is_pod<T>::value,
 		const T*>::type data( const T& ref ){ return &ref; }
 	template<class T> inline typename std::enable_if< impl::is_scalar<T>::value,
 		const T*>::type data( const std::initializer_list<T>& ref ){ return ref.begin(); }

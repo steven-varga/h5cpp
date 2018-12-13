@@ -10,6 +10,17 @@
 #ifndef H5CPP_MAX_RANK
 	#define H5CPP_MAX_RANK 7 //< maximum dimensions of stored arrays
 #endif
+
+#ifndef H5CPP_MAX_FILTER
+	#define H5CPP_MAX_FILTER 16 //< maximum number of filters in a chain
+#endif
+#ifndef H5CPP_MAX_FILTER_PARAM
+	#define H5CPP_MAX_FILTER_PARAM 16 //< maximum number of filters in a chain
+#endif
+#ifndef H5CPP_MEM_ALIGNMENT
+	#define H5CPP_MEM_ALIGNMENT 64 //< maximum number of filters in a chain
+#endif
+
 #ifndef H5CPP_NO_COMPRESSION 
 	#define H5CPP_NO_COMPRESSION 0 //< maximum dimensions of stored arrays
 #endif
@@ -43,6 +54,18 @@
 	#define H5CPP_ERROR_MSG( msg ) std::string( __FILE__ ) + " line#  " + std::to_string( __LINE__ ) + " : " + msg
 #endif
 
+#ifndef H5CPP_ERROR_MSG
+	#define H5CPP_ERROR_MSG( msg ) std::string( __FILE__ ) + " line#  " + std::to_string( __LINE__ ) + " : " + msg
+#endif
+
+// detecting c++17 if constexpr cond ( ... ){} 
+#ifdef __cpp_if_constexpr
+	#define h5cpp__constexpr constexpr
+	#define h5cpp__assert( condition, msg ) static_assert( condition, msg )
+#else
+	#define h5cpp__constexpr
+	#define h5cpp__assert( condition, msg ) if( !condition ) throw std::runtime_error( "ERROR: "  msg )
+#endif
 
 
 #define H5CPP_CHECK_EQ( call, exception, msg ) if( call == 0 ) throw exception( H5CPP_ERROR_MSG( msg ));

@@ -107,6 +107,11 @@ namespace h5 { namespace impl {
 			: base_t( std::make_tuple( values.size(), this->values) ) {
 			std::copy( std::begin(values), std::end(values), this->values);
 		}
+		template <class T, size_t N>
+		aprop_t( std::array<T,N> values )
+			: base_t( std::make_tuple( values.size(), this->values) ) {
+			std::copy( std::begin(values), std::end(values), this->values);
+		}
 		hsize_t values[H5CPP_MAX_RANK];
 		using type = phid_t;
 		using base_t =  prop_t<phid_t,init,capi,capi_call>;
@@ -216,11 +221,9 @@ const static h5::alloc_time alloc_time_early{H5D_ALLOC_TIME_EARLY};
 const static h5::alloc_time alloc_time_incr{H5D_ALLOC_TIME_INCR};
 const static h5::alloc_time alloc_time_late{H5D_ALLOC_TIME_LATE};
 const static h5::chunk_opts dont_filter_partial_chunks{H5D_CHUNK_DONT_FILTER_PARTIAL_CHUNKS};
-// DATA ACCESS PROPERTY LISTS
-using chunk_cache              = impl::fapl_call< impl::fapl_args<hid_t,size_t, size_t, double>,H5Pset_chunk_cache>;
-using efile_prefix             = impl::fapl_call< impl::fapl_args<hid_t,const char*>,H5Pset_efile_prefix>;
-using virtual_view             = impl::fapl_call< impl::fapl_args<hid_t,H5D_vds_view_t>,H5Pset_virtual_view>;
-using virtual_printf_gap       = impl::fapl_call< impl::fapl_args<hid_t,hsize_t>,H5Pset_virtual_printf_gap>;
+// DATA ACCESS PROPERTY LISTS: see H5Pdapl.hpp
+
+
 // DATA TRANSFER PROPERTY LISTS
 using buffer                   = impl::dxpl_call< impl::dxpl_args<hid_t,size_t,void*,void*>,H5Pset_buffer>;
 using edc_check                = impl::dxpl_call< impl::dxpl_args<hid_t,H5Z_EDC_t>,H5Pset_edc_check>;
@@ -280,9 +283,9 @@ namespace h5 { namespace notimplemented_yet { // OBJECT COPY PROPERTY LISTS
 	//MISSING:	using file_image_callbacks, H5_file_image_callbacks_t* >;
 }}
 
+
 namespace h5 {
 	const static h5::acpl_t acpl = static_cast<h5::acpl_t>( H5P_DEFAULT );
-	const static h5::dapl_t dapl = static_cast<h5::dapl_t>( H5P_DEFAULT );
 	const static h5::dcpl_t dcpl = static_cast<h5::dcpl_t>( H5P_DEFAULT);
 	const static h5::dxpl_t dxpl = static_cast<h5::dxpl_t>( H5P_DEFAULT );
 	const static h5::lcpl_t lcpl = h5::char_encoding{H5T_CSET_UTF8} | h5::create_intermediate_group{1};
@@ -290,7 +293,6 @@ namespace h5 {
 	const static h5::fcpl_t fcpl = static_cast<h5::fcpl_t>( H5P_DEFAULT );
 
 	const static h5::acpl_t default_acpl = static_cast<h5::acpl_t>( H5P_DEFAULT );
-	const static h5::dapl_t default_dapl = static_cast<h5::dapl_t>( H5P_DEFAULT );
 	const static h5::dcpl_t default_dcpl = static_cast<h5::dcpl_t>( H5P_DEFAULT );
 	const static h5::dxpl_t default_dxpl = static_cast<h5::dxpl_t>( H5P_DEFAULT );
 	const static h5::lcpl_t default_lcpl = h5::char_encoding{H5T_CSET_UTF8} | h5::create_intermediate_group{1};

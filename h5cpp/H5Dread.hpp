@@ -60,13 +60,19 @@ namespace h5 {
 		if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
 		using element_t = typename impl::decay<T>::type;
 		h5::dt_t<element_t> mem_type;
-		h5::sp_t mem_space = h5::create_simple( size );
-		h5::select_all( mem_space );
-		h5::select_hyperslab( file_space, offset, stride, count, block);
+		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
+			h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
+			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGPUT, &filters);
+			filters->write(ds, offset, stride, block, count, dxpl, ptr);
+		}else{
+			h5::sp_t mem_space = h5::create_simple( size );
+			h5::select_all( mem_space );
+			h5::select_hyperslab( file_space, offset, stride, count, block);
 
-		H5CPP_CHECK_NZ( H5Dread(
+			H5CPP_CHECK_NZ( H5Dread(
 					static_cast<hid_t>( ds ), static_cast<hid_t>(mem_type), static_cast<hid_t>(mem_space),
 					static_cast<hid_t>(file_space),	static_cast<hid_t>(dxpl), ptr ), h5::error::io::dataset::read, h5::error::msg::read_dataset);
+		}
 	} catch ( const std::runtime_error& err ){
 		throw h5::error::io::dataset::read( err.what() );
 	}

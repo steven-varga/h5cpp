@@ -27,9 +27,33 @@ namespace h5{
 
 		hid_t ds;
 	   	H5CPP_CHECK_NZ((
-			ds = H5Dopen( static_cast<hid_t>(fd), path.data(), static_cast<hid_t>(dapl))),
+			ds = H5Dopen2( static_cast<hid_t>(fd), path.data(), static_cast<hid_t>(dapl) )),
 				   							h5::error::io::dataset::open, h5::error::msg::open_dataset );
-     	return  h5::ds_t{ds};
+		// custom h5cpp specific C++ high throughpout filter
+		// is abstracted out and hidden under property list
+		// see: H5Pdapl.hpp and H5Pchunk.hpp for details
+		hid_t dcpl = H5Dget_create_plist( ds );
+
+		switch( H5Pget_layout(dcpl) ){
+			case H5D_COMPACT: break;
+			case H5D_CONTIGUOUS: break;
+			case H5D_CHUNKED:
+				if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
+					// grab pointer to uninitialized pipeline
+					h5::impl::pipeline_t<impl::basic_pipeline_t>* ptr;
+					H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGPUT, &ptr);
+					hid_t type_id = H5Dget_type( static_cast<::hid_t>(ds) );
+					size_t element_size = H5Tget_size( type_id );
+					ptr->set_cache(dcpl, element_size);
+				}
+				break;
+			case H5D_VIRTUAL: break;
+		}
+
+		h5::ds_t ds_{ds};
+		//FIXME: temporary carry dapl around
+		ds_.prop = static_cast<hid_t>( dapl );
+		return ds_;
     }
 }
 
