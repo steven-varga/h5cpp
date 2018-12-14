@@ -119,13 +119,26 @@ void>::type h5::pt_t::append( const T& ref ) try {
 	*current_dims += 1;
 	h5::set_extent(ds, current_dims);
 	auto ptr_ = impl::data( ref );
-	pipeline.write_chunk(offset,block_size, (void*) ptr_ );
+	auto dims_ = impl::size( ref );
+
+	switch( dims_.size() ){
+		case 1: // vector
+			;break;
+		case 2: //matrix
+			if( dims[0] * dims[1] * element_size == block_size ){
+				pipeline.write_chunk(offset, block_size, (void*) ptr_ );
+			}
+			break;
+		case 3: // cube
+			;break;
+		default:
+			throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("objects with rank > 2 are not supported... "));
+	}
+	//pipeline.write_chunk(offset,block_size, (void*) ptr_ );
 
 } catch( const std::runtime_error& err ){
 	throw h5::error::io::dataset::append( err.what() );
 }
-
-
 
 inline
 void h5::pt_t::flush(){

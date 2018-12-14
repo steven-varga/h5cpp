@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 	std::default_random_engine gen(rd());
     std::uniform_int_distribution<unsigned> dist(1, 200);
 
-	unsigned slices = 100, nrows=720, ncols=1280;
+	unsigned slices = 1000, nrows=720, ncols=1280;
 
 	std::array<unsigned,3> chunk{1,72,ncols};
 	std::array<unsigned,3>  dims{slices,nrows,ncols};
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 	// CREATE dataset
 	{
 	h5::ds_t ds = h5::create<unsigned>(fd,"movie"
-				,current_dims,max_dims, h5::chunk{chunk}  | h5::fill_value<unsigned>{0} );
+				,current_dims,max_dims, h5::chunk{chunk}  | h5::fill_value<unsigned>{0} | h5::fill_time{H5D_FILL_TIME_NEVER} );
 	}
 
 	{   std::cout << "HDF5 1.10.4 CAPI PIPELINE:\n";
@@ -75,12 +75,26 @@ int main(int argc, char **argv) {
 
 	{   std::cout << "HDF5 1.10.4 H5CPP APPEND: scalar values  directly into chunk buffer\n";
 
-		h5::pt_t pt = h5::create<unsigned>(fd,"append"
+		h5::pt_t pt = h5::create<unsigned>(fd,"append scalar"
 				,h5::max_dims{H5S_UNLIMITED,nrows,ncols}, h5::chunk{1,nrows,ncols}  | h5::fill_value<unsigned>{0} | h5::high_throughput );
-		// use part of the same memory, for details see armadillo advanced constructors
+
 		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 			for( int i=0; i < slices * nrows * ncols; i++)
-				h5::append<unsigned>(pt, ptr[i] );
+				h5::append(pt, ptr[i] );
+		std::chrono::system_clock::time_point stop = std::chrono::system_clock::now();
+
+		double running_time = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() ;
+		std::cout << running_time <<" throughput: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
+	}
+	{   std::cout << "HDF5 1.10.4 H5CPP APPEND: objects with matching chunk size, data directly written from object memory\n";
+
+		h5::pt_t pt = h5::create<unsigned>(fd,"append matrix"
+				,h5::max_dims{H5S_UNLIMITED,nrows,ncols}, h5::chunk{1,nrows,ncols}  | h5::fill_value<unsigned>{0} | h5::high_throughput );
+		// use part of the same memory, for details see armadillo advanced constructors
+		arma::Mat<unsigned> mat(ptr,ncols,nrows, false, true);
+		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+			for( int i=0; i < slices; i++)
+				h5::append(pt, mat );
 		std::chrono::system_clock::time_point stop = std::chrono::system_clock::now();
 
 		double running_time = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() ;

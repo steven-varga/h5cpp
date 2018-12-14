@@ -73,16 +73,17 @@ int main(){
 		size_t nrows = 3, ncols=13, nframes=7;
 		h5::pt_t pt = h5::create<double>(fd, "stream of matrices", // 1280 x 720
 				h5::max_dims{H5S_UNLIMITED,nrows,ncols},
-				h5::chunk{1,3,13} ); // chunk size controls h5::append internal cache size
+				// currently chunk dimensions must match object size
+				h5::chunk{1,nrows,ncols} ); // chunk size controls h5::append internal cache size
 		Matrix<double> M(nrows,ncols);
 		// paint matrix with a sequence -- arma::mat doesn't know iterators
 		int k=0;
 	   	for( int i=0; i<nrows; i++)
 			for(int j=0; j<ncols; j++) M(i,j) = ++k;
 		// actual performance: create 'movie' frame by frame
-		//for( int i = 1; i < nframes; i++){ 	//
-		//	h5::append( pt, M);  			// save it into file
-		//}
+		for( int i = 1; i < nframes; i++) 	//
+			h5::append( pt, M);  			// save it into file
+
 	}
 
 	/*
