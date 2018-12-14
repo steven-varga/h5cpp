@@ -58,8 +58,8 @@ int main(){
 	} catch ( const h5::error::any& e ){
 		std::cerr << "ERROR:" << e.what();
 	}
-	/*
-	// CONTAINERS
+
+	// CONTAINERS : WORK IN PROGRESS!!!
 	{ 	// packet table for a collection of matrices modelling a HD resolution of gray scale images
 		// c++ objects may be factored into:
 		// 1. information available compile time: underlying type or element_type, ... 
@@ -70,23 +70,21 @@ int main(){
 
 		// creates and transfers ownership to pt
 		//size_t nrows = 1280, ncols=720, nframes=25*60*1;
-		size_t nrows = 3, ncols=5, nframes=7;
+		size_t nrows = 3, ncols=13, nframes=7;
 		h5::pt_t pt = h5::create<double>(fd, "stream of matrices", // 1280 x 720
 				h5::max_dims{H5S_UNLIMITED,nrows,ncols},
-				h5::chunk{1,2,2}  // chunk size controls h5::append internal cache size
-			   	| h5::gzip{9} );
+				h5::chunk{1,3,13} ); // chunk size controls h5::append internal cache size
 		Matrix<double> M(nrows,ncols);
-//		arma::mat M(3,5), b(5,1);
-		std::cout << "\n[matrix]:\n";
+		// paint matrix with a sequence -- arma::mat doesn't know iterators
 		int k=0;
 	   	for( int i=0; i<nrows; i++)
 			for(int j=0; j<ncols; j++) M(i,j) = ++k;
-
-		for( int i = 1; i < nframes; i++){ 	//
-			h5::append( pt, M);  			// save it into file
-		}
+		// actual performance: create 'movie' frame by frame
+		//for( int i = 1; i < nframes; i++){ 	//
+		//	h5::append( pt, M);  			// save it into file
+		//}
 	}
-	*/
+
 	/*
 	{
 		h5::pt_t pt = h5::create<double>(fd, "stream of vectors", // 1280 x 720

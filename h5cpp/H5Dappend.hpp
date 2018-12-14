@@ -113,7 +113,14 @@ void>::type h5::pt_t::append( const T& ref ) try {
 
 template<class T> inline typename std::enable_if< !h5::impl::is_scalar<T>::value,
 void>::type h5::pt_t::append( const T& ref ) try {
-	;//std::cout <<"<0: not scalar>";
+	auto dims = impl::size( ref );
+
+	*offset = *current_dims;
+	*current_dims += 1;
+	h5::set_extent(ds, current_dims);
+	auto ptr_ = impl::data( ref );
+	pipeline.write_chunk(offset,block_size, (void*) ptr_ );
+
 } catch( const std::runtime_error& err ){
 	throw h5::error::io::dataset::append( err.what() );
 }

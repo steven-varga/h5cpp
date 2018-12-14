@@ -52,7 +52,18 @@ namespace h5 { namespace impl {
 		return {(hsize_t)ref.cols(), (hsize_t)ref.rows()};
 	}
 
-
+	/*rank:
+	// MATRICES:
+	template<class T,int R,int C,int MR=R,int MC=C>
+	inline struct rank<const ::Eigen::Matrix<T,R,C,::Eigen::RowMajor,MR,MC>> : public std::integral_constant<size_t,2>{};
+	template<class T,int R,int C,int MR=R,int MC=C>
+	inline struct rank<const ::Eigen::Matrix<T,R,C,::Eigen::ColMajor,MR,MC>> : public std::integral_constant<size_t,2>{};
+	// ARRAYS
+	template<class T,int R,int C,int MR=R,int MC=C>
+	inline struct rank<const ::Eigen::Array<T,R,C,::Eigen::RowMajor,MR,MC>> : public std::integral_constant<size_t,2>{};
+	template<class T,int R,int C,int MR=R,int MC=C>
+	inline struct rank<const ::Eigen::Array<T,R,C,::Eigen::ColMajor,MR,MC>> : public std::integral_constant<size_t,2>{};
+*/
 	// CTOR-s
 	// MATRICES
 	template<class T,int R,int C>

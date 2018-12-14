@@ -30,9 +30,7 @@ int main(int argc, char **argv) {
 	h5::offset_t offset{0,0,0};
 	size_t size = 1; for( auto n : dims ) size*=n;
 	size *= sizeof(unsigned);
-	
-	
-	
+
 	std::cout <<"\n------------------------ THROUGHPUT TEST ----------------------------\n";
 	std::cout <<"MEMORY SIZE of DATASET:" <<  size / 1e6 << "MB\n";
 	unsigned * ptr = static_cast<unsigned*>( malloc( size ) );
@@ -61,7 +59,7 @@ int main(int argc, char **argv) {
 		std::chrono::system_clock::time_point stop = std::chrono::system_clock::now();
 
 		double running_time = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() ;
-		std::cout << running_time <<" throughout: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
+		std::cout << running_time <<" throughput: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
 	}
 	{   std::cout << "HDF5 1.10.4 H5CPP HIGH THOUPUT PIPELINE:\n";
 		h5::ds_t ds = h5::open(fd,"movie", h5::high_throughput);
@@ -72,7 +70,21 @@ int main(int argc, char **argv) {
 		std::chrono::system_clock::time_point stop = std::chrono::system_clock::now();
 
 		double running_time = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() ;
-		std::cout << running_time <<" throughout: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
+		std::cout << running_time <<" throughput: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
+	}
+
+	{   std::cout << "HDF5 1.10.4 H5CPP APPEND: scalar values  directly into chunk buffer\n";
+
+		h5::pt_t pt = h5::create<unsigned>(fd,"append"
+				,h5::max_dims{H5S_UNLIMITED,nrows,ncols}, h5::chunk{1,nrows,ncols}  | h5::fill_value<unsigned>{0} | h5::high_throughput );
+		// use part of the same memory, for details see armadillo advanced constructors
+		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+			for( int i=0; i < slices * nrows * ncols; i++)
+				h5::append<unsigned>(pt, ptr[i] );
+		std::chrono::system_clock::time_point stop = std::chrono::system_clock::now();
+
+		double running_time = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() ;
+		std::cout << running_time <<" throughput: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
 	}
 
 	{   std::cout << "RAW  BINARY \n";
@@ -83,16 +95,16 @@ int main(int argc, char **argv) {
 		std::chrono::system_clock::time_point stop = std::chrono::system_clock::now();
 
 		double running_time = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() ;
-		std::cout << running_time <<" throughout: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
+		std::cout << running_time <<" throughput: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
 	}
-	
+
 	{   std::cout << "ARMA BINARY \n";
 		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 			cube.save("cube_arma",arma::arma_binary);
 		std::chrono::system_clock::time_point stop = std::chrono::system_clock::now();
 
 		double running_time = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() ;
-		std::cout << running_time <<" throughout: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
+		std::cout << running_time <<" throughput: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
 	}
 
 	free(ptr);
