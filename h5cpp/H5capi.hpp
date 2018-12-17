@@ -173,7 +173,6 @@ namespace h5 {
 				std::runtime_error,	h5::error::msg::write_dataset );
 	}
 
-
 	inline void set_chunk( h5::dcpl_t& dcpl, const h5::chunk_t& chunk ){
 		H5CPP_CHECK_NZ(
 				H5Pset_chunk(static_cast<::hid_t>(dcpl), chunk.rank, *chunk ), std::runtime_error,	 h5::error::msg::set_chunk );
@@ -183,7 +182,7 @@ namespace h5 {
 		  const h5::sp_t& sp, const h5::lcpl_t& lcpl, const h5::dcpl_t& dcpl, const h5::dapl_t& dapl ){
 		hid_t ds;
 		H5CPP_CHECK_NZ(( ds = H5Dcreate2( static_cast<hid_t>(fd), path.data(), type, static_cast<hid_t>(sp),
-								static_cast<hid_t>(lcpl), static_cast<hid_t>(dcpl), static_cast<hid_t>(dapl) )),
+								static_cast<hid_t>(lcpl), static_cast<hid_t>(dcpl), static_cast<hid_t>( dapl )  )),
 			   std::runtime_error,	h5::error::msg::create_dataset );
 		//FIXME: hack to carry prop over
 		h5::ds_t ds_{ds};
@@ -203,7 +202,6 @@ namespace h5 {
 				break;
 			case H5D_VIRTUAL: break;
 		}
-
 		ds_.prop = static_cast<::hid_t>( dapl );
 		return ds_;
 	}

@@ -30,10 +30,15 @@ namespace h5 { namespace impl {
 }}
 
 namespace h5 { namespace impl { namespace detail {
+	/* this mechanism is to alter the behaviour of h5::hid_t through 
+	 * template specialization. The base class is ::any which provides
+	 * conversion policy and resource cleanup
+	 */ 
 	namespace hdf5 { // fair use of copyrighted HDF5 symbol to ease on reading
 		constexpr int any 		= 0x00;
 		constexpr int property 	= 0x01;
 		constexpr int type 		= 0x02;
+		constexpr int dataset	= 0x04;
 	}
 
 	// base template with T type, the capi_close function, and 
@@ -52,11 +57,14 @@ namespace h5 { namespace impl { namespace detail {
 		using hidtype = T;
 		// from CAPI
 		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
+
+			//std::cout<<"<from capi: " << this << ">\n";
 			if( H5Iis_valid( handle_ ) )
 				H5Iinc_ref( handle_ );
 		}
 		// TO CAPI
 		H5CPP__EXPLICIT operator ::hid_t() const {
+			//std::cout<<"<to capi: " << this << ">\n";
 			return  handle;
 		}
         hid_t( std::initializer_list<::hid_t> fd ) // direct  initialization doesn't increment handle
@@ -65,7 +73,7 @@ namespace h5 { namespace impl { namespace detail {
 		//TODO: have default constructor such that can initialize properties
 		// see 'create.hpp line 164:  h5::dcpl_t dcpl = h5::dcpl_t {H5Pcreate(H5P_DATASET_CREATE)};
 		// which is awkward
-		hid_t() : handle(H5I_UNINIT),prop{H5I_UNINIT}{};
+		hid_t() : handle(H5I_UNINIT){};
 		hid_t( const hid_t& ref) {
 			this->handle = ref.handle;
 			if( H5Iis_valid( handle ) )
@@ -87,7 +95,6 @@ namespace h5 { namespace impl { namespace detail {
 			if( H5Iis_valid( handle ) )
 				err = capi_close( handle );
 		}
-		::hid_t prop;
 		private:
 		::hid_t handle;
 	};
@@ -115,14 +122,26 @@ namespace h5 { namespace impl { namespace detail {
 			return *this;
 		}
 	};
+	/*dataset id*/
+	template<class T, capi_close_t capi_close>
+	struct hid_t<T,capi_close, true,true,hdf5::dataset> : public hid_t<T,capi_close,true,true,hdf5::any> {
+		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
+		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
+		using hidtype = T;
 
+		::hid_t prop;
+	};
 }}}
 
+
+
+
 namespace h5 { namespace impl {
-	// redefine this to disable conversion
+	// redefine ::hid_t<..,from_capi,to_capi,...> to disable conversion, default setting: hid_t::<.., true,true,..>
 	template <class T, capi_close_t capi_call> using aid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::any>;
 	template <class T, capi_close_t capi_call> using hid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::any>;
 	template <class T, capi_close_t capi_call> using pid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::property>;
+	template <class T, capi_close_t capi_call> using did_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::dataset>;
 }}
 
 /*hide gory details, and stamp out descriptors */
@@ -130,8 +149,9 @@ namespace h5 {
 	/*base template with no default ctors to prevent instantiation*/
 	#define H5CPP__defhid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::hid_t<impl::T_,D_>;
 	#define H5CPP__defpid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::pid_t<impl::T_,D_>;
+	#define H5CPP__defdid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::did_t<impl::T_,D_>;
 	#define H5CPP__defaid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::aid_t<impl::T_,D_>;
-	/*file:  */ H5CPP__defaid_t(fd_t, H5Fclose) /*dataset:*/	H5CPP__defaid_t(ds_t, H5Dclose) /* <- packet table: is specialization enabled */
+	/*file:  */ H5CPP__defaid_t(fd_t, H5Fclose) /*dataset:*/	H5CPP__defdid_t(ds_t, H5Dclose) /* <- packet table: is specialization enabled */
 	/*attrib:*/ H5CPP__defhid_t(at_t, H5Aclose) /*group:  */	H5CPP__defaid_t(gr_t, H5Gclose) /*object:*/	H5CPP__defhid_t(ob_t, H5Oclose)
 	/*space: */ H5CPP__defhid_t(sp_t, H5Sclose) 
 	/*datatype:*/   //H5CPP__defhid_t(dt_t, H5Tclose)

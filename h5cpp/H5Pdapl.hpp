@@ -20,6 +20,7 @@ namespace h5 { namespace impl {
 		return 0;
 	}
 	inline herr_t dapl_pipeline_delete( ::hid_t dapl_id, const char *name, size_t size, void *value){
+		std::cout <<"< dapl delete:" << dapl_id <<">\n";
 		return 0;
 	}
 	inline herr_t dapl_pipeline_copy( const char *name, size_t size, void *value){
@@ -30,7 +31,8 @@ namespace h5 { namespace impl {
 	}
 
 	inline herr_t dapl_pipeline_close( const char *name, size_t size, void *ptr ){
-		//delete *static_cast<impl::pipeline_t<impl::basic_pipeline_t>**>( ptr );
+ 		std::cout <<"<dapl delete: " << *static_cast< impl::pipeline_t<impl::basic_pipeline_t>**>( ptr ) <<">\n";
+		delete *static_cast< impl::pipeline_t<impl::basic_pipeline_t>**>( ptr );
 		return 0;
 	}
 
@@ -39,7 +41,8 @@ namespace h5 { namespace impl {
 		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ) return 0;
 		using pipeline = impl::pipeline_t<impl::basic_pipeline_t>;
 	 	pipeline* ptr = new pipeline();
-		return H5Pinsert2(dapl, H5CPP_DAPL_HIGH_THROUGPUT, sizeof(pipeline*), &ptr,
+		std::cout <<"<dapl create: " << ptr <<">\n";
+		return H5Pinsert2(dapl, H5CPP_DAPL_HIGH_THROUGPUT, sizeof( pipeline* ), &ptr,
 				dapl_pipeline_set, dapl_pipeline_get, dapl_pipeline_delete, dapl_pipeline_copy, dapl_pipeline_comp, dapl_pipeline_close);
 	}
 }}

@@ -37,7 +37,6 @@ namespace h5 {
 		H5CPP_CHECK_PROP( lcpl, h5::error::property_list::misc, "invalid list control property" );
 		H5CPP_CHECK_PROP( dcpl, h5::error::property_list::misc, "invalid data control property" );
 		H5CPP_CHECK_PROP( dapl, h5::error::property_list::misc, "invalid data access property" );
-
 		// and dimensions
 		h5::current_dims_t current_dims_default{0}; // if no current dims_present 
 		// this mutable value will be referenced
