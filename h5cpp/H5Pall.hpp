@@ -12,6 +12,9 @@ namespace h5 { namespace impl {
 	 * only same class properties may be daisy chained */
 	template <class Derived, class phid_t>
 	struct prop_base {
+		using hidtype = typename phid_t::parent::hidtype;
+		using parent_hidtype = typename phid_t::hidtype;
+
 		prop_base(){ }
 		// removed ctor
 		~prop_base(){
@@ -19,13 +22,15 @@ namespace h5 { namespace impl {
 				H5Pclose( handle );
 			}
 	  	}
-
-		template <class R> 	const prop_base<Derived, phid_t>&
+		// prevents property type mismatch at compile time:
+		template <class R>
+		typename std::enable_if< std::is_same<typename R::hidtype, hidtype>::value ,
+		const prop_base<Derived, phid_t>& >::type
 		operator|( const R& rhs ) const {
 			rhs.copy( handle );
 			return *this;
 		 }
-
+		// convert to propery
 		void copy(::hid_t handle_) const { /*CRTP idiom*/
 			static_cast<const Derived*>(this)->copy_impl( handle_ );
 		}

@@ -32,7 +32,7 @@ namespace h5 { namespace impl {
 
 	inline herr_t dapl_pipeline_close( const char *name, size_t size, void *ptr ){
  		std::cout <<"<dapl delete: " << *static_cast< impl::pipeline_t<impl::basic_pipeline_t>**>( ptr ) <<">\n";
-		delete *static_cast< impl::pipeline_t<impl::basic_pipeline_t>**>( ptr );
+	//	delete *static_cast< impl::pipeline_t<impl::basic_pipeline_t>**>( ptr );
 		return 0;
 	}
 

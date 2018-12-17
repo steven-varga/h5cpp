@@ -115,10 +115,12 @@ namespace h5 { namespace impl { namespace detail {
 		using hidtype = T;
 
 		hid_t& operator |=( const hid_t& ref){
+			std::cout<<"< |= >\n";
 			return *this;
 		}
 
 		hid_t& operator |( const hid_t& ref){
+			std::cout <<"< | >\n";
 			return *this;
 		}
 	};
