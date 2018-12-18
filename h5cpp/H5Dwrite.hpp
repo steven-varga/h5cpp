@@ -92,6 +92,7 @@ namespace h5 {
 			// will throw it's own
  			h5::write(ds, ptr.data(), count, args...);
         	for( auto p:ptr ) free(p);
+			return ds;
 		}  else // ditto, throws error
 			return h5::write<element_t>(ds, impl::data(ref), count, args...  );
 	} catch ( const std::runtime_error& err ){

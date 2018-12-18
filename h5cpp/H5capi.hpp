@@ -26,7 +26,7 @@ namespace h5 { namespace impl {
 
 namespace h5 {
 	inline ::hid_t get_access_plist( const ds_t& ds ){
-		return ds.prop;
+		return ds.dapl;
 	}
 	template<class T> 
 	inline bool is_valid( const T& v ){
@@ -202,7 +202,7 @@ namespace h5 {
 				break;
 			case H5D_VIRTUAL: break;
 		}
-		ds_.prop = static_cast<::hid_t>( dapl );
+		ds_.dapl = static_cast<::hid_t>( dapl );
 		return ds_;
 	}
 

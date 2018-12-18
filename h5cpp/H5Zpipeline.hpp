@@ -18,7 +18,7 @@ namespace h5{ namespace impl {
 
 	template <class Derived>
 	struct pipeline_t {
-		pipeline_(){};
+		pipeline_t(){};
 		~pipeline_t(){};
 		void set_cache( const h5::dcpl_t& dcpl, size_t element_size );
 		void write(const h5::ds_t& ds, const h5::offset_t& start, const h5::stride_t& stride, const h5::block_t& block, const h5::count_t& count,

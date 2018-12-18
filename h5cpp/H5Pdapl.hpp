@@ -10,40 +10,17 @@
 #define H5CPP_DAPL_HIGH_THROUGPUT "h5cpp_dapl_highthroughput"
 
 namespace h5 { namespace impl {
-	inline herr_t dapl_pipeline_create( const char *name, size_t size, void *initial_value){
-		return 0;
-	}
-	inline herr_t dapl_pipeline_set( ::hid_t dapl_id, const char *name, size_t size, void *new_value){
-		return 0;
-	}
-	inline herr_t dapl_pipeline_get( ::hid_t dapl_id, const char *name, size_t size, void *value){
-		return 0;
-	}
-	inline herr_t dapl_pipeline_delete( ::hid_t dapl_id, const char *name, size_t size, void *value){
-		std::cout <<"< dapl delete:" << dapl_id <<">\n";
-		return 0;
-	}
-	inline herr_t dapl_pipeline_copy( const char *name, size_t size, void *value){
-		return 0;
-	}
-	inline int dapl_pipeline_comp( const void *value1, const void *value2, size_t size){
-		return 0;
-	}
-
 	inline herr_t dapl_pipeline_close( const char *name, size_t size, void *ptr ){
- 		std::cout <<"<dapl delete: " << *static_cast< impl::pipeline_t<impl::basic_pipeline_t>**>( ptr ) <<">\n";
 		delete *static_cast< impl::pipeline_t<impl::basic_pipeline_t>**>( ptr );
 		return 0;
 	}
-
 	inline ::herr_t dapl_pipeline_set(::hid_t dapl ){
 		// ignore if already set 
 		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ) return 0;
 		using pipeline = impl::pipeline_t<impl::basic_pipeline_t>;
 	 	pipeline* ptr = new pipeline();
-		std::cout <<"<dapl create: " << ptr <<">\n";
 		return H5Pinsert2(dapl, H5CPP_DAPL_HIGH_THROUGPUT, sizeof( pipeline* ), &ptr,
-				dapl_pipeline_set, dapl_pipeline_get, dapl_pipeline_delete, dapl_pipeline_copy, dapl_pipeline_comp, dapl_pipeline_close);
+				nullptr, nullptr, nullptr, nullptr, nullptr, dapl_pipeline_close);
 	}
 }}
 

@@ -16,15 +16,16 @@ namespace h5 { namespace impl { namespace filter {
 	template<class Derived>
 	struct filter_t {
 		htri_t can_apply(::hid_t dcpl, ::hid_t type, ::hid_t space){
-			static_cast<Derived*>(this)->can_apply_impl(dcpl,type,space);
+			return static_cast<Derived*>(this)->can_apply_impl(dcpl,type,space);
 		}
 		herr_t set_local(::hid_t dcpl, ::hid_t type, ::hid_t space){
-			static_cast<Derived*>(this)->set_local_impl(dcpl,type,space);
+			return static_cast<Derived*>(this)->set_local_impl(dcpl,type,space);
 		}
 		size_t callback(unsigned int flags, size_t cd_nelmts, const unsigned int cd_values[], size_t nbytes, size_t *buf_size, void **buf){
+			return 0;
 		}
 		size_t apply( void* dst, const void* src, size_t size){
-			static_cast<Derived*>(this)->apply(dst,src,size);
+			return static_cast<Derived*>(this)->apply(dst,src,size);
 		}
 		int version;
 		unsigned id;
@@ -80,7 +81,10 @@ namespace h5 { namespace impl { namespace filter {
 		memcpy(dst,src,size);
 		return size;
 	}
-
+	inline size_t error( void* dst, const void* src, size_t size, unsigned flags, size_t n, const unsigned params[] ){
+		throw std::runtime_error("invalid filter");
+		return size;
+	}
 	inline call_t get_callback( H5Z_filter_t filter_id ){
 
 		switch( filter_id ){
@@ -90,6 +94,8 @@ namespace h5 { namespace impl { namespace filter {
 			case H5Z_FILTER_SZIP: return filter::szip;
 			case H5Z_FILTER_NBIT: return filter::nbit;
 			case H5Z_FILTER_SCALEOFFSET: return filter::scaleoffset;
+			default:
+					return filter::error;
 		}
 	}
 

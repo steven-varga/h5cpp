@@ -60,10 +60,12 @@ namespace h5 {
 		if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
 		using element_t = typename impl::decay<T>::type;
 		h5::dt_t<element_t> mem_type;
+
+		hid_t dapl = h5::get_access_plist( ds );
 		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
 			h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
 			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGPUT, &filters);
-			filters->write(ds, offset, stride, block, count, dxpl, ptr);
+			filters->read(ds, offset, stride, block, count, dxpl, ptr);
 		}else{
 			h5::sp_t mem_space = h5::create_simple( size );
 			h5::select_all( mem_space );

@@ -42,7 +42,7 @@ TYPED_TEST(IntegralTest,create_max_dims) {
 	// compile time static_assert: current_dims or max_dims must be set
 	//if( h5::create<TypeParam>(this->fd, this->name + " 1d") < 0 ) ADD_FAILURE();
 
-	if( h5::create<TypeParam>(this->fd, this->name + " 1d", h5::max_dims{5}, h5::default_dcpl ) < 0 ) ADD_FAILURE();
+	if( h5::create<TypeParam>(this->fd, this->name + " 1d", h5::max_dims{5}, h5::default_lcpl, h5::default_dapl ) < 0 ) ADD_FAILURE();
 	if( h5::create<TypeParam>(this->fd, this->name + " 2d", h5::max_dims{5,H5S_UNLIMITED} ) < 0 ) ADD_FAILURE();
 	if( h5::create<TypeParam>(this->fd, this->name + " 3d", h5::max_dims{5,10,20}, h5::chunk{5,1,1} ) < 0 ) ADD_FAILURE();
 	if( h5::create<TypeParam>(this->fd, this->name + "ddapl, chunk, dlcpl", h5::max_dims{10},
@@ -183,8 +183,6 @@ TYPED_TEST(IntegralTest, read_pointer ) {
 
 	h5::read<TypeParam>(this->fd, this->name + ext, buf.data(), h5::count{5} );
 }
-
-
 
 TYPED_TEST(IntegralTest, read_simple) {
 	std::array<TypeParam,120> arr{}; for( auto& i:arr) i = 22;

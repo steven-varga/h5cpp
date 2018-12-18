@@ -52,7 +52,7 @@ namespace h5{
 
 		h5::ds_t ds_{ds};
 		//FIXME: temporary carry dapl around
-		ds_.prop = static_cast<hid_t>( dapl );
+		ds_.dapl = static_cast<hid_t>( dapl );
 		return ds_;
     }
 }

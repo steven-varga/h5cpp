@@ -57,14 +57,11 @@ namespace h5 { namespace impl { namespace detail {
 		using hidtype = T;
 		// from CAPI
 		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
-
-			//std::cout<<"<from capi: " << this << ">\n";
 			if( H5Iis_valid( handle_ ) )
 				H5Iinc_ref( handle_ );
 		}
 		// TO CAPI
 		H5CPP__EXPLICIT operator ::hid_t() const {
-			//std::cout<<"<to capi: " << this << ">\n";
 			return  handle;
 		}
         hid_t( std::initializer_list<::hid_t> fd ) // direct  initialization doesn't increment handle
@@ -115,12 +112,10 @@ namespace h5 { namespace impl { namespace detail {
 		using hidtype = T;
 
 		hid_t& operator |=( const hid_t& ref){
-			std::cout<<"< |= >\n";
 			return *this;
 		}
 
 		hid_t& operator |( const hid_t& ref){
-			std::cout <<"< | >\n";
 			return *this;
 		}
 	};
@@ -129,9 +124,14 @@ namespace h5 { namespace impl { namespace detail {
 	struct hid_t<T,capi_close, true,true,hdf5::dataset> : public hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
 		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
+		using parent::handle; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
 
-		::hid_t prop;
+		hid_t(){
+			this->handle = H5I_UNINIT;
+			this->dapl = H5I_UNINIT;
+		};
+		::hid_t dapl;
 	};
 }}}
 
