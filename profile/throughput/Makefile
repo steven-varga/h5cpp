@@ -11,7 +11,11 @@ LIBS =  -lprofiler -lboost_program_options -lhdf5 -lz -ldl -lm
 
 tile: tile.o
 	$(CXX) $^ $(LIBS) -o $@
-	#./$@ && h5dump -pH example.h5
+example.h5: tile
+	./tile
+read: read.o example.h5
+	$(CXX) read.o $(LIBS) -o $@
+	./read
 
 clean:
 	@$(RM) *.o *.h5 tile *.prof cube*

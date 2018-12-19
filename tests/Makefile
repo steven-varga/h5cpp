@@ -40,6 +40,9 @@ packettable:  packettable.o
 	$(CXX) $^ $(LIBS) -o $@	
 armadillo: armadillo.o
 	$(CXX) $^ $(LIBS) -o $@	
+pipeline: pipeline.o
+	$(CXX) $^ $(LIBS) -o $@	
+
 stl: stl.o
 	$(CXX) $^ $(LIBS) -o $@	
 
@@ -50,6 +53,9 @@ test-packettable: packettable
 
 test-armadillo: armadillo
 	./armadillo $(flags)
+test-pipeline: pipeline
+	./pipeline $(flags)
+
 test-stl: stl
 	./stl $(flags)
 

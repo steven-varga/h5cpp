@@ -8,6 +8,8 @@
 #include <h5cpp/all>
 #include <random>
 #include <cmath>
+
+#define READ_TEST
 /**
  * bash :get prime numbers from range
  * factor {100..1000} | cut -d':' -f2 | tr ' ' \\n |sort -g|uniq
@@ -24,7 +26,7 @@ int main(int argc, char **argv) {
 
 	unsigned slices = 500, nrows=720, ncols=1280;
 
-	std::array<unsigned,3> chunk{1,72,ncols};
+	std::array<unsigned,3> chunk{1,720,ncols};
 	std::array<unsigned,3>  dims{slices,nrows,ncols};
 	h5::count_t count( dims );
 	h5::offset_t offset{0,0,0};

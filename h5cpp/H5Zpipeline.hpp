@@ -25,15 +25,16 @@ namespace h5{ namespace impl {
 				const h5::dxpl_t& dxpl, const void* ptr);
 
 		void read(const h5::ds_t& ds, const h5::offset_t& start, const h5::stride_t& stride, const h5::block_t& block, const h5::count_t& count,
-				const h5::dxpl_t& dxpl, const void* ptr);
+				const h5::dxpl_t& dxpl, void* ptr);
 
 		void write_chunk(  const hsize_t* offset, size_t nbytes, const void* ptr ){
 			static_cast<Derived*>(this)->write_chunk_impl(offset, nbytes, ptr);
 		}
-		void read_chunk( const hsize_t* offset, size_t nbytes, const void* ptr ){
-			static_cast<Derived*>(this)->write_chunk_impl(offset, nbytes, ptr);
+		void read_chunk( const hsize_t* offset, size_t nbytes, void* ptr ){
+			static_cast<Derived*>(this)->read_chunk_impl(offset, nbytes, ptr);
 		}
-		void split_to_chunk(filter_direction_t direction, const hsize_t* offset, const hsize_t* dims, const void* ptr );
+		void split_to_chunk_write(filter_direction_t direction, const hsize_t* offset, const hsize_t* dims, const void* ptr );
+		void split_to_chunk_read(filter_direction_t direction, const hsize_t* offset, const hsize_t* dims, void* ptr );
 
 		char *chunk0, *chunk1;
 		hsize_t tail,rank;
@@ -57,24 +58,24 @@ namespace h5{ namespace impl {
 
 	struct basic_pipeline_t : public pipeline_t<basic_pipeline_t>{
 		void write_chunk_impl( const hsize_t* offset, size_t nbytes, const void* ptr );
-		void read_chunk_impl( const hsize_t* offset, size_t nbytes, const void* ptr );
+		void read_chunk_impl( const hsize_t* offset, size_t nbytes, void* ptr );
 	};
 	struct threaded_pipeline_t : public pipeline_t<threaded_pipeline_t>{
 		void write_chunk_impl( const hsize_t* offset, size_t nbytes, const void* ptr ){
 		}
-		void read_chunk_impl( const hsize_t* offset, size_t nbytes, const void* ptr ){
+		void read_chunk_impl( const hsize_t* offset, size_t nbytes, void* ptr ){
 		}
 	};
 	struct romio_pipeline_t : public pipeline_t<romio_pipeline_t>{
 		void write_chunk_impl( const hsize_t* offset, size_t nbytes, const void* ptr ){
 		}
-		void read_chunk_impl( const hsize_t* offset, size_t nbytes, const void* ptr ){
+		void read_chunk_impl( const hsize_t* offset, size_t nbytes, void* ptr ){
 		}
 	};
 	struct hadoop_pipeline_t : public pipeline_t<hadoop_pipeline_t>{
 		void write_chunk_impl( const hsize_t* offset, size_t nbytes, const void* ptr ){
 		}
-		void read_chunk_impl( const hsize_t* offset, size_t nbytes, const void* ptr ){
+		void read_chunk_impl( const hsize_t* offset, size_t nbytes, void* ptr ){
 		}
 	};
 }}
@@ -88,20 +89,19 @@ inline void h5::impl::pipeline_t<Derived>::write(
 	for(int i=0; i<rank; i++)
 		offset_[i] = offset[i], count_[i] = count[i] * block[i];
 	this->dxpl = dxpl; this->ds = ds;
-	split_to_chunk(filter_direction_t::forward, offset_.begin(), count_.begin(), ptr );
+	split_to_chunk_write(filter_direction_t::forward, offset_.begin(), count_.begin(), ptr );
 }
 
 template< class Derived>
 inline void h5::impl::pipeline_t<Derived>::read(
 		const h5::ds_t& ds, const h5::offset_t& offset, const h5::stride_t& stride, const h5::block_t& block, const h5::count_t& count,
-				const h5::dxpl_t& dxpl, const void* ptr){
+				const h5::dxpl_t& dxpl, void* ptr){
 
 	h5::offset_t offset_; h5::count_t count_;
 	for(int i=0; i<rank; i++)
 		offset_[i] = offset[i], count_[i] = count[i] * block[i];
 	this->dxpl = dxpl; this->ds = ds;
-
-	split_to_chunk(filter_direction_t::reverse, offset_.begin(), count_.begin(), ptr );
+	split_to_chunk_read(filter_direction_t::reverse, offset_.begin(), count_.begin(), ptr );
 }
 
 template< class Derived>
@@ -139,9 +139,51 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 #define h5cpp_def( idx ) hsize_t i##idx=0, j##idx = 0, s##idx=0, n##idx=N[idx], b##idx=B[idx], r##idx=R[idx];
 
 template< class Derived>
-inline void h5::impl::pipeline_t<Derived>::split_to_chunk(
-	filter_direction_t direction, const hsize_t* chunk_offset, const hsize_t* dims, const void* ptr_ ){
+inline void h5::impl::pipeline_t<Derived>::split_to_chunk_read(
+	filter_direction_t direction, const hsize_t* chunk_offset, const hsize_t* dims, void* ptr_ ){
+	char* ptr = static_cast<char*>( ptr_ );
+	// compute edges if any - for the data size
+	// computes R residuals, and sets N dimension in reverse order
+	// when actual data dimensions - current_dims are greater then a chunk, it must be broken into chunk size
+	// if there are residuals on the edges, then padding is needed.
+	unsigned i=0;
+	for(; i<rank; i++ )
+		N[i] = dims[rank-i-1], R[i] = N[i] % B[i];
+	for(; i<H5CPP_MAX_RANK; i++) N[i] = B[i] = 1, R[i] = 0;
 
+	// b - block size, j - block index pos, r - remainder at the edges, n - actual dimension of data
+	//
+	h5cpp_def(0) h5cpp_def(1) h5cpp_def(2) h5cpp_def(3) h5cpp_def(4) h5cpp_def(5) h5cpp_def(6)
+
+	h5cpp_outer( 6 ){ h5cpp_outer( 5 ){ h5cpp_outer( 4 ){ h5cpp_outer( 3 ){
+	h5cpp_outer( 2 ){ h5cpp_outer( 1 ){ h5cpp_outer( 0 ){
+		char* p = chunk0;
+		// at this point we have a single 'chunk' in this->chunk0 buffer ready to go
+		// the coordinates are in j indices
+		D[0] = j0, D[1]=j1, D[2]=j2, D[3]=j3, D[4]=j4, D[5]=j5, D[6]=j6;
+		//coordinates are reversed in D, invert them:
+		for(int k=0;k<rank; k++ ) C[k] = D[rank-k-1] + chunk_offset[k];
+		// execute filters in reverse direction
+		read_chunk( this->C, this->block_size, this->chunk0 );
+		// reset memory page only on the edges
+	//	if( j0 + b0 > n0 || j1 + b1 > n1 || j2 + b2 > n2 ||
+	//		j3 + b3 > n3 || j4 + b4 > n4 || j5 + b5 > n5 || j6 + b6 > n6 ) memset(p,0, block_size);
+		h5cpp_inner(6){	h5cpp_inner(5){ h5cpp_inner(4){
+		h5cpp_inner(3){ h5cpp_inner(2){ h5cpp_inner(1){
+			hsize_t offset = i6*n5*n4*n3*n2*n1*n0 + i5*n4*n3*n2*n1*n0 +
+					i4*n3*n2*n1*n0 + i3*n2*n1*n0 + i2*n1*n0 + i1*n0 + j0;
+			if( j0 != n0 - r0 ) // block copy
+				memcpy(ptr + offset * element_size, p, b0 * element_size );
+			else // edge handling
+				memcpy(ptr + offset * element_size,p, r0 * element_size );
+			p += b0 * element_size;
+		}}}}}}
+	}}}}}}}
+}
+
+template< class Derived>
+inline void h5::impl::pipeline_t<Derived>::split_to_chunk_write(
+	filter_direction_t direction, const hsize_t* chunk_offset, const hsize_t* dims, const void* ptr_ ){
 	const char* ptr = static_cast<const char*>( ptr_ );
 	// compute edges if any - for the data size
 	// computes R residuals, and sets N dimension in reverse order
@@ -180,12 +222,11 @@ inline void h5::impl::pipeline_t<Derived>::split_to_chunk(
 		for(int k=0;k<rank; k++ ) C[k] = D[rank-k-1] + chunk_offset[k];
 
 		// execute filters in direction
-		switch( direction ){
-			case filter_direction_t::forward: write_chunk( this->C, this->block_size, this->chunk0 ); break;
-			case filter_direction_t::reverse: read_chunk( this->C, this->block_size, this->chunk0 );  break;
-		}
+		write_chunk( this->C, this->block_size, this->chunk0 );
 	}}}}}}}
 }
+
+
 #undef h5cpp_def
 #undef h5cpp_inner
 #undef h5cpp_outer

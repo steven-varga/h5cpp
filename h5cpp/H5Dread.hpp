@@ -75,6 +75,9 @@ namespace h5 {
 					static_cast<hid_t>( ds ), static_cast<hid_t>(mem_type), static_cast<hid_t>(mem_space),
 					static_cast<hid_t>(file_space),	static_cast<hid_t>(dxpl), ptr ), h5::error::io::dataset::read, h5::error::msg::read_dataset);
 		}
+	//	for(int i=0; i<11*11; i++)
+	//		std::cout<< ((short*) ptr)[i] <<" ";
+	//	std::cout << "\n";
 	} catch ( const std::runtime_error& err ){
 		throw h5::error::io::dataset::read( err.what() );
 	}
@@ -94,7 +97,8 @@ namespace h5 {
  	*/ 
 	template<class T, class... args_t>
 	void read( const h5::fd_t& fd, const std::string& dataset_path, T* ptr, args_t&&... args ){
-		h5::ds_t ds = h5::open(fd, dataset_path ); // will throw its exception
+		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+		h5::ds_t ds = h5::open(fd, dataset_path, dapl ); // will throw its exception
 		h5::read<T>(ds, ptr, args...);
 	}
 
@@ -112,7 +116,7 @@ namespace h5 {
  	*/ 
 	template<class T, class... args_t>
 	void read( const std::string& file_path, const std::string& dataset_path,T* ptr, args_t&&... args ){
-		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR, h5::default_fapl );
+		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR );
 		h5::read( fd, dataset_path, ptr, args...);
 	}
 
@@ -157,9 +161,12 @@ namespace h5 {
  	*/ 
 	template<class T,  class... args_t> // dispatch to above
 		void read( const h5::fd_t& fd,  const std::string& dataset_path, T& ref, args_t&&... args ){
-		h5::ds_t ds = h5::open(fd, dataset_path );
+
+		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+		h5::ds_t ds = h5::open(fd, dataset_path, dapl );
 		h5::read<T>(ds, ref, args...);
 	}
+
  	/** \func_read_hdr
  	*  Updates the content of passed **ref** reference, which must have enough memory space to receive data.
 	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified for partial IO,
@@ -172,7 +179,8 @@ namespace h5 {
  	*/ 
 	template<class T, class... args_t> // dispatch to above
 	void read( const std::string& file_path, const std::string& dataset_path, T& ref, args_t&&... args ){
-		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR, h5::default_fapl );
+
+		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR );
 		h5::read( fd, dataset_path, ref, args...);
 	}
 
@@ -227,7 +235,9 @@ namespace h5 {
  	*/
 	template<class T, class... args_t> // dispatch to above
 	T read( hid_t fd, const std::string& dataset_path, args_t&&... args ){
-		h5::ds_t ds = h5::open(fd, dataset_path );
+
+		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+		h5::ds_t ds = h5::open(fd, dataset_path, dapl );
 		return h5::read<T>(ds, args...);
 	}
  	/** \func_read_hdr
@@ -241,7 +251,7 @@ namespace h5 {
  	*/
 	template<class T, class... args_t> // dispatch to above
 	T read(const std::string& file_path, const std::string& dataset_path, args_t&&... args ){
-		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR, h5::default_fapl );
+		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR );
 		return h5::read<T>( fd, dataset_path, args...);
 	}
 }
