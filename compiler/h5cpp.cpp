@@ -40,7 +40,10 @@ StatementMatcher h5templateMatcher = callExpr( allOf(
 	hasDescendant( declRefExpr( to( varDecl().bind("variableDecl")  ) ) ),
 	hasDescendant( declRefExpr( to(
 		functionDecl( allOf(
-			eachOf( hasName("h5::write"), hasName("h5::create"), hasName("h5::read"), hasName("append") ),
+			eachOf(
+				hasName("h5::write"),  hasName("h5::create"),  hasName("h5::read"), hasName("h5::append"), // dataset
+				hasName("h5::awrite"), hasName("h5::acreate"), hasName("h5::aread") // attributes
+			),
 			/* locate T template argument, and declarations of T
 			 * h5::write<T>( ... ) 
 			 */

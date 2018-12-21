@@ -59,5 +59,15 @@ namespace h5{
 		throw h5::error::io::attribute::write( err.what() );
 	}
 }
+/*
+template <typename Derived, typename Clock>
+void io::Consumer<Derived,Clock>::init( const std::vector<time_point>& trading_days, 
+		const std::vector<std::string>& symbols, const std::vector<duration>& rts ){
+
+	template<>
+	h5::at_t h5::impl::detail::hid_t<h5::impl::ds_t,H5Dclose, true,true,h5::impl::detail::hdf5::dataset>::operator []( std::string ){
+		return h5::at_t();
+	}
+*/
 #endif
 
