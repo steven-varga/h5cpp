@@ -12,7 +12,7 @@ LIBS =  -lhdf5  -lz -ldl -lm
 
 test: $(apps)
 	@./attributes
-	h5dump -pH 001.h5
+	#h5dump -pH 001.h5
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX)   -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^

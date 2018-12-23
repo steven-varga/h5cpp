@@ -13,10 +13,26 @@
 int main(){
 	arma::mat M = arma::zeros(5,6);
 
+	arma::mat matrix = arma::zeros(3,4); for(int i=0; i<matrix.n_elem; i++ ) matrix[i] = i;
+	std::vector<sn::example::Record> vector = h5::utils::get_test_data<sn::example::Record>(4);
+	sn::example::Record& record = vector[0];
 
 	h5::fd_t fd = h5::create("001.h5", H5F_ACC_TRUNC);
 	h5::ds_t ds = h5::write(fd,"some dataset with attributes", M);
+	{
+		ds["att_01"] =  42 ;
+		ds["att_02"] = {1.,3.,4.,5.};
+		ds["att_03"] = {'1','3','4','5'};
+		ds["att_04"] = {"alpha", "beta","gamma","..."};
 
+		ds["att_05"] = "const char[N]";
+		ds["att_06"] =  u8"const char[N]áééé";
+		ds["att_07"] =  std::string( "std::string");
+
+		ds["att_08"] =  record; // pod/compound datatype
+		ds["att_09"] =  vector; // vector of pod/compound type
+		ds["att_10"] =  matrix; // linear algebra object
+	}
 
 	/* supported types:
 	 * T := integral | std::string | const char[] | POD struct*
@@ -24,22 +40,18 @@ int main(){
 	 * * pod struct requires h5cpp compiler or manual labour
 	 */
 	{ // create + write
-		arma::mat matrix = arma::zeros(3,4); for(int i=0; i<matrix.n_elem; i++ ) matrix[i] = i;
-		std::vector<sn::example::Record> vector = h5::utils::get_test_data<sn::example::Record>(4);
-		sn::example::Record& record = vector[0];
+		h5::awrite(ds,"att_21", 42 );
+		h5::awrite(ds,"att_22", {1.,3.,4.,5.} );
+		h5::awrite(ds,"att_23", {'1','3','4','5'} );
+		h5::awrite(ds,"att_24", {"alpha", "beta","gamma","..."} );
 
-		h5::awrite(ds,"att_01", 42 );
-		h5::awrite(ds,"att_02", {1.,3.,4.,5.} );
-		h5::awrite(ds,"att_03", {'1','3','4','5'} );
-		h5::awrite(ds,"att_04", {"alpha", "beta","gamma","..."} );
+		h5::awrite(ds,"att_25", "const char[N]");
+		h5::awrite(ds,"att_26", u8"const char[N]áééé");
+		h5::awrite(ds,"att_27", std::string( "std::string") );
 
-		h5::awrite(ds,"att_05", "const char[N]");
-		h5::awrite(ds,"att_06", u8"const char[N]áééé");
-		h5::awrite(ds,"att_07", std::string( "std::string") );
-
-		h5::awrite(ds,"att_08", record ); // pod/compound datatype
-		h5::awrite(ds,"att_09", vector ); // vector of pod/compound type
-		h5::awrite(ds,"att_10", matrix ); // linear algebra object
+		h5::awrite(ds,"att_28", record ); // pod/compound datatype
+		h5::awrite(ds,"att_29", vector ); // vector of pod/compound type
+		h5::awrite(ds,"att_30", matrix ); // linear algebra object
 	}
 
 	{ // open + write -> attribute size must not change

@@ -59,15 +59,34 @@ namespace h5{
 		throw h5::error::io::attribute::write( err.what() );
 	}
 }
-/*
-template <typename Derived, typename Clock>
-void io::Consumer<Derived,Clock>::init( const std::vector<time_point>& trading_days, 
-		const std::vector<std::string>& symbols, const std::vector<duration>& rts ){
 
-	template<>
-	h5::at_t h5::impl::detail::hid_t<h5::impl::ds_t,H5Dclose, true,true,h5::impl::detail::hdf5::dataset>::operator []( std::string ){
-		return h5::at_t();
-	}
-*/
+template<> inline
+h5::at_t h5::ds_t::operator[]( const char name[] ){
+	//we don't have the object parameters yet available the only thing to do is 
+	//mark it H5I_UNINIT and in the second phase create the attribute 
+	h5::at_t attr = ( H5Aexists(static_cast<hid_t>(*this), name ) > 0 ) ?
+			h5::open(static_cast<hid_t>( *this ), name, h5::default_acpl) : h5::at_t{H5I_UNINIT};
+	attr.ds   = static_cast<hid_t>(*this);
+	attr.name = std::string(name);
+	return attr;
+}
+
+template<> template< class V> inline
+h5::at_t h5::at_t::operator=( V arg ){
+	if( !H5Iis_valid(this->ds) )
+		throw h5::error::io::attribute::create("unable to create attribute: underlying dataset id not provided...");
+
+	h5::awrite(ds, name, arg);
+	return *this;
+}
+template<> template< class V> inline
+h5::at_t h5::at_t::operator=( const std::initializer_list<V> args ){
+	if( !H5Iis_valid(this->ds) )
+		throw h5::error::io::attribute::create("unable to create attribute: underlying dataset id not provided...");
+
+	h5::awrite(ds, name, args);
+	return *this;
+}
+
 #endif
 

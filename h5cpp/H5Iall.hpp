@@ -27,6 +27,8 @@ namespace h5 { namespace impl {
 		using args_t = std::tuple<args_tt...>;
 		using type = std::tuple<::hid_t,args_tt...>;
 	};
+	//forward declarations
+	struct at_t;
 }}
 
 namespace h5 { namespace impl { namespace detail {
@@ -39,6 +41,7 @@ namespace h5 { namespace impl { namespace detail {
 		constexpr int property 	= 0x01;
 		constexpr int type 		= 0x02;
 		constexpr int dataset	= 0x04;
+		constexpr int attribute	= 0x05;
 	}
 
 	// base template with T type, the capi_close function, and 
@@ -126,21 +129,41 @@ namespace h5 { namespace impl { namespace detail {
 		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
 		using parent::handle; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
+		using at_t = hid_t<h5::impl::at_t,H5Aclose,true,true,hdf5::attribute>;
 
 		hid_t(){
 			this->handle = H5I_UNINIT;
 			this->dapl = H5I_UNINIT;
 		};
+		at_t operator[]( const char arg[] );
+
 		::hid_t dapl;
 	};
+	/*attribute id*/
+	template<class T, capi_close_t capi_close>
+	struct hid_t<T,capi_close, true,true,hdf5::attribute> : public hid_t<T,capi_close,true,true,hdf5::any> {
+		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
+		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
+		using parent::handle; // is a must because of ds_t{hid_t} ctor 
+		using hidtype = T;
+
+		hid_t(){
+			this->handle = H5I_UNINIT;
+			this->ds = H5I_UNINIT;
+		};
+
+		template <class V> hid_t<T,capi_close, true,true,hdf5::attribute>& operator=( V arg  );
+		template <class V> hid_t<T,capi_close, true,true,hdf5::attribute>& operator=( const std::initializer_list<V> args  );
+
+		::hid_t ds;
+		std::string name;
+	};
+
 }}}
-
-
-
 
 namespace h5 { namespace impl {
 	// redefine ::hid_t<..,from_capi,to_capi,...> to disable conversion, default setting: hid_t::<.., true,true,..>
-	template <class T, capi_close_t capi_call> using aid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::any>;
+	template <class T, capi_close_t capi_call> using aid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::attribute>;
 	template <class T, capi_close_t capi_call> using hid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::any>;
 	template <class T, capi_close_t capi_call> using pid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::property>;
 	template <class T, capi_close_t capi_call> using did_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::dataset>;
@@ -153,8 +176,8 @@ namespace h5 {
 	#define H5CPP__defpid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::pid_t<impl::T_,D_>;
 	#define H5CPP__defdid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::did_t<impl::T_,D_>;
 	#define H5CPP__defaid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::aid_t<impl::T_,D_>;
-	/*file:  */ H5CPP__defaid_t(fd_t, H5Fclose) /*dataset:*/	H5CPP__defdid_t(ds_t, H5Dclose) /* <- packet table: is specialization enabled */
-	/*attrib:*/ H5CPP__defhid_t(at_t, H5Aclose) /*group:  */	H5CPP__defaid_t(gr_t, H5Gclose) /*object:*/	H5CPP__defhid_t(ob_t, H5Oclose)
+	/*file:  */ H5CPP__defhid_t(fd_t, H5Fclose) /*dataset:*/	H5CPP__defdid_t(ds_t, H5Dclose) /* <- packet table: is specialization enabled */
+	/*attrib:*/ H5CPP__defaid_t(at_t, H5Aclose) /*group:  */	H5CPP__defaid_t(gr_t, H5Gclose) /*object:*/	H5CPP__defhid_t(ob_t, H5Oclose)
 	/*space: */ H5CPP__defhid_t(sp_t, H5Sclose) 
 	/*datatype:*/   //H5CPP__defhid_t(dt_t, H5Tclose)
 
