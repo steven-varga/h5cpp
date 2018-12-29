@@ -18,7 +18,7 @@ LIBS =  -lclangFrontend -lclangSerialization -lclangDriver \
 all: $(apps)
 
 h5cpp: h5cpp.o 
-	$(CXX)  $^  $(LIBS)  -o $@	
+	$(CXX)  $^ $(LDFLAGS) $(LIBS)  -o $@	
 upload: h5cpp
 	scp -i ~/.ssh/analytics.pem h5cpp ubuntu@cluster.h5cpp.ca:/tmp/h5cpp
 
