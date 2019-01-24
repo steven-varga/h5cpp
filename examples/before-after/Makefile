@@ -5,8 +5,8 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
-CFLAGS =   -I/usr/local/include -I/usr/local/h5cpp-llvm
-CXXFLAGS =  -std=c++14  -I/usr/local/include -I/usr/local/h5cpp-llvm
+CFLAGS =   -I/usr/include
+CXXFLAGS =  -std=c++14  -I/usr/include
 LIBS = -lhdf5  -lz -ldl -lm 
 
 test: before after
@@ -14,7 +14,7 @@ test: before after
 	./after
 
 generated.h: compound.h
-	h5cpp  compound.cpp -- $(CXXFLAGS)  -Dgenerated.h
+	h5cpp  compound.cpp -- $(CXXFLAGS) -I/usr/include/h5cpp-llvm -Dgenerated.h
 
 before.o : compound.c
 	$(CC) -o before.o  $(CFLAGS) -c compound.c

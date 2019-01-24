@@ -22,27 +22,21 @@ test: $(apps)
 all: $(apps)
 
 arma: arma.cpp
-	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
 	$(CXX) $^ $(LIBS) -o $@
 
 blaze: blaze.cpp
-	$(CXX)   -o $@  -std=c++14 $(CXXFLAGS) -c $^
 	$(CXX) $^ $(LIBS) -o $@
 
 itpp: itpp.cpp
-	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
 	$(CXX) $^ $(LIBS) -litpp -o $@
 
 eigen3: eigen3.cpp
-	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
-	$(CXX) $^ $(LIBS)  -o $@
+	$(CXX)  -I/usr/include/eigen3 $^ $(LIBS)  -o $@
 
 ublas: ublas.cpp
-	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
 	$(CXX) $^ $(LIBS)  -o $@
 
 dlib: dlib.cpp
-	$(CXX)   -o $@  -std=c++11 $(CXXFLAGS) -c $^
 	$(CXX) $^ $(LIBS)  -o $@
 
 clean:

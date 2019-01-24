@@ -20,6 +20,7 @@ void test_01( const h5::fd_t& fd ){// LINARG:=[armaidllo|eigen3|blaze|blitz|it++
 	arma::imat M(NROWS,NCOLS);              // define a linalg object
 	h5::write(fd, "/linalg/armadillo",M);   // save it somewhere, partial and full read|write and append supported
 }
+
 void test_02( const h5::fd_t& fd ){// create a Matrix of STRUCT with chunked and GZIP compressed properties ready for partial read|write
 
 	// upto 7 dimensions/extents are supported

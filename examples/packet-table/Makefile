@@ -5,7 +5,7 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
-CXXFLAGS =  -std=c++11  -I/usr/local/include -I/usr/local/h5cpp-llvm
+CXXFLAGS =  -std=c++11  -I/usr/local/include -I/usr/include/eigen3 
 LIBS =  -lhdf5 -lhdf5_hl  -lz -ldl -lm -lblas -llapack
 
 test: packettable
@@ -20,10 +20,10 @@ test: packettable
 # with -Dmyfile.h specifies the generated output, which must be sandwiched between
 # <h5cpp/core> and <h5cpp/io>
 generated.h: struct.h
-	h5cpp  packettable.cpp -- $(CXXFLAGS)  -Dgenerated.h
+	h5cpp  packettable.cpp -- $(CXXFLAGS) -I/usr/include/h5cpp-llvm -Dgenerated.h
 
 packettable.o : packettable.cpp generated.h 
-	$(CXX) -o packettable.o  $(CXXFLAGS) -c packettable.cpp
+	$(CXX) -I/usr/include/eigen3 -o packettable.o  $(CXXFLAGS) -c packettable.cpp
 
 packettable: packettable.o
 	$(CXX) $^ $(LIBS) -o $@	

@@ -14,24 +14,41 @@ int main(){
 	arma::mat M = arma::zeros(5,6);
 
 	arma::mat matrix = arma::zeros(3,4); for(int i=0; i<matrix.n_elem; i++ ) matrix[i] = i;
-	std::vector<sn::example::Record> vector = h5::utils::get_test_data<sn::example::Record>(4);
+	std::vector<sn::example::Record> vector = h5::utils::get_test_data<sn::example::Record>(40);
 	sn::example::Record& record = vector[0];
-
-	h5::fd_t fd = h5::create("001.h5", H5F_ACC_TRUNC);
+	// set to use the latest file format version to able to use large size attributes
+	h5::fd_t fd = h5::create("001.h5", H5F_ACC_TRUNC, h5::default_fcpl,
+						h5::libver_bounds({H5F_LIBVER_V18, H5F_LIBVER_V18}) );
 	h5::ds_t ds = h5::write(fd,"some dataset with attributes", M);
 	{
-		ds["att_01"] =  42 ;
+		/*
+		(gr_t | ds_t | dt_t = fd["/root/some/path"]) = some object;
+		ds_t ds = ... ;
+		
+
+		gr["data set"] = some object;
+		ds["attribute"] = some attribute;
+
+
+
+
+		h5::ds_t obj = fd["/some/path"]["attribute"];
+		//h5::gr_t obj = fd["/some/path"];*/
+	}
+
+	{
+		ds["att_01"] = 42 ;
 		ds["att_02"] = {1.,3.,4.,5.};
 		ds["att_03"] = {'1','3','4','5'};
 		ds["att_04"] = {"alpha", "beta","gamma","..."};
 
 		ds["att_05"] = "const char[N]";
-		ds["att_06"] =  u8"const char[N]áééé";
-		ds["att_07"] =  std::string( "std::string");
+		ds["att_06"] = u8"const char[N]áééé";
+		ds["att_07"] = std::string( "std::string");
 
-		ds["att_08"] =  record; // pod/compound datatype
-		ds["att_09"] =  vector; // vector of pod/compound type
-		ds["att_10"] =  matrix; // linear algebra object
+		ds["att_08"] = record; // pod/compound datatype
+		ds["att_09"] = vector; // vector of pod/compound type
+		ds["att_10"] = matrix; // linear algebra object
 	}
 
 	/* supported types:
