@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
 		{
 			std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 			//ProfilerStart( (std::string(argv[0]) + std::string(".prof")).data() );
-			h5::write<unsigned>(ds, ptr_w, h5::count{slices,nrows,ncols});
+			h5::write<unsigned>(ds, ptr_w, h5::count{slices,nrows,ncols}, h5::offset{0,0,0} );
 			//ProfilerStop();
 		std::chrono::system_clock::time_point stop = std::chrono::system_clock::now();
 
@@ -108,7 +108,7 @@ int main(int argc, char **argv) {
 				,h5::max_dims{H5S_UNLIMITED,nrows,ncols}, h5::chunk{1,nrows,ncols},  h5::high_throughput );
 		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 			for( int i=0; i < slices * nrows * ncols; i++)
-				h5::append(pt, ptr_w[i] );
+				h5::append(pt, ptr_w[i] ); // [7, 8, 9, 10, .. .]
 		std::chrono::system_clock::time_point stop = std::chrono::system_clock::now();
 
 		double running_time = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() ;
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
 		std::cout << running_time <<" throughput: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
 		}
 		{
-			h5::ds_t ds = h5::open(fd,"append matrix",h5::high_throughput);
+			h5::ds_t ds = h5::open(fd,"append matrix", h5::high_throughput);
 			std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 			//ProfilerStart( (std::string(argv[0]) + std::string(".prof")).data() );
 			h5::read<unsigned>(ds, ptr_r, h5::count{slices,nrows,ncols});
@@ -151,7 +151,11 @@ int main(int argc, char **argv) {
 
 		double running_time = 1e-6 * std::chrono::duration_cast<std::chrono::microseconds>(stop - start).count() ;
 		std::cout << running_time <<" throughput: " << (size / 1e6) / running_time <<" MB/s" <<std::endl;
-		std::cout <<"< write - read : " << (std::memcmp(ptr_w, ptr_r, size) == 0 ? " MATCH " : " !!!MISMATCH!!!") <<">\n";
+		// 'objects' are the first slice of ptr_w to match it iterate through all slices, then collapse result
+		int match = 0;
+		for(int i=0; i<slices; i++)
+			match += ( std::memcmp(ptr_w, ptr_r+i*nrows*ncols, nrows*ncols*sizeof(unsigned) ) == 0 ? 0 : 1 );
+		std::cout <<"< write - read : " << ( match == 0 ? " MATCH " : " !!!MISMATCH!!!") <<">\n";
 		}
 	}
 	{   std::cout << "RAW  BINARY \n";

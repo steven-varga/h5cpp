@@ -18,10 +18,9 @@
 # IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-apps = struct-perf arma-perf stl-perf
-CXX=clang++
+apps = struct-perf tickdata-perf stl-perf arma-perf
 CXXFLAGS = -I../../ -std=c++17
-LIBS =  -lprofiler -lboost_program_options -lglog -lhdf5 -lhdf5_hl -lz -ldl -lm  -lpthread
+LIBS =  -lprofiler -lboost_program_options -lhdf5 -lz -ldl -lm
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
@@ -30,14 +29,17 @@ all: $(apps)
 
 stl-perf: stl-perf.o 
 	$(CXX) $^ $(LIBS) -o $@	
-arma-perf: arma-perf.o 
+tickdata-perf: tickdata-perf.o 
 	$(CXX) $^ $(LIBS) -o $@	
 struct-perf: struct-perf.o 
 	$(CXX) $^ $(LIBS) -o $@	
+arma-perf: arma-perf.o 
+	$(CXX) $^ $(LIBS) -o $@	
+
 
 test: 
 
-profile: struct-profile arma-profile stl-profile
+profile: struct-profile tickdata-profile stl-profile
 
 
 clean:
@@ -49,17 +51,23 @@ struct-profile: struct-perf
 	google-pprof --text struct-perf struct-perf.prof
 	kcachegrind struct-perf.callgrind &>/dev/null
 
-arma-profile: arma-perf
-	./arma-perf
-	google-pprof --callgrind ./arma-perf ./arma-perf.prof >arma-perf.callgrind
-	google-pprof --text arma-perf arma-perf.prof
-	kcachegrind arma-perf.callgrind &>/dev/null
+tickdata-profile: tickdata-perf
+	./tickdata-perf
+	google-pprof --callgrind ./tickdata-perf ./tickdata-perf.prof >tickdata-perf.callgrind
+	google-pprof --text tickdata-perf tickdata-perf.prof
+	kcachegrind tickdata-perf.callgrind &>/dev/null
 
 stl-profile: stl-perf
 	./stl-perf
 	google-pprof --callgrind ./stl-perf ./stl-perf.prof >stl-perf.callgrind
 	google-pprof --text stl-perf stl-perf.prof
 	kcachegrind stl-perf.callgrind &>/dev/null
+
+arma-profile: arma-perf
+	./arma-perf
+	google-pprof --callgrind ./arma-perf ./arma-perf.prof >arma-perf.callgrind
+	google-pprof --text arma-perf arma-perf.prof
+	kcachegrind arma-perf.callgrind &>/dev/null
 
 .PHONY: test
 

@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
 	std::default_random_engine gen(rd());
     std::uniform_int_distribution<unsigned> dist(1, 200);
 
-	unsigned slices = 500, nrows=720, ncols=1280;
+	unsigned slices = 10, nrows=720, ncols=1280;
 
 	std::array<unsigned,3> chunk{1,720,ncols};
 	std::array<unsigned,3>  dims{slices,nrows,ncols};

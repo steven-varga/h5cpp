@@ -13,8 +13,9 @@ int main(int argc, char **argv) {
 	char *version, *date;
 
 	h5::fd_t fd = h5::create("struct.h5",H5F_ACC_TRUNC);
-	h5::dcpl_t dcpl = h5::chunk{1024}  ;
-	h5::pt_t pt = h5::create<sn::struct_type>(fd,"/2017-12-01.tick", h5::max_dims{H5S_UNLIMITED}, dcpl );
+	h5::pt_t pt = h5::create<sn::struct_type>(fd,"/2017-12-01.tick",
+			h5::max_dims{H5S_UNLIMITED},
+			h5::gzip{9} | h5::chunk{1024} );
 
 	sn::struct_type data={0};
 	long long size = 10'000'000ll;
