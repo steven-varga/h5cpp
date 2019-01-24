@@ -2,8 +2,8 @@
 Name: h5cpp
 Description: C++11 template library between STL|armadillo and HDF5 objects
 URL: h5cpp.ca
-Version: 1.10.2
+Version: 1.10.4.1
 Requires: hdf5
-Cflags: -I/usr/local/include/h5cpp  -I/usr/local/include/h5cpp-llvm -std=c++17
+Cflags: -I/usr/include/h5cpp  -std=c++14
 Libs:  -lhdf5  -lz -ldl -lm
 
