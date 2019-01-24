@@ -3,109 +3,14 @@
  Author: Varga, Steven <steven@vargaconsulting.ca>
 --->
 
-Easy to use  [HDF5][hdf5] **C++11** compiler assisted templates for HDF5  
-----------------------------------------------------------------------------------------------------
+Easy to use  [HDF5][hdf5] C++ templates for HDF5  
+-----------------------------------------------
 
 [Hierarchical Data Format][hdf5] prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and stream operations on standardized or custom binary/text objects. Scientific computing platforms such as Python, R, Matlab, Fortran,  Julia [and many more...] come with the necessary libraries to read write HDF5 dataset. This edition simplifies interactions with [popular linear algebra libraries][304], provides [compiler assisted seamless object persistence][303], Standard Template Library support and equipped with novel [error handling architecture][400].
 
+H5CPP is a novel approach to  persistence in the field of machine learning, it provides high performance sequential and block access to HDF5 containers through modern C++ [Download packages from here.](http://h5cpp.org/download) If you are interested in h5cpp LLVM/clang based source code transformation tool [you find it in this separate project.](https://github.com/steven-varga/h5cpp-compiler)
+Follow this link to [our presentation](http://webinar.h5cpp.org) or sign up for the [2019.01.14 HDFGroup organized webinar here](https://register.gotowebinar.com/register/8877249470748655117)
 
-How simple can it get?
-```cpp
-   h5::write( "arma.h5", "arma vec inside matrix",  V // object contains 'count' and rank being written
-            ,h5::current_dims{40,50}  // control file_space directly where you want to place vector
-            ,h5::offset{5,0}            // when no explicit current dimension given current dimension := offset .+ object_dim .* stride (hadamard product)  
-            ,h5::stride{4,4}, h5::block{3,3}
-            ,h5::max_dims{40,H5S_UNLIMITED} )
-// wouldn't it be nice to have unlimited dimension? 
-// if no explicit chunk is set, then the object dimension is
-// used as unit chunk
-        
-```
-The above example is to demonstrate partial create + write with extendable datasets which can be turned into high performance packet table: `h5::pt_t ` by a simple conversion `h5::pt_t pt = h5::open( ... )` ,  `h5::pt_t pt = h5::create(...)` or `h5::pt_t pt = ds` where `h5::ds_t ds = ... `.   
-
-
-`h5::create | h5::read | h5::write | h5::append` take RAII enabled descriptors or CAPI hid_t ones -- depending on conversion policy: seamless or controlled fashion. The optional arguments may be placed in any order, compile time computed and come with intelligent compile time error messages.
-
-```cpp
-h5::write( "arma.h5", "arma vec inside matrix",  V 
-      ,h5::stride{4,4}, h5::block{3,3}, h5::current_dims{40,50} 
-      ,h5::offset{5,0}, h5::max_dims{40,H5S_UNLIMITED}  );
-```
-Wouldn't it be nice not to have to  remember everything? Focus on the idea, write it out intuitively and refine it later. The function construct below compiles into the same instructions as above. 
-
-```cpp
-h5::write( "arma.h5", "arma vec inside matrix",  V 
-      ,h5::max_dims{40,H5S_UNLIMITED}, h5::stride{4,4},  h5::current_dims{40,50}
-      ,h5::block{3,3}, h5::offset{5,0},   );
-```
-
-Why should you know about HDF5 at all, isn't it work about ideas? the details can be filled in later when needed:
-```cpp 
-// supported objects:  raw pointers | armadillo | eigen3 | blaze | blitz++ | it++ | dlib | uBlas | std::vector
-arma::vec V(4); // some vector: armadillo, eigen3, 
-h5::write( "arma.h5", "path/to/dataset name",  V);
-```
-How about some really complicated POD struct type that your client or colleague  wants to see in action right now?
-Invoke clang++ based `h5cpp` compiler on the translation unit -- group of files which are turned into a single object file -- and call it done!
-```cpp
-namespace sn {
-	namespace typecheck {
-		struct Record { /*the types with direct mapping to HDF5*/
-			char  _char; unsigned char _uchar; short _short; unsigned short _ushort; int _int; unsigned int _uint;
-			long _long; unsigned long _ulong; long long int _llong; unsigned long long _ullong;
-			float _float; double _double; long double _ldouble;
-			bool _bool;
-			// wide characters are not supported in HDF5
-			// wchar_t _wchar; char16_t _wchar16; char32_t _wchar32;
-		};
-	}
-	namespace other {
-		struct Record {                    // POD struct with nested namespace
-			MyUInt                    idx; // typedef type 
-			MyUInt                     aa; // typedef type 
-			double            field_02[3]; // const array mapped 
-			typecheck::Record field_03[4]; //
-		};
-	}
-	namespace example {
-		struct Record {                    // POD struct with nested namespace
-			MyUInt                    idx; // typedef type 
-			float             field_02[7]; // const array mapped 
-			sn::other::Record field_03[5]; // embedded Record
-			sn::other::Record field_04[5]; // must be optimized out, same as previous
-			other::Record  field_05[3][8]; // array of arrays 
-		};
-	}
-	namespace not_supported_yet {
-		// NON POD: not supported in phase 1
-		// C++ Class -> PODstruct -> persistence[ HDF5 | ??? ] -> PODstruct -> C++ Class 
-		struct Container {
-			double                            idx; // 
-			std::string                  field_05; // c++ object makes it non-POD
-			std::vector<example::Record> field_02; // ditto
-		};
-	}
-	/* BEGIN IGNORED STRUCT */
-	// these structs are not referenced with h5::read|h5::write|h5::create operators
-	// hence compiler should ignore them.
-	struct IgnoredRecord {
-		signed long int   idx;
-		float        field_0n;
-	};
-	/* END IGNORED STRUCTS */
-```
-I did try to make the above include file  as  ugly and complicated as I could. But do you really need to read it? What if you had a technology at your disposal that can do it for you?  
-In your code all you have to do is to trigger the compiler by making any `h5::` operations on the desired data structure. It works without the hmmm boring details?
-```cpp
-...
-std::vector<sn::example::Record> vec 
-    = h5::utils::get_test_data<sn::example::Record>(20);
-// mark vec  with an h5:: operator and delegate 
-// the details to h5cpp compiler
-h5::write(fd, "orm/partial/vector one_shot", vec );
-...
-``` 
-H5CPP is a novel approach to  persistence in the field of machine learning, it provides high performance sequential and block access to HDF5 containers through modern C++.
 
 Templates:
 ----------
@@ -155,15 +60,12 @@ template <typename T> void h5::append(h5::pt_t& ds, const T& ref) [noexcept];
 All **file and dataset io** descriptors implement [raii idiom][301] and close underlying resource when going out of scope, 
 and may be seamlessly passed to HDF5 CAPI calls when implicit conversion enabled. Similarly templates can take CAPI `hid_t` identifiers as arguments where applicable provided conversion policy allows. See [conversion policy][301] for details.
 
-how to use:
+install:
 -----------
-`sudo make install` will copy the header files and `h5cpp.pc` package config file into `/usr/local/` or copy them and ship it with your project.
-There is no other dependency than hdf5 libraries and include files. However to activate the template specialization for any given library you must include that library first then h5cpp. In case the auto detection fails turn template specialization on by defining:
-```cpp
-#define [ H5CPP_USE_BLAZE | H5CPP_USE_ARMADILLO | H5CPP_USE_EIGEN3 | H5CPP_USE_UBLAS_MATRIX 
-	| H5CPP_USE_UBLAS_VECTOR | H5CPP_USE_ITPP_MATRIX | H5CPP_USE_ITPP_VECTOR | H5CPP_USE_BLITZ | H5CPP_USE_DLIB | H5CPP_USE_ETL ]
-```
-if you're interested in `h5cpp` compiler please [visit this page][305] to recreate the required clang7.0 toolchain. 
+On the [projects download page](http://h5cpp.org/download) you find debian, rpm and general tar.gz packages with detailed instructions. Or get the
+download link to the header only [h5cpp-dev_1.10.4.deb](http://h5cpp.org/download/h5cpp-dev_1.10.4.1_amd64.deb) and the binary compiler 
+[h5cpp_1.10.4.deb](http://h5cpp.org/download/h5cpp_1.10.4.1_amd64.deb) directly from this page.
+
 
 supported classes:
 ----------------------

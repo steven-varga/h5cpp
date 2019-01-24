@@ -4,7 +4,7 @@
 all: Doxyfile
 	@doxygen Doxyfile
 	mkdir -p  ../docs/html/cgi
-	cp redirect.py ../docs/html/cgi/
+	#cp redirect.py ../docs/html/cgi/
 test:
 
 upload: all

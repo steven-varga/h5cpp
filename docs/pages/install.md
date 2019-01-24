@@ -36,9 +36,9 @@ git clone https://git.llvm.org/git/libcxx.git/
 git clone https://git.llvm.org/git/libcxxabi.git/
 # end-optional
 cd ../../ && mkdir build && cd build
-cmake  -DCMAKE_INSTALL_PREFIX=/usr/local CMAKE_BUILD_TYPE=MinSizeRel -DLLVM_TARGETS_TO_BUILD=X86  ../llvm
+3.0 (quilt)cmake  -DCMAKE_INSTALL_PREFIX=/usr/local CMAKE_BUILD_TYPE=MinSizeRel -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_USE_LINKER=gold ../llvm
 nohup make -j8&
-sudo make install
+sudo make install build-essential gcc-8 g++-8
 ```
 
 For parellel HDF5 you need a POSIX compliant parallel (duh) filesystem. [OrangeFS](https://s3.amazonaws.com/download.orangefs.org/current/source/orangefs-2.9.7.tar.gz) is a good FSF alternative to commercial solutions. This step is optional, alternative solution is to use single write multiple read SWMR mode where 
@@ -77,6 +77,35 @@ The best practice is to install all linear algebra systems from sources, startin
 Here is the list of C++ supported Scientific/Linear Algebra libraries:
 [armadillo][10] [eigen3][12] [blitz][13] [blaze][16] [dlib][15] [itpp][14] [boost: ublas][11] and [ETL][17] will be added soon. If I left your favourite out or lacking of functionality please shoot me an email.
 
+DETAILS for intel MKL based system:
+
+download intel MKL from their website, and follow instructions, don't forget to set the variables by adding `source /opt/intel/bin/compilervars.sh intel64` to `.bashrc`.
+
+You will need arpack `` 
+```bash
+git clone https://github.com/opencollab/arpack-ng.git
+cd arpack-ng
+./bootstrap
+./configure ## make sure it picks up MKL
+make -j4
+sudo make install
+```
+superLU:
+```bash
+git clone https://github.com/xiaoyeli/superlu.git
+cd superlu 
+```
+armadillo:
+```bash
+./configure -DCMAKE_INSTALL_PREFIX=/usr/local 
+make && make install
+```
+blaze: [download from here ](https://bitbucket.org/blaze-lib/blaze)
+```bash
+./configure -DCMAKE_INSTALL_PREFIX=/usr/local 
+make && make install
+```
+
 
 [10]: http://arma.sourceforge.net/
 [11]: http://www.boost.org/doc/libs/1_66_0/libs/numeric/ublas/doc/index.html
@@ -97,3 +126,16 @@ Here is the list of C++ supported Scientific/Linear Algebra libraries:
 [202]: https://www.pardiso-project.org/
 [203]: http://faculty.cse.tamu.edu/davis/suitesparse.html
 
+
+
+ubuntu 18.04 LTS ami-0d2505740b82f7948 
+```bash
+sudo apt install build-essential gcc-8 g++-8
+
+wget http://h5cpp.org/download/hdf5-1.10.4.tar.gz
+tar -xvzf tar -xvzf hdf5-1.10.4.tar.gz
+cd hdf5-1.10.4 && ./configure --prefix=/usr/local && make -j2 && sudo make install 
+
+wget http://h5cpp.org/download/h5cpp_1.10.4.1_amd64.deb
+sudo dpkg -i h5cpp_1.10.4.1_amd64.deb
+```
