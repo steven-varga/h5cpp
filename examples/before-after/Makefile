@@ -6,15 +6,16 @@
 #  _____________________________________________________________________________
 
 CFLAGS =   -I/usr/include
-CXXFLAGS =  -std=c++14  -I/usr/include
+CXXFLAGS =  -std=c++14 
 LIBS = -lhdf5  -lz -ldl -lm 
+INCLUDES = -I/usr/local/include -I/usr/include
 
 test: before after
 	./before
 	./after
 
 generated.h: compound.h
-	h5cpp  compound.cpp -- $(CXXFLAGS) -I/usr/include/h5cpp-llvm -Dgenerated.h
+	h5cpp  compound.cpp -- $(CXXFLAGS) $(INCLUDES) -I/usr/include/h5cpp-llvm -Dgenerated.h
 
 before.o : compound.c
 	$(CC) -o before.o  $(CFLAGS) -c compound.c
@@ -23,7 +24,7 @@ before: before.o
 	$(CC) $^ $(LIBS) -o $@	
 
 after.o : compound.cpp generated.h 
-	$(CXX) -o after.o  $(CXXFLAGS) -c compound.cpp
+	$(CXX) $(INCLUDES) -o after.o  $(CXXFLAGS) -c compound.cpp
 
 after: after.o
 	$(CXX) $^ $(LIBS) -o $@	

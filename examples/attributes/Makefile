@@ -7,8 +7,9 @@
 
 
 apps = attributes
-CXXFLAGS =  -std=c++11  -I/usr/local/include 
+CXXFLAGS =  -std=c++11  -I/usr/local/include -I/usr/include
 LIBS =  -lhdf5  -lz -ldl -lm
+INCLUDES = -I/usr/local/include -I/usr/include
 
 test: $(apps)
 	@./attributes
@@ -28,7 +29,7 @@ all: $(apps)
 # with -Dmyfile.h specifies the generated output, which must be sandwiched between
 # <h5cpp/core> and <h5cpp/io>
 generated.h: struct.h
-	h5cpp  attributes.cpp -- -v $(CXXFLAGS) -I/usr/include/h5cpp-llvm -Dgenerated.h
+	h5cpp  attributes.cpp --  $(CXXFLAGS) -I/usr/include/h5cpp-llvm -Dgenerated.h
 
 attributes.o : attributes.cpp generated.h 
 	$(CXX) -o attributes.o  $(CXXFLAGS) -c attributes.cpp

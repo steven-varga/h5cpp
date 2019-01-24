@@ -6,7 +6,7 @@
 #  _____________________________________________________________________________
 #
 
-DIRS = basics before-after compound packet-table  raw_memory linalg transform multi-tu stl
+DIRS = attributes optimized basics before-after compound packet-table  raw_memory linalg transform multi-tu stl
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
