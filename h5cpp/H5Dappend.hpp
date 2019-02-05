@@ -123,13 +123,19 @@ void>::type h5::pt_t::append( const T& ref ) try {
 
 	switch( dims_.size() ){
 		case 1: // vector
-			;break;
-		case 2: //matrix
-			if( dims[0] * dims[1] * element_size == block_size ){
+			if( dims[0] * element_size == block_size )
 				pipeline.write_chunk(offset, block_size, (void*) ptr_ );
-			}
+			else throw h5::error::io::packet_table::write( H5CPP_ERROR_MSG("dimension mismatch"));
+			break;
+		case 2: //matrix
+			if( dims[0] * dims[1] * element_size == block_size )
+				pipeline.write_chunk(offset, block_size, (void*) ptr_ );
+			else throw h5::error::io::packet_table::write( H5CPP_ERROR_MSG("dimension mismatch"));
 			break;
 		case 3: // cube
+			if( dims[0] * dims[1] * dims[2] * element_size == block_size )
+				pipeline.write_chunk(offset, block_size, (void*) ptr_ );
+			else throw h5::error::io::packet_table::write( H5CPP_ERROR_MSG("dimension mismatch"));
 			;break;
 		default:
 			throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("objects with rank > 2 are not supported... "));

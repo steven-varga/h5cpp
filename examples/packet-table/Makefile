@@ -10,6 +10,8 @@ LIBS =  -lhdf5 -lhdf5_hl  -lz -ldl -lm -lblas -llapack
 
 test: packettable
 	./packettable
+	#h5dump -d 'stream of matrices' example.h5
+	h5dump -d 'stream of vectors' example.h5
 
 # compiler assisted introspection will scan TU translation unit, which is the 
 # collection of files you're compiling into an object, generates desired output

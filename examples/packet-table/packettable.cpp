@@ -83,20 +83,17 @@ int main(){
 		// actual performance: create 'movie' frame by frame
 		for( int i = 1; i < nframes; i++) 	//
 			h5::append( pt, M);  			// save it into file
-
 	}
 
-	/*
 	{
-		h5::pt_t pt = h5::create<double>(fd, "stream of vectors", // 1280 x 720
-				h5::max_dims{H5S_UNLIMITED,5},
-				h5::chunk{2,5}  // chunk size controls h5::append internal cache size
-			   	| h5::gzip{9} );
-		arma::vec V(5); for(int i=0; i<5; i++) V(i) = i;
-		for( int i = 1; i < 7; i++)
-			h5::append( pt, V);  			// save it into file
-	}*/
+		h5::pt_t pt = h5::create<double>(fd, "stream of vectors",
+				h5::max_dims{H5S_UNLIMITED,5}, h5::chunk{1,5} );
 
-// 442'076'646.72
+		arma::vec V(5); for(int i=0; i<5; i++) V(i) = i;
+
+		for( int i = 0; i < 7; i++)
+			V[0] = i, h5::append( pt, V);  			// save it into file
+	}
+
 	return 0;
 }

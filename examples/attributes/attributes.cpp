@@ -93,5 +93,21 @@ int main(){
 		arma::mat att_10 = h5::aread<arma::mat>(ds,"att_10");
 		std::cerr << att_10 <<"\n";
 	}
+	{ // reading back attribute is always single shot, no partial IO 
+		std::cout << "att_01 : "; int att_01 = h5::aread<int>(ds,"att_01"); std::cout << att_01 << "\n";
+		std::cout << "att_02 : "; double att_02 = h5::aread<double>(ds,"att_02"); std::cout << att_02 << "\n";
+		std::cout << "att_03 : "; auto att_03 = h5::aread<std::vector<int>>(ds,"att_03"); 
+		for(auto v : att_03) std::cout << v << " "; std::cout<<"\n";
+		std::cout << "att_04 : "; auto att_04 = h5::aread<std::vector<std::string>>(ds,"att_04");
+		for(auto v : att_04) std::cout << v << " "; std::cout<<"\n";
+
+		//std::cout << "att_08 : "; auto att_08 = h5::aread<std::vector<sn::example::Record>>(ds,"att_08"); 
+		// const void* to void*
+		std::cout << "att_09 : "; auto att_09 = h5::aread<sn::example::Record>(ds,"att_09");
+		std::cout << att_09.idx << "\n";
+		// const void*  
+		std::cout << "att_10 : "; auto att_10 = h5::aread<double>(ds,"att_10"); std::cout << att_10 << "\n";
+
+	}
 }
 
