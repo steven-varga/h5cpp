@@ -30,8 +30,15 @@ packettable.o : packettable.cpp generated.h
 packettable: packettable.o
 	$(CXX) $^ $(LIBS) -o $@	
 
+packet_batches.o : packet_batches.cpp 
+	$(CXX) -o packet_batches.o  $(CXXFLAGS) -c packet_batches.cpp
+
+packet_batches: packet_batches.o
+	$(CXX) $^ $(LIBS) -larmadillo -o $@	
+
+
 clean:
-	@$(RM) *.o *.h5 $(apps)  packettable
+	@$(RM) *.o *.h5 $(apps)  packettable packet_batches
 
 .PHONY: test
 

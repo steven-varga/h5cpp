@@ -32,7 +32,9 @@ namespace h5 {
 		void flush();
 
 		private:
-		template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value,
+		template<class T> inline typename std::enable_if<h5::impl::is_scalar<T>::value,
+		void>::type append( const T* ptr );
+		template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value && !std::is_pointer<T>::value,
 		void>::type append( const T& ref );
 		template<class T> inline typename std::enable_if< !h5::impl::is_scalar<T>::value,
 		void>::type append( const T& ref );
@@ -94,8 +96,18 @@ h5::pt_t::~pt_t(){
 	flush();
 }
 
-
 template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value,
+void>::type h5::pt_t::append( const T* ptr ) try {
+	//PTR: write directly chunk size from provided buffer/ptr
+	*offset = *current_dims;
+	*current_dims += *chunk_dims;
+	h5::set_extent(ds, current_dims);
+	pipeline.write_chunk(offset,block_size,ptr);
+} catch( const std::runtime_error& err ){
+	throw h5::error::io::dataset::append( err.what() );
+}
+
+template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value && !std::is_pointer<T>::value,
 void>::type h5::pt_t::append( const T& ref ) try {
 //SCALAR: store inbound data directly in pipeline cache
 	static_cast<T*>( ptr )[n++] = ref;
@@ -125,17 +137,23 @@ void>::type h5::pt_t::append( const T& ref ) try {
 		case 1: // vector
 			if( dims[0] * element_size == block_size )
 				pipeline.write_chunk(offset, block_size, (void*) ptr_ );
-			else throw h5::error::io::packet_table::write( H5CPP_ERROR_MSG("dimension mismatch"));
+			else throw h5::error::io::packet_table::write(
+					H5CPP_ERROR_MSG("dimension mismatch: "
+						+ std::to_string( dims[0] * element_size) + " != " + std::to_string(block_size) ));
 			break;
 		case 2: //matrix
 			if( dims[0] * dims[1] * element_size == block_size )
 				pipeline.write_chunk(offset, block_size, (void*) ptr_ );
-			else throw h5::error::io::packet_table::write( H5CPP_ERROR_MSG("dimension mismatch"));
+			else throw h5::error::io::packet_table::write(
+					H5CPP_ERROR_MSG("dimension mismatch: "
+						+ std::to_string( dims[0] * dims[1] * element_size) + " != " + std::to_string(block_size) ));
 			break;
 		case 3: // cube
 			if( dims[0] * dims[1] * dims[2] * element_size == block_size )
 				pipeline.write_chunk(offset, block_size, (void*) ptr_ );
-			else throw h5::error::io::packet_table::write( H5CPP_ERROR_MSG("dimension mismatch"));
+			else throw h5::error::io::packet_table::write(
+					H5CPP_ERROR_MSG("dimension mismatch: "
+						+ std::to_string( dims[0] * dims[1] * dims[2] * element_size) + " != " + std::to_string(block_size) ));
 			;break;
 		default:
 			throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("objects with rank > 2 are not supported... "));
