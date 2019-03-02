@@ -13,7 +13,8 @@ INCLUDES = -I/usr/local/include -I/usr/include
 
 test: $(apps)
 	@./utf
-	h5dump -pH 001.h5
+	h5dump -pH  こんにちは世界.h5
+
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX)   -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
