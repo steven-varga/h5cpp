@@ -3,6 +3,15 @@
  Author: Varga, Steven <steven@vargaconsulting.ca>
 --->
 
+Windows VC2017
+---------------
+2019 May 22: Chris Drozdowski has donated his solution for Visual C++ 2017. Please download and provide feedback for this branch, sometime July will get back to this Windows branch as will review/merge all changes as well as provide a cross compile for the code generator tool: h5cpp-compiler
+
+Thanks Chris!
+steve
+
+
+
 Easy to use  [HDF5][hdf5] C++ templates for HDF5  
 -----------------------------------------------
 
