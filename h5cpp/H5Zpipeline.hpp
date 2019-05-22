@@ -127,8 +127,22 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 			filter::get_callback( H5Pget_filter2( dcpl, i, &flags[i], &cd_size[i], cd_values[i], 0, nullptr, &filter_config )));
 	}
 
+#ifdef _MSC_VER
+// aligned_alloc does not exist in VC++!!! About _aligned_malloc, see: https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/aligned-malloc?view=vs-2017
+// Observe the params are switched.
+// Not tested whether RAII frees the memory.
+	ptr0 = std::move( std::unique_ptr<char>{ (char*)_aligned_malloc(block_size, H5CPP_MEM_ALIGNMENT )} );
+	ptr1 = std::move( std::unique_ptr<char>{ (char*)_aligned_malloc(block_size, H5CPP_MEM_ALIGNMENT )} );
+	if (
+		(!ptr0) || (!ptr1)
+		|| (((unsigned long long)*ptr0 % H5CPP_MEM_ALIGNMENT) != 0)
+		||  (((unsigned long long)*ptr1 % H5CPP_MEM_ALIGNMENT) != 0)
+	)
+		throw h5::error::io::dataset::open(H5CPP_ERROR_MSG("CTOR: couldn't allocate memory for caching chunks, MSCV requires that alignment be an integer power of 2."));
+#else
 	ptr0 = std::move( std::unique_ptr<char>{ (char*)aligned_alloc( H5CPP_MEM_ALIGNMENT, block_size )} );
 	ptr1 = std::move( std::unique_ptr<char>{ (char*)aligned_alloc( H5CPP_MEM_ALIGNMENT, block_size )} );
+#endif
 	// get an alias to smart ptr
 	if( (chunk0 = ptr0.get()) == NULL || (chunk1 = ptr1.get()) == NULL )
 	   	throw h5::error::io::dataset::open( H5CPP_ERROR_MSG("CTOR: couldn't allocate memory for caching chunks, invalid/check size?"));

@@ -95,7 +95,12 @@ namespace h5 { namespace impl { namespace detail {
 			if( H5Iis_valid( handle ) )
 				err = capi_close( handle );
 		}
+#ifdef _MSC_VER
+// Fixes error related to this->handle access.
+		protected:
+#else
 		private:
+#endif
 		::hid_t handle;
 	};
 

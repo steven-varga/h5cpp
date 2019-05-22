@@ -71,6 +71,17 @@ h5::at_t h5::ds_t::operator[]( const char name[] ){
 	return attr;
 }
 
+#ifdef _MSC_VER
+// Observe the addition of & to h5::at_t.
+template<> template< class V> inline
+h5::at_t& h5::at_t::operator=( V arg ){
+	if( !H5Iis_valid(this->ds) )
+		throw h5::error::io::attribute::create("unable to create attribute: underlying dataset id not provided...");
+
+	h5::awrite(ds, name, arg);
+	return *this;
+}
+#else
 template<> template< class V> inline
 h5::at_t h5::at_t::operator=( V arg ){
 	if( !H5Iis_valid(this->ds) )
@@ -79,6 +90,19 @@ h5::at_t h5::at_t::operator=( V arg ){
 	h5::awrite(ds, name, arg);
 	return *this;
 }
+#endif
+
+#ifdef _MSC_VER
+// Observe the addition of & to h5::at_t.
+template<> template< class V> inline
+h5::at_t& h5::at_t::operator=( const std::initializer_list<V> args ){
+	if( !H5Iis_valid(this->ds) )
+		throw h5::error::io::attribute::create("unable to create attribute: underlying dataset id not provided...");
+
+	h5::awrite(ds, name, args);
+	return *this;
+}
+#else
 template<> template< class V> inline
 h5::at_t h5::at_t::operator=( const std::initializer_list<V> args ){
 	if( !H5Iis_valid(this->ds) )
@@ -87,6 +111,7 @@ h5::at_t h5::at_t::operator=( const std::initializer_list<V> args ){
 	h5::awrite(ds, name, args);
 	return *this;
 }
+#endif
 
 #endif
 
