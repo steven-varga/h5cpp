@@ -6,7 +6,7 @@
 
 #ifndef  H5CPP_CAPI_HPP
 #define  H5CPP_CAPI_HPP
-
+#include <limits>
 /* rules:
  * h5::id_t{ hid_t } or direct initialization  doesn't increment reference count
  */ 
@@ -214,7 +214,12 @@ inline std::ostream& operator<<(std::ostream& os, const h5::impl::array<T>& arr)
 	if( arr.rank )
 		for(int i=0;i<arr.rank; i++){
 			char sep = i != arr.rank - 1  ? ',' : '}';
-			if( arr[i] < std::numeric_limits<hsize_t>::max() )
+#ifdef _MSC_VER
+// Observe std::numeric_limits<hsize_t>::max is wrapped in ().
+			if( arr[i] < (std::numeric_limits<hsize_t>::max)() )
+#else
+			if (arr[i] < std::numeric_limits<hsize_t>::max())
+#endif // _MSC_VER
 				os << arr[i] << sep;
 			else
 				os << "inf" << sep;
