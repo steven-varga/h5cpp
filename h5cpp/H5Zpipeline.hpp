@@ -149,7 +149,12 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 }
 
 #define h5cpp_outer( idx ) for( j##idx =0; j##idx < n##idx; j##idx += b##idx)
+#ifdef _MSC_VER
+// Observe std::min is wrapped in ().
+#define h5cpp_inner( idx ) for( i##idx = j##idx; i##idx < (std::min)(j##idx+b##idx,n##idx); i##idx++)
+#else
 #define h5cpp_inner( idx ) for( i##idx = j##idx; i##idx < std::min(j##idx+b##idx,n##idx); i##idx++)
+#endif // _MSC_VER
 #define h5cpp_def( idx ) hsize_t i##idx=0, j##idx = 0, s##idx=0, n##idx=N[idx], b##idx=B[idx], rx##idx=Rx[idx],  ry##idx=Ry[idx];
 
 template< class Derived>
