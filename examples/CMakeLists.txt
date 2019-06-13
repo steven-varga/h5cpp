@@ -1,0 +1,192 @@
+#  _____________________________________________________________________________
+#  Copyright (c) <2019> <copyright Steven Varga, Toronto, On>
+#  Contact: Steven Varga
+#           steven@vargaconsulting.ca
+#           2019 Toronto, On Canada
+#  _____________________________________________________________________________
+
+
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+
+## match hdf5 versioning x.x.x.h5cpp-version
+project(h5cpp-dev VERSION 1.10.4.1 LANGUAGES CXX C)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
+	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
+set(CMAKE_CXX_STANDARD 17)
+
+if(WIN32)
+	message(STATUS "***WARNING: h5cpp is not fully tested on windows, but know to work ***")
+endif()
+if(APPLE)
+	message(STATUS "***WARNING: h5cpp is not fully tested on apple ***")
+endif()
+
+include(GNUInstallDirs)
+find_package(Doxygen QUIET)
+
+list(APPEND CMAKE_INCLUDE_PATH "/usr/include")
+list(APPEND CMAKE_INCLUDE_PATH "/usr/local/include" )
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/" 
+	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
+
+find_program(H5CPP 
+	NAME h5cpp
+	HINTS /usr/bin /usr/local/bin
+	DOC "path to h5cpp source code transformation tool")
+
+find_file(H5CPP_LLVM_PATH
+	NAME h5cpp-llvm
+	HINTS /usr/include /usr/local/include
+	DOC "path to h5cpp llvm specific header files")
+
+find_package(HDF5 1.10.4 REQUIRED QUIET)
+find_package(ZLIB REQUIRED QUIET)
+find_package(PkgConfig REQUIRED QUIET)
+
+find_package(dlib QUIET)
+find_package(Eigen3 QUIET)
+find_package(Armadillo QUIET)
+find_package(blaze QUIET)
+find_package(ublas QUIET )
+find_package(Boost QUIET)
+
+
+# these ones are pkg-config based
+pkg_check_modules(ITPP QUIET itpp)
+pkg_check_modules(Blitz QUIET blitz)
+
+list(APPEND LIBS ${HDF5_C_LIBRARIES} ${ZLIB_LIBRARIES})
+list(APPEND INCLUDE_DIRS ${CMAKE_SOURCE_DIR} ${HDF5_INCLUDE_DIRS}  ${ZLIB_INCLUDE_DIRS})
+
+include_directories(BEFORE ${CMAKE_SOURCE_DIR})
+
+add_custom_target(h5cpp-compiler-generated ALL
+	COMMAND	${H5CPP}  attributes/attributes.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dattributes/generated.h
+	COMMAND	${H5CPP}  before-after/compound.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dbefore-after/generated.h
+	COMMAND	${H5CPP}  compound/struct.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dcompound/generated.h
+	COMMAND	${H5CPP}  multi-tu/tu-01.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dmulti-tu/tu-01.h
+	COMMAND	${H5CPP}  multi-tu/tu-02.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dmulti-tu/tu-02.h
+	COMMAND	${H5CPP}  packet-table/packettable.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dpacket-table/generated.h
+	COMMENT "generating hdf5 compound type descriptors with h5cpp compiler ...")
+
+if( EXISTS ${H5CPP} )
+	add_custom_target(examples ALL DEPENDS h5cpp-compiler-generated)
+
+else( )
+	add_custom_target(examples ALL)
+	message("compiler NOT found: examples added...")
+endif()
+
+if( ${dlib_FOUND} )
+	message( "-- Found: dlib library, added to examples" )
+	add_executable(examples-dlib EXCLUDE_FROM_ALL "linalg/dlib.cpp")
+	# dlib doesn't like c++17
+	target_compile_options(examples-dlib PRIVATE "-w")
+	target_link_libraries(examples-dlib ${LIBS} )
+	set_property(TARGET examples-dlib PROPERTY CXX_STANDARD 14)
+	add_dependencies(examples examples-dlib)
+endif()
+
+if( ${Eigen3_FOUND} )
+	message( "-- Found: eigen3 ${Eigen3_VERSION} added to examples" )
+	add_executable(examples-eigen3 EXCLUDE_FROM_ALL "linalg/eigen3.cpp")
+	target_link_libraries(examples-eigen3 ${LIBS} Eigen3::Eigen )
+	add_dependencies(examples examples-eigen3)
+endif()
+
+if( ${ARMADILLO_FOUND} )
+	message( "-- Found: armadillo ${ARMADILLO_VERSION_STRING} added to examples" )
+	add_executable(examples-arma EXCLUDE_FROM_ALL "linalg/arma.cpp")
+	target_link_libraries(examples-arma ${LIBS})
+	add_dependencies(examples examples-arma)
+endif()
+
+if( ${blaze_FOUND} )
+	message( "-- Found: blaze ${blaze_VERSION} added to examples" )
+	add_executable(examples-blaze EXCLUDE_FROM_ALL "linalg/blaze.cpp")
+	target_link_libraries(examples-blaze ${LIBS})
+	add_dependencies(examples examples-blaze)
+endif()
+
+if( ${ITPP_FOUND} )
+	message( "-- Found: itpp ${ITPP_VERSION}, added to examples" )
+	add_executable(examples-itpp EXCLUDE_FROM_ALL "linalg/itpp.cpp")
+	target_link_libraries(examples-itpp ${LIBS}  ${ITPP_LDFLAGS}  )
+	add_dependencies(examples examples-itpp)
+endif()
+
+if( ${Blitz_FOUND} )
+	message( "-- Found: blitz ${Blitz_VERSION}, added to examples" )
+	#add_executable(examples-blitz EXCLUDE_FROM_ALL "linalg/blitz.cpp")
+	#target_link_libraries(examples-blitz ${LIBS}  ${Blitz_LDFLAGS} )
+	#TODO: re-add example for blitz++ 
+	#add_dependencies(examples examples-blitz)
+endif()
+
+if( ${Boost_FOUND} )
+	if(EXISTS "${Boost_INCLUDE_DIRS}/boost/numeric/ublas")
+		set(ublas_DIR "${Boost_INCLUDE_DIRS}/boost/numeric/ublas" CACHE PATH "path to ublas includes" FORCE)
+		message( "-- Found: ublas ${Boost_VERSION}" )
+		add_executable(examples-ublas EXCLUDE_FROM_ALL "linalg/ublas.cpp")
+		target_link_libraries(examples-ublas ${LIBS} )
+		add_dependencies(examples examples-ublas)
+	endif()
+endif()
+
+
+## attributes ###
+#add_executable(examples-attributes EXCLUDE_FROM_ALL "attributes/attributes.cpp")
+#target_link_libraries(examples-attributes ${LIBS} )
+#add_dependencies(examples examples-attributes)
+
+## before-after: before ###
+add_executable(examples-before EXCLUDE_FROM_ALL "before-after/compound.c")
+target_link_libraries(examples-before ${LIBS} )
+add_dependencies(examples examples-before)
+
+## before-after: after ###
+add_executable(examples-after EXCLUDE_FROM_ALL "before-after/compound.cpp")
+target_link_libraries(examples-after ${LIBS} )
+add_dependencies(examples examples-after)
+
+## compound ###
+add_executable(examples-compound EXCLUDE_FROM_ALL "compound/struct.cpp")
+target_link_libraries(examples-compound ${LIBS} )
+add_dependencies(examples examples-compound)
+
+
+
+## multi translation unit ###
+#add_library(examples-multi-tu01 OBJECT "multi-tu/tu_01.cpp")
+#add_library(examples-multi-tu02 OBJECT "multi-tu/tu_02.cpp")
+
+#add_executable(examples-multi-tu EXCLUDE_FROM_ALL "multi-tu/main.cpp")
+#target_link_libraries(examples-multi-tu  examples-multi-tu01 examples-multi-tu02 ${LIBS}   )
+#add_dependencies(examples examples-multi-tu)
+
+
+
+
+## basics ###
+add_executable(examples-basics EXCLUDE_FROM_ALL "basics/basics.cpp")
+target_link_libraries(examples-basics ${LIBS} )
+add_dependencies(examples examples-basics)
+
+## raw memory ###
+add_executable(examples-raw EXCLUDE_FROM_ALL "raw_memory/raw.cpp")
+target_link_libraries(examples-raw ${LIBS} )
+add_dependencies(examples examples-raw)
+
+## stl ###
+add_executable(examples-stl EXCLUDE_FROM_ALL "stl/vector.cpp")
+target_link_libraries(examples-stl ${LIBS} )
+add_dependencies(examples examples-stl)
+
+## transform ###
+add_executable(examples-transform EXCLUDE_FROM_ALL "transform/transform.cpp")
+target_link_libraries(examples-transform ${LIBS} )
+add_dependencies(examples examples-transform)
+
+
+
