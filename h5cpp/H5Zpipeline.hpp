@@ -12,6 +12,24 @@ namespace h5 {
 }
 
 namespace h5{ namespace impl {
+
+#ifdef _MSC_VER
+	// pipeline_t uses unique_ptr to manage memory returned from aligned_alloc.
+	// The default dtor for unique_ptr can free this memory.
+	// VC++ doesn't have aligned_alloc, it has _aligned_alloc.
+	// Memory returned from _aligned_alloc must be freed using _aligned_free.
+	// Hence, for VC++, we will use a custom dtor for these unique_ptrs in order to make
+	// sure _aligned_free gets called. If it isn't called, ugly exception thrown.
+	struct ms_aligned_mem_ptr_deleter {
+		void operator()(void* ptr) {
+			if (ptr) {
+				_aligned_free(ptr);
+				ptr = nullptr;
+			}
+		}
+	};
+#endif
+
 	enum struct filter_direction_t {
 		forward = 0, reverse = 1
 	};
@@ -43,7 +61,13 @@ namespace h5{ namespace impl {
 		void push( filter::call_t filter );
 		void pop();
 
+#ifdef _MSC_VER
+		// See definition of 'ms_aligned_mem_ptr_deleter' near the top of this file for explanation of this.
+		std::unique_ptr<char, ms_aligned_mem_ptr_deleter> ptr0, ptr1;
+#else
 		std::unique_ptr<char> ptr0, ptr1; // will call std::free on dtor
+#endif
+
 		filter::call_t filter[H5CPP_MAX_FILTER];
 		hsize_t n,
 				C[H5CPP_MAX_RANK], D[H5CPP_MAX_RANK],
@@ -130,15 +154,9 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 #ifdef _MSC_VER
 // aligned_alloc does not exist in VC++!!! About _aligned_malloc, see: https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/aligned-malloc?view=vs-2017
 // Observe the params are switched.
-// Not tested whether RAII frees the memory.
-	ptr0 = std::move( std::unique_ptr<char>{ (char*)_aligned_malloc(block_size, H5CPP_MEM_ALIGNMENT )} );
-	ptr1 = std::move( std::unique_ptr<char>{ (char*)_aligned_malloc(block_size, H5CPP_MEM_ALIGNMENT )} );
-	if (
-		(!ptr0) || (!ptr1)
-		|| (((unsigned long long)*ptr0 % H5CPP_MEM_ALIGNMENT) != 0)
-		||  (((unsigned long long)*ptr1 % H5CPP_MEM_ALIGNMENT) != 0)
-	)
-		throw h5::error::io::dataset::open(H5CPP_ERROR_MSG("CTOR: couldn't allocate memory for caching chunks, MSCV requires that alignment be an integer power of 2."));
+// See definition of 'ms_aligned_mem_ptr_deleter' near the top of this file for explanation of why unique_ptr is defined this way.
+	ptr0 = std::move( std::unique_ptr<char, ms_aligned_mem_ptr_deleter>{ (char*)_aligned_malloc(block_size, H5CPP_MEM_ALIGNMENT )} );
+	ptr1 = std::move( std::unique_ptr<char, ms_aligned_mem_ptr_deleter>{ (char*)_aligned_malloc(block_size, H5CPP_MEM_ALIGNMENT )} );
 #else
 	ptr0 = std::move( std::unique_ptr<char>{ (char*)aligned_alloc( H5CPP_MEM_ALIGNMENT, block_size )} );
 	ptr1 = std::move( std::unique_ptr<char>{ (char*)aligned_alloc( H5CPP_MEM_ALIGNMENT, block_size )} );
