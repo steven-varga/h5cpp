@@ -6,7 +6,7 @@
 
 #ifndef  H5CPP_CAPI_HPP
 #define  H5CPP_CAPI_HPP
-#include <limits>
+
 /* rules:
  * h5::id_t{ hid_t } or direct initialization  doesn't increment reference count
  */ 
