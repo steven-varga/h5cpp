@@ -57,6 +57,9 @@ find_file(H5CPP_LLVM_PATH
 
 if( H5CPP AND H5CPP_LLVM_PATH)
 	message("-- H5CPP compiler found: ${H5CPP} with llvm path: ${H5CPP_LLVM_PATH}")
+	set(H5CPP_COMPILER_FOUND TRUE)
+else()
+	set(H5CPP_COMPILER_FOUND FALSE)
 endif()
 
 #find_package(HDF5 1.10.4 REQUIRED QUIET)
@@ -84,21 +87,20 @@ list(APPEND LIBS ${HDF5_C_LIBRARIES} ${ZLIB_LIBRARIES})
 list(APPEND INCLUDE_DIRS ${CMAKE_SOURCE_DIR} ${HDF5_INCLUDE_DIRS}  ${ZLIB_INCLUDE_DIRS})
 
 include_directories(BEFORE ${CMAKE_SOURCE_DIR})
-add_custom_target(h5cpp-compiler-generated ALL
-	COMMAND	${H5CPP}  attributes/attributes.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dattributes/generated.h
-	COMMAND	${H5CPP}  before-after/compound.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dbefore-after/generated.h
-	COMMAND	${H5CPP}  compound/struct.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dcompound/generated.h
-	COMMAND	${H5CPP}  multi-tu/tu-01.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dmulti-tu/tu-01.h
-	COMMAND	${H5CPP}  multi-tu/tu-02.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dmulti-tu/tu-02.h
-	COMMAND	${H5CPP}  packet-table/packettable.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dpacket-table/generated.h
-	COMMENT "generating hdf5 compound type descriptors with h5cpp compiler ...")
 
-if( EXISTS ${H5CPP} )
+if( H5CPP_COMPILER_FOUND )
+	add_custom_target(h5cpp-compiler-generated ALL
+		COMMAND	${H5CPP}  attributes/attributes.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dattributes/generated.h
+		COMMAND	${H5CPP}  before-after/compound.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dbefore-after/generated.h
+		COMMAND	${H5CPP}  compound/struct.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dcompound/generated.h
+		COMMAND	${H5CPP}  multi-tu/tu-01.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dmulti-tu/tu-01.h
+		COMMAND	${H5CPP}  multi-tu/tu-02.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dmulti-tu/tu-02.h
+		COMMAND	${H5CPP}  packet-table/packettable.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dpacket-table/generated.h
+		COMMENT "-- generating hdf5 compound type descriptors with h5cpp compiler ...")
 	add_custom_target(examples ALL DEPENDS h5cpp-compiler-generated)
-
 else( )
 	add_custom_target(examples ALL)
-	message("compiler NOT found: examples added...")
+	message("-- H5CPP compiler NOT found: skipping some examples...")
 endif()
 
 if( ${dlib_FOUND} )
@@ -157,13 +159,25 @@ if( ${Boost_FOUND} )
 	endif()
 endif()
 
+include(FindMPI)
+if( MPI_FOUND AND HDF5_IS_PARALLEL )
+	find_program(SLURM_SBATCH_COMMAND sbatch DOC "Path to the SLURM sbatch executable")
+	find_program(SLURM_SRUN_COMMAND srun DOC "Path to the SLURM srun executable")
+	find_program(SLURM_SACCTMGR_COMMAND sacctmgr DOC "Path to the SLURM sacctmgr executable")
 
-if( HDF5_IS_PARALLEL )
-	message( "-- Found: Parallel HDF5 ${HDF5_VERSION}" )
-	add_executable(examples-ublas EXCLUDE_FROM_ALL "linalg/ublas.cpp")
-	target_link_libraries(examples-ublas ${LIBS} )
-	add_dependencies(examples examples-ublas)
+	message("-- MPI and PHDF5 found: Parallel H5CPP enabled")
+	message("-- using ${MPI_CXX_COMPILER} ${MPIEXEC_EXECUTABLE}")
+	if(SLURM_SRUN_COMMAND AND SLURM_SBATCH_COMMAND)
+		set(SLURM_FOUND true)
+	endif()
+	if( SLURM_FOUND )
+		message("-- SLURM found, scheduling with ${SLURM_SBATCH_COMMAND} ${SLURM_SRUN_COMMAND}")
+	elseif()
+		message("-- SLURM NOT FOUND schedule the test with mpiexec -n proc_num ...")
+	endif()
 endif()
+
+
 
 
 ## attributes ###

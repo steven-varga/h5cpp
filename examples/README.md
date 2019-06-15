@@ -1,14 +1,18 @@
 ## Examples 
+For convenience  the `generated.h` files are present, so the examples may be compiled without having the `h5cpp` compiler around. Remove them if you have the compiler installed.
 
-the content of this directory gets installed `${INSTALLDIR}/share/h5cpp`, copy the directory into a temporary place then execute cmake **in-directory**:
-`cmake ./`
+1. traditional GNU `make` - this approach assumes H5CPP installed in `/usr/local` and the [compiler downloaded and installed](http://h5cpp.org/download/)
+2. alternatively cmake **in-directory**:  `cmake ./` which detects if the `h5cpp` compiler is installed or not.
 
 ## What do they do:
+- mpi: 
+   - collective (in progress)
+   - independent (in progress)
+- kita/AWS S3: planned
 - attributes: new add on to guide you with attribute
 - basics: help you to catch on HDF5 concepts such as descriptors and property lists
 - before-after: comparative example between C API and H5CPP approach
 - linalg: you find all you need to know as a scientist when working  HDF5 for modern C++
-- mpi: collective and independent IO examples are in progress
 - multi-tu: demonstrates how to use `h5cpp` compiler with multiple TU translation units
 - optimized: work in progress
 - packet-table: sensor networks, financial engineering, particle colliders require high performance stream recording. This implementation is near the actual underlying file-system throughput 300X faster than the one you find in HDF5 high level API. Not only works with non-homogeneous such as structs but also takes vectors, matrices, cubes...
