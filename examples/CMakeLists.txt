@@ -13,12 +13,17 @@ project(h5cpp-examples VERSION 1.10.4.1 LANGUAGES CXX C)
 
 # check if the correct version of hdf5 available
 set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+set(HDF5_FIND_DEBUG FALSE)
 include(FindHDF5)
 if(HDF5_VERSION VERSION_LESS ${H5CPP_VERSION})
 	message(FATAL_ERROR "H5CPP examples require of HDF5 v${H5CPP_VERSION} or greater!!!")
 else()
 	message("-- H5CPP ${PROJECT_VERSION} matches with minimum required HDF5 v${HDF5_VERSION}")
 endif()
+if(HDF5_VERSION VERSION_GREATER 1.12.0)
+	message("H5CPP KITA support is available, see webpage for details...")
+endif()
+
 
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
@@ -50,6 +55,10 @@ find_file(H5CPP_LLVM_PATH
 	HINTS /usr/include /usr/local/include
 	DOC "path to h5cpp llvm specific header files")
 
+if( H5CPP AND H5CPP_LLVM_PATH)
+	message("-- H5CPP compiler found: ${H5CPP} with llvm path: ${H5CPP_LLVM_PATH}")
+endif()
+
 #find_package(HDF5 1.10.4 REQUIRED QUIET)
 include(FindHDF5)
 if(HDF5_VERSION VERSION_LESS 1.10.4)
@@ -75,7 +84,6 @@ list(APPEND LIBS ${HDF5_C_LIBRARIES} ${ZLIB_LIBRARIES})
 list(APPEND INCLUDE_DIRS ${CMAKE_SOURCE_DIR} ${HDF5_INCLUDE_DIRS}  ${ZLIB_INCLUDE_DIRS})
 
 include_directories(BEFORE ${CMAKE_SOURCE_DIR})
-
 add_custom_target(h5cpp-compiler-generated ALL
 	COMMAND	${H5CPP}  attributes/attributes.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dattributes/generated.h
 	COMMAND	${H5CPP}  before-after/compound.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dbefore-after/generated.h
@@ -147,6 +155,14 @@ if( ${Boost_FOUND} )
 		target_link_libraries(examples-ublas ${LIBS} )
 		add_dependencies(examples examples-ublas)
 	endif()
+endif()
+
+
+if( HDF5_IS_PARALLEL )
+	message( "-- Found: Parallel HDF5 ${HDF5_VERSION}" )
+	add_executable(examples-ublas EXCLUDE_FROM_ALL "linalg/ublas.cpp")
+	target_link_libraries(examples-ublas ${LIBS} )
+	add_dependencies(examples examples-ublas)
 endif()
 
 

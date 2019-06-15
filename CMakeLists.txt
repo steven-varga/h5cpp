@@ -18,9 +18,18 @@ set(CMAKE_CXX_STANDARD 17)
 set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 include(FindHDF5)
 if(HDF5_VERSION VERSION_LESS ${H5CPP_VERSION})
-	message(FATAL_ERROR "H5CPP examples require of HDF5 v${H5CPP_VERSION} or greater!!!")
+	message(FATAL_ERROR "-- !!! H5CPP examples require of HDF5 v${H5CPP_VERSION} or greater!!!")
 else()
 	message("-- H5CPP ${PROJECT_VERSION} matches with minimum required HDF5 v${HDF5_VERSION}")
+endif()
+
+#if(HDF5_VERSION VERSION_GREATER 1.12.0)
+#	message("H5CPP KITA support is available, see webpage for details...")
+#endif()
+
+include(FindMPI)
+if( MPI_FOUND AND HDF5_IS_PARALLEL )
+	message("-- MPI and PHDF5 found: Parallel H5CPP enabled")
 endif()
 
 if(WIN32)
@@ -63,7 +72,7 @@ install(FILES     examples/CMakeLists.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/${
 
 #add_subdirectory(examples)
 
-include("CPackConfig.cmake")
-include(CPack)
-add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
+#include("CPackConfig.cmake")
+#include(CPack)
+#add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 
