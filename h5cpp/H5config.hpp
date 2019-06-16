@@ -7,6 +7,12 @@
 #ifndef H5CPP_CONFIG_H
 #define H5CPP_CONFIG_H
 
+// to activate must include: #include "rest_vol_public.h"
+// see: https://bitbucket.hdfgroup.org/users/jhenderson/repos/rest-vol/browse
+#ifndef rest_vol_public_H
+	#define H5CPP_HAVE_KITA
+#endif
+
 #ifndef H5CPP_MAX_RANK
 	#define H5CPP_MAX_RANK 7 //< maximum dimensions of stored arrays
 #endif

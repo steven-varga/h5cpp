@@ -171,6 +171,7 @@ namespace flag {
 	using fapl_sec2            = impl::fapl_call< impl::fapl_args<hid_t>,H5Pset_fapl_sec2>;
 	using fapl_stdio           = impl::fapl_call< impl::fapl_args<hid_t>,H5Pset_fapl_stdio>;
 }
+const static h5::libver_bounds latest_version({H5F_LIBVER_LATEST, H5F_LIBVER_LATEST});
 const static flag::fapl_sec2  sec2;
 const static flag::fapl_stdio stdio;
 const static h5::fclose_degree fclose_degree_weak{H5F_CLOSE_WEAK};
@@ -218,6 +219,7 @@ const static h5::layout layout_compact{H5D_COMPACT};
 const static h5::layout layout_contigous{H5D_CONTIGUOUS};
 const static h5::layout layout_chunked{H5D_CHUNKED};
 const static h5::layout layout_virtual{H5D_VIRTUAL};
+
 const static h5::fill_time fill_time_ifset{H5D_FILL_TIME_IFSET};
 const static h5::fill_time fill_time_alloc{H5D_FILL_TIME_ALLOC};
 const static h5::fill_time fill_time_never{H5D_FILL_TIME_NEVER};
@@ -253,28 +255,40 @@ const static h5::copy_object expand_reference{H5O_COPY_EXPAND_REFERENCE_FLAG};
 const static h5::copy_object copy_without_attr{H5O_COPY_WITHOUT_ATTR_FLAG};
 const static h5::copy_object merge_commited_dtype{H5O_COPY_MERGE_COMMITTED_DTYPE_FLAG};
 
-
+#ifdef H5CPP_HAVE_KITA
+// follow instructions: https://bitbucket.hdfgroup.org/users/jhenderson/repos/rest-vol/browse
+//using fapl_rest_vol              = impl::fapl_call< impl::fapl_args<hid_t>,H5Pset_fapl_rest_vol>;
+//using fapl_kita                  = impl::fapl_call< impl::fapl_args<hid_t>,H5Pset_fapl_rest_vol>;
+#endif
 #ifdef H5_HAVE_PARALLEL
-using fapl_mpio                  = impl::fapl_call< impl::fapl_args<hid_t,MPI_Comm, MPI_Info>,H5Pset_fapl_mpio>;
+using fapl_mpiio                 = impl::fapl_call< impl::fapl_args<hid_t,MPI_Comm, MPI_Info>,H5Pset_fapl_mpio>;
 using all_coll_metadata_ops      = impl::fapl_call< impl::fapl_args<hid_t,hbool_t>,H5Pset_all_coll_metadata_ops>;
 using coll_metadata_write        = impl::fapl_call< impl::fapl_args<hid_t,hbool_t>,H5Pset_coll_metadata_write>;
-using gc_reference               = impl::fapl_call< impl::fapl_args<hid_t,unsigned>,H5Pset_gc_reference>;
+using gc_references              = impl::fapl_call< impl::fapl_args<hid_t,unsigned>,H5Pset_gc_references>;
 using small_data_block_size      = impl::fapl_call< impl::fapl_args<hid_t,hsize_t>,H5Pset_small_data_block_size>;
 using object_flush_cb            = impl::fapl_call< impl::fapl_args<hid_t,H5F_flush_cb_t,void*>,H5Pset_object_flush_cb>;
-using all_coll_metadata_ops      = impl::fapl_call< impl::fapl_args<hid_t,hbool_t>,H5Pset_all_coll_metadata_ops>;
-using all_coll_metadata_ops,     = impl::lapl_call< impl::lapl_args<hid_t,hbool_t>,H5Pset_all_coll_metadata_ops>;
-using all_coll_metadata_ops      = impl::gapl_call< impl::gapl_args<hid_t,hbool_t>,H5Pset_all_coll_metadata_ops>;
-using dxpl_mpio                  = impl::dxpl_call< impl::dxpl_args<hid_t,H5FD_mpio_xfer_t>,H5Pset_dxpl_mpio>;
-using dxpl_mpio_chunk_opt        = impl::dxpl_call< impl::dxpl_args<hid_t,H5FD_mpio_chunk_opt_t>,H5Pset_dxpl_mpio_chunk_opt>;
-using dxpl_mpio_chunk_opt_num    = impl::dxpl_call< impl::dxpl_args<hid_t,unsigned>,H5Pset_dxpl_mpio_chunk_opt_num>;
-using mpio_chunk_opt_ratio       = impl::dxpl_call< impl::dxpl_args<hid_t,unsigned>,H5Pset_mpio_chunk_opt_ratio>;
-using mpio_collective_opt        = impl::dxpl_call< impl::dxpl_args<hid_t,H5FD_mpio_collective_opt_t>,H5Pset_mpio_collective_opt>;
-using dxpl_mpio                  = impl::dxpl_call< impl::dxpl_args<hid_t,H5FD_mpio_xfer_t*>,H5Pset_dxpl_mpio>;
-using mpio_actual_chunk_opt_mode = impl::dxpl_call< impl::dxpl_args<hid_t, H5D_mpio_actual_chunk_opt_mode_t *>,H5Pset_mpio_actual_chunk_opt_mode>;
-using mpio_actual_io_mode        = impl::dxpl_call< impl::dxpl_args<hid_t,H5D_mpio_actual_io_mode_t* >,H5Pset_mpio_actual_io_mode>;
-using mpio_no_collective_cause   = impl::dxpl_call< impl::dxpl_args<hid_t,uint32_t *,uint32_t *>,H5Pset_mpio_no_collective_cause>;
-#endif
+
+using fapl_coll_metadata_ops     = impl::fapl_call< impl::fapl_args<hid_t,hbool_t>,H5Pset_all_coll_metadata_ops>; // file
+using gapl_coll_metadata_ops     = impl::gapl_call< impl::gapl_args<hid_t,hbool_t>,H5Pset_all_coll_metadata_ops>; // group 
+using dapl_coll_metadata_ops     = impl::gapl_call< impl::dapl_args<hid_t,hbool_t>,H5Pset_all_coll_metadata_ops>; // dataset
+using tapl_coll_metadata_ops     = impl::tapl_call< impl::tapl_args<hid_t,hbool_t>,H5Pset_all_coll_metadata_ops>; // type 
+using lapl_coll_metadata_ops     = impl::lapl_call< impl::lapl_args<hid_t,hbool_t>,H5Pset_all_coll_metadata_ops>; // link
+using aapl_coll_metadata_ops     = impl::gapl_call< impl::gapl_args<hid_t,hbool_t>,H5Pset_all_coll_metadata_ops>; // attribute
+
+using dxpl_mpiio                 = impl::dxpl_call< impl::dxpl_args<hid_t,H5FD_mpio_xfer_t>,H5Pset_dxpl_mpio>;
+using dxpl_mpiio_chunk_opt       = impl::dxpl_call< impl::dxpl_args<hid_t,H5FD_mpio_chunk_opt_t>,H5Pset_dxpl_mpio_chunk_opt>;
+using dxpl_mpiio_chunk_opt_num   = impl::dxpl_call< impl::dxpl_args<hid_t,unsigned>,H5Pset_dxpl_mpio_chunk_opt_num>;
+using dxpl_mpiio_chunk_opt_ratio = impl::dxpl_call< impl::dxpl_args<hid_t,unsigned>,H5Pset_dxpl_mpio_chunk_opt_ratio>;
+using dxpl_mpiio_collective_opt  = impl::dxpl_call< impl::dxpl_args<hid_t,H5FD_mpio_collective_opt_t>,H5Pset_dxpl_mpio_collective_opt>;
+//TODO; verify * -> ref?
+using dxpl_mpiio                 = impl::dxpl_call< impl::dxpl_args<hid_t,H5FD_mpio_xfer_t>,H5Pset_dxpl_mpio>;
+
+using mpiio = fapl_mpiio;
+const static h5::dxpl_mpiio collective{H5FD_MPIO_COLLECTIVE};
+const static h5::dxpl_mpiio independent{H5FD_MPIO_INDEPENDENT};
 }
+#endif
+
 
 namespace h5 { namespace notimplemented_yet { // OBJECT COPY PROPERTY LISTS
 	//using char_encoding_ =              = impl::fapl_call< impl::fapl_args<hid_t, >,H5Pset_char_encoding, H5T_cset_t)
