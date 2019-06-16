@@ -41,7 +41,7 @@ INPUT                  = ../h5cpp ../README.md ../docs/pages/profiling.md \
 FILE_PATTERNS          = *.cpp *.hpp *.h
 RECURSIVE              = YES
 
-EXAMPLE_PATH           = ../examples/basics ../examples/before-after ../examples/compound ../examples/linalg ../examples/packet-table \
+EXAMPLE_PATH           = ../examples/mpi ../examples/attributes ../examples/multi-tu ../examples/optimized ../examples/stl ../examples/string ../examples/utf ../examples/basics ../examples/before-after ../examples/compound ../examples/linalg ../examples/packet-table \
 ../examples/raw_memory ../examples/transform
 
 EXAMPLE_PATTERNS       = *

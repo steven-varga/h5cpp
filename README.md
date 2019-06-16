@@ -3,13 +3,20 @@
  Author: Varga, Steven <steven@vargaconsulting.ca>
 --->
 
-Easy to use  [HDF5][hdf5] C++ templates for HDF5  
------------------------------------------------
+Easy to use  [HDF5][hdf5] C++ templates for Serial and Paralell HDF5  
+----------------------------------------------------------------------
 
 [Hierarchical Data Format][hdf5] prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and stream operations on standardized or custom binary/text objects. Scientific computing platforms such as Python, R, Matlab, Fortran,  Julia [and many more...] come with the necessary libraries to read write HDF5 dataset. This edition simplifies interactions with [popular linear algebra libraries][304], provides [compiler assisted seamless object persistence][303], Standard Template Library support and equipped with novel [error handling architecture][400].
 
 H5CPP is a novel approach to  persistence in the field of machine learning, it provides high performance sequential and block access to HDF5 containers through modern C++ [Download packages from here.](http://h5cpp.org/download) If you are interested in h5cpp LLVM/clang based source code transformation tool [you find it in this separate project.](https://github.com/steven-varga/h5cpp-compiler)
-Follow this link to [our presentation](http://webinar.h5cpp.org) or sign up for the [2019.01.14 HDFGroup organized webinar here](https://register.gotowebinar.com/register/8877249470748655117)
+
+You can read this [blog post][500] published on HDFGroup Blog site to find out where the project is originated. [Click here Doxygen based Documentation][501] pages. Browse [highlighted examples][502], follow this link to [our spring presentation](http://webinar.h5cpp.org) or take a peek at the upcoming [ISC'19 BOF](http://isc19.hdf5.io), where I am [presenting H5CPP](https://forum.hdfgroup.org/t/hdf5-bof-at-isc-19/5692).
+
+H5CPP for MPI 
+---------------
+Proud to announce to the HPC community that H5CPP is now MPI capable. The prerequisites are: c++17 capable MPI compiler, and linking against the Parallel HDF5 library. The template system provides the same easy to use functionality as in the serial version, and may be enabled by including parallel `hdf5.h` then passing `h5::mpiio({mpi_com, mpi_info})` to `h5::create | h5::open | h5::write | h5::read `, as well as `h5::independent` and `h5::collective` data transfer properties. There are examples for [independent][503], [collective][504] IO, as well as a [short program][505] to demonstrate throughput. The MPI extension supports all parallel HDF5 features, while the documentation is in progress please look at the tail end of `H5Pall.hpp` for details.
+
+**Note:** `h5::append` operator and attributes are not yet tested, and probably are non-functional.
 
 
 Templates:
@@ -181,3 +188,9 @@ while( having_a_good_day ){
 [304]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_linalg.html
 [305]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_install.html
 [400]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_error_handling.html
+[500]: http://h5cpp.org/md__home_steven_Documents_projects_h5cpp_docs_pages_blog.html
+[501]: http://h5cpp.org/modules.html
+[502]: http://h5cpp.org/examples.html
+[503]: http://h5cpp.org/independent_8cpp-example.html
+[504]: http://h5cpp.org/collective_8cpp-example.html
+[505]: http://h5cpp.org/throughput_8cpp-example.html
