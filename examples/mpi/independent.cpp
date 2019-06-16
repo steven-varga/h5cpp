@@ -1,27 +1,66 @@
+/* Copyright (c) 2019 vargaconsulting, Toronto,ON Canada
+ * Author: Varga, Steven <steven@vargaconsulting.ca>
+ */
+
 #include <mpi.h>
-#include <stdio.h>
-#include <unistd.h>
+#include <h5cpp/all>
+#include <chrono>
+#include <vector>
+#include <algorithm>
+
+#pragma GCC diagnostic ignored "-Wnarrowing"
+// armadillo
+//./configure -DCMAKE_INSTALL_PREFIX=/usr/local -DDETECT_HDF5=OFF
 int main(int argc, char** argv) {
-    // Initialize the MPI environment
-    MPI_Init(NULL, NULL);
 
-    // Get the number of processes
-    int world_size;
-    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
-
-    // Get the rank of the process
-    int world_rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
-
-    // Get the name of the processor
+	// usual boiler place
+    int size, rank, name_len;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
-    int name_len;
+    MPI_Init(NULL, NULL);
+	MPI_Info info  = MPI_INFO_NULL;
+	MPI_Comm comm  = MPI_COMM_WORLD;
+
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Get_processor_name(processor_name, &name_len);
 
-    // Print off a hello world message
-    printf("Hello world from processor %s, rank %d out of %d processors\n",
-           processor_name, world_rank, world_size);
+	int nrows = 10;
+	{ // CREATE - WRITE
+		std::vector<double> v(nrows);
+		std::fill(std::begin(v), std::end(v), rank + 2 );
+		// open file with MPIIO
+		auto fd = h5::create("collective.h5", H5F_ACC_TRUNC,
+				h5::fcpl, 
+				h5::mpiio({MPI_COMM_WORLD, info}) // pass the communicator and hints as usual
+		);
+		// single write request is expanded to chunked write at compile time, setting up 
+		// required arguments. 
+		// Passed property lists, chunk and size descriptors may be interchanged, and or omitted
+		h5::write( fd, "dataset", v,
+				h5::chunk{nrows,1}, h5::current_dims{nrows,size}, h5::offset{0,rank}, h5::count{nrows,1},
+				h5::independent ); // this makes `collective IO` magic happen
+		// RAII will close all descriptors when leaving code block
+	}
 
-    // Finalize the MPI environment.
+	{ // READ
+		// open container with MPIIO enabled
+		auto fd = h5::open("collective.h5", H5F_ACC_RDWR,  h5::mpiio({MPI_COMM_WORLD, info}));
+		// this is a single shot read, all memory reservations are inside the `read` operator, convenient
+		// but suboptimal for loops. 
+		auto data = h5::read<std::vector<double>>(fd, "dataset", h5::offset{0,rank}, h5::count{nrows,1}, h5::collective);
+		std::cout << "rank: " << rank <<" data: ";
+		for( auto v : data) std::cout << v << " "; std::cout <<" ";
+
+		// for high performance loops constructs please use:
+		std::vector<double> buffer(nrows); // pre-allocate buffer, see documentation for variety of
+		// linear algebra, the STL or raw memory objects
+
+		// make sure to open dataset outside of the loop
+		auto ds = h5::open(fd, "dataset");
+		// this is as efficient as it gets
+		h5::read(ds, buffer.data(),  h5::offset{0,rank}, h5::count{nrows,1}, h5::independent);
+	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
 }

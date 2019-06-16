@@ -98,9 +98,9 @@ if( H5CPP_COMPILER_FOUND )
 		COMMAND	${H5CPP}  packet-table/packettable.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dpacket-table/generated.h
 		COMMENT "-- generating hdf5 compound type descriptors with h5cpp compiler ...")
 	add_custom_target(examples ALL DEPENDS h5cpp-compiler-generated)
-else( )
+else()
 	add_custom_target(examples ALL)
-	message("-- H5CPP compiler NOT found: skipping some examples...")
+	message("-- H5CPP compiler NOT found: using `generated.h` already present...")
 endif()
 
 if( ${dlib_FOUND} )
@@ -175,10 +175,29 @@ if( MPI_FOUND AND HDF5_IS_PARALLEL )
 	elseif()
 		message("-- SLURM NOT FOUND schedule the test with mpiexec -n proc_num ...")
 	endif()
+	## mpi-collective ###
+	add_executable(examples-mpi-collective EXCLUDE_FROM_ALL "mpi/collective.cpp")
+	target_link_libraries(examples-mpi-collective ${LIBS} ${MPI_CXX_LIBRARIES} )
+	target_compile_definitions(examples-mpi-collective PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
+	target_include_directories(examples-mpi-collective PUBLIC ${MPI_CXX_INCLUDE_DIRS})
+	add_dependencies(examples examples-mpi-collective)
+	
+	## mpi-independent ###
+	add_executable(examples-mpi-independent EXCLUDE_FROM_ALL "mpi/independent.cpp")
+	target_link_libraries(examples-mpi-independent ${LIBS} ${MPI_CXX_LIBRARIES} )
+	target_compile_definitions(examples-mpi-independent PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
+	target_include_directories(examples-mpi-independent PUBLIC ${MPI_CXX_INCLUDE_DIRS})
+	add_dependencies(examples examples-mpi-independent)
+
+	## mpi throughput
+	add_executable(examples-mpi-throughput EXCLUDE_FROM_ALL "mpi/throughput.cpp")
+	target_link_libraries(examples-mpi-throughput ${LIBS} ${MPI_CXX_LIBRARIES} )
+	target_compile_definitions(examples-mpi-throughput PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
+	target_include_directories(examples-mpi-throughput PUBLIC ${MPI_CXX_INCLUDE_DIRS})
+	add_dependencies(examples examples-mpi-throughput)
+
+
 endif()
-
-
-
 
 ## attributes ###
 #add_executable(examples-attributes EXCLUDE_FROM_ALL "attributes/attributes.cpp")
@@ -200,8 +219,6 @@ add_executable(examples-compound EXCLUDE_FROM_ALL "compound/struct.cpp")
 target_link_libraries(examples-compound ${LIBS} )
 add_dependencies(examples examples-compound)
 
-
-
 ## multi translation unit ###
 #add_library(examples-multi-tu01 OBJECT "multi-tu/tu_01.cpp")
 #add_library(examples-multi-tu02 OBJECT "multi-tu/tu_02.cpp")
@@ -209,9 +226,6 @@ add_dependencies(examples examples-compound)
 #add_executable(examples-multi-tu EXCLUDE_FROM_ALL "multi-tu/main.cpp")
 #target_link_libraries(examples-multi-tu  examples-multi-tu01 examples-multi-tu02 ${LIBS}   )
 #add_dependencies(examples examples-multi-tu)
-
-
-
 
 ## basics ###
 add_executable(examples-basics EXCLUDE_FROM_ALL "basics/basics.cpp")
