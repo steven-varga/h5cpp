@@ -1,6 +1,10 @@
 /* Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
+
+/** @example vector.cpp
+ * A description of the example file, causes the example file to show up in 
+ * Examples */
 #include <vector>
 #include <string>
 #include <algorithm>

@@ -81,7 +81,16 @@
 #define H5CPP_CHECK_ID( id, exception, msg ) if( !static_cast<::hid_t>( id ) ) throw exception( H5CPP_ERROR_MSG( msg ));
 
 /**
- 
+
+
+@example attributes.cpp
+@example collective.cpp
+@example independent.cpp
+@example throughput.cpp
+@example tu_01.cpp
+@example tu_02.cpp
+@example optimized.cpp
+
 @example basics.cpp
 @example compound.cpp
 @example compound.c
