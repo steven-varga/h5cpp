@@ -50,4 +50,5 @@
 	
 	#include "H5Ialgorithm.hpp"
 	#include "H5capi.hpp"
+	#include "H5cout.hpp"
 #endif	
