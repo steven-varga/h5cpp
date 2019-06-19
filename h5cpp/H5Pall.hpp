@@ -257,8 +257,8 @@ const static h5::copy_object merge_commited_dtype{H5O_COPY_MERGE_COMMITTED_DTYPE
 
 #ifdef H5CPP_HAVE_KITA
 // follow instructions: https://bitbucket.hdfgroup.org/users/jhenderson/repos/rest-vol/browse
-//using fapl_rest_vol              = impl::fapl_call< impl::fapl_args<hid_t>,H5Pset_fapl_rest_vol>;
-//using fapl_kita                  = impl::fapl_call< impl::fapl_args<hid_t>,H5Pset_fapl_rest_vol>;
+using fapl_rest_vol              = impl::fapl_call< impl::fapl_args<hid_t>,H5Pset_fapl_rest_vol>;
+using kita                       = impl::fapl_call< impl::fapl_args<hid_t>,H5Pset_fapl_rest_vol>;
 #endif
 #ifdef H5_HAVE_PARALLEL
 using fapl_mpiio                 = impl::fapl_call< impl::fapl_args<hid_t,MPI_Comm, MPI_Info>,H5Pset_fapl_mpio>;
@@ -286,9 +286,8 @@ using dxpl_mpiio                 = impl::dxpl_call< impl::dxpl_args<hid_t,H5FD_m
 using mpiio = fapl_mpiio;
 const static h5::dxpl_mpiio collective{H5FD_MPIO_COLLECTIVE};
 const static h5::dxpl_mpiio independent{H5FD_MPIO_INDEPENDENT};
-}
 #endif
-
+}
 
 namespace h5 { namespace notimplemented_yet { // OBJECT COPY PROPERTY LISTS
 	//using char_encoding_ =              = impl::fapl_call< impl::fapl_args<hid_t, >,H5Pset_char_encoding, H5T_cset_t)
