@@ -102,3 +102,20 @@ itpp  {._data()}         {length()}        {cols():1,rows():0}
 ublas {.data().begin()}  {n/a}             {size2():1, size1():0}
 dlib  {&ref(0,0)}        {size()}          {nc():1,    nr():0}
 ```
+
+OpenMPI tuning                {#link_ompi_tuning}
+==================================================
+The most important parameters influencing the performance of an I/O operation are listed below:
+
+- **io_ompio_cycle_buffer_size**: Data size issued by individual reads/writes per call. By default, an individual read/write operation will be executed as one chunk. Splitting the operation up into multiple, smaller chunks can lead to performance improvements in certain scenarios.
+- **io_ompio_bytes_per_agg**: Size of temporary buffer for collective I/O operations on aggregator processes. Default value is 32MB. Tuning this parameter has a very high impact on the performance of collective operations. (See recommendations for tuning collective operations below.)
+- **io_ompio_num_aggregators**: Number of aggregators used in collective I/O operations. Setting this parameter to a value larger zero disables the internal automatic aggregator selection logic of OMPIO. Tuning this parameter has a very high impact on the performance of collective operations (See recommendations for tuning collective operations below).
+- **io_ompio_grouping_option**: Algorithm used to automatically decide the number of aggregators used. Applications working with regular 2-D or 3-D data decomposition can try changing this parameter to 4 (hybrid) algorithm.
+
+
+The main parameters of the fs components allow you to manipulate the layout of a new file on a parallel file system.
+
+- **fs_pvfs2_stripe_size**: Sets the number of storage servers for a new file on a PVFS2 file system. If not set, system default will be used. Note that this parameter can also be set through the stripe_size Info object.
+- **fs_pvfs2_stripe_width**: Sets the size of an individual block for a new file on a PVFS2 file system. If not set, system default will be used. Note that this parameter can also be set through the stripe_width Info object.
+- **fs_lustre_stripe_size**: Sets the number of storage servers for a new file on a Lustre file system. If not set, system default will be used. Note that this parameter can also be set through the stripe_size Info object.
+- **fs_lustre_stripe_width**: Sets the size of an individual block for a new file on a Lustre file system. If not set, system default will be used. Note that this parameter can also be set through the stripe_width Info object.

@@ -4,6 +4,11 @@
  */
 
 #include <hdf5.h>
+
+#ifdef H5CPP_HAVE_KITA
+	#include <rest_vol_public.h>
+#endif
+
 #include <vector>
 #include <string>
 #include <memory>

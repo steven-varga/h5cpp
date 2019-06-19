@@ -9,7 +9,7 @@
 
 // to activate must include: #include "rest_vol_public.h"
 // see: https://bitbucket.hdfgroup.org/users/jhenderson/repos/rest-vol/browse
-#ifndef rest_vol_public_H
+#ifdef H5CPP_WITH_KITA
 	#define H5CPP_HAVE_KITA
 #endif
 
@@ -107,6 +107,7 @@
 @example packettable.cpp
 @example raw.cpp
 @example transform.cpp
+@example kita.cpp
 
 */
 

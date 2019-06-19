@@ -34,14 +34,14 @@ WARN_FORMAT            = "$file:$line: $text"
 
 INPUT                  = ../h5cpp ../README.md ../docs/pages/profiling.md \
 ../docs/pages/conversion.md	../docs/pages/error_handling.md ../docs/pages/objects.md  ../docs/pages/property_lists.md \
-../docs/pages/compiler.md ../docs/pages/install.md ../docs/pages/compiler_trial.md ../docs/pages/exceptions.md ../docs/pages/linalg.md ../docs/pages/blog.md ../docs/pages/not_available.md ../docs/pages/usergroup.md
+../docs/pages/compiler.md ../docs/pages/install.md . ../docs/pages/exceptions.md ../docs/pages/linalg.md ../docs/pages/blog.md  ../docs/pages/usergroup.md
 
 
 
 FILE_PATTERNS          = *.cpp *.hpp *.h
 RECURSIVE              = YES
 
-EXAMPLE_PATH           = ../examples/mpi ../examples/attributes ../examples/multi-tu ../examples/optimized ../examples/stl ../examples/string ../examples/utf ../examples/basics ../examples/before-after ../examples/compound ../examples/linalg ../examples/packet-table \
+EXAMPLE_PATH           = ../examples/kita ../examples/mpi ../examples/attributes ../examples/multi-tu ../examples/optimized ../examples/stl ../examples/string ../examples/utf ../examples/basics ../examples/before-after ../examples/compound ../examples/linalg ../examples/packet-table \
 ../examples/raw_memory ../examples/transform
 
 EXAMPLE_PATTERNS       = *
