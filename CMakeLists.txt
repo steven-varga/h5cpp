@@ -49,6 +49,11 @@ if(DOXYGEN_FOUND)
 endif()
 
 #add_subdirectory(examples)
+option(H5CPP_BUILD_TESTS "Build tests" ON)
+if(H5CPP_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 
 
 #installation
