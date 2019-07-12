@@ -14,7 +14,7 @@ namespace h5 {
 /* template specialization from hid_t< .. > type which provides syntactic sugar in the form
  * h5::dt_t<int> dt; 
  * */
-namespace h5 { namespace impl { namespace detail {
+namespace h5::impl::detail {
 	template<class T> // parent type, data_type is inherited from, see H5Iall.hpp top section for details 
 	using dt_p = hid_t<T,H5Tclose,true,true,hdf5::any>;
 	/*type id*/
@@ -26,7 +26,7 @@ namespace h5 { namespace impl { namespace detail {
 		hid_t() : parent( H5I_UNINIT){};
 	};
 	template <class T> using dt_t = hid_t<T,H5Tclose,true,true,hdf5::type>;
-}}}
+}
 
 /* template specialization is for the preceding class, and should be used only for HDF5 ELEMENT types
  * which are in C/C++ the integral types of: char,short,int,long, ... and C POD types. 
@@ -36,7 +36,7 @@ namespace h5 { namespace impl { namespace detail {
  */
 
 #define H5CPP_REGISTER_TYPE_( C_TYPE, H5_TYPE )                                           \
-namespace h5 { namespace impl { namespace detail { 	                                      \
+namespace h5::impl::detail {                                                              \
 	template <> struct hid_t<C_TYPE,H5Tclose,true,true,hdf5::type> : public dt_p<C_TYPE> {\
 		using parent = dt_p<C_TYPE>;                                                      \
 		using parent::hid_t;                                                              \
@@ -47,7 +47,7 @@ namespace h5 { namespace impl { namespace detail { 	                            
 					H5Tset_size (id,H5T_VARIABLE), H5Tset_cset(id, H5T_CSET_UTF8);        \
 		}                                                                                 \
 	};                                                                                    \
-}}}                                                                                       \
+}                                                                                         \
 namespace h5 {                                                                            \
 	template <> struct name<C_TYPE> {                                                     \
 		static constexpr char const * value = #C_TYPE;                                    \

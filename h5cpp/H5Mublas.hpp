@@ -8,12 +8,12 @@
 #define  H5CPP_UBLAS_HPP
 
 #if defined(_BOOST_UBLAS_MATRIX_) || defined(H5CPP_USE_UBLAS_MATRIX)
-namespace h5 { 	namespace ublas {
+namespace h5::ublas {
 		template<class T> using rowmat 	= ::boost::numeric::ublas::matrix<T>;
 		template <class Object, class T = typename impl::decay<Object>::type> 
 			using is_supportedm = std::integral_constant<bool, std::is_same<Object,h5::ublas::rowmat<T>>::value>;
-}}
-namespace h5 { namespace impl {
+}
+namespace h5::impl {
 	// 1.) object -> H5T_xxx
 	template <class T> struct decay<h5::ublas::rowmat<T>>{ typedef T type; };
 	// get read access to datastaore
@@ -34,16 +34,16 @@ namespace h5 { namespace impl {
 		static inline h5::ublas::rowmat<T> ctor( std::array<size_t,2> dims ){
 			return h5::ublas::rowmat<T>( dims[1], dims[0] );
 	}};
-}}
+}
 #endif
 
 #if defined(_BOOST_UBLAS_VECTOR_) || defined(H5CPP_USE_UBLAS_VECTOR)
-namespace h5 { 	namespace ublas {
+namespace h5::ublas {
 		template<class T> using rowvec = ::boost::numeric::ublas::vector<T>;
 		template <class Object, class T = typename impl::decay<Object>::type>
 			using is_supportedv = std::integral_constant<bool, std::is_same<Object,h5::ublas::rowvec<T>>::value>;
-}}
-namespace h5 { namespace impl {
+}
+namespace h5::impl {
 	template <class T> struct decay<h5::ublas::rowvec<T>>{ typedef T type; };
 	template <class Object, class T = typename impl::decay<Object>::type> inline
 	typename std::enable_if< h5::ublas::is_supportedv<Object>::value,
@@ -61,6 +61,6 @@ namespace h5 { namespace impl {
 		static inline h5::ublas::rowvec<T> ctor( std::array<size_t,1> dims ){
 			return h5::ublas::rowvec<T>( dims[0] );
 	}};
-}}
+}
 #endif
 #endif

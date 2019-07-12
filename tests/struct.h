@@ -35,13 +35,13 @@ namespace h5{
 H5CPP_REGISTER_STRUCT(sn::struct_type );
 
 
-namespace h5 { namespace utils { // this specializations not necessary, only used in tests 
+namespace h5::utils { // this specializations not necessary, only used in tests 
 	template <> std::vector<sn::StructType> get_test_data( size_t n ){
 		std::vector<sn::StructType> data;
 		for(unsigned int i; i<n; i++)
 			data.push_back(	sn::StructType( {i,0.0,0,0} ));
 		return data;
 	}
-}}
+}
 
 

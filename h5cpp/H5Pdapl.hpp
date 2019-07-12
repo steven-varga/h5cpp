@@ -9,7 +9,7 @@
 
 #define H5CPP_DAPL_HIGH_THROUGPUT "h5cpp_dapl_highthroughput"
 
-namespace h5 { namespace impl {
+namespace h5::impl {
 	inline herr_t dapl_pipeline_close( const char *name, size_t size, void *ptr ){
 		delete *static_cast< impl::pipeline_t<impl::basic_pipeline_t>**>( ptr );
 		return 0;
@@ -22,7 +22,7 @@ namespace h5 { namespace impl {
 		return H5Pinsert2(dapl, H5CPP_DAPL_HIGH_THROUGPUT, sizeof( pipeline* ), &ptr,
 				nullptr, nullptr, nullptr, nullptr, nullptr, dapl_pipeline_close);
 	}
-}}
+}
 
 namespace h5 {
 // DATA ACCESS PROPERTY LISTS

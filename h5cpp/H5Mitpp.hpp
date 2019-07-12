@@ -9,12 +9,12 @@
 
 
 #if defined(MAT_H) || defined(H5CPP_USE_ITPP_MATRIX)
-namespace h5 { 	namespace itpp {
+namespace h5::itpp {
 		template<class T> using rowmat = ::itpp::Mat<T>;
 		template <class Object, class T = typename impl::decay<Object>::type> 
 			using is_supported = std::integral_constant<bool, std::is_same<Object,h5::itpp::rowmat<T>>::value>;
-}}
-namespace h5 { namespace impl {
+}
+namespace h5::impl {
 	// 1.) object -> H5T_xxx
 	template <class T> struct decay<h5::itpp::rowmat<T>>{ typedef T type; };
 
@@ -36,16 +36,16 @@ namespace h5 { namespace impl {
 		static inline h5::itpp::rowmat<T> ctor( std::array<size_t,2> dims ){
 			return h5::itpp::rowmat<T>( dims[1], dims[0] );
 	}};
-}}
+}
 #endif
 
 #if defined(VEC_H) || defined(H5CPP_USE_ITPP_VECTOR)
-namespace h5 { 	namespace itpp {
+namespace h5::itpp {
 		template<class T> using rowvec = ::itpp::Vec<T>;
 		template <class Object, class T = typename impl::decay<Object>::type>
 			using is_supported_v = std::integral_constant<bool, std::is_same<Object,h5::itpp::rowvec<T>>::value>;
-}}
-namespace h5 { namespace impl {
+}
+namespace h5::impl {
 	template <class T> struct decay<h5::itpp::rowvec<T>>{ typedef T type; };
 	template <class Object, class T = typename impl::decay<Object>::type> inline
 	typename std::enable_if< h5::itpp::is_supported_v<Object>::value,
@@ -63,6 +63,6 @@ namespace h5 { namespace impl {
 		static inline h5::itpp::rowvec<T> ctor( std::array<size_t,1> dims ){
 			return h5::itpp::rowvec<T>( dims[0] );
 	}};
-}}
+}
 #endif
 #endif

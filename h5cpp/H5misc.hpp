@@ -16,16 +16,16 @@ namespace h5{
 
 #define H5CPP_supported_elementary_types "supported elementary types ::= pod_struct | float | double |  [signed](int8 | int16 | int32 | int64)"
 
-namespace h5 { namespace utils {
+namespace h5::utils {
 	template <class T>
 	static constexpr bool is_supported = std::is_class<T>::value | std::is_arithmetic<T>::value;
 	//static constexpr bool is_supported = std::is_pod<T>::value && std::is_class<T>::value | std::is_arithmetic<T>::value;
-}}
+}
 
 
 
 
-namespace h5 { namespace utils {
+namespace h5::utils {
 
 	template <typename T> inline  std::vector<T> get_test_data( size_t n ){
 		std::random_device rd;
@@ -63,6 +63,6 @@ namespace h5 { namespace utils {
 				  });
 		return data;
 	}
-}}
+}
 #endif
 

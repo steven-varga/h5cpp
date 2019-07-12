@@ -11,7 +11,7 @@ namespace h5 {
 	int get_chunk_dims( const h5::dcpl_t& dcpl,  h5::chunk_t& chunk_dims );
 }
 
-namespace h5{ namespace impl {
+namespace h5::impl {
 	enum struct filter_direction_t {
 		forward = 0, reverse = 1
 	};
@@ -78,7 +78,7 @@ namespace h5{ namespace impl {
 		void read_chunk_impl( const hsize_t* offset, size_t nbytes, void* ptr ){
 		}
 	};
-}}
+}
 
 template< class Derived>
 inline void h5::impl::pipeline_t<Derived>::write(

@@ -6,7 +6,7 @@
 #include "struct.h"
 #include <h5cpp/H5misc.hpp>
 
-namespace h5 { namespace utils {
+namespace h5::utils {
 	// template specialization 
 	template <> inline  std::vector<sn::example::Record> get_test_data( size_t n ){
 		std::vector<sn::example::Record> vec (n);
@@ -15,4 +15,4 @@ namespace h5 { namespace utils {
 		return vec;
 	}
 
-}}
+}

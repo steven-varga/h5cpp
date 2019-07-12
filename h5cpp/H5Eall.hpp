@@ -43,7 +43,7 @@ namespace h5 {
     }
 }
 
-namespace h5 { namespace error {
+namespace h5::error {
 	struct any : public std::runtime_error {
 		any() : std::runtime_error("H5CPP ERROR") {}
 		any(const std::string& msg ) : std::runtime_error( msg ){}
@@ -99,8 +99,8 @@ namespace h5 { namespace error {
 		const std::string get_dataset_type = "???? ...";
 		const std::string create_dcpl = "???? ...";
 	}
-}}
-namespace h5 { namespace error { namespace io {
+}
+namespace h5::error::io {
 	struct rollback : public h5::error::rollback {
 		rollback( const std::string& msg ) : h5::error::rollback( msg ){}
 	};
@@ -108,9 +108,9 @@ namespace h5 { namespace error { namespace io {
 		any() : h5::error::any() {}
 		any( const std::string& msg ) : h5::error::any( msg ){}
 	};
-}}}
+}
 
-namespace h5 { namespace error { namespace io { namespace file {
+namespace h5::error::io::file {
 	struct rollback : public h5::error::io::rollback {
 		rollback( const std::string& msg ) : h5::error::io::rollback( msg ){}
 	};
@@ -142,9 +142,9 @@ namespace h5 { namespace error { namespace io { namespace file {
 		misc() : h5::error::io::file::any() {}
 		misc( const std::string& msg ) : h5::error::io::file::any( msg ){}
 	};
-}}}}
+}
 
-namespace h5 { namespace error { namespace io { namespace dataset {
+namespace h5:: error::io::dataset {
 	struct rollback : public h5::error::io::rollback {
 		rollback( const std::string& msg ) : h5::error::io::rollback( msg ){}
 	};
@@ -180,8 +180,8 @@ namespace h5 { namespace error { namespace io { namespace dataset {
 		misc() : h5::error::io::dataset::any() {}
 		misc( const std::string& msg ) : h5::error::io::dataset::any( msg ){}
 	};
-}}}}
-namespace h5 { namespace error { namespace io { namespace packet_table {
+}
+namespace h5::error::io::packet_table {
 	struct rollback : public h5::error::io::rollback {
 		rollback( const std::string& msg ) : h5::error::io::rollback( msg ){}
 	};
@@ -217,9 +217,9 @@ namespace h5 { namespace error { namespace io { namespace packet_table {
 		misc() : h5::error::io::packet_table::any() {}
 		misc( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
 	};
-}}}}
+}
 
-namespace h5 { namespace error { namespace io { namespace attribute {
+namespace h5::error::io::attribute {
 	struct rollback : public h5::error::io::rollback {
 		rollback( const std::string& msg ) : h5::error::io::rollback( msg ){}
 	};
@@ -251,9 +251,9 @@ namespace h5 { namespace error { namespace io { namespace attribute {
 		misc() : h5::error::io::attribute::any() {}
 		misc( const std::string& msg ) : h5::error::io::attribute::any( msg ){}
 	};
-}}}}
+}
 
-namespace h5 { namespace error { namespace property_list {
+namespace h5::error::property_list {
 	struct rollback : public h5::error::rollback {
 		rollback( const std::string& msg ) : h5::error::rollback( msg ){}
 	};
@@ -269,6 +269,6 @@ namespace h5 { namespace error { namespace property_list {
 		misc() : h5::error::property_list::any() {}
 		misc( const std::string& msg ) : h5::error::property_list::any( msg ){}
 	};
-}}}
+}
 #endif
 

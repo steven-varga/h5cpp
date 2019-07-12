@@ -11,7 +11,7 @@
 #include <zlib.h>
 #include <math.h>
 
-namespace h5 { namespace impl { namespace filter {
+namespace h5::impl::filter {
 	// TODO: figure something out to map c++ filters to C calls? 
 	template<class Derived>
 	struct filter_t {
@@ -100,5 +100,5 @@ namespace h5 { namespace impl { namespace filter {
 	}
 
 
-}}}
+}
 #endif

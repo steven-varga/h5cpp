@@ -8,7 +8,7 @@
 #define  H5CPP_DLIB_HPP
 
 #if defined(DLIB_MATRIx_HEADER) || defined(H5CPP_USE_DLIB)
-namespace h5 { 	namespace dlib {
+namespace h5::dlib {
 // dlib template:
 // const dlib::matrix<short int, 0, 0, dlib::memory_manager_stateless_kernel_1<char>, dlib::row_major_layout>&
 		template<class T> using rowmat = ::dlib::matrix<T, 0, 0,
@@ -16,8 +16,8 @@ namespace h5 { 	namespace dlib {
 			::dlib::row_major_layout>;
 		template <class Object, class T = typename impl::decay<Object>::type>
 			using is_supported = std::integral_constant<bool, std::is_same<Object,h5::dlib::rowmat<T>>::value>;
-}}
-namespace h5 { namespace impl {
+}
+namespace h5::impl {
 	// 1.) object -> H5T_xxx
 	template <class T> struct decay<h5::dlib::rowmat<T>>{ typedef T type; };
 
@@ -48,6 +48,6 @@ namespace h5 { namespace impl {
 		static inline h5::dlib::rowmat<T> ctor( std::array<size_t,2> dims ){
 			return h5::dlib::rowmat<T>( dims[1], dims[0] );
 	}};
-}}
+}
 #endif
 #endif

@@ -7,7 +7,7 @@
 #ifndef  H5CPPI_ALGORITHM_HPP
 #define  H5CPPI_ALGORITHM_HPP
 
-namespace h5 { namespace impl {
+namespace h5::impl {
 	inline static herr_t iterate_callback( ::hid_t gid, const char *name, const H5L_info_t *info, void *op_data){
 		// this must not throw error, CAPI has to clean up
 		try {
@@ -19,7 +19,7 @@ namespace h5 { namespace impl {
 		return 0;
 	}
 
-}}
+}
 
 namespace h5 {
     inline std::vector<std::string> ls(const h5::fd_t& fd,  const std::string& directory ){

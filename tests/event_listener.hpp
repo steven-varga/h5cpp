@@ -30,13 +30,13 @@
 #define KGRN  "\x1B[32m"
 #define KNRM  "\x1B[0m"
 
-namespace testing { namespace internal {
+namespace testing::internal {
 	/* 
 	 */
 	template<> inline std::string GetTypeName<std::string>() {
 		return std::string("std::string");
 	}
-}}
+}
 
 class MinimalistPrinter : public ::testing::EmptyTestEventListener {
 	public:

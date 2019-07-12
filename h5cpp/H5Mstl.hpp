@@ -7,7 +7,7 @@
 #ifndef  H5CPP_STL_HPP 
 #define  H5CPP_STL_HPP
 
-namespace h5 { namespace impl {
+namespace h5::impl {
 /*STL: */
 	// 2.) filter is_xxx_type
 	// 4.) write access
@@ -75,5 +75,5 @@ namespace h5 { namespace impl {
 		static inline std::vector<T> ctor( std::array<size_t,1> dims ){
 			return std::vector<T>( dims[0] );
 	}};
-}}
+}
 #endif

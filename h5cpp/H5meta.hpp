@@ -6,7 +6,7 @@
 #ifndef  H5CPP_META_HPP 
 #define  H5CPP_META_HPP
 
-namespace h5{ namespace arg {
+namespace h5::arg {
 	// declaration
 	template<class S, class... T > struct tpos;
 	namespace detail {
@@ -50,13 +50,13 @@ namespace h5{ namespace arg {
 		auto tuple = std::forward_as_tuple(args...);
 		return std::get<idx>( tuple );
 	}
-}}
+}
 
-namespace h5 { namespace impl {
+namespace h5::impl {
 	//<public domain code> borrowed from c++ library reference: to lower c+14 to c++11
 	template<bool B, class T, class F> struct conditional { typedef T type; };
 	template<class T, class F> struct conditional<false, T, F> { typedef F type; };
-}}
+}
 
 namespace h5 {
 	// type-name helper class for compile time id and printout 

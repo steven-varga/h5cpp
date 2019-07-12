@@ -8,7 +8,7 @@
 #define  H5CPP_BLAZE_HPP
 
 #if defined(_BLAZE_MATH_MODULE_H_) || defined(H5CPP_USE_BLAZE)
-namespace h5 { 	namespace blaze {
+namespace h5::blaze {
 		template<class T> using rowvec = ::blaze::DynamicVector<T,::blaze::rowVector>;
 		template<class T> using colvec = ::blaze::DynamicVector<T,::blaze::columnVector>;
 		template<class T> using rowmat = ::blaze::DynamicMatrix<T,::blaze::rowMajor>;
@@ -18,9 +18,9 @@ namespace h5 { 	namespace blaze {
 		template <class Object, class T = typename impl::decay<Object>::type> using is_supported =
 		std::integral_constant<bool, std::is_same<Object,rowmat<T>>::value || std::is_same<Object,colmat<T>>::value
 			|| std::is_same<Object,rowvec<T>>::value ||  std::is_same<Object,colvec<T>>::value>;
-}}
+}
 
-namespace h5 { namespace impl {
+namespace h5::impl {
 	// 1.) object -> H5T_xxx
 	template <class T> struct decay<h5::blaze::rowvec<T>>{ typedef T type; };
 	template <class T> struct decay<h5::blaze::colvec<T>>{ typedef T type; };
@@ -67,7 +67,7 @@ namespace h5 { namespace impl {
 		static inline h5::blaze::colmat<T> ctor( std::array<size_t,2> dims ){
 			return h5::blaze::colmat<T>( dims[0], dims[1] );
 	}};
-}}
+}
 
 #endif
 #endif

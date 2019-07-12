@@ -8,7 +8,7 @@
 #define  H5CPP_ARMA_HPP
 
 #if defined(ARMA_INCLUDES) || defined(H5CPP_USE_ARMADILLO)
-namespace h5 { 	namespace arma {
+namespace h5::arma {
 		template<class T> using rowvec = ::arma::Row<T>;
 		template<class T> using colvec = ::arma::Col<T>;
 		template<class T> using colmat = ::arma::Mat<T>;
@@ -18,9 +18,9 @@ namespace h5 { 	namespace arma {
 		template <class Object, class T = typename impl::decay<Object>::type> using is_supported =
 		std::integral_constant<bool, std::is_same<Object,h5::arma::cube<T>>::value || std::is_same<Object,h5::arma::colmat<T>>::value
 			|| std::is_same<Object,h5::arma::rowvec<T>>::value ||  std::is_same<Object,h5::arma::colvec<T>>::value>;
-}}
+}
 
-namespace h5 { namespace impl {
+namespace h5::impl {
 	// 1.) object -> H5T_xxx
 
 	template <class T> struct decay<h5::arma::rowvec<T>>{ typedef T type; };
@@ -71,6 +71,6 @@ namespace h5 { namespace impl {
 		static inline h5::arma::colmat<T> ctor( std::array<size_t,3> dims ){
 			return h5::arma::colmat<T>( dims[2], dims[0], dims[1] );
 	}};
-}}
+}
 #endif
 #endif
