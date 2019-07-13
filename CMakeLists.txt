@@ -14,6 +14,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
 	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
 set(CMAKE_CXX_STANDARD 17)
 
+add_library(h5cpp INTERFACE)
+
 # check if the correct version of hdf5 available
 set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 include(FindHDF5)
@@ -46,31 +48,63 @@ if(DOXYGEN_FOUND)
 	#add_subdirectory (doxy)
 endif()
 
+#add_subdirectory(examples)
+option(H5CPP_BUILD_TESTS "Build tests" ON)
+if(H5CPP_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
 
-add_library(h5cpp INTERFACE)
+
+#installation
 target_include_directories(h5cpp INTERFACE
-	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/h5cpp>
+	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
 
+set(INSTALL_DIR_CMAKE    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/cmake/h5cpp")
+set(INSTALL_DIR_INCLUDE  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
+set(INSTALL_DIR_EXAMPLES "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp")
 
-message( "-- Install directory: ${CMAKE_INSTALL_PREFIX} ${CMAKE_INSTALL_INCLUDEDIR}")
+message( "-- Install directory: ${INSTALL_DIR_INCLUDE}")
+
 # copy header only library into DESTDIR
-install(DIRECTORY h5cpp DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR} )
+install(DIRECTORY h5cpp DESTINATION ${INSTALL_DIR_INCLUDE})
+install(TARGETS h5cpp EXPORT h5cpp-targets)
 
-install(DIRECTORY examples/attributes DESTINATION  ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
-install(DIRECTORY examples/basics DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
-install(DIRECTORY examples/before-after DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
-install(DIRECTORY examples/compound DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
-install(DIRECTORY examples/linalg DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
-install(DIRECTORY examples/multi-tu DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
-install(DIRECTORY examples/optimized DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
-install(DIRECTORY examples/packet-table DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
-install(DIRECTORY examples/raw_memory DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
-install(DIRECTORY examples/transform DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
-install(FILES     examples/CMakeLists.txt DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp )
+install(DIRECTORY examples/attributes     DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/basics         DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/before-after   DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/compound       DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/linalg         DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/multi-tu       DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/optimized      DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/packet-table   DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/raw_memory     DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/transform      DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(FILES     examples/CMakeLists.txt DESTINATION "${INSTALL_DIR_EXAMPLES}")
 
+#generate cmake config and version files
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+    ${CMAKE_SOURCE_DIR}/cmake/config.cmake.in
+    ${CMAKE_BINARY_DIR}/h5cpp-config.cmake
+    INSTALL_DESTINATION ${INSTALL_DIR_CMAKE}
+)
+write_basic_package_version_file(
+    ${CMAKE_BINARY_DIR}/h5cpp-config-version.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
 
-#add_subdirectory(examples)
+export(PACKAGE h5cpp)
+export(EXPORT h5cpp-targets)
+
+install(EXPORT h5cpp-targets DESTINATION ${INSTALL_DIR_CMAKE})
+install(FILES
+    ${CMAKE_BINARY_DIR}/h5cpp-config.cmake
+    ${CMAKE_BINARY_DIR}/h5cpp-config-version.cmake
+    DESTINATION ${INSTALL_DIR_CMAKE}
+)
 
 #include("CPackConfig.cmake")
 #include(CPack)

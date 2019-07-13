@@ -37,3 +37,8 @@ tests/macros
 tests/stl
 tests/struct
 tests/utils
+
+build
+CMakeLists.txt.user*
+*~
+*.swp
