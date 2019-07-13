@@ -85,7 +85,13 @@ namespace h5 {
 			std::vector<char*> ptr;
 			try {
 				for( const auto& reference:ref)
-            		ptr.push_back( strdup( reference.data()) );
+					#ifdef _MSC_VER
+						// Visual Studio 2017 complains:
+						// Error C4996 'strdup': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _strdup.
+						ptr.push_back( _strdup(reference.data()) );
+					#else
+						ptr.push_back( strdup( reference.data()) );
+					#endif
 			} catch( ... ){
 				throw h5::error::io::dataset::write( h5::error::msg::mem_alloc );
 			}
