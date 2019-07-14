@@ -80,6 +80,13 @@
 #define H5CPP_CHECK_PROP( id, exception, msg ) if( static_cast<::hid_t>( id ) < 0 ) throw exception( H5CPP_ERROR_MSG( msg ));
 #define H5CPP_CHECK_ID( id, exception, msg ) if( !static_cast<::hid_t>( id ) ) throw exception( H5CPP_ERROR_MSG( msg ));
 
+
+#ifndef H5CPP_CONSOLE_WIDTH 
+	#define H5CPP_CONSOLE_WIDTH 30
+#endif
+
+
+
 /**
 
 

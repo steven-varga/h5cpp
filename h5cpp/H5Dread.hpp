@@ -31,7 +31,6 @@ namespace h5 {
 		using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
 		using tcount   = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using tblock   = typename arg::tpos<const h5::block_t&,const args_t&...>;
-
 		static_assert( tcount::present, "h5::count_t{ ... } must be specified" );
 		static_assert( utils::is_supported<T>, "error: " H5CPP_supported_elementary_types );
 

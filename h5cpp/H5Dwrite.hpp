@@ -71,7 +71,6 @@ namespace h5 {
 	template <class T, class... args_t>
 	typename std::enable_if<!std::is_same<T,char**>::value,
 	h5::ds_t>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ) try {
-
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double | std::string
 		using element_t = typename impl::decay<T>::type;
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;

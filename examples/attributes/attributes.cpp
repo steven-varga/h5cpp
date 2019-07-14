@@ -15,7 +15,7 @@ int main(){
 
 	arma::mat matrix = arma::zeros(3,4); for(int i=0; i<matrix.n_elem; i++ ) matrix[i] = i;
 	std::vector<sn::example::Record> vector = h5::utils::get_test_data<sn::example::Record>(40);
-	sn::example::Record& record = vector[0];
+	sn::example::Record& record = vector[3];
 	// set to use the latest file format version to able to use large size attributes
 	h5::fd_t fd = h5::create("001.h5", H5F_ACC_TRUNC, h5::default_fcpl,
 						h5::libver_bounds({H5F_LIBVER_V18, H5F_LIBVER_V18}) );
@@ -24,22 +24,17 @@ int main(){
 		/*
 		(gr_t | ds_t | dt_t = fd["/root/some/path"]) = some object;
 		ds_t ds = ... ;
-		
 
 		gr["data set"] = some object;
 		ds["attribute"] = some attribute;
-
-
-
-
 		h5::ds_t obj = fd["/some/path"]["attribute"];
 		//h5::gr_t obj = fd["/some/path"];*/
 	}
 
 	{
 		ds["att_01"] = 42 ;
-		ds["att_02"] = {1.,3.,4.,5.};
-		ds["att_03"] = {'1','3','4','5'};
+		ds["att_02"] = {1.,2.,3.,4.};
+		ds["att_03"] = {'1','2','3','4'};
 		ds["att_04"] = {"alpha", "beta","gamma","..."};
 
 		ds["att_05"] = "const char[N]";
@@ -78,7 +73,7 @@ int main(){
 		// 1.) remove previous attribute
 		// 2.) create new attribute
 		// 3.) write attribute
-		h5::awrite(ds,"att_02", {1.,3.,4.,5.,6.,.7} );
+		h5::awrite(ds,"att_02", {1.,2.,3.,4.,5.,6.} );
 		// trigger runtime error and then handle it
 		h5::mute();
 		try{
@@ -94,20 +89,25 @@ int main(){
 		std::cerr << att_10 <<"\n";
 	}
 	{ // reading back attribute is always single shot, no partial IO 
+		// vector of ints
 		std::cout << "att_01 : "; int att_01 = h5::aread<int>(ds,"att_01"); std::cout << att_01 << "\n";
-		std::cout << "att_02 : "; double att_02 = h5::aread<double>(ds,"att_02"); std::cout << att_02 << "\n";
-		std::cout << "att_03 : "; auto att_03 = h5::aread<std::vector<int>>(ds,"att_03"); 
-		for(auto v : att_03) std::cout << v << " "; std::cout<<"\n";
+		// vector of doubles
+		std::cout << "att_02 : "; auto att_02 = h5::aread<std::vector<double>>(ds,"att_02");
+		std::cout << att_02 << "\n";
+		// vector of ints
+		std::cout << "att_03 : "; auto att_03 = h5::aread<std::vector<int>>(ds,"att_03");
+		std::cout << att_03 << "\n";
+		// vector of strings, NOTE: charaters or initializer lists are not yet supported
 		std::cout << "att_04 : "; auto att_04 = h5::aread<std::vector<std::string>>(ds,"att_04");
-		for(auto v : att_04) std::cout << v << " "; std::cout<<"\n";
-
-		//std::cout << "att_08 : "; auto att_08 = h5::aread<std::vector<sn::example::Record>>(ds,"att_08"); 
-		// const void* to void*
-		std::cout << "att_09 : "; auto att_09 = h5::aread<sn::example::Record>(ds,"att_09");
-		std::cout << att_09.idx << "\n";
-		// const void*  
-		std::cout << "att_10 : "; auto att_10 = h5::aread<double>(ds,"att_10"); std::cout << att_10 << "\n";
-
+		std::cout<< att_04 <<"\n";
+		// POD type rank 0
+		std::cout << "att_08 : "; sn::example::Record att_08 = h5::aread<sn::example::Record>(ds,"att_08");
+		std::cout<< att_08.idx <<"\n";
+		// POD type rank 1
+		std::cout << "att_09 : "; auto att_09 = h5::aread<std::vector<sn::example::Record>>(ds,"att_09");
+		for(auto v: att_09) std::cout << v.idx <<","; std::cout <<std::endl;
+		// linear algebra object
+		std::cout << "att_10 : "; auto att_10 = h5::aread<arma::mat>(ds,"att_10"); std::cout << att_10 << "\n";
 	}
 }
 
