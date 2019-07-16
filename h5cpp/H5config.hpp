@@ -7,6 +7,12 @@
 #ifndef H5CPP_CONFIG_H
 #define H5CPP_CONFIG_H
 
+// to activate must include: #include "rest_vol_public.h"
+// see: https://bitbucket.hdfgroup.org/users/jhenderson/repos/rest-vol/browse
+#ifdef H5CPP_WITH_KITA
+	#define H5CPP_HAVE_KITA
+#endif
+
 #ifndef H5CPP_MAX_RANK
 	#define H5CPP_MAX_RANK 7 //< maximum dimensions of stored arrays
 #endif
@@ -74,8 +80,24 @@
 #define H5CPP_CHECK_PROP( id, exception, msg ) if( static_cast<::hid_t>( id ) < 0 ) throw exception( H5CPP_ERROR_MSG( msg ));
 #define H5CPP_CHECK_ID( id, exception, msg ) if( !static_cast<::hid_t>( id ) ) throw exception( H5CPP_ERROR_MSG( msg ));
 
+
+#ifndef H5CPP_CONSOLE_WIDTH 
+	#define H5CPP_CONSOLE_WIDTH 30
+#endif
+
+
+
 /**
- 
+
+
+@example attributes.cpp
+@example collective.cpp
+@example independent.cpp
+@example throughput.cpp
+@example tu_01.cpp
+@example tu_02.cpp
+@example optimized.cpp
+
 @example basics.cpp
 @example compound.cpp
 @example compound.c
@@ -92,6 +114,7 @@
 @example packettable.cpp
 @example raw.cpp
 @example transform.cpp
+@example kita.cpp
 
 */
 
