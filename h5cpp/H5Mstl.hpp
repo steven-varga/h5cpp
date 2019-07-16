@@ -66,10 +66,9 @@ namespace h5 { namespace impl {
 		std::array<size_t,0>>::type size( T value ){ return{}; }
 	template <class T> inline typename std::enable_if< impl::is_rank01<T>::value,
 		std::array<size_t,1>>::type size( const T& ref ){ return {ref.size()}; }
-
 	// 6.) ctor with right dimensions
 	template <class T> struct get {
-	   	static inline T ctor( std::array<size_t,impl::rank<T>::value> dims ){ 
+	   	static inline T ctor( std::array<size_t,impl::rank<T>::value> dims ){
 			return T(); }};
 	template<class T>
 	struct get<std::vector<T>> {

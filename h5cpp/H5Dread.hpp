@@ -25,13 +25,12 @@ namespace h5 {
  	*/ 
 
 	template<class T, class... args_t>
-	typename std::enable_if<!std::is_same<T,char*>::value,
+	typename std::enable_if<!std::is_same<T,char**>::value,
 	void>::type read( const h5::ds_t& ds, T* ptr, args_t&&... args ) try {
 		using toffset  = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
 		using tcount   = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using tblock   = typename arg::tpos<const h5::block_t&,const args_t&...>;
-
 		static_assert( tcount::present, "h5::count_t{ ... } must be specified" );
 		static_assert( utils::is_supported<T>, "error: " H5CPP_supported_elementary_types );
 
@@ -60,7 +59,6 @@ namespace h5 {
 		if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
 		using element_t = typename impl::decay<T>::type;
 		h5::dt_t<element_t> mem_type;
-
 		hid_t dapl = h5::get_access_plist( ds );
 		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
 			h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
@@ -75,9 +73,6 @@ namespace h5 {
 					static_cast<hid_t>( ds ), static_cast<hid_t>(mem_type), static_cast<hid_t>(mem_space),
 					static_cast<hid_t>(file_space),	static_cast<hid_t>(dxpl), ptr ), h5::error::io::dataset::read, h5::error::msg::read_dataset);
 		}
-	//	for(int i=0; i<11*11; i++)
-	//		std::cout<< ((short*) ptr)[i] <<" ";
-	//	std::cout << "\n";
 	} catch ( const std::runtime_error& err ){
 		throw h5::error::io::dataset::read( err.what() );
 	}
@@ -195,8 +190,9 @@ namespace h5 {
 	* \endcode  
 	* \par_ds \par_offset \par_stride \par_count \par_block \tpar_T \returns_object 
  	*/
-	template<class T,  class... args_t>
-	T read( const h5::ds_t& ds, args_t&&... args ){
+	template<class T, class D=typename impl::decay<T>::type, class... args_t>
+	typename std::enable_if<!std::is_same<D,std::string>::value,
+	T>::type read( const h5::ds_t& ds, args_t&&... args ){
 	// if 'count' isn't specified use the one inside the hdf5 file, once it is obtained
 	// collapse dimensions to the rank of the object returned and create this T object
 	// update the content by we're good to go, since stride and offset can be processed in the 
@@ -223,6 +219,80 @@ namespace h5 {
 		read<element_type>(ds, ptr, count, args...);
 		return ref;
 	}
+/***************************  STRING *****************************/
+ 	/** \func_read_hdr
+ 	*  Direct read from an opened dataset descriptor that returns the entire data space wrapped into the object specified. 
+	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified for partial IO, 
+	*  to describe the retrieved hyperslab from hdf5 file space. Default case is to select and retrieve all elements from dataset. 
+	* \code
+	* h5::fd_t fd = h5::open("myfile.h5", H5F_ACC_RDWR);
+	* auto vec = h5::read<std::vector<std::string>>( fd, "path/to/variable_length_string",	h5::count{10,10}, h5::offset{5,0} );	
+	* \endcode  
+	* \par_ds \par_offset \par_stride \par_count \par_block \tpar_T \returns_object 
+ 	*/
+
+	template<class T, class D=typename impl::decay<T>::type, class... args_t>
+	typename std::enable_if<std::is_same<D,std::string>::value,
+	T>::type read( const h5::ds_t& ds, args_t&&... args ){
+	// if 'count' isn't specified use the one inside the hdf5 file, once it is obtained
+	// collapse dimensions to the rank of the object returned and create this T object
+	// update the content by we're good to go, since stride and offset can be processed in the 
+	// update step
+		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
+		using toffset  = typename arg::tpos<const h5::offset_t&,const args_t&...>;
+		using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
+		using tblock   = typename arg::tpos<const h5::block_t&,const args_t&...>;
+		using element_type    = typename impl::decay<T>::type;
+
+		h5::count_t size;
+		const h5::count_t& count = arg::get(size, args...);
+		h5::block_t  default_block{1,1,1,1,1,1,1};
+		const h5::block_t& block = arg::get( default_block, args...);
+
+		if constexpr( !tcount::present ){ // read count ::= current_dim of file space 
+			h5::sp_t file_space = h5::get_space( ds );
+			h5::get_simple_extent_dims(file_space, size);
+		} else {
+			for(int i=0;i<count.rank;i++) size[i] = count[i] * block[i];
+			size.rank = count.rank;
+		}
+
+		h5::offset_t  default_offset{0,0,0,0,0,0};
+		const h5::offset_t& offset = arg::get( default_offset, args...);
+
+		h5::stride_t  default_stride{1,1,1,1,1,1,1};
+		const h5::stride_t& stride = arg::get( default_stride, args...);
+
+		const h5::dxpl_t& dxpl = arg::get( h5::default_dxpl, args...);
+		H5CPP_CHECK_PROP( dxpl, h5::error::property_list::misc, "invalid data transfer property" );
+
+		h5::sp_t file_space = h5::get_space(ds);
+	   	int rank = h5::get_simple_extent_ndims( file_space );
+
+		if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
+		using element_t = typename impl::decay<T>::type;
+		h5::dt_t<char*> mem_type;
+		hid_t dapl = h5::get_access_plist( ds );
+
+		T ref = impl::get<T>::ctor( count );
+		size_t nelem = impl::nelements(size);
+		char ** ptr = static_cast<char **>(
+										malloc( nelem * sizeof(char *)));
+		h5::sp_t mem_space = h5::create_simple( size );
+		h5::select_all( mem_space );
+		h5::select_hyperslab( file_space, offset, stride, count, block);
+		H5CPP_CHECK_NZ( H5Dread(
+					static_cast<hid_t>( ds ), static_cast<hid_t>(mem_type), static_cast<hid_t>(mem_space),
+					static_cast<hid_t>(file_space),	static_cast<hid_t>(dxpl), ptr ), h5::error::io::dataset::read, h5::error::msg::read_dataset);
+		for(int i=0; i<nelem; i++)
+				if( ptr[i] != NULL )
+						ref[i] = std::string( ptr[i] );
+		H5Dvlen_reclaim (mem_type, mem_space, H5P_DEFAULT, ptr);
+		free(ptr);
+		return ref;
+	}
+
+
  	/** \func_read_hdr
  	*  Direct read from an opened file descriptor and dataset path that returns the entire data space wrapped into the object specified. 
 	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified in any order for partial IO, 
