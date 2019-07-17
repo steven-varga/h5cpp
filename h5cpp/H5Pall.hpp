@@ -79,7 +79,7 @@ namespace h5::impl {
 			//int i = capi_call + 1;
 			/*CAPI needs `this` hid_t id passed along */
 			capi_t capi_args = std::tuple_cat( std::tie(id), args );
-			H5CPP_CHECK_NZ( compat::apply(capi_call, capi_args),
+			H5CPP_CHECK_NZ( std::apply(capi_call, capi_args),
 					h5::error::property_list::argument,"failed to parse arguments...");
 		}
 		using base_t =  prop_base<prop_t<phid_t,init,capi,capi_call>,phid_t>;
