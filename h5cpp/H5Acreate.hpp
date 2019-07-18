@@ -26,7 +26,7 @@ namespace h5 {
 		const h5::current_dims_t& current_dims = arg::get(current_dims_default, args...);
 		// no partial IO or chunks
 		h5::sp_t space = h5::create_simple( current_dims );
-		using element_t = typename impl::decay<T>::type;
+		using element_t = impl::decay_t<T>;
 		h5::dt_t<element_t> type;
 		hid_t id;
 	   	H5CPP_CHECK_NZ( (id = H5Acreate2( static_cast<hid_t>( ds ), path.c_str(),

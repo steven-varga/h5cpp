@@ -9,7 +9,7 @@
 namespace h5 {
 
 	//ARITHMETIC ELEMENT TYPES 
-	template <class T, class D=typename impl::decay<T>::type, class... args_t> inline
+	template <class T, class D= impl::decay_t<T>, class... args_t> inline
 	std::enable_if_t< std::is_integral_v<D> || std::is_floating_point_v<D>, T>
 	aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
 
@@ -21,7 +21,7 @@ namespace h5 {
 		h5::current_dims_t current_dims;
 
 		int rank = get_simple_extent_dims(file_space, current_dims );
-		using element_t = typename impl::decay<T>::type;
+		using element_t = impl::decay_t<T>;
 		h5::dt_t<element_t> type;
 		T object = impl::get<T>::ctor( current_dims );
 		element_t *ptr = const_cast<element_t*>( impl::data( object ));
@@ -31,7 +31,7 @@ namespace h5 {
 	}
 
 	//POD ELEMENT TYPES: Rank 0 and rank > 0
-	template <class T, class D=typename impl::decay<T>::type, class... args_t> inline
+	template <class T, class D= impl::decay_t<T>, class... args_t> inline
 	std::enable_if_t< !std::is_arithmetic_v<D> && std::is_pod_v<D>, T>
 	aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
 		h5::at_t attr = h5::open(ds, name, h5::default_acpl);
@@ -42,7 +42,7 @@ namespace h5 {
 		h5::current_dims_t current_dims;
 
 		int rank = get_simple_extent_dims(file_space, current_dims );
-		using element_t = typename impl::decay<T>::type;
+		using element_t = impl::decay_t<T>;
 		h5::dt_t<element_t> type;
 		if( !rank ){ // FIXME: write impl::get<pod_type>(...)
 			T object;
@@ -59,7 +59,7 @@ namespace h5 {
 	}
 
 	// STD::STRING
-	template <class T, class D=typename impl::decay<T>::type, class... args_t> inline
+	template <class T, class D= impl::decay_t<T>, class... args_t> inline
 	std::enable_if_t<std::is_same_v<D,std::string>, T> //TODO: add char**
 	aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
 		h5::at_t attr = h5::open(ds, name, h5::default_acpl);
@@ -69,7 +69,7 @@ namespace h5 {
 		h5::sp_t file_space{id};
 		h5::current_dims_t current_dims;
 		int rank = get_simple_extent_dims(file_space, current_dims );
-		using element_t = typename impl::decay<T>::type;
+		using element_t = impl::decay_t<T>;
 		h5::dt_t<char*> type;
 		T object = impl::get<T>::ctor( current_dims );
 		size_t nelem = impl::nelements(current_dims);

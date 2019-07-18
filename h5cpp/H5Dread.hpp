@@ -57,7 +57,7 @@ namespace h5 {
 	   	int rank = h5::get_simple_extent_ndims( file_space );
 
 		if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
-		using element_t = typename impl::decay<T>::type;
+		using element_t = impl::decay_t<T>;
 		h5::dt_t<element_t> mem_type;
 		hid_t dapl = h5::get_access_plist( ds );
 		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
@@ -134,7 +134,7 @@ namespace h5 {
 	// passed 'ref' contains memory size and element type, let's extract them
 	// and delegate forward  
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
-		using element_type = typename impl::decay<T>::type;
+		using element_type = impl::decay_t<T>;
 
 		static_assert( !tcount::present,
 				"h5::count_t{ ... } is already present when passing arg by reference, did you mean to pass by pointer?" );
@@ -190,7 +190,7 @@ namespace h5 {
 	* \endcode  
 	* \par_ds \par_offset \par_stride \par_count \par_block \tpar_T \returns_object 
  	*/
-	template<class T, class D=typename impl::decay<T>::type, class... args_t>
+	template<class T, class D= impl::decay_t<T>, class... args_t>
 	std::enable_if_t<!std::is_same_v<D,std::string>, T>
 	read( const h5::ds_t& ds, args_t&&... args ){
 	// if 'count' isn't specified use the one inside the hdf5 file, once it is obtained
@@ -198,7 +198,7 @@ namespace h5 {
 	// update the content by we're good to go, since stride and offset can be processed in the 
 	// update step
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
-		using element_type    = typename impl::decay<T>::type;
+		using element_type    = impl::decay_t<T>;
 
 		h5::count_t size;
 		const h5::count_t& count = arg::get(size, args...);
@@ -231,7 +231,7 @@ namespace h5 {
 	* \par_ds \par_offset \par_stride \par_count \par_block \tpar_T \returns_object 
  	*/
 
-	template<class T, class D=typename impl::decay<T>::type, class... args_t>
+	template<class T, class D= impl::decay_t<T>, class... args_t>
 	std::enable_if_t<std::is_same_v<D,std::string>, T>
 	read( const h5::ds_t& ds, args_t&&... args ){
 	// if 'count' isn't specified use the one inside the hdf5 file, once it is obtained
@@ -242,7 +242,7 @@ namespace h5 {
 		using toffset  = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
 		using tblock   = typename arg::tpos<const h5::block_t&,const args_t&...>;
-		using element_type    = typename impl::decay<T>::type;
+		using element_type    = impl::decay_t<T>;
 
 		h5::count_t size;
 		const h5::count_t& count = arg::get(size, args...);
@@ -270,7 +270,7 @@ namespace h5 {
 	   	int rank = h5::get_simple_extent_ndims( file_space );
 
 		if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
-		using element_t = typename impl::decay<T>::type;
+		using element_t = impl::decay_t<T>;
 		h5::dt_t<char*> mem_type;
 		hid_t dapl = h5::get_access_plist( ds );
 
