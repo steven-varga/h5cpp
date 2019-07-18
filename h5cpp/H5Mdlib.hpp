@@ -14,23 +14,23 @@ namespace h5::dlib {
 		template<class T> using rowmat = ::dlib::matrix<T, 0, 0,
 			::dlib::memory_manager_stateless_kernel_1<char>,
 			::dlib::row_major_layout>;
-		template <class Object, class T = typename impl::decay<Object>::type>
-			using is_supported = std::integral_constant<bool, std::is_same<Object,h5::dlib::rowmat<T>>::value>;
+		template <class Object, class T = impl::decay_t<Object>>
+			using is_supported = std::integral_constant<bool, std::is_same_v<Object,h5::dlib::rowmat<T>>>;
 }
 namespace h5::impl {
 	// 1.) object -> H5T_xxx
 	template <class T> struct decay<h5::dlib::rowmat<T>>{ typedef T type; };
 
 	// get read access to datastaore
-	template <class Object, class T = typename impl::decay<Object>::type> inline
-	typename std::enable_if< h5::dlib::is_supported<Object>::value,
-	const T*>::type data(const Object& ref ){
+	template <class Object, class T = impl::decay_t<Object>> inline
+	std::enable_if_t< h5::dlib::is_supported<Object>::value, const T*>
+	data(const Object& ref ){
 			return &ref(0,0);
 	}
 	// read write access
-	template <class Object, class T = typename impl::decay<Object>::type> inline
-	typename std::enable_if< h5::dlib::is_supported<Object>::value,
-	T*>::type data( Object& ref ){
+	template <class Object, class T = impl::decay_t<Object>> inline
+	std::enable_if_t< h5::dlib::is_supported<Object>::value, T*>
+	data( Object& ref ){
 			return &ref(0,0);
 	}
 	template<class T> struct rank<h5::dlib::rowmat<T>> : public std::integral_constant<size_t,2>{};

@@ -16,8 +16,8 @@ namespace h5::arma {
 
 		// is_linalg_type := filter
 		template <class Object, class T = typename impl::decay<Object>::type> using is_supported =
-		std::integral_constant<bool, std::is_same<Object,h5::arma::cube<T>>::value || std::is_same<Object,h5::arma::colmat<T>>::value
-			|| std::is_same<Object,h5::arma::rowvec<T>>::value ||  std::is_same<Object,h5::arma::colvec<T>>::value>;
+		std::integral_constant<bool, std::is_same_v<Object,h5::arma::cube<T>> || std::is_same_v<Object,h5::arma::colmat<T>>
+			|| std::is_same_v<Object,h5::arma::rowvec<T>> ||  std::is_same_v<Object,h5::arma::colvec<T>>>;
 }
 
 namespace h5::impl {
@@ -30,15 +30,15 @@ namespace h5::impl {
 
 	// get read access to datastaore
 	template <class Object, class T = typename impl::decay<Object>::type> inline
-	typename std::enable_if< h5::arma::is_supported<Object>::value,
-	const T*>::type data( const Object& ref ){
+	std::enable_if_t< h5::arma::is_supported<Object>::value, const T*>
+	data( const Object& ref ){
 			return ref.memptr();
 	}
 
 	// read write access
 	template <class Object, class T = typename impl::decay<Object>::type> inline
-	typename std::enable_if< h5::arma::is_supported<Object>::value,
-	T*>::type data( Object& ref ){
+	std::enable_if_t< h5::arma::is_supported<Object>::value, T*>
+	data( Object& ref ){
 			return ref.memptr();
 	}
 

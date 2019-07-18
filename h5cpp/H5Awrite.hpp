@@ -22,8 +22,8 @@ namespace h5{
 				h5::error::io::attribute::write, "couldn't var length string attribute.");
 	}
 	// const char[]
-	template <class T, class... args_t> inline typename std::enable_if<std::is_array<T>::value,
-	h5::at_t>::type awrite( const h5::ds_t& ds, const std::string& name, const T& ref, const h5::acpl_t& acpl = h5::default_acpl ){
+	template <class T, class... args_t> inline std::enable_if_t<std::is_array_v<T>, h5::at_t>
+	awrite( const h5::ds_t& ds, const std::string& name, const T& ref, const h5::acpl_t& acpl = h5::default_acpl ){
 		h5::current_dims_t current_dims = impl::size( ref );
 		using element_t = typename impl::decay<T>::type;
 		h5::at_t attr = ( H5Aexists(ds, name.c_str() ) > 0 ) ?
@@ -33,8 +33,8 @@ namespace h5{
 	}
 
 	// general case but not: {std::initializer_list<T>} and const char[] 
-	template <class T, class... args_t> inline typename std::enable_if<!std::is_array<T>::value,
-	h5::at_t>::type awrite( const h5::ds_t& ds, const std::string& name, const T& ref, const h5::acpl_t& acpl = h5::default_acpl ){
+	template <class T, class... args_t> inline std::enable_if_t<!std::is_array_v<T>, h5::at_t>
+	awrite( const h5::ds_t& ds, const std::string& name, const T& ref, const h5::acpl_t& acpl = h5::default_acpl ){
 		h5::current_dims_t current_dims = impl::size( ref );
 		using element_t = typename impl::decay<T>::type;
 		h5::at_t attr = ( H5Aexists(ds, name.c_str() ) > 0 ) ?

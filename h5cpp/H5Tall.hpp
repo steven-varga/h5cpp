@@ -43,7 +43,7 @@ namespace h5::impl::detail {                                                    
 		using hidtype = C_TYPE;                                                           \
 		hid_t() : parent( H5Tcopy( H5_TYPE ) ) { 										  \
 			hid_t id = static_cast<hid_t>( *this );                                       \
-			if constexpr ( std::is_pointer<C_TYPE>::value )                               \
+			if constexpr ( std::is_pointer_v<C_TYPE> )                                    \
 					H5Tset_size (id,H5T_VARIABLE), H5Tset_cset(id, H5T_CSET_UTF8);        \
 		}                                                                                 \
 	};                                                                                    \
@@ -95,7 +95,7 @@ template<class T>
 inline std::ostream& operator<<(std::ostream &os, const h5::dt_t<T>& dt) {
 	hid_t id = static_cast<hid_t>( dt );
 	os << "data type: " << h5::name<T>::value << " ";
-	os << ( std::is_pointer<T>::value ? "pointer" : "value" );
+	os << ( std::is_pointer_v<T> ? "pointer" : "value" );
 	os << ( H5Iis_valid( id ) > 0 ? " valid" : " invalid");
 	return os;
 }

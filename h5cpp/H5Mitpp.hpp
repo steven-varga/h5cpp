@@ -12,7 +12,7 @@
 namespace h5::itpp {
 		template<class T> using rowmat = ::itpp::Mat<T>;
 		template <class Object, class T = typename impl::decay<Object>::type> 
-			using is_supported = std::integral_constant<bool, std::is_same<Object,h5::itpp::rowmat<T>>::value>;
+			using is_supported = std::integral_constant<bool, std::is_same_v<Object,h5::itpp::rowmat<T>>>;
 }
 namespace h5::impl {
 	// 1.) object -> H5T_xxx
@@ -20,14 +20,14 @@ namespace h5::impl {
 
 	// get read access to datastaore
 	template <class Object, class T = typename impl::decay<Object>::type> inline
-	typename std::enable_if< h5::itpp::is_supported<Object>::value,
-	const T*>::type data(const Object& ref ){
+	std::enable_if_t< h5::itpp::is_supported<Object>::value, const T*>
+	data(const Object& ref ){
 			return ref._data();
 	}
 	// read write access
 	template <class Object, class T = typename impl::decay<Object>::type> inline
-	typename std::enable_if< h5::itpp::is_supported<Object>::value,
-	T*>::type data( Object& ref ){
+	std::enable_if_t< h5::itpp::is_supported<Object>::value, T*>
+	data( Object& ref ){
 			return ref._data();
 	}
 	template<class T> struct rank<h5::itpp::rowmat<T>> : public std::integral_constant<size_t,2>{};
@@ -43,18 +43,18 @@ namespace h5::impl {
 namespace h5::itpp {
 		template<class T> using rowvec = ::itpp::Vec<T>;
 		template <class Object, class T = typename impl::decay<Object>::type>
-			using is_supported_v = std::integral_constant<bool, std::is_same<Object,h5::itpp::rowvec<T>>::value>;
+			using is_supported_v = std::integral_constant<bool, std::is_same_v<Object,h5::itpp::rowvec<T>>>;
 }
 namespace h5::impl {
 	template <class T> struct decay<h5::itpp::rowvec<T>>{ typedef T type; };
 	template <class Object, class T = typename impl::decay<Object>::type> inline
-	typename std::enable_if< h5::itpp::is_supported_v<Object>::value,
-	const T*>::type data(const Object& ref ){
+	std::enable_if_t< h5::itpp::is_supported_v<Object>::value, const T*>
+	data(const Object& ref ){
 			return ref._data();
 	}
 	template <class Object, class T = typename impl::decay<Object>::type> inline
-	typename std::enable_if< h5::itpp::is_supported_v<Object>::value,
-	T*>::type data( Object& ref ){
+	std::enable_if_t< h5::itpp::is_supported_v<Object>::value, T*>
+	data( Object& ref ){
 			return ref._data();
 	}
 	template<class T> struct rank<h5::itpp::rowvec<T>> : public std::integral_constant<size_t,2>{};

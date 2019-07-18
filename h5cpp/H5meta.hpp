@@ -19,7 +19,7 @@ namespace h5::arg {
 		// recursive case 
 		template<class S, int P, int C, class not_used, class Head, class... Tail >
 		struct tuple_pos<S, P,C,false, not_used, std::tuple<Head, Tail...>>
-			: tuple_pos<S, P+1,C, std::is_convertible<Head,S>::value, Head, std::tuple<Tail...>> { };
+			: tuple_pos<S, P+1,C, std::is_convertible_v<Head,S>, Head, std::tuple<Tail...>> { };
 		// match case 
 		template<class S, int P, int C, class Type, class... Tail >
 		struct tuple_pos<S, P,C,true, Type, std::tuple<Tail...>>
@@ -45,7 +45,7 @@ namespace h5::arg {
 		return std::get<idx::value>( tuple );
 	}
 	template <int idx, class... args_t>
-	typename std::tuple_element<idx, std::tuple<args_t...> >::type&
+	std::tuple_element_t<idx, std::tuple<args_t...> >&
 	getn(args_t&&... args ){
 		auto tuple = std::forward_as_tuple(args...);
 		return std::get<idx>( tuple );

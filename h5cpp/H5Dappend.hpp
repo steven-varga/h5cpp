@@ -32,12 +32,12 @@ namespace h5 {
 		void flush();
 
 		private:
-		template<class T> inline typename std::enable_if<h5::impl::is_scalar<T>::value,
-		void>::type append( const T* ptr );
-		template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value && !std::is_pointer<T>::value,
-		void>::type append( const T& ref );
-		template<class T> inline typename std::enable_if< !h5::impl::is_scalar<T>::value,
-		void>::type append( const T& ref );
+		template<class T> inline std::enable_if_t<h5::impl::is_scalar_v<T>>
+		append( const T* ptr );
+		template<class T> inline std::enable_if_t< h5::impl::is_scalar_v<T> && !std::is_pointer_v<T>>
+		append( const T& ref );
+		template<class T> inline std::enable_if_t< !h5::impl::is_scalar_v<T>>
+		append( const T& ref );
 
 		impl::pipeline_t<impl::basic_pipeline_t> pipeline;
 		h5::ds_t ds;
@@ -98,8 +98,8 @@ h5::pt_t::~pt_t(){
 	free(this->fill_value);
 }
 
-template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value,
-void>::type h5::pt_t::append( const T* ptr ) try {
+template<class T> inline std::enable_if_t< h5::impl::is_scalar_v<T>>
+h5::pt_t::append( const T* ptr ) try {
 	//PTR: write directly chunk size from provided buffer/ptr
 	*offset = *current_dims;
 	*current_dims += *chunk_dims;
@@ -109,8 +109,8 @@ void>::type h5::pt_t::append( const T* ptr ) try {
 	throw h5::error::io::dataset::append( err.what() );
 }
 
-template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value && !std::is_pointer<T>::value,
-void>::type h5::pt_t::append( const T& ref ) try {
+template<class T> inline std::enable_if_t< h5::impl::is_scalar_v<T> && !std::is_pointer_v<T>>
+h5::pt_t::append( const T& ref ) try {
 //SCALAR: store inbound data directly in pipeline cache
 	static_cast<T*>( ptr )[n++] = ref;
 
@@ -125,8 +125,8 @@ void>::type h5::pt_t::append( const T& ref ) try {
 	throw h5::error::io::dataset::append( err.what() );
 }
 
-template<class T> inline typename std::enable_if< !h5::impl::is_scalar<T>::value,
-void>::type h5::pt_t::append( const T& ref ) try {
+template<class T> inline std::enable_if_t< !h5::impl::is_scalar_v<T>>
+h5::pt_t::append( const T& ref ) try {
 	auto dims = impl::size( ref );
 
 	*offset = *current_dims;

@@ -10,8 +10,8 @@ namespace h5 {
 
 	//ARITHMETIC ELEMENT TYPES 
 	template <class T, class D=typename impl::decay<T>::type, class... args_t> inline
-	typename std::enable_if< std::is_integral<D>::value || std::is_floating_point<D>::value,
-	T>::type aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
+	std::enable_if_t< std::is_integral_v<D> || std::is_floating_point_v<D>, T>
+	aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
 
 		h5::at_t attr = h5::open(ds, name, h5::default_acpl);
 		hid_t id;
@@ -32,8 +32,8 @@ namespace h5 {
 
 	//POD ELEMENT TYPES: Rank 0 and rank > 0
 	template <class T, class D=typename impl::decay<T>::type, class... args_t> inline
-	typename std::enable_if< !std::is_arithmetic<D>::value && std::is_pod<D>::value,
-	T>::type aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
+	std::enable_if_t< !std::is_arithmetic_v<D> && std::is_pod_v<D>, T>
+	aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
 		h5::at_t attr = h5::open(ds, name, h5::default_acpl);
 		hid_t id;
 		H5CPP_CHECK_NZ( (id = H5Aget_space( static_cast<hid_t>(attr) )),
@@ -60,8 +60,8 @@ namespace h5 {
 
 	// STD::STRING
 	template <class T, class D=typename impl::decay<T>::type, class... args_t> inline
-	typename std::enable_if<std::is_same<D,std::string>::value, //TODO: add char**
-	T>::type aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
+	std::enable_if_t<std::is_same_v<D,std::string>, T> //TODO: add char**
+	aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
 		h5::at_t attr = h5::open(ds, name, h5::default_acpl);
 		hid_t id;
 		H5CPP_CHECK_NZ( (id = H5Aget_space( static_cast<hid_t>(attr) )),
