@@ -52,12 +52,6 @@ namespace h5::arg {
 	}
 }
 
-namespace h5::impl {
-	//<public domain code> borrowed from c++ library reference: to lower c+14 to c++11
-	template<bool B, class T, class F> struct conditional { typedef T type; };
-	template<class T, class F> struct conditional<false, T, F> { typedef F type; };
-}
-
 namespace h5 {
 	// type-name helper class for compile time id and printout 
 	template <class T> struct name {
