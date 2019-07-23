@@ -24,10 +24,6 @@ if(HDF5_VERSION VERSION_GREATER 1.12.0)
 	message("H5CPP KITA support is available, see webpage for details...")
 endif()
 
-
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
-	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -44,8 +40,6 @@ find_package(Doxygen QUIET)
 
 list(APPEND CMAKE_INCLUDE_PATH "/usr/include")
 list(APPEND CMAKE_INCLUDE_PATH "/usr/local/include" )
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/" 
-	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
 
 find_program(H5CPP 
 	NAME h5cpp

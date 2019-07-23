@@ -10,8 +10,6 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 ## match hdf5 versioning x.x.x.h5cpp-version
 project(h5cpp-dev VERSION 1.10.4.1 LANGUAGES CXX C)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
-	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
 
 add_library(h5cpp INTERFACE)
 
