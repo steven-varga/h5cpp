@@ -11,7 +11,7 @@
 namespace h5::ublas {
 		template<class T> using rowmat 	= ::boost::numeric::ublas::matrix<T>;
 		template <class Object, class T = impl::decay_t<Object>>
-			using is_supportedm = std::integral_constant<bool, std::is_same_v<Object,h5::ublas::rowmat<T>>>;
+			using is_supportedm = std::bool_constant<std::is_same_v<Object,h5::ublas::rowmat<T>>>;
 }
 namespace h5::impl {
 	// 1.) object -> H5T_xxx
@@ -41,7 +41,7 @@ namespace h5::impl {
 namespace h5::ublas {
 		template<class T> using rowvec = ::boost::numeric::ublas::vector<T>;
 		template <class Object, class T = impl::decay_t<Object>>
-			using is_supportedv = std::integral_constant<bool, std::is_same_v<Object,h5::ublas::rowvec<T>>>;
+			using is_supportedv = std::bool_constant<std::is_same_v<Object,h5::ublas::rowvec<T>>>;
 }
 namespace h5::impl {
 	template <class T> struct decay<h5::ublas::rowvec<T>>{ typedef T type; };

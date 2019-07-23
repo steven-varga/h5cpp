@@ -37,7 +37,7 @@ namespace h5::impl {
 	inline constexpr bool is_scalar_v = std::is_integral_v<T> || std::is_pod_v<T> || std::is_same_v<T,std::string>;
 
 	template <class T, class B = impl::decay_t<T>>
-		using is_rank01 = std::integral_constant<bool,
+		using is_rank01 = std::bool_constant<
 			std::is_same_v<T,std::initializer_list<B>> ||
 			std::is_same_v<T,std::vector<B>> >;
 
