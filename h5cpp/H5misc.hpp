@@ -4,6 +4,11 @@
  *
  */
 
+/**
+ * @file This file contains convenience type defs, a template to test whether
+ * a type is supported by the library and utilities to generate random test data
+ */
+
 #ifndef  H5CPP_MISC_HPP
 #define  H5CPP_MISC_HPP
 namespace h5{
@@ -17,6 +22,9 @@ namespace h5{
 #define H5CPP_supported_elementary_types "supported elementary types ::= pod_struct | float | double |  [signed](int8 | int16 | int32 | int64)"
 
 namespace h5::utils {
+	/**
+	 * @brief Checks whether a type is supported by h5cpp.
+	 */
 	template <class T>
 	static constexpr bool is_supported = std::is_class_v<T> || std::is_arithmetic_v<T>;
 	//static constexpr bool is_supported = std::is_pod_v<T> && std::is_class_v<T> | std::is_arithmetic_v<T>;

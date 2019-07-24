@@ -4,13 +4,75 @@
  *
  */
 
+/**
+ * @file This file contains size types for different uses in hdf5
+ * (e.g. data set dimensions, chunk dimensions or strides)
+ */
+
 #ifndef  H5CPP_SALL_HPP
 #define  H5CPP_SALL_HPP
 
 namespace h5::impl {
-	struct max_dims_t{}; struct current_dims_t{};
-	struct dims_t{}; struct chunk_t{};  struct offset_t{}; struct stride_t{};  struct count_t{}; struct block_t{};
+	/**
+	 * @brief Tag usen in combination with \ref h5::impl::array.
+	 * @see h5::impl::array
+	 * @see h5::max_dims_t
+	 */
+	struct max_dims_t{};
+	/**
+	 * @brief Tag usen in combination with \ref h5::impl::array.
+	 * @see h5::impl::array
+	 * @see h5::current_dims_t
+	 */
+	struct current_dims_t{};
+	/**
+	 * @brief Tag usen in combination with \ref h5::impl::array.
+	 * @see h5::impl::array
+	 * @see h5::dims_t
+	 */
+	struct dims_t{};
+	/**
+	 * @brief Tag usen in combination with \ref h5::impl::array.
+	 * @see h5::impl::array
+	 * @see h5::chunk_t
+	 */
+	struct chunk_t{};
+	/**
+	 * @brief Tag usen in combination with \ref h5::impl::array.
+	 * @see h5::impl::array
+	 * @see h5::offset_t
+	 */
+	struct offset_t{};
+	/**
+	 * @brief Tag usen in combination with \ref h5::impl::array.
+	 * @see h5::impl::array
+	 * @see h5::stride_t
+	 */
+	struct stride_t{};
+	/**
+	 * @brief Tag usen in combination with \ref h5::impl::array.
+	 * @see h5::impl::array
+	 * @see h5::count_t
+	 */
+	struct count_t{};
+	/**
+	 * @brief Tag usen in combination with \ref h5::impl::array.
+	 * @see h5::impl::array
+	 * @see h5::block_t
+	 */
+	struct block_t{};
 
+	/**
+	 * @brief A tagged array of hsize_t to store dimensions of chunks, offsets, etc.
+	 * @see h5::max_dims_t
+	 * @see h5::current_dims_t
+	 * @see h5::dims_t
+	 * @see h5::chunk_t
+	 * @see h5::offset_t
+	 * @see h5::stride_t
+	 * @see h5::count_t
+	 * @see h5::block_t
+	 */
 	template <typename T, int N=H5CPP_MAX_RANK>
 	struct array  {
 
@@ -81,21 +143,93 @@ namespace h5::impl {
 
 /*PUBLIC CALLS*/
 namespace h5 {
+	/**
+	 * @brief Tagged array used to specify the maximum dimensions of a dataset.
+	 * @see h5::impl::array
+	 * @see h5::impl::max_dims_t
+	 */
 	using max_dims_t       = impl::array<impl::max_dims_t>;
+	/**
+	 * @brief Tagged array used to specify the current dimensions of a dataset.
+	 * @see h5::impl::array
+	 * @see h5::impl::current_dims_t
+	 */
 	using current_dims_t   = impl::array<impl::current_dims_t>;
+	/**
+	 * @brief Tagged array used to describe the dimensions of a datatype.
+	 * @see h5::impl::array
+	 * @see h5::impl::dims_t
+	 */
 	using dims_t   = impl::array<impl::dims_t>;
+	/**
+	 * @brief Tagged array used to specify the chunk size used by hdf5 for a dataset.
+	 * @see h5::impl::array
+	 * @see h5::impl::chunk_t
+	 */
 	using chunk_t  = impl::array<impl::chunk_t>;
+	/**
+	 * @brief Tagged array used to specify the offset when selecting a hyperslab
+	 * in a hdf5 dataset.
+	 *
+	 * This is the first blocks offset in the dataset.
+	 * Further reading in the <a href="https://support.hdfgroup.org/HDF5/doc/RM/RM_H5S.html#Dataspace-SelectHyperslab">reference</a>,
+	 * the <a href="https://support.hdfgroup.org/HDF5/doc/UG/HDF5_Users_Guide-Responsive%20HTML5/index.html#t=HDF5_Users_Guide%2FDataspaces%2FHDF5_Dataspaces_and_Partial_I_O.htm%23TOC_7_4_2_Programming_Modelbc-8&rhtocid=7.2.0_2">user manual</a>
+	 * or on <a href="https://stackoverflow.com/a/46557034">stack overflow</a>.
+	 * @see h5::impl::array
+	 * @see h5::impl::offset_t
+	 */
 	using offset_t = impl::array<impl::offset_t>;
+	/**
+	 * @brief Tagged array used to specify the stride when selecting a hyperslab
+	 * in a hdf5 dataset.
+	 *
+	 * This is the stride between blocks selected from the dataset.
+	 * Further reading in the <a href="https://support.hdfgroup.org/HDF5/doc/RM/RM_H5S.html#Dataspace-SelectHyperslab">reference</a>,
+	 * the <a href="https://support.hdfgroup.org/HDF5/doc/UG/HDF5_Users_Guide-Responsive%20HTML5/index.html#t=HDF5_Users_Guide%2FDataspaces%2FHDF5_Dataspaces_and_Partial_I_O.htm%23TOC_7_4_2_Programming_Modelbc-8&rhtocid=7.2.0_2">user manual</a>
+	 * or on <a href="https://stackoverflow.com/a/46557034">stack overflow</a>.
+	 * @see h5::impl::array
+	 * @see h5::impl::stride_t
+	 */
 	using stride_t = impl::array<impl::stride_t>;
+	/**
+	 * @brief Tagged array used to specify the block count when selecting a hyperslab
+	 * in a hdf5 dataset.
+	 *
+	 * This is the number of blocks selected from the dataset
+	 * along its different dimensions.
+	 * Further reading in the <a href="https://support.hdfgroup.org/HDF5/doc/RM/RM_H5S.html#Dataspace-SelectHyperslab">reference</a>,
+	 * the <a href="https://support.hdfgroup.org/HDF5/doc/UG/HDF5_Users_Guide-Responsive%20HTML5/index.html#t=HDF5_Users_Guide%2FDataspaces%2FHDF5_Dataspaces_and_Partial_I_O.htm%23TOC_7_4_2_Programming_Modelbc-8&rhtocid=7.2.0_2">user manual</a>
+	 * or on <a href="https://stackoverflow.com/a/46557034">stack overflow</a>.
+	 * @see h5::impl::array
+	 * @see h5::impl::count_t
+	 */
 	using count_t  = impl::array<impl::count_t>;
+	/**
+	 * @brief Tagged array used to specify the block size when selecting a hyperslab
+	 * in a hdf5 dataset.
+	 *
+	 * This is the size of one block selected from the dataset.
+	 * Further reading in the <a href="https://support.hdfgroup.org/HDF5/doc/RM/RM_H5S.html#Dataspace-SelectHyperslab">reference</a>,
+	 * the <a href="https://support.hdfgroup.org/HDF5/doc/UG/HDF5_Users_Guide-Responsive%20HTML5/index.html#t=HDF5_Users_Guide%2FDataspaces%2FHDF5_Dataspaces_and_Partial_I_O.htm%23TOC_7_4_2_Programming_Modelbc-8&rhtocid=7.2.0_2">user manual</a>
+	 * or on <a href="https://stackoverflow.com/a/46557034">stack overflow</a>.
+	 * @see h5::impl::array
+	 * @see h5::impl::block_t
+	 */
 	using block_t  = impl::array<impl::block_t>;
 
+	///@see h5::offset_t
 	using offset = offset_t;
+	///@see h5::stride_t
 	using stride = stride_t;
+	///@see h5::count_t
 	using count  = count_t;
+	///@see h5::block_t
 	using block  = block_t;
+	///@see h5::dims_t
 	using dims   = dims_t;
+	///@see h5::current_dims_t
 	using current_dims   = current_dims_t;
+	///@see h5::max_dims_t
 	using max_dims       = max_dims_t;
 	}
 #endif

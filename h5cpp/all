@@ -3,9 +3,20 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
+/**
+ * @file This file includes everything in h5cpp.
+ * Core contains low level functionallity and io
+ * provides a convenient to use high level interface.
+ */
+
 #ifndef  H5CPP_ALL_H
 #define H5CPP_ALL_H
 	#include "core"
 	#include "io"
-#endif	
+#endif
 
+/**
+ * @defgroup customization-point Customization points
+ * This group contains templates that can be specialized
+ * to add support for new types.
+ */

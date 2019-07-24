@@ -4,6 +4,12 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  *
  */
+
+/**
+ * @file This file adds support for the itpp library by specializing
+ * customization points.
+ */
+
 #ifndef  H5CPP_ITPP_HPP 
 #define  H5CPP_ITPP_HPP
 

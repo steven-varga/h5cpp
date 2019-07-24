@@ -4,6 +4,12 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  *
  */
+
+/**
+ * @file This file adds support for the eigen3 library by specializing
+ * customization points.
+ */
+
 #ifndef  H5CPP_EIGEN_HPP 
 #define H5CPP_EIGEN_HPP
 

@@ -4,6 +4,12 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  *
  */
+
+/**
+ * @file This file adds support for the armadillo library by specializing
+ * customization points.
+ */
+
 #ifndef  H5CPP_ARMA_HPP 
 #define  H5CPP_ARMA_HPP
 

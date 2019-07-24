@@ -4,6 +4,10 @@
 
  */
 
+/**
+ * @file This file contains defines to configure the behaviour of h5cpp
+ */
+
 #ifndef H5CPP_CONFIG_H
 #define H5CPP_CONFIG_H
 

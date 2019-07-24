@@ -4,6 +4,12 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  *
  */
+
+/**
+ * @file This file contains meta functions and normal functions
+ * to deal with c++ types. (e.g. to get the element type.)
+ */
+
 #ifndef  H5CPP_STL_HPP 
 #define  H5CPP_STL_HPP
 
@@ -15,6 +21,13 @@ namespace h5::impl {
 	// 6.) ctor with right dimensions
 
 	// 1.) object -> H5T_xxx
+	/**
+	 * @brief This meta function returns the element type of a class
+	 *
+	 * \note This is a customization point for new types.
+	 *
+	 * @ingroup customization-point
+	 */
 	template <class T, class...> struct decay{ typedef T type; };
 	template <class T, class...Ts> using decay_t = typename decay<T, Ts...>::type;
 
@@ -41,12 +54,30 @@ namespace h5::impl {
 			std::is_same_v<T,std::initializer_list<B>> ||
 			std::is_same_v<T,std::vector<B>> >;
 
+	/**
+	 * @brief This meta function returns the number of dimensions encapsulated
+	 * in the given c++ type.
+	 *
+	 * \note This is a customization point for new types.
+	 *
+	 * @ingroup customization-point
+	 */
 	template<class T> struct rank : public std::integral_constant<size_t,0>{};
 	template<> struct rank<std::string>: public std::integral_constant<size_t,1>{};
 	template<class T> struct rank<T*>: public std::integral_constant<size_t,1>{};
 	template<class T> struct rank<std::vector<T>>: public std::integral_constant<size_t,1>{};
 
 	// 3.) read access
+	/**
+	 * @brief This function provides const read access to the data buffer
+	 * of a type.
+	 *
+	 * The access is provided as a const pointer to the element type.
+	 *
+	 * \note This is a customization point for new types.
+	 *
+	 * @ingroup customization-point
+	 */
 	template <class T> inline std::enable_if_t<std::is_integral_v<T> || std::is_pod_v<T>, const T*>
 		data( const T& ref ){ return &ref; }
 	template<class T> inline std::enable_if_t< impl::is_scalar_v<T>, const T*>
@@ -56,18 +87,45 @@ namespace h5::impl {
 	template <class T> inline const T* data( const std::vector<T>& ref ){
 		return ref.data();
 	}
+	// 4.) write access
+	/**
+	 * @brief This function provides read / write access to the data buffer
+	 * of a type.
+	 *
+	 * The access is provided as a pointer to the element type.
+	 *
+	 * \note This is a customization point for new types.
+	 *
+	 * @ingroup customization-point
+	 */
 	template <class T> inline T* data( std::vector<T>& ref ){
 		return ref.data();
 	}
-	// 4.) write access
 	template <class T> inline std::enable_if_t<std::is_integral_v<T>, T*>
 	data( T& ref ){ return &ref; }
 	// 5.) obtain dimensions of extents
+	/**
+	 * @brief This function provides the sizes of the dimensions encapsulated in
+	 * the given type.
+	 *
+	 * \note This is a customization point for new types.
+	 *
+	 * @ingroup customization-point
+	 */
 	template <class T> inline constexpr std::enable_if_t< impl::is_scalar_v<T>, std::array<size_t,0>>
 		size( T value ){ return{}; }
 	template <class T> inline std::enable_if_t< impl::is_rank01<T>::value, std::array<size_t,1>>
 		size( const T& ref ){ return {ref.size()}; }
 	// 6.) ctor with right dimensions
+	/**
+	 * @brief This function calls the constructor of a type initializing any
+	 * encapsulated dimensions to the given sizes.
+	 * @param dims Size of encapsulated dimensions
+	 *
+	 * \note This is a customization point for new types.
+	 *
+	 * @ingroup customization-point
+	 */
 	template <class T> struct get {
 	   	static inline T ctor( std::array<size_t,impl::rank<T>::value> dims ){
 			return T(); }};

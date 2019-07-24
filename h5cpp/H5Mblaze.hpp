@@ -4,6 +4,12 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  *
  */
+
+/**
+ * @file This file adds support for the blaze library by specializing
+ * customization points.
+ */
+
 #ifndef  H5CPP_BLAZE_HPP 
 #define  H5CPP_BLAZE_HPP
 

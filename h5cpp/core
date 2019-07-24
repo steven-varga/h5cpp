@@ -3,6 +3,12 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
+/**
+ * @file This includes all core components as configuration, c-api
+ * abstraction and helper structures to deal with datastructures
+ * from 3rd party libraries (e.g. eigen, arma, dlib)
+ */
+
 #include <hdf5.h>
 
 #ifdef H5CPP_HAVE_KITA

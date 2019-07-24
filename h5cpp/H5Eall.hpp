@@ -4,6 +4,11 @@
  *
  */
 
+/**
+ * @file This file contains definitions of all exceptions used by h5cpp as
+ * well as facilities to mute error messages.
+ * It has to be included before any h5cpp function throwing an exception.
+ */
 
 #ifndef  H5CPP_EALL_HPP
 #define  H5CPP_EALL_HPP

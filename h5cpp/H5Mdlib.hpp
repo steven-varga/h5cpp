@@ -4,6 +4,12 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  *
  */
+
+/**
+ * @file This file adds support for the dlib library by specializing
+ * customization points.
+ */
+
 #ifndef  H5CPP_DLIB_HPP 
 #define  H5CPP_DLIB_HPP
 
