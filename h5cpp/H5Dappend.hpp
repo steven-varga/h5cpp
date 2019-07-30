@@ -47,14 +47,14 @@ namespace h5 {
 			chunk_dims[H5CPP_MAX_RANK],
 			count[H5CPP_MAX_RANK];
 		size_t block_size,element_size,N,n,rank;
-		void *ptr;
+		void *ptr, *fill_value;
 	};
 }
 
 /* initialized to invalid state
  * */
 inline h5::pt_t::pt_t() :
-	dxpl{H5Pcreate(H5P_DATASET_XFER)},ds{H5I_UNINIT},n{0}{
+	dxpl{H5Pcreate(H5P_DATASET_XFER)},ds{H5I_UNINIT},n{0},fill_value{NULL}{
 		for( int i=0; i<H5CPP_MAX_RANK; i++ )
 			count[i] = 1, offset[i] = 0;
 	}
@@ -74,7 +74,8 @@ h5::pt_t::pt_t( const h5::ds_t& handle ) : pt_t() {
 		h5::dcpl_t dcpl = h5::get_dcpl( ds );
 		h5::dt_t<void*> type = h5::get_type<void*>( ds );
 		hsize_t size = h5::get_size( type );
-		pipeline.set_cache(dcpl, size );
+		this->fill_value = h5::get_fill_value(dcpl, type, size);
+		pipeline.set_cache(dcpl, size);
 		this->ptr = pipeline.chunk0;
 		this->block_size = pipeline.block_size;
 		this->element_size = pipeline.element_size;
@@ -94,6 +95,7 @@ h5::pt_t::~pt_t(){
 	if( !h5::is_valid( ds ) )
 		return;
 	flush();
+	free(this->fill_value);
 }
 
 template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value,
@@ -167,9 +169,10 @@ void>::type h5::pt_t::append( const T& ref ) try {
 inline
 void h5::pt_t::flush(){
 	if( n == 0 ) return;
-	// the remainder of last chunk is zeroed out:
-	memset(
-			static_cast<char*>( ptr ) + n*element_size, 0, (N-n) * element_size);
+	// the remainder of last chunk must be set to fill_value; arbitrary type size supported
+	for(hsize_t i=0; i<(N-n); i++)
+		for(size_t j=0; j < element_size; j++)
+			static_cast<char*>( ptr )[(n + i) * element_size + j] = static_cast<char*>( fill_value )[ j ];
 	*offset = *current_dims;
 	*current_dims += *current_dims % *chunk_dims;
 	size_t r=1; for(int i=1; i<rank; i++) r*=chunk_dims[i];
