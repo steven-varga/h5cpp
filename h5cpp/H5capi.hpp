@@ -7,6 +7,8 @@
 #ifndef  H5CPP_CAPI_HPP
 #define  H5CPP_CAPI_HPP
 
+
+
 /* rules:
  * h5::id_t{ hid_t } or direct initialization  doesn't increment reference count
  */ 
@@ -206,6 +208,28 @@ namespace h5 {
 		return ds_;
 	}
 
+	inline void * get_fill_value(const h5::dcpl_t& dcpl, const h5::dt_t<void*>& type, size_t size){
+
+		H5D_fill_value_t fill_value_status;
+		H5Pfill_value_defined(static_cast<::hid_t>(dcpl), &fill_value_status);
+
+		if( fill_value_status != H5D_FILL_VALUE_UNDEFINED ){
+			void * buffer = malloc(size);
+			H5Pget_fill_value(
+					static_cast<::hid_t>(dcpl),
+					static_cast<::hid_t>(type), buffer );
+			return buffer;
+		} else
+			return NULL;
+	}
+
+	inline void * get_fill_value(const h5::ds_t& ds){
+		h5::dt_t<void*> type = h5::get_type<void*>( ds );
+		hsize_t size = h5::get_size( type );
+		h5::dcpl_t dcpl = h5::get_dcpl( ds );
+
+		return h5::get_fill_value(dcpl, type, size);
+	}
 }
 #endif
 
