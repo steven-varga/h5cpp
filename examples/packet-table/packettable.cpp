@@ -21,7 +21,9 @@ int main(){
 
 	h5::fd_t fd = h5::create("example.h5",H5F_ACC_TRUNC);
 
-	// SCALAR: integral 
+	// SCALAR: integral
+	// The motivation behind this example to allow 2D frames be recorded into a stream
+	// 3x5 is the frame or image size, with 2 planes. 
 	try { // centrally used error handling
 		std::vector<int> stream(83);
 		std::iota(std::begin(stream), std::end(stream), 1);
@@ -29,7 +31,7 @@ int main(){
 		// zero copy writes directly to chunk buffer then pushed through filter chain if specified
 		// works up to H5CPP_MAX_RANK default to 7
 		// last chunk if partial filled with h5::fill_value<T>( some_value )  
-		h5::pt_t pt = h5::create<int>(fd, "stream of integral",
+		h5::pt_t pt = h5::create<int>(fd, "stream of integral 01",
 				 h5::max_dims{H5S_UNLIMITED,3,5}, h5::chunk{2,3,5} | h5::gzip{9} | h5::fill_value<int>(3) );
 		for( auto record : stream )
 			h5::append(pt, record);
@@ -38,8 +40,23 @@ int main(){
 		std::cerr << "ERROR:" << e.what();
 	}
 
-	// SCALAR: pod 
 	try { // centrally used error handling
+		std::vector<int> stream(83);
+		std::iota(std::begin(stream), std::end(stream), 1);
+		// the leading dimension is extended once chunk is full, chunk is filled in row major order
+		// zero copy writes directly to chunk buffer then pushed through filter chain if specified
+		// works up to H5CPP_MAX_RANK default to 7
+		// last chunk if partial filled with h5::fill_value<T>( some_value )  
+		h5::pt_t pt = h5::create<int>(fd, "stream of integral 02",
+									  h5::max_dims{H5S_UNLIMITED}, h5::chunk{6} | h5::gzip{9} | h5::fill_value<int>(3) );
+		for( auto record : stream )
+			h5::append(pt, record);
+	} catch ( const h5::error::any& e ){
+		std::cerr << "ERROR:" << e.what();
+	}
+
+	// SCALAR: pod 
+	try { //
 		std::vector<sn::example::Record> stream = h5::utils::get_test_data<sn::example::Record>(127);
 
 		// implicit conversion from h5::ds_t to h5::pt_t makes it a breeze to create
@@ -50,7 +67,6 @@ int main(){
 		//
 		// compiler assisted introspection generates boilerplate, developer 
 		// can focus on the idea, leaving boring details to machines 
-		//h5::pt_t pt = h5::create<sn::example::Record>(fd, "stream of struct",
 		h5::pt_t pt = h5::create<sn::example::Record>(fd, "stream of struct",
 				 h5::max_dims{H5S_UNLIMITED,7}, h5::chunk{4,7} | h5::gzip{9} );
 		for( auto record : stream )
@@ -59,6 +75,7 @@ int main(){
 		std::cerr << "ERROR:" << e.what();
 	}
 
+/*
 	// CONTAINERS : WORK IN PROGRESS!!!
 	{ 	// packet table for a collection of matrices modelling a HD resolution of gray scale images
 		// c++ objects may be factored into:
@@ -94,6 +111,6 @@ int main(){
 		for( int i = 0; i < 7; i++)
 			V[0] = i, h5::append( pt, V);  			// save it into file
 	}
-
+*/
 	return 0;
 }
