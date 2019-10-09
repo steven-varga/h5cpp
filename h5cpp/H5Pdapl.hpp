@@ -26,10 +26,12 @@ namespace h5 { namespace impl {
 
 namespace h5 {
 // DATA ACCESS PROPERTY LISTS
-	using chunk_cache          = impl::dapl_call< impl::dapl_args<hid_t,size_t, size_t, double>,H5Pset_chunk_cache>;
+#if H5_VERSION_GE(1,10,0)
 	using efile_prefix 		   = impl::dapl_call< impl::dapl_args<hid_t,const char*>,H5Pset_efile_prefix>;
 	using virtual_view         = impl::dapl_call< impl::dapl_args<hid_t,H5D_vds_view_t>,H5Pset_virtual_view>;
 	using virtual_printf_gap   = impl::dapl_call< impl::dapl_args<hid_t,hsize_t>,H5Pset_virtual_printf_gap>;
+#endif
+	using chunk_cache          = impl::dapl_call< impl::dapl_args<hid_t,size_t, size_t, double>,H5Pset_chunk_cache>;
 	//using num_threads  	   	   = impl::dapl_call< impl::dapl_args<hid_t, unsigned char>,impl::dapl_threads>;
 	namespace flag {
 		using high_throughput      = impl::dapl_call< impl::dapl_args<hid_t>,impl::dapl_pipeline_set>;
