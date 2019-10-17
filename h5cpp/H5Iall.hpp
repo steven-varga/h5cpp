@@ -95,7 +95,7 @@ namespace h5 { namespace impl { namespace detail {
 			if( H5Iis_valid( handle ) )
 				err = capi_close( handle );
 		}
-		private:
+		protected:
 		::hid_t handle;
 	};
 
@@ -122,11 +122,11 @@ namespace h5 { namespace impl { namespace detail {
 			return *this;
 		}
 	};
-	/*dataset id*/
+	/*dataset id*/ //FIXME: eliminate extra field: ds  @see HDF5 CAPI BUG: https://jira.hdfgroup.org/browse/HDFFV-10934
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, true,true,hdf5::dataset> : public hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
-		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
+		using parent::hid_t;  // is a must because of ds_t{hid_t} ctor 
 		using parent::handle; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
 		using at_t = hid_t<h5::impl::at_t,H5Aclose,true,true,hdf5::attribute>;
@@ -139,11 +139,11 @@ namespace h5 { namespace impl { namespace detail {
 
 		::hid_t dapl;
 	};
-	/*attribute id*/
+	/*attribute id*/ // FIXME: eliminate extra fields: ds, name
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, true,true,hdf5::attribute> : public hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
-		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
+		using parent::hid_t;  // is a must because of ds_t{hid_t} ctor 
 		using parent::handle; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
 

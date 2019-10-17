@@ -19,7 +19,7 @@ int main(){
 	// set to use the latest file format version to able to use large size attributes
 	h5::fd_t fd = h5::create("001.h5", H5F_ACC_TRUNC, h5::default_fcpl,
 						h5::libver_bounds({H5F_LIBVER_V18, H5F_LIBVER_V18}) );
-	h5::ds_t ds = h5::write(fd,"some dataset with attributes", M);
+	h5::ds_t ds = h5::write(fd,"directory/dataset", M);
 	{
 		/*
 		(gr_t | ds_t | dt_t = fd["/root/some/path"]) = some object;
@@ -65,6 +65,23 @@ int main(){
 		h5::awrite(ds,"att_29", vector ); // vector of pod/compound type
 		h5::awrite(ds,"att_30", matrix ); // linear algebra object
 	}
+	{//directory
+		h5::gr_t gr{H5Gopen(fd,"/directory", H5P_DEFAULT)};
+		h5::awrite(gr,"att_21", 42 );
+		h5::awrite(gr,"att_22", {1.,3.,4.,5.} );
+		h5::awrite(gr,"att_23", {'1','3','4','5'} );
+		h5::awrite(gr,"att_24", {"alpha", "beta","gamma","..."} );
+
+		h5::awrite(gr,"att_25", "const char[N]");
+		h5::awrite(gr,"att_26", u8"const char[N]áééé");
+		h5::awrite(gr,"att_27", std::string( "std::string") );
+
+		h5::awrite(gr,"att_28", record ); // pod/compound datatype
+		h5::awrite(gr,"att_29", vector ); // vector of pod/compound type
+		h5::awrite(gr,"att_30", matrix ); // linear algebra object
+	}
+
+
 
 	{ // open + write -> attribute size must not change
 		arma::mat att_01 = arma::ones(3,4);
