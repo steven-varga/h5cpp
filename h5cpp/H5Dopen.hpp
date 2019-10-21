@@ -21,13 +21,15 @@ namespace h5{
 	 * 	}	                                                  // ds and fd closes automatically 
 	 * @endcode 
 	 */
-    inline h5::ds_t open(const  h5::fd_t& fd, const std::string& path, const h5::dapl_t& dapl = h5::default_dapl ){
+	template<class L>
+	inline typename std::enable_if< impl::is_location<L>::value,
+	h5::ds_t>::type open(const L& loc, const std::string& path, const h5::dapl_t& dapl = h5::default_dapl ){
 
 		H5CPP_CHECK_PROP( dapl, h5::error::io::dataset::open, "invalid data access property" );
 
 		hid_t ds;
 	   	H5CPP_CHECK_NZ((
-			ds = H5Dopen2( static_cast<hid_t>(fd), path.data(), static_cast<hid_t>(dapl) )),
+			ds = H5Dopen2( static_cast<hid_t>(loc), path.data(), static_cast<hid_t>(dapl) )),
 				   							h5::error::io::dataset::open, h5::error::msg::open_dataset );
 		// custom h5cpp specific C++ high throughpout filter
 		// is abstracted out and hidden under property list

@@ -14,5 +14,11 @@ namespace h5 { namespace utils {
 			vec[i].idx = i;
 		return vec;
 	}
-
+	template <class T, size_t N> inline
+		std::array<sn::example::Record,N> get_test_data( ){
+	std::array<sn::example::Record,N> vec;
+	for(int i=0; i<N; i++ )
+		vec[i].idx = i;
+	return vec;
+	}
 }}

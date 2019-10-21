@@ -39,7 +39,7 @@ namespace h5{ namespace arg {
 
 	template <class S, class... args_t,
 			 class idx = tpos</*search: */const S&,/*args: */ const args_t&...,const S&>>
-	typename idx::type& 
+	typename idx::type&
 	get( const S& def, args_t&&... args ){
 		auto tuple = std::forward_as_tuple(args..., def );
 		return std::get<idx::value>( tuple );
@@ -63,6 +63,19 @@ namespace h5 {
 	template <class T> struct name {
 		static constexpr char const * value = "n/a";
 	};
-
 }
+/*
+namespace h5::impl::tuple {
+	template <typename... T, std::size_t... I>
+	auto subtuple_(const std::tuple<T...>& tuple, std::index_sequence<I...>) {
+	  return std::make_tuple(std::get<I>(tuple)...);
+	}
+
+	template <int Trim, typename... T>
+	auto subtuple(const std::tuple<T...>& tuple) {
+	  return subtuple_(tuple, std::make_index_sequence<sizeof...(T) - Trim>());
+	}
+}
+*/
+
 #endif

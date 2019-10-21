@@ -126,5 +126,18 @@ int main(){
 		// linear algebra object
 		std::cout << "att_10 : "; auto att_10 = h5::aread<arma::mat>(ds,"att_10"); std::cout << att_10 << "\n";
 	}
+	{ // std::tuple
+		/* bundled up operations with std::tuple<...>
+		 */ 
+
+		h5::gr_t gr = h5::gcreate(fd, "my-group" );
+		h5::awrite(gr, std::make_tuple(
+				"temperature", 18.0,
+				"pressure", 0.5,
+				"matrix", matrix,
+				"vector", vector,
+				"pod struct", record
+				));
+	}
 }
 

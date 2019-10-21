@@ -13,7 +13,7 @@ namespace h5 {
 	typename std::enable_if< std::is_integral<D>::value || std::is_floating_point<D>::value,
 	T>::type aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
 
-		h5::at_t attr = h5::open(ds, name, h5::default_acpl);
+		h5::at_t attr = h5::aopen(ds, name, h5::default_acpl);
 		hid_t id;
 		H5CPP_CHECK_NZ( (id = H5Aget_space( static_cast<hid_t>(attr) )),
 			   h5::error::io::attribute::read, "couldn't get space...");
@@ -34,7 +34,7 @@ namespace h5 {
 	template <class T, class D=typename impl::decay<T>::type, class... args_t> inline
 	typename std::enable_if< !std::is_arithmetic<D>::value && std::is_pod<D>::value,
 	T>::type aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
-		h5::at_t attr = h5::open(ds, name, h5::default_acpl);
+		h5::at_t attr = h5::aopen(ds, name, h5::default_acpl);
 		hid_t id;
 		H5CPP_CHECK_NZ( (id = H5Aget_space( static_cast<hid_t>(attr) )),
 			   h5::error::io::attribute::read, "couldn't get space...");
@@ -62,7 +62,7 @@ namespace h5 {
 	template <class T, class D=typename impl::decay<T>::type, class... args_t> inline
 	typename std::enable_if<std::is_same<D,std::string>::value, //TODO: add char**
 	T>::type aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
-		h5::at_t attr = h5::open(ds, name, h5::default_acpl);
+		h5::at_t attr = h5::aopen(ds, name, h5::default_acpl);
 		hid_t id;
 		H5CPP_CHECK_NZ( (id = H5Aget_space( static_cast<hid_t>(attr) )),
 			   h5::error::io::attribute::read, "couldn't get space...");

@@ -253,6 +253,41 @@ namespace h5 { namespace error { namespace io { namespace attribute {
 	};
 }}}}
 
+namespace h5 { namespace error { namespace io { namespace group {
+	struct rollback : public h5::error::io::rollback {
+		rollback( const std::string& msg ) : h5::error::io::rollback( msg ){}
+	};
+	struct any : public h5::error::io::any {
+		any() : h5::error::io::any() {}
+		any( const std::string& msg ) : h5::error::io::any( msg ){}
+	};
+	struct open : public h5::error::io::group::any {
+		open() : h5::error::io::group::any() {}
+		open( const std::string& msg ) : h5::error::io::group::any( msg ){}
+	};
+	struct close : public h5::error::io::group::any {
+		close() : h5::error::io::group::any() {}
+		close( const std::string& msg ) : h5::error::io::group::any( msg ){}
+	};
+	struct read : public h5::error::io::group::any {
+		read() : h5::error::io::group::any() {}
+		read( const std::string& msg ) : h5::error::io::group::any( msg ){}
+	};
+	struct write : public h5::error::io::group::any {
+		write() : h5::error::io::group::any() {}
+		write( const std::string& msg ) : h5::error::io::group::any( msg ){}
+	};
+	struct create : public h5::error::io::group::any {
+		create() : h5::error::io::group::any() {}
+		create( const std::string& msg ) : h5::error::io::group::any( msg ){}
+	};
+	struct misc : public h5::error::io::group::any {
+		misc() : h5::error::io::group::any() {}
+		misc( const std::string& msg ) : h5::error::io::group::any( msg ){}
+	};
+}}}}
+
+
 namespace h5 { namespace error { namespace property_list {
 	struct rollback : public h5::error::rollback {
 		rollback( const std::string& msg ) : h5::error::rollback( msg ){}

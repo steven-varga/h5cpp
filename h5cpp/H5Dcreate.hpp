@@ -18,8 +18,9 @@ namespace h5 {
 	* \par_file_path \par_dataset_path \par_current_dims \par_max_dims 
 	* \par_lcpl \par_dcpl \par_dapl  \tpar_T \returns_ds
  	*/ 
-	template<class T, class... args_t>
-	h5::ds_t create( const h5::fd_t& fd, const std::string& dataset_path, args_t&&... args ) try {
+	template<class T, class L, class... args_t>
+	inline typename std::enable_if< impl::is_location<L>::value,
+	h5::ds_t>::type create( const L& loc, const std::string& dataset_path, args_t&&... args ) try {
 		// compile time check of property lists: 
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
 		using tmax_dims 	= typename arg::tpos<const h5::max_dims_t&,const args_t&...>;
@@ -69,7 +70,7 @@ namespace h5 {
 			std::move( h5::create_simple( current_dims, max_dims ) ) :  std::move( h5::create_simple( current_dims ) );
 		using element_t = typename impl::decay<T>::type;
 		h5::dt_t<element_t> type;
-		return h5::createds(fd, dataset_path, type, space_id, lcpl, dcpl, dapl);
+		return h5::createds(loc, dataset_path, type, space_id, lcpl, dcpl, dapl);
 
 	} catch( const std::runtime_error& err ) {
 			throw h5::error::io::dataset::create( err.what() );

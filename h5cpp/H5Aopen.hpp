@@ -10,7 +10,7 @@
 namespace h5 {
 	template<class HID_T>
 	inline typename std::enable_if<h5::impl::is_valid_attr<HID_T>::value,
-    h5::at_t>::type open(const  HID_T& parent, const std::string& path, const h5::acpl_t& acpl = h5::default_acpl ){
+    h5::at_t>::type aopen(const  HID_T& parent, const std::string& path, const h5::acpl_t& acpl = h5::default_acpl ){
 
 		H5CPP_CHECK_PROP( acpl, h5::error::io::attribute::open, "invalid attribute creation property" );
 		hid_t attr = H5I_UNINIT;

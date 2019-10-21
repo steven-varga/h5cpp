@@ -280,9 +280,14 @@ const static flag::fletcher32 fletcher32;
 const static flag::shuffle shuffle;
 const static flag::nbit nbit;
 
+
+const static h5::layout compact{H5D_COMPACT};
+const static h5::layout contigous{H5D_CONTIGUOUS};
+const static h5::layout chunked{H5D_CHUNKED};
 const static h5::layout layout_compact{H5D_COMPACT};
 const static h5::layout layout_contigous{H5D_CONTIGUOUS};
 const static h5::layout layout_chunked{H5D_CHUNKED};
+
 const static h5::layout layout_virtual{H5D_VIRTUAL};
 
 const static h5::fill_time fill_time_ifset{H5D_FILL_TIME_IFSET};
@@ -379,6 +384,8 @@ namespace h5 { namespace notimplemented_yet { // OBJECT COPY PROPERTY LISTS
 
 
 namespace h5 {
+	const static h5::gcpl_t gcpl = static_cast<h5::gcpl_t>( H5P_DEFAULT );
+	const static h5::gapl_t gapl = static_cast<h5::gapl_t>( H5P_DEFAULT );
 	const static h5::acpl_t acpl = static_cast<h5::acpl_t>( H5P_DEFAULT );
 	const static h5::dcpl_t dcpl = static_cast<h5::dcpl_t>( H5P_DEFAULT);
 	const static h5::dxpl_t dxpl = static_cast<h5::dxpl_t>( H5P_DEFAULT );
@@ -386,6 +393,8 @@ namespace h5 {
 	const static h5::fapl_t fapl = static_cast<h5::fapl_t>( H5P_DEFAULT );
 	const static h5::fcpl_t fcpl = static_cast<h5::fcpl_t>( H5P_DEFAULT );
 
+	const static h5::gcpl_t default_gcpl = static_cast<h5::gcpl_t>( H5P_DEFAULT );
+	const static h5::gapl_t default_gapl = static_cast<h5::gapl_t>( H5P_DEFAULT );
 	const static h5::acpl_t default_acpl = static_cast<h5::acpl_t>( H5P_DEFAULT );
 	const static h5::dcpl_t default_dcpl = static_cast<h5::dcpl_t>( H5P_DEFAULT );
 	const static h5::dxpl_t default_dxpl = static_cast<h5::dxpl_t>( H5P_DEFAULT );

@@ -1,16 +1,9 @@
-# H5CPP documentation (Sandbox)
+## Sparse Matrix[^1]
+<div id="object" style="float: right">
+	![Object](../pix/sparse-csr.svg)
+</div>
 
-[H5CPP](http://h5cpp.org) is template only persistence for modern C++ with compiler assisted reflection. To take the notch a step higher, this DEVELOPER BRANCH comes with  improved documentation in addition to:
-
-* General C++ Class persistence PLANNED
-* Sparse Matrix Support IN-PROGRESS
-* Full STL Support IN-PROGRESS
-* More Examples: IN-PROGRESS
-
-
-The pages maybe viewed live at [SANDBOX](http://sandbox.h5cpp.org)
-
-**FOCUS:** Currently I am working on a thorough treatment of Sparse Matrices, if you are a researcher working with massive sparse datasets I am interested in your input.
+The fill rate of a matrix is a ration between non-zero and zero elements. If the latter significantly outweighs the former then we speak of Sparse Matrices. Depending on the sparsity pattern some storage format are more efficient than others. Nevertheless a sparse matrix is an object of multiple fields as opposed to a single contagious memory location with homogeneous type.
 
 Netlib considers the following [sparse storage formats][109]:
 
@@ -23,6 +16,13 @@ Netlib considers the following [sparse storage formats][109]:
 |[Jagged Diagonal Storage][114]          | `h5::sparse::jds`   |
 |[Skyline Storage][115]                  | `h5::sparse::ss`    |
 
+
+### Multi Dataset Storage Format
+
+
+
+### Single Dataset Storage Format
+TODO: write code and documentation
 
 
 [99]: https://en.wikipedia.org/wiki/C_(programming_language)#Pointers
@@ -44,4 +44,6 @@ Netlib considers the following [sparse storage formats][109]:
 [115]: http://www.netlib.org/utk/people/JackDongarra/etemplates/node378.html
 
 
+
+[^1]: Material based on Netlib Documentation
 

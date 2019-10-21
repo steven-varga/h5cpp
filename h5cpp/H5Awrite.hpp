@@ -29,7 +29,7 @@ namespace h5 {
 		h5::current_dims_t current_dims = impl::size( ref );
 		using element_t = typename impl::decay<T>::type;
 		h5::at_t attr = ( H5Aexists(static_cast<hid_t>(parent), name.c_str() ) > 0 ) ?
-			h5::open(parent, name, h5::default_acpl) : h5::create<element_t>(parent, name, current_dims);
+			h5::aopen(parent, name, h5::default_acpl) : h5::acreate<element_t>(parent, name, current_dims);
 		h5::awrite(attr, &ref[0] );
 		return attr;
 	}
@@ -41,7 +41,7 @@ namespace h5 {
 		h5::current_dims_t current_dims = impl::size( ref );
 		using element_t = typename impl::decay<T>::type;
 		h5::at_t attr = ( H5Aexists(static_cast<hid_t>(parent), name.c_str() ) > 0 ) ?
-			h5::open(parent, name, h5::default_acpl) : h5::create<element_t>(parent, name, current_dims);
+			h5::aopen(parent, name, h5::default_acpl) : h5::acreate<element_t>(parent, name, current_dims);
 		h5::awrite(attr, impl::data(ref) );
 		return attr;
 	}
@@ -56,12 +56,43 @@ namespace h5 {
 		using element_t = typename impl::decay<std::initializer_list<T>>::type;
 
 		h5::at_t attr = ( H5Aexists(static_cast<hid_t>(parent), name.c_str() ) > 0 ) ?
-			h5::open(parent, name, h5::default_acpl) : h5::create<element_t>(parent, name, current_dims);
+			h5::aopen(parent, name, h5::default_acpl) : h5::acreate<element_t>(parent, name, current_dims);
 		h5::awrite<element_t>(attr, impl::data( ref ) );
 		return attr;
 	} catch( const std::runtime_error& err ){
 		throw h5::error::io::attribute::write( err.what() );
 	}
+
+	namespace impl::tuple {
+		// tail case
+		template <std::size_t N, class... Fields>
+		typename std::enable_if< N == 0,
+		void>::type awrite(const h5::gr_t& parent, const std::tuple<Fields...>& fields, const h5::acpl_t& acpl ){
+			//std::cout << N << " " <<std::get<N>(fields) <<": "<<std::get<N+1>(fields)<<"\n";
+			h5::awrite(parent, std::get<N>(fields), std::get<N+1>(fields), acpl);
+		}
+		// 
+		template <std::size_t N, class... Fields, class... Names, class... Args>
+		typename std::enable_if< std::isgreater(N,0),
+		void>::type awrite(const h5::gr_t& parent, const std::tuple<Fields...>& fields, const h5::acpl_t& acpl){
+			impl::tuple::awrite<N-2>(parent, fields, acpl);
+			//std::cout << N << " " <<std::get<N>(fields) <<": "<<std::get<N+1>(fields)<<"\n";
+			h5::awrite(parent, std::get<N>(fields), std::get<N+1>(fields), acpl);
+		}
+	}
+
+	// breaks up std::tuple into set of calls, and delegates them to respective awrite calls
+	// std::tuple<L0,V0, L1,V1, ... ,  Ln,Vn> is a pair wise of labels and values
+	template<class P, class... A>
+	inline typename std::enable_if<h5::impl::is_valid_attr<P>::value,
+    void>::type awrite( const P& parent, const std::tuple<A...>& attr, const h5::acpl_t& acpl = h5::default_acpl) try {
+		constexpr std::size_t N = std::tuple_size<std::tuple<A...>>::value - 2;
+		impl::tuple::awrite<N>(parent, attr, acpl);
+	} catch( const std::runtime_error& err ){
+		throw h5::error::io::attribute::write( err.what() );
+	}
+
+
 }
 
 template<> inline
@@ -69,7 +100,7 @@ h5::at_t h5::ds_t::operator[]( const char name[] ){
 	//we don't have the object parameters yet available the only thing to do is 
 	//mark it H5I_UNINIT and in the second phase create the attribute 
 	h5::at_t attr = ( H5Aexists(static_cast<hid_t>(*this), name ) > 0 ) ?
-			h5::open(static_cast<hid_t>( *this ), name, h5::default_acpl) : h5::at_t{H5I_UNINIT};
+			h5::aopen(static_cast<hid_t>( *this ), name, h5::default_acpl) : h5::at_t{H5I_UNINIT};
 	attr.ds   = static_cast<hid_t>(*this);
 	attr.name = std::string(name);
 	return attr;

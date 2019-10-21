@@ -73,13 +73,11 @@
 	#define h5cpp__assert( condition, msg ) if( !condition ) throw std::runtime_error( "ERROR: "  msg )
 #endif
 
-
 #define H5CPP_CHECK_EQ( call, exception, msg ) if( call == 0 ) throw exception( H5CPP_ERROR_MSG( msg ));
 #define H5CPP_CHECK_NZ( call, exception, msg ) if( call < 0 ) throw exception( H5CPP_ERROR_MSG( msg ));
 #define H5CPP_CHECK_NULL( call, exception, msg ) if( call == NULL  ) throw exception( H5CPP_ERROR_MSG( msg ));
 #define H5CPP_CHECK_PROP( id, exception, msg ) if( static_cast<::hid_t>( id ) < 0 ) throw exception( H5CPP_ERROR_MSG( msg ));
 #define H5CPP_CHECK_ID( id, exception, msg ) if( !static_cast<::hid_t>( id ) ) throw exception( H5CPP_ERROR_MSG( msg ));
-
 
 #ifndef H5CPP_CONSOLE_WIDTH 
 	#define H5CPP_CONSOLE_WIDTH 30
@@ -87,9 +85,36 @@
 
 
 
-/**
 
+#ifdef _GLIBCXX_ARRAY
+	#define H5CPP_STL_ARRAY
+#endif
+#ifdef _GLIBCXX_FORWARD_LIST
+	#define H5CPP_STL_FORWARD_LIST
+#endif
+#ifdef _GLIBCXX_MAP
+	#define H5CPP_STL_MAP
+#endif
+#ifdef _GLIBCXX_LIST
+	#define H5CPP_STL_LIST
+#endif
+#ifdef _GLIBCXX_QUEUE
+	#define H5CPP_STL_QUEUE
+#endif
+#ifdef _GLIBCXX_SET
+	#define H5CPP_STL_SET
+#endif
+#ifdef _GLIBCXX_STACK
+	#define H5CPP_STL_STACK
+#endif
+#ifdef _GLIBCXX_UNORDERED_MAP
+	#define H5CPP_STL_UNORDERED_MAP
+#endif
+#ifdef _GLIBCXX_UNORDERED_SET
+	#define H5CPP_STL_UNORDERED_SET
+#endif
 
+/*
 @example attributes.cpp
 @example collective.cpp
 @example independent.cpp

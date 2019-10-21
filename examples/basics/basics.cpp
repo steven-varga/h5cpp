@@ -53,7 +53,7 @@ int main(){
 		h5::unmute();
 	}
 
-	{ // property lists can bae daisy chained with | operator
+	{ // property lists can be daisy chained with | operator
 		h5::fcpl_t fcpl = h5::file_space_page_size{4096} | h5::userblock{512};
 		h5::fapl_t fapl = h5::fclose_degree_weak | h5::stdio;
 		auto some_prop = h5::libver_bounds({H5F_LIBVER_LATEST, H5F_LIBVER_LATEST});

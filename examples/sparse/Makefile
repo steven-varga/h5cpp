@@ -4,23 +4,18 @@
 #           steven@vargaconsulting.ca
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
+#
+apps = arma
 
+CXXFLAGS = -Wno-deprecated  -Wall
+LIBS =  -lhdf5 -lz -ldl -lm
 
-apps = basics
-
-CXXFLAGS =  -std=c++17 -Wno-deprecated
-LIBS =  -lhdf5  -lz -ldl -lm
-
-test: $(apps)
-	@./basics
-	#h5dump -pH 004.h5
-
-%.o : $(SRC_DIR)/%.cpp 
-	$(CXX)   -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
+test: clean $(apps)
+	@./arma
 
 all: $(apps)
 
-basics: basics.o
+arma: arma.cpp
 	$(CXX) $^ $(LIBS) -o $@
 
 clean:

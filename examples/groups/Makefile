@@ -5,31 +5,25 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
-CXXFLAGS =  -std=c++11  -I/usr/local/include
+
+apps = groups
+
+CXXFLAGS =  -std=c++17 -Wno-deprecated
 LIBS =  -lhdf5  -lz -ldl -lm
 
-apps = vector array
-
-test: vector
-	./vector
-
-# STL container examples uses generated.h from `../compound` example, where h5cpp compiler 
-# automatically produces thhis file, containing the type descriptors. 
-#
-
+test: $(apps)
+	@./groups
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX)   -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
 
-vector: vector.o
-	$(CXX) $^ $(LIBS) -o $@
+all: $(apps)
 
-array: array.o
+groups: groups.o
 	$(CXX) $^ $(LIBS) -o $@
-
 
 clean:
-	@$(RM) *.o *.h5 $(apps)
+	@$(RM) *.o *.prof *.h5 $(apps)
 
 .PHONY: test
 

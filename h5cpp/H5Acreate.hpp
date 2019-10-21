@@ -8,20 +8,9 @@
 #ifndef  H5CPP_ACREATE_HPP
 #define  H5CPP_ACREATE_HPP
 namespace h5 {
-	namespace impl {
-		/*this template defines what HDF5 object types may have attributes */
-		template <class H, class T=void> using is_valid_attr =
-			std::integral_constant<bool, std::is_same<H, ::hid_t>::value ||
-				std::is_same<H, h5::gr_t>::value || std::is_same<H, h5::ds_t>::value ||
-				std::is_same<H, h5::ob_t>::value || std::is_same<H, h5::dt_t<T>>::value>;
-		/*template <class H, class T=void> using is_valid_attr =
-			std::integral_constant<bool,
-				std::is_same<H, h5::ds_t>::value>;*/
-	}
-
 	template<class T, class HID_T, class... args_t> 
 	inline typename std::enable_if<h5::impl::is_valid_attr<HID_T>::value,
-	h5::at_t>::type create( const HID_T& parent, const std::string& path, args_t&&... args ){
+	h5::at_t>::type acreate( const HID_T& parent, const std::string& path, args_t&&... args ){
 		try {
 			// compile time check of property lists: 
 			using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;

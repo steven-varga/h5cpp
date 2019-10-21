@@ -26,7 +26,6 @@ namespace h5 {
  	*/ 
 	template <class T, class... args_t>
 	h5::ds_t write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ) try {
-
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
@@ -78,7 +77,6 @@ namespace h5 {
 
 		default_count = impl::size( ref );
 		const h5::count_t& count = arg::get(default_count, args...);
-
 		// std::string is variable length
 		if constexpr( std::is_same<std::string,element_t>::value ){
 			std::vector<char*> ptr;
@@ -100,7 +98,7 @@ namespace h5 {
 	/** \func_write_hdr
  	*  TODO: write doxy for here  
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
- 	*/ 
+ 	*/
 	template <class T, class... args_t>
 	h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T* ptr,  args_t&&... args  ){
 
@@ -151,7 +149,8 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
+	typename std::enable_if<!impl::is_multi<T>::value,
+	h5::ds_t>::type write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
@@ -197,6 +196,46 @@ namespace h5 {
 			h5::open( fd, dataset_path, dapl) : h5::create<element_t>(fd, dataset_path, args..., current_dims );
 		h5::unmute();
  		return h5::write<T>(ds, ref,  args...);
+	}
+	/* 
+	 */
+	namespace impl::tuple {
+		// tail case
+		template <std::size_t N, class... Fields, class... Names, class... Args>
+		typename std::enable_if< N == 0,
+		void>::type write(const h5::fd_t& fd, const std::string& dataset_path,
+				const std::tuple<Fields...>& fields, const std::tuple<Names...>& names, Args&&... args ){
+			h5::write(fd, dataset_path +"/"+std::get<N>(names), std::get<N>(fields), args...);
+		}
+		// 
+		template <std::size_t N, class... Fields, class... Names, class... Args>
+		typename std::enable_if< std::isgreater(N,0),
+		void>::type write(const h5::fd_t& fd, const std::string& dataset_path,
+				const std::tuple<Fields...>& fields, const std::tuple<Names...>& names, Args&&... args ){
+
+			h5::write(fd, dataset_path +"/"+std::get<N>(names), std::get<N>(fields), args...);
+			impl::tuple::write<N-1>(fd, dataset_path, fields, names, args...);
+		}
+	}
+
+
+	/** \func_write_hdr
+ 	*  Handling compound datatypes which are not PODs
+	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
+	 */
+	template <class T, class... args_t>
+	typename std::enable_if<impl::is_multi<T>::value,
+	h5::gr_t>::type write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
+		auto fields = h5::impl::get_fields(ref);
+		auto names = h5::impl::get_field_names(ref);
+		constexpr size_t N = impl::member<T>::size - 1;
+		impl::tuple::write<N>(fd, dataset_path, fields, names,  args... );
+
+		// at this point dataset_path exists, as a group, lets open it and add attributes:
+		h5::gr_t gr{H5Gopen(static_cast<hid_t>(fd), dataset_path.c_str(), H5P_DEFAULT)};
+		auto attr = h5::impl::get_field_attributes(ref);
+		h5::awrite(gr,attr);
+		return gr;
 	}
 
    /** \func_write_hdr
