@@ -7,13 +7,15 @@
 
 #ifndef  H5CPP_AOPEN_HPP
 #define  H5CPP_AOPEN_HPP
-namespace h5{
-    inline h5::at_t open(const  h5::ds_t& ds, const std::string& path, const h5::acpl_t& acpl = h5::default_acpl ){
+namespace h5 {
+	template<class HID_T>
+	inline typename std::enable_if<h5::impl::is_valid_attr<HID_T>::value,
+    h5::at_t>::type open(const  HID_T& parent, const std::string& path, const h5::acpl_t& acpl = h5::default_acpl ){
 
 		H5CPP_CHECK_PROP( acpl, h5::error::io::attribute::open, "invalid attribute creation property" );
-		hid_t attr;
+		hid_t attr = H5I_UNINIT;
 	   	H5CPP_CHECK_NZ((
-			attr = H5Aopen( static_cast<hid_t>(ds), path.c_str(), static_cast<hid_t>(acpl))),
+			attr = H5Aopen( static_cast<hid_t>(parent), path.c_str(), static_cast<hid_t>(acpl))),
 				   							h5::error::io::attribute::open, "can't open attribute..." );
      	return  h5::at_t{attr};
     }
