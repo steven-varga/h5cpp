@@ -1,2 +1,4 @@
+2020 jan 04 fixed clang compile problem for version 6.0
+	 added distclean target to example makefiles to reset generated header files
 2019 oct 09 fixed prpperty list version related problems, added some missing properties
  

@@ -8,7 +8,7 @@
 
 apps = kita
 CXX=mpic++
-CXXFLAGS =  -std=c++11 -Wno-deprecated
+CXXFLAGS =  -std=c++17 -Wno-deprecated
 LIBS = -lrestvol -lcurl -lyajl -lhdf5  -lz -ldl -lm
 
 test: $(apps)
@@ -24,6 +24,8 @@ kita: kita.o
 
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)
+
+distclean: clean
 
 .PHONY: test
 

@@ -24,7 +24,6 @@ int main(){
 		try {
 			h5::fd_t fd = h5::open("こんにちは世界.h5", H5F_ACC_RDWR);
 			auto m = h5::read<arma::mat>(fd, "مرحبا بالعالم" );
-			m.print();
 		} catch( const h5::error::any& err ){
 			std::cerr << "ERROR:" << err.what();
 		}

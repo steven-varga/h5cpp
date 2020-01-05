@@ -5,27 +5,31 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
-CXXFLAGS =  -std=c++11  -I/usr/local/include
+CXXFLAGS =  -std=c++17  -I/usr/local/include
 LIBS =  -lhdf5  -lz -ldl -lm
 
 apps = vector
 
 test: vector
 	./vector
-
 # STL container examples uses generated.h from `../compound` example, where h5cpp compiler 
-# automatically produces thhis file, containing the type descriptors. 
+# automatically produces this file, containing the type descriptors. 
 #
 
+generated.h: struct.h
+	h5cpp  vector.cpp --  $(CXXFLAGS) -Dgenerated.h
 
-%.o : $(SRC_DIR)/%.cpp 
-	$(CXX)   -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
+vector.o : vector.cpp generated.h 
+	$(CXX) $(INCLUDES) -o vector.o  $(CXXFLAGS) -c vector.cpp
 
 vector: vector.o
 	$(CXX) $^ $(LIBS) -o $@
 
 clean:
 	@$(RM) *.o *.h5 $(apps)
+
+distclean: clean
+	@$(RM) generated.h
 
 .PHONY: test
 

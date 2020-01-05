@@ -1,8 +1,8 @@
 /* Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
  *     Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-#ifndef H5CPP_GUARD_BflzG
-#define H5CPP_GUARD_BflzG
+#ifndef H5CPP_GUARD_ChFCY
+#define H5CPP_GUARD_ChFCY
 
 namespace h5{
     //template specialization of sn::example::Record to create HDF5 COMPOUND type
@@ -53,32 +53,5 @@ namespace h5{
     };
 }
 H5CPP_REGISTER_STRUCT(sn::example::Record);
-
-namespace h5{
-    //template specialization of sn::typecheck::Record to create HDF5 COMPOUND type
-    template<> hid_t inline register_struct<sn::typecheck::Record>(){
-
-        hid_t ct_00 = H5Tcreate(H5T_COMPOUND, sizeof (sn::typecheck::Record));
-        H5Tinsert(ct_00, "_char",	HOFFSET(sn::typecheck::Record,_char),H5T_NATIVE_CHAR);
-        H5Tinsert(ct_00, "_uchar",	HOFFSET(sn::typecheck::Record,_uchar),H5T_NATIVE_UCHAR);
-        H5Tinsert(ct_00, "_short",	HOFFSET(sn::typecheck::Record,_short),H5T_NATIVE_SHORT);
-        H5Tinsert(ct_00, "_ushort",	HOFFSET(sn::typecheck::Record,_ushort),H5T_NATIVE_USHORT);
-        H5Tinsert(ct_00, "_int",	HOFFSET(sn::typecheck::Record,_int),H5T_NATIVE_INT);
-        H5Tinsert(ct_00, "_uint",	HOFFSET(sn::typecheck::Record,_uint),H5T_NATIVE_UINT);
-        H5Tinsert(ct_00, "_long",	HOFFSET(sn::typecheck::Record,_long),H5T_NATIVE_LONG);
-        H5Tinsert(ct_00, "_ulong",	HOFFSET(sn::typecheck::Record,_ulong),H5T_NATIVE_ULONG);
-        H5Tinsert(ct_00, "_llong",	HOFFSET(sn::typecheck::Record,_llong),H5T_NATIVE_LLONG);
-        H5Tinsert(ct_00, "_ullong",	HOFFSET(sn::typecheck::Record,_ullong),H5T_NATIVE_ULLONG);
-        H5Tinsert(ct_00, "_float",	HOFFSET(sn::typecheck::Record,_float),H5T_NATIVE_FLOAT);
-        H5Tinsert(ct_00, "_double",	HOFFSET(sn::typecheck::Record,_double),H5T_NATIVE_DOUBLE);
-        H5Tinsert(ct_00, "_ldouble",	HOFFSET(sn::typecheck::Record,_ldouble),H5T_NATIVE_LDOUBLE);
-        H5Tinsert(ct_00, "_bool",	HOFFSET(sn::typecheck::Record,_bool),H5T_NATIVE_HBOOL);
-
-        //if not used with h5cpp framework, but as a standalone code generator then
-        //the returned 'hid_t ct_00' must be closed: H5Tclose(ct_00);
-        return ct_00;
-    };
-}
-H5CPP_REGISTER_STRUCT(sn::typecheck::Record);
 
 #endif

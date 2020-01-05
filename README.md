@@ -18,6 +18,12 @@ Proud to announce to the HPC community that H5CPP is now MPI capable. The prereq
 
 **Note:** `h5::append` operator and attributes are not yet tested, and probably are non-functional.
 
+Tested against:
+-----------------
+- gcc 7.4.0, gcc 8.3.0, gcc 9.0.1
+- clang 6.0
+
+**Note:** the preferred compiler is gcc, however there is work put in to broaden the support for major modern C++ compilers. Please contact me if there is any shortcomings.
 
 Templates:
 ----------

@@ -6,7 +6,7 @@
 #  _____________________________________________________________________________
 
 apps = optimized
-CXXFLAGS =  -std=c++11 -Wno-deprecated
+CXXFLAGS =  -std=c++17 -Wno-deprecated
 LIBS =  -lhdf5  -lz -ldl -lm
 
 test: $(apps)
@@ -22,6 +22,8 @@ optimized: optimized.o
 
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)
+
+distclean: clean
 
 .PHONY: test
 

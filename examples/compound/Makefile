@@ -5,7 +5,7 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
-CXXFLAGS =  -std=c++11
+CXXFLAGS =  -std=c++17
 LIBS =  -lhdf5  -lz -ldl -lm
 INCLUDES = -I/usr/local/include -I/usr/include
 
@@ -21,7 +21,7 @@ test: struct
 # with -Dmyfile.h specifies the generated output, which must be sandwiched between
 # <h5cpp/core> and <h5cpp/io>
 generated.h: struct.h
-	h5cpp  struct.cpp -- $(CXXFLAGS) $(INCLUDES) -I/usr/include/h5cpp-llvm -Dgenerated.h
+	h5cpp  struct.cpp -- $(CXXFLAGS) $(INCLUDES) -Dgenerated.h
 
 struct.o : struct.cpp generated.h 
 	$(CXX) $(INCLUDES) -o struct.o  $(CXXFLAGS) -c struct.cpp
@@ -30,7 +30,9 @@ struct: struct.o
 	$(CXX) $^ $(LIBS) -o $@	
 
 clean:
-	@$(RM) *.o *.h5 $(apps) generated.h struct
+	@$(RM) *.o *.h5 $(apps) struct
 
+distclean: clean
+	@$(RM) generated.h
 .PHONY: test
 

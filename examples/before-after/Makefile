@@ -6,7 +6,7 @@
 #  _____________________________________________________________________________
 
 CFLAGS =   -I/usr/include
-CXXFLAGS =  -std=c++14 
+CXXFLAGS =  -std=c++17
 LIBS = -lhdf5  -lz -ldl -lm 
 INCLUDES = -I/usr/local/include -I/usr/include
 
@@ -15,7 +15,7 @@ test: before after
 	./after
 
 generated.h: compound.h
-	h5cpp  compound.cpp -- $(CXXFLAGS) $(INCLUDES) -I/usr/include/h5cpp-llvm -Dgenerated.h
+	h5cpp  compound.cpp -- $(CXXFLAGS) $(INCLUDES)  -Dgenerated.h
 
 before.o : compound.c
 	$(CC) -o before.o  $(CFLAGS) -c compound.c
@@ -30,6 +30,7 @@ after: after.o
 	$(CXX) $^ $(LIBS) -o $@	
 
 clean:
-	@$(RM) *.o *.h5 $(apps) generated.h before after
-
+	@$(RM) *.o *.h5 $(apps) before after
+distclean: clean
+	@$(RM) generated.h
 .PHONY: test

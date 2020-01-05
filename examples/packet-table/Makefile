@@ -10,8 +10,7 @@ LIBS =  -lhdf5 -lhdf5_hl  -lz -ldl -lm -lblas -llapack
 
 test: packettable
 	./packettable
-	#h5dump -d 'stream of matrices' example.h5
-	h5dump -d 'stream of vectors' example.h5
+	h5dump -pH example.h5
 
 # compiler assisted introspection will scan TU translation unit, which is the 
 # collection of files you're compiling into an object, generates desired output
@@ -22,7 +21,7 @@ test: packettable
 # with -Dmyfile.h specifies the generated output, which must be sandwiched between
 # <h5cpp/core> and <h5cpp/io>
 generated.h: struct.h
-	h5cpp  packettable.cpp -- $(CXXFLAGS) -I/usr/include/h5cpp-llvm -Dgenerated.h
+	h5cpp  packettable.cpp -- $(CXXFLAGS)  -Dgenerated.h
 
 packettable.o : packettable.cpp generated.h 
 	$(CXX) -I/usr/include/eigen3 -o packettable.o  $(CXXFLAGS) -c packettable.cpp
@@ -40,5 +39,7 @@ packet_batches: packet_batches.o
 clean:
 	@$(RM) *.o *.h5 $(apps)  packettable packet_batches
 
+distclean: clean
+	@$(RM) generated.h
 .PHONY: test
 

@@ -27,9 +27,9 @@ test: app
 # invoke `h5cpp` compiler separately for any given TU translation unit
 # to produce tu_0?.h header file which must be included exactly once in each given TU. 
 tu_01.h: struct.h
-	h5cpp  tu_01.cpp -- $(CXXFLAGS) $(INCLUDES) -I/usr/include/h5cpp-llvm -Dtu_01.h
+	h5cpp  tu_01.cpp -- $(CXXFLAGS) $(INCLUDES) -Dtu_01.h
 tu_02.h: struct.h
-	h5cpp  tu_02.cpp -- $(CXXFLAGS) $(INCLUDES)  -I/usr/include/h5cpp-llvm -Dtu_02.h
+	h5cpp  tu_02.cpp -- $(CXXFLAGS) $(INCLUDES)  -Dtu_02.h
 
 # for simplicity let's use explicit rules to compile TU-s into object files
 tu_01.o : tu_01.cpp tu_01.h 
@@ -45,7 +45,10 @@ app: tu_01.o tu_02.o main.o
 	$(CXX) $^ $(LIBS) -o $@	
 
 clean:
-	@$(RM) *.o *.h5 $(apps) tu_01.h tu_02.h app
+	@$(RM) *.o *.h5  app
+
+distclean: clean
+	@$(RM) tu_01.h tu_02.h
 
 .PHONY: test
 

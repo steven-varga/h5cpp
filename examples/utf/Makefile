@@ -5,24 +5,25 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
-apps = raw
-CXXFLAGS =  -std=c++11 -Wno-deprecated
+
+apps = utf
+CXXFLAGS =  -std=c++17
 LIBS =  -lhdf5  -lz -ldl -lm
+INCLUDES = -I/usr/local/include -I/usr/include
 
 test: $(apps)
-	@./raw
-	h5dump -d dataset raw.h5
+	@./utf
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX)   -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
 
 all: $(apps)
 
-raw: raw.o
-	$(CXX) $^ $(LIBS) -o $@
+utf: utf.o
+	$(CXX) $^ $(LIBS) -o $@	
 
 clean:
-	@$(RM) *.o *.prof *.h5 $(apps)
+	@$(RM) *.o *.prof *.h5 $(apps) generated.h
 
 distclean: clean
 .PHONY: test

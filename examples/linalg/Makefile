@@ -42,5 +42,6 @@ dlib: dlib.cpp
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)
 
+distclean: clean
 .PHONY: test
 
