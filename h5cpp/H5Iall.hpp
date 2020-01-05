@@ -57,6 +57,7 @@ namespace h5 { namespace impl { namespace detail {
 	// actual implementation with full conversion allowed
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, true,true,hdf5::any> {
+		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
 		using hidtype = T;
 		// from CAPI
 		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
@@ -104,15 +105,18 @@ namespace h5 { namespace impl { namespace detail {
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, false,false,hdf5::any> : private hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
-		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
+        hid_t( std::initializer_list<::hid_t> fd ) : parent( fd ){}
 	};
 	/*property id*/
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, true,true,hdf5::property> : public hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
-		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
+		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
+		//hid_t( ::hid_t handle_ )  {}
+		//hid_t& operator =( ::hid_t ref ) {}
+
 
 		hid_t& operator |=( const hid_t& ref){
 			return *this;
@@ -144,16 +148,17 @@ namespace h5 { namespace impl { namespace detail {
 	struct hid_t<T,capi_close, true,true,hdf5::attribute> : public hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
 		using parent::hid_t;  // is a must because of ds_t{hid_t} ctor 
-		using parent::handle; // is a must because of ds_t{hid_t} ctor 
+		using parent::handle;
 		using hidtype = T;
+		using at_t = hid_t<h5::impl::at_t,H5Aclose,true,true,hdf5::attribute>;
 
 		hid_t(){
 			this->handle = H5I_UNINIT;
 			this->ds = H5I_UNINIT;
 		};
 
-		template <class V> hid_t<T,capi_close, true,true,hdf5::attribute>& operator=( V arg  );
-		template <class V> hid_t<T,capi_close, true,true,hdf5::attribute>& operator=( const std::initializer_list<V> args  );
+		template <class V> at_t operator=( V arg  );
+		template <class V> at_t operator=( const std::initializer_list<V> args  ){};
 
 		::hid_t ds;
 		std::string name;
@@ -196,4 +201,6 @@ namespace h5 {
 	#undef H5CPP__defhid_t
 }
 #endif
-
+// T ::= impl::T_ 
+// prop_t<h5::fapl_t, default_fapl,  capi, capi_call>
+// prop_base< prop_t<phid_t,init,capi,capi_call>, phid_t >

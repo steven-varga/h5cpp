@@ -74,7 +74,6 @@ h5::at_t h5::ds_t::operator[]( const char name[] ){
 	attr.name = std::string(name);
 	return attr;
 }
-
 template<> template< class V> inline
 h5::at_t h5::at_t::operator=( V arg ){
 	if( !H5Iis_valid(this->ds) )

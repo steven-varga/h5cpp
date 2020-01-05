@@ -46,7 +46,7 @@
 	#include "H5Mitpp.hpp"
 	#include "H5Mublas.hpp"
 	
-	#include "H5Iall.hpp"
+	#include "H5Iall.hpp" /* base hid_t type definitions */
 	#include "H5Tall.hpp"
 	#include "H5Zall.hpp"
 	#include "H5Pall.hpp"

@@ -21,9 +21,9 @@ namespace h5 { namespace impl { namespace detail {
 	template<class T>
 		struct hid_t<T,H5Tclose,true,true,hdf5::type> : public dt_p<T> {
 		using parent = dt_p<T>;
-		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
-		hid_t() : parent( H5I_UNINIT){};
+		hid_t( std::initializer_list<::hid_t> fd ) : parent( fd ){}
+		hid_t() : parent( H5I_UNINIT){}
 	};
 	template <class T> using dt_t = hid_t<T,H5Tclose,true,true,hdf5::type>;
 }}}
