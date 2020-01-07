@@ -84,6 +84,14 @@
 #ifndef H5CPP_CONSOLE_WIDTH 
 	#define H5CPP_CONSOLE_WIDTH 30
 #endif
+/* uncomment for automatically detext OpenHDR half 
+#ifdef _HALF_H // prefix openxdr half float
+	#define WITH_OPENEXR_HALF
+#endif
+*/
+#ifndef OPENEXR_NAMESPACE // prefix openxdr half float
+	#define OPENEXR_NAMESPACE
+#endif
 
 
 
