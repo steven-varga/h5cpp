@@ -5,6 +5,9 @@
 
 Easy to use  [HDF5][hdf5] C++ templates for Serial and Paralell HDF5  
 ----------------------------------------------------------------------
+**News:**
+binary release h5cpp-dev_1.10.4-5.xxx contains bug fixes, and half float support, [deb](http://h5cpp.org/download/h5cpp-dev_1.10.4-5_amd64.deb),[rpm](http://h5cpp.org/download/h5cpp-dev-1.10.4-5.x86_64.rpm),[tarball](http://h5cpp.org/download/h5cpp-full_1.10.4-5.tar.gz)
+
 
 [Hierarchical Data Format][hdf5] prevalent in high performance scientific computing, sits directly on top of sequential or parallel file systems, providing block and stream operations on standardized or custom binary/text objects. Scientific computing platforms such as Python, R, Matlab, Fortran,  Julia [and many more...] come with the necessary libraries to read write HDF5 dataset. This edition simplifies interactions with [popular linear algebra libraries][304], provides [compiler assisted seamless object persistence][303], Standard Template Library support and equipped with novel [error handling architecture][400].
 
