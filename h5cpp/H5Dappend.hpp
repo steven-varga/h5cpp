@@ -25,6 +25,7 @@ namespace h5 {
 
 		pt_t& operator=( h5::pt_t&& pt ){
 			init(pt.ds);
+			return pt;
 		}
 		friend std::ostream& ::operator<<(std::ostream &os, const h5::pt_t& pt);
 		template<class T>
