@@ -21,9 +21,9 @@ namespace h5 { namespace impl { namespace detail {
 	template<class T>
 		struct hid_t<T,H5Tclose,true,true,hdf5::type> : public dt_p<T> {
 		using parent = dt_p<T>;
-		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
-		hid_t() : parent( H5I_UNINIT){};
+		hid_t( std::initializer_list<::hid_t> fd ) : parent( fd ){}
+		hid_t() : parent( H5I_UNINIT){}
 	};
 	template <class T> using dt_t = hid_t<T,H5Tclose,true,true,hdf5::type>;
 }}}
@@ -69,7 +69,53 @@ namespace h5 {                                                                  
 
 	H5CPP_REGISTER_TYPE_(char*, H5T_C_S1)
 
+// half float support: 
+// TODO: factor out in a separate file
+#ifdef HALF_HALF_HPP
+   namespace h5::impl::detail {
+	template <> struct hid_t<half_float::half, H5Tclose,true,true, hdf5::type> : public dt_p<half_float::half> {
+		using parent = dt_p<half_float::half>;
+		using parent::hid_t;
+		using hidtype = half_float::half;
+		hid_t() : parent( H5Tcopy( H5T_NATIVE_FLOAT ) ) {
 
+			H5Tset_fields( handle, 15, 10, 5, 0, 10);
+			H5Tset_precision(handle, 16);
+			H5Tset_ebias( handle, 15);
+			H5Tset_size(handle,2);
+			hid_t id = static_cast<hid_t>( *this );
+		}
+	};
+}
+namespace h5 {
+	template <> struct name<half_float::half> {
+		static constexpr char const * value = "half-float";
+	};
+}
+#endif
+// Open XDR doesn-t define namespace or 
+#ifdef WITH_OPENEXR_HALF 
+   namespace h5::impl::detail {
+	template <> struct hid_t<OPENEXR_NAMESPACE::half, H5Tclose,true,true, hdf5::type> : public dt_p<OPENEXR_NAMESPACE::half> {
+		using parent = dt_p<OPENEXR_NAMESPACE::half>;
+		using parent::hid_t;
+		using hidtype = OPENEXR_NAMESPACE::half;
+		hid_t() : parent( H5Tcopy( H5T_NATIVE_FLOAT ) ) {
+
+			H5Tset_fields( handle, 15, 10, 5, 0, 10);
+			H5Tset_precision(handle, 16);
+			H5Tset_ebias( handle, 15);
+			H5Tset_size(handle,2);
+			hid_t id = static_cast<hid_t>( *this );
+		}
+	};
+}
+namespace h5 {
+	template <> struct name<OPENEXR_NAMESPACE::half> {
+		static constexpr char const * value = "openexr half-float";
+	};
+}
+#endif
 #define H5CPP_REGISTER_STRUCT( POD_STRUCT ) H5CPP_REGISTER_TYPE_( POD_STRUCT, h5::register_struct<POD_STRUCT>() )
 
 /* type alias is responsible for ALL type maps through H5CPP if you want to screw things up
@@ -97,6 +143,33 @@ inline std::ostream& operator<<(std::ostream &os, const h5::dt_t<T>& dt) {
 	os << "data type: " << h5::name<T>::value << " ";
 	os << ( std::is_pointer<T>::value ? "pointer" : "value" );
 	os << ( H5Iis_valid( id ) > 0 ? " valid" : " invalid");
+
+	size_t spos, epos, esize, mpos, msize;
+	switch( H5Tget_class( id ) ){
+		case H5T_INTEGER: ; break;
+		case H5T_FLOAT:
+			H5Tget_fields( id, &spos, &epos, &esize, &mpos, &msize );
+
+			os << "\n\tebias: " << H5Tget_ebias( id ) 
+				<< " norm: " <<  H5Tget_norm( id ) 
+				<< " offset: " <<  H5Tget_offset( id )
+			   	<< " precision: " << H5Tget_precision( id )
+			   	<< " size: " << H5Tget_size( id )
+				<< "\n\tspos:" << spos << " epos:" << epos << " esize:" << esize << " mpos:" << mpos <<" msize:" << msize
+			   	<<"\n";
+			 break;
+		case H5T_STRING: ; break;
+		case H5T_BITFIELD: ; break;
+		case H5T_OPAQUE: ; break;
+		case H5T_COMPOUND: ; break;
+		case H5T_REFERENCE: ; break;
+		case H5T_ENUM: ; break;
+		case H5T_VLEN: ; break;
+		case H5T_ARRAY: ;break;
+	}
+	/*
+*/
+
 	return os;
 }
 

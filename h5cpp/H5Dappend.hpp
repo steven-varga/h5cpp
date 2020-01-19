@@ -22,16 +22,19 @@ namespace h5 {
 		pt_t( const h5::pt_t& pt ) : h5::pt_t(pt.ds) {
 		};
 		~pt_t();
-		pt_t& operator=( h5::pt_t& pt ) = default;
-		constexpr pt_t& operator=( h5::pt_t&& pt ) = delete;
 
+		pt_t& operator=( h5::pt_t&& pt ){
+			init(pt.ds);
+			return pt;
+		}
 		friend std::ostream& ::operator<<(std::ostream &os, const h5::pt_t& pt);
 		template<class T>
 		friend void append( h5::pt_t& ds, const T& ref);
-
 		void flush();
 
 		private:
+		void init(const h5::ds_t& ds_);
+
 		template<class T> inline typename std::enable_if<h5::impl::is_scalar<T>::value,
 		void>::type append( const T* ptr );
 		template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value && !std::is_pointer<T>::value,
@@ -51,6 +54,7 @@ namespace h5 {
 	};
 }
 
+
 /* initialized to invalid state
  * */
 inline h5::pt_t::pt_t() :
@@ -64,7 +68,20 @@ inline
 h5::pt_t::pt_t( const h5::ds_t& handle ) : pt_t() {
 	/*default ctor has an invalid state -- skip initialization */
 	if( !is_valid(handle) ) return;
+	init(handle);
+}
 
+inline
+h5::pt_t::~pt_t(){
+	/*default ctor has an invalid state -- skip flushing cache */
+	if( !h5::is_valid( ds ) )
+		return;
+	flush();
+	free(this->fill_value);
+}
+
+inline
+void h5::pt_t::init( const h5::ds_t& handle ){
 	try {
 		ds = handle; // copy handle inc ref, behaves as unique_ptr
 
@@ -88,16 +105,6 @@ h5::pt_t::pt_t( const h5::ds_t& handle ) : pt_t() {
 		throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("CTOR: unable to create handle from dataset..."));
 	}
 }
-
-inline
-h5::pt_t::~pt_t(){
-	/*default ctor has an invalid state -- skip flushing cache */
-	if( !h5::is_valid( ds ) )
-		return;
-	flush();
-	free(this->fill_value);
-}
-
 template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value,
 void>::type h5::pt_t::append( const T* ptr ) try {
 	//PTR: write directly chunk size from provided buffer/ptr
@@ -202,14 +209,23 @@ namespace h5 {
 }
 
 inline std::ostream& operator<<(std::ostream &os, const h5::pt_t& pt) {
+
+	std::vector<size_t> current_dims(pt.current_dims, pt.current_dims + pt.rank);
+	std::vector<size_t> chunk_dims(pt.chunk_dims, pt.chunk_dims + pt.rank);
+	std::vector<size_t> count(pt.count, pt.count + pt.rank);
+	std::vector<size_t> offset(pt.offset, pt.offset + pt.rank);
+
 	os <<"packet table:\n"
 		 "------------------------------------------\n";
-/*	os << "current dims: " << pt.current_dims << "\n";
-	os << "max dims: " << pt.max_dims << "\n";
-	os << "offset: " << pt.offset << "\n";
-	os << "cache size: " << pt.n_nelements << "\n";
-*/
+	os << "rank: " << pt.rank << " N:" << pt.N <<" n:" << pt.n << "\n";
+	os << "element size: " << pt.element_size << " block size: " << pt.block_size << "\n";
+	os << "current dims: " << current_dims << std::endl;
+	os << "chunk dims: " << current_dims << std::endl;
+	os << "offset : " <<  offset <<  " count : " << count << std::endl;
+	os <<"ds: "<< static_cast<hid_t>( pt.ds ) <<" dxpl: "<< static_cast<hid_t>( pt.dxpl ) << std::endl;
+	os <<"fill value: " << std::hex << pt.fill_value << " buffer: " << pt.ptr;
+	os << "\n\n";
+
 	return os;
 }
-
 #endif
