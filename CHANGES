@@ -1,4 +1,16 @@
+2020 jan 06 added half float support
 2020 jan 04 fixed clang compile problem for version 6.0
-	 added distclean target to example makefiles to reset generated header files
-2019 oct 09 fixed prpperty list version related problems, added some missing properties
- 
+	 added distclean target to example make files to reset generated header files
+2019 oct 20 std::tuple creates multiple objects 
+2019 oct 20 added README-s to examples
+2019 oct 09 fixed property list version related problems, added some missing properties
+2019 jun 19 kita support
+2019 jun 16 MPI support
+2019 jun 15 cmake in addition to unix make
+2019 feb 04 extended and improved packet table 
+2019 jan 23 moved h5cpp compiler to separate project; experimental high throughput pipeline
+2018 dec 23 attributes with operators and h5cpp compiler assisted reflection
+2018 jul 11 LLVM based compile time reflection: h5cpp tool
+2018 may 13 property lists added
+2018 feb 28 Linalg libraries: ETL, dlib, blaze, blitz++, it++, boost, eigen3
+2017 dec 08 Project Started 

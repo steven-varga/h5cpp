@@ -1,0 +1,5 @@
+h5cpp-dev (1.10.4-5) unstable; urgency=medium
+
+  * first binary distribution of h5cpp compiler
+
+ -- steven varga <steven@vargaconsulting.ca>  Mon, 13 Jan 2020 08:40:39 +0500
