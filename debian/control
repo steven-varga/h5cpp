@@ -7,7 +7,7 @@ Standards-Version: 3.9.5
 Homepage: http://h5cpp.org
 Vcs-Git: git://steven-varga/h5cpp.git
 
-Package: libh5cpp
+Package: libh5cpp-dev
 Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}
 Recommends: libh5cpp-dev 
