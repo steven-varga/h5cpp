@@ -1,2 +1,10 @@
-Copy `h5cpp-headers/h5cpp` to `/usr/local/include` or `/usr/include`
-follow examaples. Most people find it convenient to ship `h5cpp` headers with the project
+
+
+This distribution contains two packages: an c++17 template library for major linear algebra packages and a source code transformation tool that help you to generate HDF5 compound datatype descriptors from valid C/C++ include files. 
+
+1. donwload and install HDF5 v1.10.4 from https://www.hdfgroup.org/downloads/hdf5/source-code/
+from the source tree execute.:
+./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110
+make -j4
+sudo make install
+

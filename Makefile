@@ -1,7 +1,7 @@
 
 PREFIX = /usr/local
 
-VERSION = 1.10.4.5
+VERSION = 1.10.4-1
 PROGRAM_NAME=h5cpp-dev
 BIN_DIR = $(PREFIX)/bin
 INCLUDE_DIR = $(PREFIX)/include
@@ -47,11 +47,11 @@ install: installdirs
 	find examples -type f -exec install -Dm 644 "{}" "${EXAMPLE_DIR}/h5cpp/{}" \;
 
 tar-gz:
-	tar -czvf ../h5cpp-dev_1.10.4.5.tar.gz ./
+	tar -czvf ../h5cpp-dev_1.10.4-1.tar.gz ./
 
 clean:
 
 dist: h5cpp-dev
 	debuild -i -us -uc -b
-	sudo alien -r ../h5cpp-dev_1.10.4-5_amd64.deb
+	sudo alien -r ../h5cpp-dev_1.10.4-1_amd64.deb
 

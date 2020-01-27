@@ -1,5 +1,5 @@
-h5cpp-dev (1.10.4-5) unstable; urgency=medium
+libh5cpp (1.10.4-1) unstable; urgency=medium
 
-  * first binary distribution of h5cpp compiler
+  * first official debian release for libh5cpp
 
- -- steven varga <steven@vargaconsulting.ca>  Mon, 13 Jan 2020 08:40:39 +0500
+ -- steven varga <steven@vargaconsulting.ca>  Mon, 27 Jan 2020 14:28:00 +0500
