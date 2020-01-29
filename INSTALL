@@ -2,9 +2,38 @@
 
 This distribution contains two packages: an c++17 template library for major linear algebra packages and a source code transformation tool that help you to generate HDF5 compound datatype descriptors from valid C/C++ include files. 
 
-1. donwload and install HDF5 v1.10.4 from https://www.hdfgroup.org/downloads/hdf5/source-code/
+1. download and install HDF5 v1.10.4 from https://www.hdfgroup.org/downloads/hdf5/source-code/
 from the source tree execute.:
+```
 ./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110
 make -j4
 sudo make install
+```
+NOTE: the system is often shipped with existing hdf5 installation, the supplied CMAKE will be looking in `/usr/local` first. 
+
+2. install libh5cpp-dev:
+	a. copy and ship the content of h5cpp/* with your distribution
+    b. `sudo make install`
+	c. ./configure && make install
+
+3. linear algebra packages better to install from sources, for performance consider using Intel MKL BLAS/LAPACK
+   nevertheless here are few packages generally available on the system. For new project I recommend Armadillo C++ or Eigen3	 
+	`sudo apt-get install -y libarmadillo-dev libitpp-dev libblitz0-dev  libeigen3-dev libdlib-dev`
+
+
+For development on Ubuntu 18.04 based systems:
+----------------
+```
+sudo apt-get install -y build-essential fakeroot devscripts google-perftools kcachegrind doxygen doxygen-gui markdown libboost-program-options-dev libgtest-dev cmake gcc g++
+sudo apt-get install -y libarmadillo-dev libitpp-dev libblitz0-dev  libeigen3-dev libdlib-dev
+```
+
+You have to do some manual labor here:
+```
+cd /usr/src/gtest && sudo cmake ./ && sudo make install
+```
+
+To package the library check out the relevant branch, ie: debian, then run `make dist-deb`
+which in turn will run the cmake based configuration scripts, generates new make file and finally the
+installation package.
 

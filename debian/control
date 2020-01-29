@@ -2,18 +2,42 @@ Source: libh5cpp
 Section: utils
 Priority: optional
 Maintainer: Steven Varga <steven@vargaconsulting.ca>
-Build-Depends: debhelper (>= 9)
+Build-Depends: debhelper (>= 9), cmake, libgtest-dev, libgtest-dev, libarmadillo-dev, libgoogle-perftools-dev, libgoogle-glog-dev
 Standards-Version: 3.9.5
 Homepage: http://h5cpp.org
-Vcs-Git: git://steven-varga/h5cpp.git
+Vcs-Git: https://github.com/steven-varga/h5cpp.git
 
 Package: libh5cpp-dev
-Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
-Recommends: libh5cpp-dev 
-Enhances: libhdf5-dev, libhdf5-openmpi-dev, libhdf5-serial-dev, libarmadillo-dev, libeigen3-dev, libitpp-dev, libdlib-dev, libboost-dev
-Multi-Arch: foreign
-Description: c++ header only library for HDF5 dataformat
- h5cpp is to provide easy seamless persistence for C++ 
- objects and popular linear algebra libraries such as 
- armadillo,eigen3,dlib,itpp,blaze,boost::ublas, ... 
+Architecture: all
+Depends: libhdf5-dev (>=1.10.4)
+Recommends: h5cpp-compiler 
+Description: C++ header only low latency IO library for HDF5
+ H5CPP provides high performance C++ IO templates to save or restore 
+ structured or homogeneous data into/from HDF5 format. Its companion, the 
+ h5cpp-compiler, assists this library with seamless non-intrusive persistence
+ for arbitrary deep C/C++ POD layout types, much similarly what we find in
+ interpreted languages. Moreover the header only library has built in support
+ for major linear algebra libraries such as:
+   armadillo C++, eigen3, dlib, itpp, blaze, boost::ublas, stl::vector. 
+ and planning to expand this level of support for other domain specific 
+ libraries, as well as for the full STL.
+ .
+ The library found to be useful in machine learning, bio-informatics, physics,
+ computational finance, sensor networks, energy and oil industry and in 
+ general science and engineering. You would choose this package if you are
+ looking for performance tuned C++ templates for both the serial and parallel
+ HDF5 format that allows you to switch between the C API and C++ handles, 
+ provides RAII managed handles, structured exceptions and pythonic easy to use
+ syntax without performance tradeoffs.
+ .
+ H5CPP stands aside its competitors by LLVM/CLANG based compiler assisted 
+ reflection, pythonic easy to use syntax, its custom cache aware filtering
+ pipeline and direct chunk IO capability, its packet table implementation
+ that is 100 fold faster than of the standard HDF5 CAPI, as well as with its
+ MPI, KITA capability.
+ .
+ As an engineer/scientist you would choose H5CPP if you need IO throughout near
+ the underlying file  system for tiny to large packets streams such as in 
+ machine learning: moving image processing, ultra high frequency trading, 
+ particle colliders, sensor networks; or partial and fast block access to 
+ N dimensional hyper-cubes such as matrices and tensors. 

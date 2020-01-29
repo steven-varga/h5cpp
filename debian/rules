@@ -14,7 +14,23 @@ endif
 	dh $@
 
 override_dh_auto_install:
-	$(MAKE) install PREFIX=$(CURDIR)/debian/h5cpp-dev/usr MAN_BASE_DIR=$(CURDIR)/debian/h5cpp-dev/usr/share/man
+	cmake -DCMAKE_INSTALL_PREFIX:PATH=$(CURDIR)/debian/libh5cpp-dev/usr ./
+	make install
 
 override_dh_installdocs:
 	dh_installdocs		CONTRIBUTORS TODO
+
+clean:
+
+binary:
+
+binary-arch:
+
+binary-indep:
+
+build:
+
+build-arch:
+
+build-indep:
+
