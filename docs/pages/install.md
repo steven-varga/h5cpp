@@ -36,7 +36,7 @@ git clone https://git.llvm.org/git/libcxx.git/
 git clone https://git.llvm.org/git/libcxxabi.git/
 # end-optional
 cd ../../ && mkdir build && cd build
-3.0 (quilt)cmake  -DCMAKE_INSTALL_PREFIX=/usr/local CMAKE_BUILD_TYPE=MinSizeRel -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_USE_LINKER=gold ../llvm
+3.0 (quilt)cmake  -DLLVM_ENABLE_PROJECTS=clang -DCMAKE_INSTALL_PREFIX=/usr/local CMAKE_BUILD_TYPE=MinSizeRel -DLLVM_TARGETS_TO_BUILD=X86 -DLLVM_USE_LINKER=gold ../llvm
 nohup make -j8&
 sudo make install build-essential gcc-8 g++-8
 ```

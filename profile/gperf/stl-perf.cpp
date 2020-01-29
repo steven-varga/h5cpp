@@ -2,7 +2,7 @@
 #include <armadillo>
 #include <h5cpp/all>
 #include <gperftools/profiler.h>
-
+#include <hdf5_hl.h>
 
 int main(int argc, char **argv) {
 	arma::wall_clock timer;
@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
 	{
 		timer.tic();
 		for(hsize_t i = 0; i<size; i++)
-			h5::write<float>(ds, data, h5::offset{i,0}, h5::count{1,col} );
+			h5::write(ds, data, h5::offset{i,0}, h5::count{1,col} );
 		auto running_time = timer.toc();
 		std::cout << "number of seconds: " << running_time << " record per sec: " << size/running_time 
 	 		<< " sustained throughput: " << (data_size/running_time) / 1'000'000 <<" Mbyte/sec"	<< std::endl;

@@ -40,7 +40,7 @@ H5CPP_REGISTER_STRUCT(sn::tick);
 
 
 int main(int argc, char **argv) {
-
+try {
 	h5::fd_t fd = h5::create("tick.h5",H5F_ACC_TRUNC );
 
 	//using chunk_cache = impl::fapl_call< impl::fapl_args<hid_t,size_t, size_t, double>,H5Pset_chunk_cache>;
@@ -67,6 +67,10 @@ int main(int argc, char **argv) {
 
 	}
 	ProfilerStop();
+
+	} catch ( const h5::error::any& e ){
+		std::cerr << "ERROR:" << e.what() <<"\n";
+	}
 }
 /*
 	    original        compressed:   ratio:    time:       running time:

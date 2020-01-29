@@ -57,6 +57,7 @@ namespace h5 { namespace impl { namespace detail {
 	// actual implementation with full conversion allowed
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, true,true,hdf5::any> {
+		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
 		using hidtype = T;
 		// from CAPI
 		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
@@ -104,15 +105,18 @@ namespace h5 { namespace impl { namespace detail {
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, false,false,hdf5::any> : private hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
-		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
+        hid_t( std::initializer_list<::hid_t> fd ) : parent( fd ){}
 	};
 	/*property id*/
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, true,true,hdf5::property> : public hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
-		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
+		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
+		//hid_t( ::hid_t handle_ )  {}
+		//hid_t& operator =( ::hid_t ref ) {}
+
 
 		hid_t& operator |=( const hid_t& ref){
 			return *this;
@@ -144,16 +148,17 @@ namespace h5 { namespace impl { namespace detail {
 	struct hid_t<T,capi_close, true,true,hdf5::attribute> : public hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
 		using parent::hid_t;  // is a must because of ds_t{hid_t} ctor 
-		using parent::handle; // is a must because of ds_t{hid_t} ctor 
+		using parent::handle;
 		using hidtype = T;
+		using at_t = hid_t<h5::impl::at_t,H5Aclose,true,true,hdf5::attribute>;
 
 		hid_t(){
 			this->handle = H5I_UNINIT;
 			this->ds = H5I_UNINIT;
 		};
 
-		template <class V> hid_t<T,capi_close, true,true,hdf5::attribute>& operator=( V arg  );
-		template <class V> hid_t<T,capi_close, true,true,hdf5::attribute>& operator=( const std::initializer_list<V> args  );
+		template <class V> at_t operator=( V arg  );
+		template <class V> at_t operator=( const std::initializer_list<V> args  );
 
 		::hid_t ds;
 		std::string name;
@@ -171,17 +176,20 @@ namespace h5 { namespace impl {
 
 /*hide gory details, and stamp out descriptors */
 namespace h5 {
+	// all descriptors decay to `hid_t` type
+	#define h5cpp__decay( T_ )      template <> struct impl::decay<T_>{ using type = ::hid_t; }
+	#define h5cpp__impl( T_, D_)    namespace impl{struct T_ final {};}
 	/*base template with no default ctors to prevent instantiation*/
-	#define H5CPP__defhid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::hid_t<impl::T_,D_>;
-	#define H5CPP__defpid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::pid_t<impl::T_,D_>;
-	#define H5CPP__defdid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::did_t<impl::T_,D_>;
-	#define H5CPP__defaid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::aid_t<impl::T_,D_>;
+	#define H5CPP__defhid_t( T_, D_ ) h5cpp__impl(T_,D_) using T_ = impl::hid_t<impl::T_,D_>; h5cpp__decay(T_);
+	#define H5CPP__defpid_t( T_, D_ ) h5cpp__impl(T_,D_) using T_ = impl::pid_t<impl::T_,D_>; h5cpp__decay(T_);
+	#define H5CPP__defdid_t( T_, D_ ) h5cpp__impl(T_,D_) using T_ = impl::did_t<impl::T_,D_>; h5cpp__decay(T_);
+	#define H5CPP__defaid_t( T_, D_ ) h5cpp__impl(T_,D_) using T_ = impl::aid_t<impl::T_,D_>; h5cpp__decay(T_);
 	/*file:  */ H5CPP__defhid_t(fd_t, H5Fclose) /*dataset:*/	H5CPP__defdid_t(ds_t, H5Dclose) /* <- packet table: is specialization enabled */
 	/*attrib:*/ H5CPP__defaid_t(at_t, H5Aclose) /*group:  */	H5CPP__defaid_t(gr_t, H5Gclose) /*object:*/	H5CPP__defhid_t(ob_t, H5Oclose)
 	/*space: */ H5CPP__defhid_t(sp_t, H5Sclose) 
-	/*datatype:*/   //H5CPP__defhid_t(dt_t, H5Tclose)
+	/*datatype: see H5Tall.hpp for specific implementation */
 
-	/*each of these properties has a distinct proxy object to handle the details
+	/* each of these properties has a distinct proxy object to handle the details
 	 * see: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html#AttributeCreatePropFuncs */
 	H5CPP__defpid_t(acpl_t,H5Pclose)
 	H5CPP__defpid_t(dapl_t,H5Pclose) H5CPP__defpid_t(dxpl_t,H5Pclose) H5CPP__defpid_t(dcpl_t,H5Pclose)
@@ -194,6 +202,10 @@ namespace h5 {
 	#undef H5CPP__defaid_t
 	#undef H5CPP__defpid_t
 	#undef H5CPP__defhid_t
+	#undef h5cpp__decay
+	#undef h5cpp__impl
 }
 #endif
-
+// T ::= impl::T_ 
+// prop_t<h5::fapl_t, default_fapl,  capi, capi_call>
+// prop_base< prop_t<phid_t,init,capi,capi_call>, phid_t >

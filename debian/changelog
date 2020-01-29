@@ -1,0 +1,5 @@
+h5cpp-dev (1.10.4.4) unstable; urgency=medium
+
+  * std::string read|write support added for hdf5 variable length strings
+
+ -- steven varga <steven@vargaconsulting.ca>  Sun, 14 Jul 2019 19:17:00 +0500

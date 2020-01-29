@@ -1,0 +1,17 @@
+Source: h5cpp
+Section: utils
+Priority: optional
+Maintainer: Steven Varga <steven@vargaconsulting.ca>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.5
+Homepage: http://h5cpp.org
+Vcs-Git: git://steven-varga/h5cpp.git
+
+Package: libh5cpp
+Architecture: any
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Multi-Arch: foreign
+Description: c++ header only library for HDF5 dataformat
+ h5cpp is to provide easy seamless persistence for C++ 
+ objects and popular linear algebra libraries such as 
+ armadillo,eigen3,dlib,itpp,blaze,boost::ublas, ... 

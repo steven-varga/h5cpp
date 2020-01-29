@@ -22,6 +22,13 @@ Netlib considers the following [sparse storage formats][109]:
 |[Compressed Diagonal Storage][113]      | `h5::sparse::cds`   |
 |[Jagged Diagonal Storage][114]          | `h5::sparse::jds`   |
 |[Skyline Storage][115]                  | `h5::sparse::ss`    |
+=======
+Tested against:
+-----------------
+- gcc 7.4.0, gcc 8.3.0, gcc 9.0.1
+- clang 6.0
+
+**Note:** the preferred compiler is gcc, however there is work put in to broaden the support for major modern C++ compilers. Please contact me if there is any shortcomings.
 
 
 

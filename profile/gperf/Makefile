@@ -20,7 +20,7 @@
 
 apps = struct-perf tickdata-perf stl-perf arma-perf
 CXXFLAGS = -I../../ -std=c++17
-LIBS =  -lprofiler -lboost_program_options -lhdf5 -lz -ldl -lm
+LIBS =  -lprofiler -lboost_program_options -lhdf5_hl -lhdf5 -lz -ldl -lm
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX) -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^

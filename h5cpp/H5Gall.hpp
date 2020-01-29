@@ -35,7 +35,7 @@ namespace h5 {
 		H5CPP_CHECK_PROP( gapl, h5::error::io::group::create, "invalid group access property" );
 		hid_t gr = H5I_UNINIT;
 	   	H5CPP_CHECK_NZ((
-			gr = H5Gcreate( static_cast<hid_t>(parent), path.c_str(), 
+			gr = H5Gcreate( static_cast<hid_t>(parent), path.c_str(),
 				static_cast<hid_t>(lcpl), static_cast<hid_t>(gcpl), static_cast<hid_t>(gapl)  )),
 				   							h5::error::io::group::create, "can't create group..." );
      	return  h5::gr_t{gr};

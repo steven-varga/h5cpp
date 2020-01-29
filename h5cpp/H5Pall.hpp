@@ -12,8 +12,8 @@ namespace h5 { namespace impl {
 	 * only same class properties may be daisy chained */
 	template <class Derived, class phid_t>
 	struct prop_base {
-		using hidtype = typename phid_t::parent::hidtype;
-		using parent_hidtype = typename phid_t::hidtype;
+		using hidtype = phid_t;
+		using type = phid_t;
 
 		prop_base(){ }
 		// removed ctor
@@ -41,32 +41,17 @@ namespace h5 { namespace impl {
 			return phid_t{handle};
 		}
 		::hid_t handle;
-		using type = phid_t;
 	};
-	// definition
-	template <class phid_t, defprop_t init, class capi, typename capi::fn_t capi_call> struct prop_t;
-	/* CAPI macros are sequence calls: (H5OPEN, register_property_class), these are all meant to be read only/copied from,
-	 */
-	#define H5CPP__capicall( name, default_id ) ::hid_t inline default_##name(){ return default_id; } 	\
-			template <class capi, typename capi::fn_t capi_call>                                        \
-				using name##_call = prop_t<h5::name##_t, default_##name,  capi, capi_call>; 	        \
-			template <class... args> using name##_args = impl::capi_t<args...>; 						\
 
-	H5CPP__capicall( acpl, H5P_ATTRIBUTE_CREATE) H5CPP__capicall( dapl, H5P_DATASET_ACCESS )
-	H5CPP__capicall( dxpl, H5P_DATASET_XFER )    H5CPP__capicall( dcpl, H5P_DATASET_CREATE )
-	H5CPP__capicall( tapl, H5P_DATATYPE_ACCESS ) H5CPP__capicall( tcpl, H5P_DATATYPE_CREATE )
-	H5CPP__capicall( fapl, H5P_FILE_ACCESS )     H5CPP__capicall( fcpl, H5P_FILE_CREATE )
-	H5CPP__capicall( fmpl, H5P_FILE_MOUNT )
-
-	H5CPP__capicall( gapl, H5P_GROUP_ACCESS)     H5CPP__capicall( gcpl, H5P_GROUP_CREATE )
-	H5CPP__capicall( lapl, H5P_LINK_ACCESS)      H5CPP__capicall( lcpl, H5P_LINK_CREATE	 )
-	H5CPP__capicall( ocpl, H5P_OBJECT_COPY)      H5CPP__capicall( ocrl, H5P_OBJECT_CREATE )
-	H5CPP__capicall( scpl, H5P_STRING_CREATE)
-	#undef H5CPP__defid
 
 	/*property with a capi function call with some arguments, also is the base for other properties */
 	template <class phid_t, defprop_t init, class capi, typename capi::fn_t capi_call>
-	struct prop_t : prop_base<prop_t<phid_t,init,capi,capi_call>,phid_t> {
+	struct prop_t : prop_base< prop_t<phid_t,init,capi,capi_call>, phid_t > {
+		using base_t =  prop_base<prop_t<phid_t,init,capi,capi_call>, phid_t>;
+		using args_t = typename capi::args_t;
+		using capi_t = typename capi::type;
+		using type = phid_t;
+
 		prop_t( typename capi::args_t values ) : args( values ) {
 			H5CPP_CHECK_NZ( (this->handle = H5Pcreate(init())),
 				   h5::error::property_list::misc, "failed to create property");
@@ -79,13 +64,10 @@ namespace h5 { namespace impl {
 			//int i = capi_call + 1;
 			/*CAPI needs `this` hid_t id passed along */
 			capi_t capi_args = std::tuple_cat( std::tie(id), args );
-			H5CPP_CHECK_NZ( compat::apply(capi_call, capi_args),
+			H5CPP_CHECK_NZ( h5::compat::apply(capi_call, capi_args),
 					h5::error::property_list::argument,"failed to parse arguments...");
 		}
-		using base_t =  prop_base<prop_t<phid_t,init,capi,capi_call>,phid_t>;
-		using args_t = typename capi::args_t;
-		using capi_t = typename capi::type;
-		using type = phid_t;
+
 		args_t args;
 	};
 
@@ -94,20 +76,25 @@ namespace h5 { namespace impl {
 	 */
 	template <class phid_t, defprop_t init, class capi, typename capi::fn_t capi_call, class T>
 	struct tprop_t final : prop_t<phid_t,init,capi,capi_call> { // ::hid_t,const void*
+		using type = phid_t;
+		using base_t = prop_t<phid_t,init,capi,capi_call>;
+
 		tprop_t( T value ) : base_t( std::make_tuple( h5::copy<T>( h5::dt_t<T>() ), &this->value) ), value(value) {
 		}
 		~tprop_t(){ // don't forget that the first argument is a HDF5 type info, that needs closing
 			if( H5Iis_valid( std::get<0>(this->args) ) )
 				H5Tclose( std::get<0>(this->args) );
 		}
-		using type = phid_t;
-		using base_t = prop_t<phid_t,init,capi,capi_call>;
+
 		T value;
 	};
 	/* takes an arbitrary length of hsize_t sequence and calls H5Pset_xxx
 	 */
 	template <class phid_t, defprop_t init, class capi, typename capi::fn_t capi_call>
 	struct aprop_t final : prop_t<phid_t,init,capi,capi_call> {
+		using type = phid_t;
+		using base_t =  prop_t<phid_t,init,capi,capi_call>;
+
 		aprop_t( std::initializer_list<hsize_t> values )
 			: base_t( std::make_tuple( values.size(), this->values) ) {
 			std::copy( std::begin(values), std::end(values), this->values);
@@ -118,9 +105,28 @@ namespace h5 { namespace impl {
 			std::copy( std::begin(values), std::end(values), this->values);
 		}
 		hsize_t values[H5CPP_MAX_RANK];
-		using type = phid_t;
-		using base_t =  prop_t<phid_t,init,capi,capi_call>;
 	};
+
+	/* CAPI macros are sequence calls: (H5OPEN, register_property_class), these are all meant to be read only/copied from,
+	 */
+	#define H5CPP__capicall( name, default_id ) ::hid_t inline default_##name(){ return default_id; } 	\
+		template <class... args> using name##_args = impl::capi_t<args...>; 						\
+		template <class capi, typename capi::fn_t capi_call>                                        \
+			using name##_call = prop_t<h5::name##_t, default_##name,  capi, capi_call>; 	        \
+
+	//impl::fapl_call< impl::fapl_args<hid_t,H5F_libver_t,H5F_libver_t>,H5Pset_libver_bounds>;
+
+	H5CPP__capicall( acpl, H5P_ATTRIBUTE_CREATE) H5CPP__capicall( dapl, H5P_DATASET_ACCESS )
+	H5CPP__capicall( dxpl, H5P_DATASET_XFER )    H5CPP__capicall( dcpl, H5P_DATASET_CREATE )
+	H5CPP__capicall( tapl, H5P_DATATYPE_ACCESS ) H5CPP__capicall( tcpl, H5P_DATATYPE_CREATE )
+	H5CPP__capicall( fapl, H5P_FILE_ACCESS )     H5CPP__capicall( fcpl, H5P_FILE_CREATE )
+	H5CPP__capicall( fmpl, H5P_FILE_MOUNT )
+
+	H5CPP__capicall( gapl, H5P_GROUP_ACCESS)     H5CPP__capicall( gcpl, H5P_GROUP_CREATE )
+	H5CPP__capicall( lapl, H5P_LINK_ACCESS)      H5CPP__capicall( lcpl, H5P_LINK_CREATE	 )
+	H5CPP__capicall( ocpl, H5P_OBJECT_COPY)      H5CPP__capicall( ocrl, H5P_OBJECT_CREATE )
+	H5CPP__capicall( scpl, H5P_STRING_CREATE)
+	#undef H5CPP__defid
 
 	// only data control property list set_chunk has this pattern, lets allow to define CAPI argument lists 
 	// the same way as with others
@@ -387,7 +393,7 @@ namespace h5 {
 	const static h5::gcpl_t gcpl = static_cast<h5::gcpl_t>( H5P_DEFAULT );
 	const static h5::gapl_t gapl = static_cast<h5::gapl_t>( H5P_DEFAULT );
 	const static h5::acpl_t acpl = static_cast<h5::acpl_t>( H5P_DEFAULT );
-	const static h5::dcpl_t dcpl = static_cast<h5::dcpl_t>( H5P_DEFAULT);
+	const static h5::dcpl_t dcpl = static_cast<h5::dcpl_t>( H5P_DEFAULT );
 	const static h5::dxpl_t dxpl = static_cast<h5::dxpl_t>( H5P_DEFAULT );
 	const static h5::lcpl_t lcpl = h5::char_encoding{H5T_CSET_UTF8} | h5::create_intermediate_group{1};
 	const static h5::fapl_t fapl = static_cast<h5::fapl_t>( H5P_DEFAULT );

@@ -113,5 +113,37 @@ return os;
 }
 
 
+template<class T>
+inline std::ostream& operator<<(std::ostream &os, const h5::dt_t<T>& dt) {
+	hid_t id = static_cast<hid_t>( dt );
+	os << "data type: " << h5::name<T>::value << " ";
+	os << ( std::is_pointer<T>::value ? "pointer" : "value" );
+	os << ( H5Iis_valid( id ) > 0 ? " valid" : " invalid");
+
+	size_t spos, epos, esize, mpos, msize;
+	switch( H5Tget_class( id ) ){
+		case H5T_INTEGER: ; break;
+		case H5T_FLOAT:
+			H5Tget_fields( id, &spos, &epos, &esize, &mpos, &msize );
+
+			os << "\n\tebias: " << H5Tget_ebias( id ) 
+				<< " norm: " <<  H5Tget_norm( id ) 
+				<< " offset: " <<  H5Tget_offset( id )
+			   	<< " precision: " << H5Tget_precision( id )
+			   	<< " size: " << H5Tget_size( id )
+				<< "\n\tspos:" << spos << " epos:" << epos << " esize:" << esize << " mpos:" << mpos <<" msize:" << msize
+			   	<<"\n";
+			 break;
+		case H5T_STRING: ; break;
+		case H5T_BITFIELD: ; break;
+		case H5T_OPAQUE: ; break;
+		case H5T_COMPOUND: ; break;
+		case H5T_REFERENCE: ; break;
+		case H5T_ENUM: ; break;
+		case H5T_VLEN: ; break;
+		case H5T_ARRAY: ;break;
+	}
+	return os;
+}
 #endif
 

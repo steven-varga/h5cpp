@@ -9,7 +9,7 @@
 #define  H5CPP_COMPAT_HPP
 //CREDITS: https://en.cppreference.com/w/cpp/utility/functional/invoke 
 
-namespace compat { // C++11 shim to lower from c++17
+namespace h5::compat { // C++11 shim to lower from c++17
 	template <std::size_t ...> struct index_sequence{ };
 
 	template <std::size_t N, std::size_t ... next>
@@ -33,8 +33,58 @@ namespace compat { // C++11 shim to lower from c++17
 		return apply_impl(std::forward<F>(f), std::forward<Tuple>(t),
 			compat::make_index_sequence<std::tuple_size<TP>::value>{});
 	}
+
 }
 
+namespace h5::impl::compat {
+// N4436 and https://en.cppreference.com/w/cpp/experimental/is_detected 
+
+	struct nonesuch {
+		nonesuch( ) = delete;
+		~nonesuch( ) = delete;
+		nonesuch( nonesuch const& ) = delete;
+		void operator = ( nonesuch const& ) = delete;
+	};
+
+	template< class... > using void_t = void;
+	namespace detail {
+		template <class Default, class AlwaysVoid,
+				  template<class...> class Op, class... Args>
+		struct detector {
+		  using value_t = std::false_type;
+		  using type = Default;
+		};
+
+		template <class Default, template<class...> class Op, class... Args>
+		struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
+		  using value_t = std::true_type;
+		  using type = Op<Args...>;
+		};
+	} // namespace detail
+
+	template <template<class...> class Op, class... Args>
+	using is_detected = typename detail::detector<nonesuch, void, Op, Args...>::value_t;
+
+	template <template<class...> class Op, class... Args>
+	using detected_t = typename detail::detector<nonesuch, void, Op, Args...>::type;
+
+	template <class Default, template<class...> class Op, class... Args>
+	using detected_or = detail::detector<Default, void, Op, Args...>;
+
+	// helper templates
+	template< template<class...> class Op, class... Args >
+	constexpr bool is_detected_v = is_detected<Op, Args...>::value;
+	template< class Default, template<class...> class Op, class... Args >
+	using detected_or_t = typename detected_or<Default, Op, Args...>::type;
+	template <class Expected, template<class...> class Op, class... Args>
+	using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
+	template <class Expected, template<class...> class Op, class... Args>
+	constexpr bool is_detected_exact_v = is_detected_exact<Expected, Op, Args...>::value;
+	template <class To, template<class...> class Op, class... Args>
+	using is_detected_convertible = std::is_convertible<detected_t<Op, Args...>, To>;
+	template <class To, template<class...> class Op, class... Args>
+	constexpr bool is_detected_convertible_v = is_detected_convertible<To, Op, Args...>::value;
+}
 
 #endif
 

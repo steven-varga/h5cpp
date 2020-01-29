@@ -34,11 +34,11 @@
 	#include "H5config.hpp"
 	#include "compat.hpp"  /* */
 	#include "H5Eall.hpp"  /* all methods throwing exceptions must be included after */
-	#include "H5misc.hpp"
+	//#include "H5misc.hpp"
 	#include "H5Sall.hpp"
 	
 	#include "H5meta.hpp"
-	#include "H5Mstl.hpp"
+	#include "H5Tmeta.hpp"
 	#include "H5Marma.hpp"
 	#include "H5Mdlib.hpp"
 	#include "H5Meigen.hpp"
@@ -46,7 +46,7 @@
 	#include "H5Mitpp.hpp"
 	#include "H5Mublas.hpp"
 	
-	#include "H5Iall.hpp"
+	#include "H5Iall.hpp" /* base hid_t type definitions */
 	#include "H5Tall.hpp"
 	#include "H5Zall.hpp"
 	#include "H5Pall.hpp"

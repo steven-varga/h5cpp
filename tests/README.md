@@ -1,89 +1,124 @@
-<!---
+# Cartesian Test
+Google Test framework v1.7.0 provides limited support for Cartesian products of test values with `Combine` upto 10 independent cases (see: `gtest-param-test.h`). This restriction is the result of macro based approach, and is lifted by providing a template meta-programming based C++17 compliant implementation.
 
- Copyright (c) 2017 vargaconsulting, Toronto,ON Canada
- Author: Varga, Steven <steven@vargaconsulting.ca>
+In `h5cpp-test.hpp` the definition  `#define H5CPP_ALL_TYPES char, short, ... , double` controls what types test cases are iterated through, there is a different type definition for containers, and linear algebra objects. 
 
- Permission is hereby granted, free of charge, to any person obtaining a copy of
- this  software  and associated documentation files (the "Software"), to deal in
- the Software  without   restriction, including without limitation the rights to
- use, copy, modify, merge,  publish,  distribute, sublicense, and/or sell copies
- of the Software, and to  permit persons to whom the Software is furnished to do
- so, subject to the following conditions:
+In the following code example ellipsis `...` represents omitted code. `TypeParam` takes the next type of `scalar_t`
+```cpp
+template <typename T> class H5ETest : public AbstractTest<T>{};
+using scalar_t = ::testing::Types<char, int, long, long long, float, double, ...>;
+TYPED_TEST_CASE(H5ETest, scalar_t);
 
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
+TYPED_TEST(H5ETest, cartesian_example) { //tets case iterated through `scalar_t`
+	using tuple_t = std::tuple<std::vector<TypeParam>, std::array<TypeParam,3>>;
+	tuple_t data = h5::mock::data<tuple_t>( 1024 ); // obtain dataset of tuple_t type
+	// the cartesian product  {elementary_t X tuple_t} are executed within lambda
+	h5::meta::static_for<tuple_t>( [&]( auto i ){
+        auto v = std::get<i>( data ); // get tuple element at compile time
+		...
+		ASSERT_TRUE(...);
+    });
+	// implement test cases for scalars outside of loop
+	...
+}
+```
+`AbstractTest<T> : public ::testing::Test { ... }` class sets up the environment for HDF5 IO test, is defined in `h5cpp-test.hpp` and provides additional functionality such as defining dataset names as a function of executed datatype
+```cpp
+template <typename T> class AbstractTest
+					: public ::testing::Test {
+	using container_t = std::tuple<std::array<T,10>, std::vector<T>, std::deque<T>>;
+public:
+	void SetUp() {
+		dir = ::testing::UnitTest::GetInstance()->current_test_info()->name();
+		type = h5::name<T>::value;
+		name = dir + "/" + type;
+		this->fd = h5::open("test.h5", H5F_ACC_RDWR );
+	}
+	void TearDown() {
+	}
 
- THE  SOFTWARE IS  PROVIDED  "AS IS",  WITHOUT  WARRANTY  OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT  SHALL THE AUTHORS OR
- COPYRIGHT HOLDERS BE LIABLE FOR ANY  CLAIM,  DAMAGES OR OTHER LIABILITY, WHETHER
- IN  AN  ACTION  OF  CONTRACT, TORT OR  OTHERWISE, ARISING  FROM,  OUT  OF  OR IN
- CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
---->
+	std::string type;
+	std::string name;
+	std::string dir;
+	h5::fd_t fd; //< file descriptor
+};
+```
 
+In addition to test case assertions there is a general error handler which triggers failure if HDF5 CAPI reports error. Consider this as a fail safe switch to prevent erroneous implementation pass.
+```
+herr_t CAPI_error_handler (long int, void *) {
+	hid_t error_stack = H5Eget_current_stack();
+	H5Eclear( error_stack );
+	ADD_FAILURE();
+	return error_stack;
+}
+```
 
-`make all` generates doxygen documention into docs/html and compiles `examples/*.cpp`
-In `tests` directory there are instruction on google test suit, similarly you find instructions in 
-`h5cpp/profiling`
+And finally the output with a custom printer. For `json | xml | ... ` take a look at google test framework.
+```bash
+--------------------------------------------------------------------------------------
+ RUNNING TEST SUITE:                                                           ./H5E 
+--------------------------------------------------------------------------------------
+cartesian_example                                              unsigned char [  OK  ]
+cartesian_example                                             unsigned short [  OK  ]
+cartesian_example                                               unsigned int [  OK  ]
+cartesian_example                                         unsigned long long [  OK  ]
+cartesian_example                                                       char [  OK  ]
+cartesian_example                                                      short [  OK  ]
+cartesian_example                                                        int [  OK  ]
+cartesian_example                                                  long long [  OK  ]
+cartesian_example                                                      float [  OK  ]
+cartesian_example                                                     double [  OK  ]
+-------------------------------------------------------------------------------------- 
+PASSED: 10  FAILED: 0 TIME: 3 ms 
+-------------------------------------------------------------------------------------
+```
+## Mock Functions
+* `std::array<T,N> mock::randu(size_t min, size_t max)` returns an array of T where `T ::= numerical | std::string`
+* `std::tuple<...> mock::data<std::tuple<...>>(size_t min, size_t max, double fill_rate)` return tuple of random length and content of datasets with cardinality specified by `min` and `max`. 
 
-**to build documentation, examples and profile code install:**
+# Prerequisites 
+
+### Basics
 ```shell
-apt install build-essential libhdf5-serial-dev
+apt install build-essential
 apt install google-perftools kcachegrind
-apt install doxygen doxygen-gui markdown
+```
+
+### HDF5 C library
+Download and compile [the latest version][207] from The HDFGroup website or use the provided [binary packages][206]. The minimum version requirements for HDF5 CAPI is set to v1.10.2.
+
+
+
+### Compiler
+[GCC 7.0][gcc] or above
+[clang 5.0][clang] or above
+with `-std=c++17`
+
+### Linear Algebra
+optionally install linear algebra packages from source, or package manager
+```shell
 apt install libarmadillo-dev libeigen3-dev libblitz0-dev libitpp-dev libdlib-dev libboost-all-dev 
 ```
-in addition to above, download [blaze][106] and copy header files to `/usr/local/include`
-ETL is slightly trickier, make sure to clone it recursively, and have either gcc 6.3.0 or clang 3.9 or greater
+In acase of [blaze][100] and  header files to `/usr/local/include`, and [ETL][101] is slightly trickier, make sure to clone it recursively, and have minimum version of gcc 6.3.0 / clang 3.9
+
 `git clone --recursive https://github.com/wichtounet/etl.git`
 `cd etl; CXX=clang++ make`
 
-compilers:
------------
-[GCC 6.1][gcc] supports -std=c++14
-[clang 3.4][clang] 
+### Google Test
+is used to test integrity, here are the steps:
 
-requirements:
--------------
-1. installed serial HDF5 libraries:
-	- pre-compiled on ubuntu: `sudo apt install libhdf5-serial-dev hdf5-tools hdf5-helpers hdfview`
-	- from source: [HDF5 download][5]
-	`./configure --prefix=/usr/local --enable-build-mode=production --enable-shared --enable-static --enable-optimization=high --with-default-api-version=v110 --enable-hl`
-	`make -j4` then `sudo make install`
-
-2. C++11 or above capable compiler installed HDF5 libraries: `sudo apt install build-essential g++`
-3. set the location of the include library, and c++11 or higher flag: `h5c++  -Iyour/project/../h5cpp -std=c++14` or `CFLAGS += pkg-config --cflags h5cpp`
-4. optionally include `[ <armadillo> | <Eigen/Dense> | <blaze/Math.h> | ... ]`  header file before including `<h5cpp/all>`
-
-
-
-
-How to install google-test framework:
--------------------------------------
-
-first install google-test sources: `sudo apt-get install libgtest-dev`
-make sure you have cmake: `sudo apt-get install cmake` 
-you find the source dir here: `cd /usr/src/gtest` 
-inside the source directory run `sudo cmake CMakeLists.txt` 
-then `sudo make`
-copy  libgtest.a and libgtest_main.a to your /usr/lib folder `sudo cp *.a /usr/lib`
-
-specify link in makefile: `LDLIBS = -lgtest -lgtest_main`
-
-eigen3:
---------
-requires to specify the location of eigen3 system directory; which is on my system:
-`/usr/include/eigen3`
-
-dependencies for testing ALL TESTCASES:
-----------------------------------------
-have boost ublas installed some way
-sudo apt install libarmadillo-dev libitpp-dev libblitz0-dev libdlib-dev 
-
-FAILS:
-------
+1. install google-test sources: `sudo apt-get install libgtest-dev`
+2. get cmake: `sudo apt-get install cmake`
+3. do `cd /usr/src/gtest` to enter the source directory
+4. `sudo cmake CMakeLists.txt && make`
 
 
 [gcc]: https://gcc.gnu.org/projects/cxx-status.html#cxx14
 [clang]: https://clang.llvm.org/cxx_status.html
+
+[100]: https://bitbucket.org/blaze-lib/blaze/src/master/
+[101]: https://github.com/wichtounet/etl
+[206]: https://www.hdfgroup.org/downloads/hdf5/
+[207]: https://www.hdfgroup.org/downloads/hdf5/source-code/
 

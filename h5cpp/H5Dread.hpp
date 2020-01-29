@@ -90,9 +90,9 @@ namespace h5 {
 	* \endcode  
 	* \par_file_path \par_dataset_path \par_ptr \par_offset \par_stride \par_count \par_block \par_dxpl \tpar_T \returns_err
  	*/ 
-	template<class T, class L, class... args_t>
-	inline typename std::enable_if< impl::is_location<L>::value,
-	void>::type read( const L& loc, const std::string& dataset_path, T* ptr, args_t&&... args ){
+	template<class T, class HID_T, class... args_t>
+	inline typename std::enable_if< impl::is_location<HID_T>::value,
+	void>::type read( const HID_T& loc, const std::string& dataset_path, T* ptr, args_t&&... args ){
 		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
 		h5::ds_t ds = h5::open(loc, dataset_path, dapl ); // will throw its exception
 		h5::read<T>(ds, ptr, args...);
@@ -155,9 +155,9 @@ namespace h5 {
 	* \endcode  
 	* \par_fd \par_dataset_path \par_ref \par_offset \par_stride  \par_block \tpar_T \returns_err
  	*/ 
-	template<class T, class L, class... args_t> // dispatch to above
-		inline typename std::enable_if< impl::is_location<L>::value,
-		void>::type read( const L& loc,  const std::string& dataset_path, T& ref, args_t&&... args ){
+	template<class T, class HID_T, class... args_t> // dispatch to above
+		inline typename std::enable_if< impl::is_location<HID_T>::value,
+	void>::type read( const HID_T& loc,  const std::string& dataset_path, T& ref, args_t&&... args ){
 
 		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
 		h5::ds_t ds = h5::open(loc, dataset_path, dapl );
@@ -305,9 +305,9 @@ namespace h5 {
 	* \endcode  
 	* \par_fd \par_dataset_path \par_offset \par_stride \par_count \par_block \tpar_T \returns_object 
  	*/
-	template<class T, class L, class... args_t> // dispatch to above
-	inline typename std::enable_if< impl::is_location<L>::value,
-	T>::type read( const L& loc, const std::string& dataset_path, args_t&&... args ){
+	template<class T, class HID_T, class... args_t> // dispatch to above
+	inline typename std::enable_if< impl::is_location<HID_T>::value,
+	T>::type read( const HID_T& loc, const std::string& dataset_path, args_t&&... args ){
 
 		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
 		h5::ds_t ds = h5::open(loc, dataset_path, dapl );
@@ -327,43 +327,55 @@ namespace h5 {
 		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR );
 		return h5::read<T>( fd, dataset_path, args...);
 	}
+
 	// tuple handling for compound multi dataset types
 	namespace impl::tuple {
 		// tail case
-		template <std::size_t N, class... Fields, class... Names, class... Args>
+		template <std::size_t N, class Tuple, class... Fields, class... Names, class... Args>
 		typename std::enable_if< N == 0,
-		void>::type read(const h5::gr_t& gr, std::tuple<Fields...>&& fields, std::tuple<Names...>& names, Args&&... args ){
-			std::cout << N << " " << std::get<N>(names) <<"\n";
-		}
-		// 
-		template <std::size_t N, class... Fields, class... Names, class... Args>
-		typename std::enable_if< std::isgreater(N,0),
-		void>::type read(const h5::gr_t& gr,
+		Tuple>::type read(const h5::gr_t& gr,
 				std::tuple<Fields...>& fields, std::tuple<Names...>& names, Args&&... args ){
-			std::cout << N << " " << std::get<N>(names) <<"\n";
-			std::string name(std::get<N>(names));
-			using object_t = typename std::tuple_element<N, std::tuple<Fields...>>::type;
-			object_t obj = h5::read<object_t>(gr, name );
-			std::get<N>(fields) = obj;
 
-		//	impl::tuple::read<N-1>(gr, fields, names, args...);
+			using object_t = typename std::tuple_element<N,Tuple>::type;
+			auto tuple = std::tuple_cat(
+				   	std::make_tuple( h5::read<object_t>(gr, std::get<N>(names))), fields );
+			return tuple;
+		}
+		//pumping 
+		template <std::size_t N, class Tuple, class... Fields, class... Names, class... Args>
+		typename std::enable_if< std::isgreater(N,0),
+		Tuple>::type read(const h5::gr_t& gr,
+					 std::tuple<Fields...>& fields, std::tuple<Names...>& names, Args&&... args ){
+
+			using object_t = typename std::tuple_element<N,Tuple>::type;
+			auto tuple = std::tuple_cat(
+				   	std::make_tuple(h5::read<object_t>(gr, std::get<N>(names))), fields );
+			return impl::tuple::read<N-1, Tuple>(gr, tuple, names, args...);
+		}
+		// entry/head
+		template <std::size_t N, class Tuple, class... Names, class... Args>
+		Tuple read(const h5::gr_t& gr, std::tuple<Names...>& names, Args&&... args ){
+
+			using object_t = typename std::tuple_element<N,Tuple>::type;
+			auto tuple = std::make_tuple(h5::read<object_t>(gr, std::get<N>(names)));
+			return impl::tuple::read<N-1, Tuple>(gr, tuple, names, args...);
 		}
 	}
-
 
 	template<class T, class... args_t>
 	typename std::enable_if<impl::is_multi<T>::value,
 	T>::type read( const h5::gr_t& gr, args_t&&... args ){
-		using element_t = typename impl::decay<T>::type;
-		using tuple_t = typename impl::member<T>::type;
-		const T ref; // = impl::get<T>::ctor(&a,&b, &values, 10, 20);
 
-		tuple_t fields;
-		auto names = h5::impl::get_field_names(ref);
-		constexpr size_t N = impl::member<T>::size - 1;
-		std::cout <<"tuple: " << std::get<1>(fields) << "\n";
-		impl::tuple::read<N>(gr, fields, names,  args... );
-		return ref;
+		using tuple_t = typename impl::member<T>::type; // tuple varies with objects
+		auto names = h5::impl::csc_names;               // FIXME: add more storage options
+		constexpr size_t N = impl::member<T>::size - 1; // compile time counter
+
+		//std::string format = h5::aread<std::string>(gr,"format");
+		std::array<unsigned int, 2> shape =
+			h5::aread<std::array<unsigned int, 2>>(gr, "shape");
+		// recursively construct 
+		auto tuple = impl::tuple::read<N, tuple_t>(gr, names,  args... );
+		return impl::get<T>::ctor( tuple );
 	}
 
 

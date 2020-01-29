@@ -226,15 +226,15 @@ namespace h5 {
 	template <class T, class... args_t>
 	typename std::enable_if<impl::is_multi<T>::value,
 	h5::gr_t>::type write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
-		auto fields = h5::impl::get_fields(ref);
-		auto names = h5::impl::get_field_names(ref);
+		auto fields = h5::impl::get_fields(ref); // FIXME: as<std::tuple>
+		auto names = h5::impl::csc_names;
 		constexpr size_t N = impl::member<T>::size - 1;
 		impl::tuple::write<N>(fd, dataset_path, fields, names,  args... );
 
 		// at this point dataset_path exists, as a group, lets open it and add attributes:
 		h5::gr_t gr{H5Gopen(static_cast<hid_t>(fd), dataset_path.c_str(), H5P_DEFAULT)};
 		auto attr = h5::impl::get_field_attributes(ref);
-		h5::awrite(gr,attr);
+		h5::awrite(gr, attr);
 		return gr;
 	}
 

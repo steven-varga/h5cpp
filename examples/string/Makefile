@@ -5,7 +5,7 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
-CXXFLAGS =  -std=c++11  -I/usr/include
+CXXFLAGS =  -std=c++17  -I/usr/include
 LIBS =  -lhdf5  -lz -ldl -lm
 
 apps = string
@@ -23,5 +23,6 @@ string: string.o
 clean:
 	@$(RM) *.o *.h5 $(apps)
 
+dist-clean: clean
 .PHONY: test
 

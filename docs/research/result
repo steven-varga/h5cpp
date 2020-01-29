@@ -1,0 +1,232 @@
+--------------------------------------------------------------------------------
+I1 cache:         32768 B, 64 B, 8-way associative
+D1 cache:         32768 B, 64 B, 8-way associative
+LL cache:         4194304 B, 64 B, 16-way associative
+Command:          ./tile-perf
+Data file:        tile.cache
+Events recorded:  Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Events shown:     Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Event sort order: Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Thresholds:       0.1 100 100 100 100 100 100 100 100
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+            Ir  I1mr  ILmr            Dr       D1mr       DLmr            Dw        D1mw        DLmw 
+--------------------------------------------------------------------------------
+19,989,190,784 9,611 5,492 5,458,971,039 57,654,533 57,627,024 2,999,556,435 129,611,185 115,222,465  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+           Ir I1mr ILmr            Dr       D1mr       DLmr            Dw       D1mw       DLmw  file:function
+--------------------------------------------------------------------------------
+7,372,800,000    4    4 2,457,600,000      2,000      2,000 1,228,800,000 14,401,000 14,401,000  /usr/local/include/h5cpp/H5Mmemcpy.hpp:memcpy_fast(void*, void const*, unsigned long)
+6,612,107,032   15   15 2,150,466,023     13,001      8,001   691,932,004          0          0  /usr/include/x86_64-linux-gnu/bits/string3.h:h5::impl::pipeline<unsigned int, 3ul>::tile(unsigned int*)
+3,686,400,000    1    1   614,400,000          0          0   614,400,000          0          0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::mock(void*, void*, unsigned long)
+1,036,800,125   11   11            18          9          8   230,400,041 57,600,004 57,600,004  /home/steven/research/tile.cpp:main
+  659,551,734   35   19   234,007,191 57,601,244 57,600,134   233,285,837 57,601,195 43,214,568  /build/glibc-Cl5G7W/glibc-2.23/string/../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:__memcpy_sse2_unaligned
+  614,400,000    0    0             0          0          0             0          0          0  /usr/lib/gcc/x86_64-linux-gnu/8/include/avxintrin.h:memcpy_fast(void*, void const*, unsigned long)
+
+--------------------------------------------------------------------------------
+I1 cache:         32768 B, 64 B, 8-way associative
+D1 cache:         32768 B, 64 B, 8-way associative
+LL cache:         4194304 B, 64 B, 16-way associative
+Command:          ./tile-perf
+Data file:        tile.cache
+Events recorded:  Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Events shown:     Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Event sort order: Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Thresholds:       0.1 100 100 100 100 100 100 100 100
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+            Ir  I1mr  ILmr            Dr       D1mr       DLmr            Dw        D1mw        DLmw 
+--------------------------------------------------------------------------------
+15,841,991,377 9,606 5,495 4,230,171,211 57,654,531 57,627,023 2,385,156,532 129,611,186 115,222,465  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+           Ir I1mr ILmr            Dr       D1mr       DLmr          Dw       D1mw       DLmw  file:function
+--------------------------------------------------------------------------------
+5,529,600,000    4    4 1,843,200,000      2,000      2,000 921,600,000 14,401,000 14,401,000  /usr/local/include/h5cpp/H5Mmemcpy.hpp:memcpy_fast(void*, void const*, unsigned long)
+5,383,307,032   15   15 1,689,666,023     13,001      8,001 538,332,004          0          0  /usr/include/x86_64-linux-gnu/bits/string3.h:h5::impl::pipeline<unsigned int, 3ul>::tile(unsigned int*)
+1,036,800,132   12   12            18          7          7 230,400,043 57,600,004 57,600,004  /home/steven/research/tile.cpp:main
+  659,551,780   37   19   234,007,196 57,601,244 57,600,134 233,285,842 57,601,195 43,214,568  /build/glibc-Cl5G7W/glibc-2.23/string/../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:__memcpy_sse2_unaligned
+  460,800,000    1    1    76,800,000          0          0  76,800,000          0          0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::gzip(void*, void*, unsigned long)
+  460,800,000    1    1    76,800,000          0          0  76,800,000          0          0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::disperse(void*, void*, unsigned long)
+  460,800,000    1    1    76,800,000          0          0  76,800,000          0          0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::mock(void*, void*, unsigned long)
+  460,800,000    1    1    76,800,000          0          0  76,800,000          0          0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::shuffle(void*, void*, unsigned long)
+  460,800,000    0    0    76,800,000          0          0  76,800,000          0          0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::add(void*, void*, unsigned long)
+  460,800,000    0    0    76,800,000          0          0  76,800,000          0          0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::jpeg(void*, void*, unsigned long)
+  460,800,000    0    0             0          0          0           0          0          0  /usr/lib/gcc/x86_64-linux-gnu/8/include/avxintrin.h:memcpy_fast(void*, void const*, unsigned long)
+
+--------------------------------------------------------------------------------
+I1 cache:         32768 B, 64 B, 8-way associative
+D1 cache:         32768 B, 64 B, 8-way associative
+LL cache:         4194304 B, 64 B, 16-way associative
+Command:          ./tile
+Data file:        tile.cache
+Events recorded:  Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Events shown:     Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Event sort order: Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Thresholds:       0.1 100 100 100 100 100 100 100 100
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+            Ir  I1mr  ILmr            Dr        D1mr       DLmr            Dw        D1mw       DLmw 
+--------------------------------------------------------------------------------
+20,291,056,551 9,584 5,496 4,920,046,945 123,137,518 57,616,017 2,964,467,443 172,909,173 57,608,213  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+            Ir I1mr ILmr            Dr        D1mr       DLmr            Dw        D1mw       DLmw  file:function
+--------------------------------------------------------------------------------
+11,344,931,780   33   19 2,110,607,196 122,400,241 57,600,134 1,489,005,842 115,300,193      1,319  /build/glibc-Cl5G7W/glibc-2.23/string/../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:__memcpy_sse2_unaligned
+ 5,320,455,044   17   17 1,570,244,033     600,004          3   629,800,004           0          0  /usr/include/x86_64-linux-gnu/bits/string3.h:void h5::impl::write_chunk<unsigned int, 3ul>(std::array<int, 3ul>, std::array<int, 3ul>, unsigned int*)
+ 1,152,000,063    6    6            14           4          4   230,400,016  57,600,001 57,600,001  /home/steven/research/tile.cpp:main
+   921,600,000    1    1             0           0          0   614,400,000           0          0  /usr/include/x86_64-linux-gnu/bits/string3.h:h5::impl::filter::mock(void*, void*, unsigned long)
+   921,600,000    0    0   614,400,000           0          0             0           0          0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::mock(void*, void*, unsigned long)
+   621,648,082  678  400   621,646,495         765        133           906          26         16  ???:???
+
+--------------------------------------------------------------------------------
+I1 cache:         32768 B, 64 B, 8-way associative
+D1 cache:         32768 B, 64 B, 8-way associative
+LL cache:         4194304 B, 64 B, 16-way associative
+Command:          ./tile
+Data file:        tile.cache
+Events recorded:  Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Events shown:     Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Event sort order: Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Thresholds:       0.1 100 100 100 100 100 100 100 100
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+            Ir  I1mr  ILmr            Dr        D1mr        DLmr            Dw        D1mw        DLmw 
+--------------------------------------------------------------------------------
+29,973,215,873 9,755 5,548 7,120,724,203 115,245,587 115,224,053 4,888,834,064 172,811,178 172,809,077  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+            Ir I1mr ILmr            Dr        D1mr        DLmr            Dw        D1mw        DLmw  file:function
+--------------------------------------------------------------------------------
+17,371,231,780   34   19 3,183,127,196 115,201,245 115,201,133 2,199,365,842 115,202,194 115,202,166  /build/glibc-Cl5G7W/glibc-2.23/string/../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:__memcpy_sse2_unaligned
+ 6,151,323,046   18   18 1,477,502,033       6,005       6,005   983,771,004           0           0  /usr/include/x86_64-linux-gnu/bits/string3.h:void h5::impl::write_chunk<unsigned int, 3ul>(std::array<int, 3ul>, std::array<int, 3ul>, unsigned int*)
+ 2,211,840,000    1    1             0           0           0 1,474,560,000           0           0  /usr/include/x86_64-linux-gnu/bits/string3.h:h5::impl::filter::mock(void*, void*, unsigned long)
+ 2,211,840,000    0    0 1,474,560,000           0           0             0           0           0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::mock(void*, void*, unsigned long)
+ 1,036,800,073    7    6            17           6           6   230,400,019  57,600,002  57,600,002  /home/steven/research/tile.cpp:main
+   983,808,087  703  407   983,806,498         770         132           908          25          16  ???:???
+
+--------------------------------------------------------------------------------
+I1 cache:         32768 B, 64 B, 8-way associative
+D1 cache:         32768 B, 64 B, 8-way associative
+LL cache:         4194304 B, 64 B, 16-way associative
+Command:          ./tile
+Data file:        tile.cache
+Events recorded:  Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Events shown:     Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Event sort order: Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Thresholds:       0.1 100 100 100 100 100 100 100 100
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+            Ir   I1mr  ILmr             Dr        D1mr        DLmr            Dw        D1mw        DLmw 
+--------------------------------------------------------------------------------
+47,223,883,616 10,985 6,668 10,909,448,961 121,307,998 115,520,461 7,192,420,640 173,893,467 172,895,924  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+            Ir  I1mr ILmr            Dr       D1mr       DLmr            Dw       D1mw       DLmw  file:function
+--------------------------------------------------------------------------------
+23,500,972,197    41   20 4,147,237,393 57,619,556 57,600,910 2,764,828,922 57,618,638 57,606,294  /build/glibc-Cl5G7W/glibc-2.23/string/../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:__memcpy_sse2_unaligned
+14,066,712,033    14   14 2,995,956,024 57,607,574 57,607,060 1,843,924,004 57,601,084 57,601,000  /usr/include/x86_64-linux-gnu/bits/string3.h:main
+ 3,456,000,000     1    1             0          0          0 2,304,000,000          0          0  /usr/include/x86_64-linux-gnu/bits/string3.h:h5::impl::filter::mock(void*, void*, unsigned long)
+ 3,456,000,000     0    0 2,304,000,000          0          0             0          0          0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::mock(void*, void*, unsigned long)
+ 1,653,314,193 1,038  737 1,447,044,078  4,073,489    204,046    39,246,786    554,736     24,700  ???:???
+ 1,036,800,134    13   13            25         12          7   230,400,045 57,600,008 57,600,006  /home/steven/research/tile.cpp:main
+
+--------------------------------------------------------------------------------
+I1 cache:         32768 B, 64 B, 8-way associative
+D1 cache:         32768 B, 64 B, 8-way associative
+LL cache:         4194304 B, 64 B, 16-way associative
+Command:          ./tile
+Data file:        tile.cache
+Events recorded:  Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Events shown:     Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Event sort order: Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Thresholds:       0.1 100 100 100 100 100 100 100 100
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+            Ir  I1mr  ILmr             Dr        D1mr        DLmr            Dw        D1mw        DLmw 
+--------------------------------------------------------------------------------
+48,482,008,457 9,707 5,555 11,068,245,011 115,245,629 115,224,100 7,146,754,403 172,811,181 172,809,082  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+            Ir I1mr ILmr            Dr        D1mr        DLmr            Dw        D1mw        DLmw  file:function
+--------------------------------------------------------------------------------
+24,160,351,780   33   19 4,381,207,196 115,201,245 115,201,133 2,998,085,842 115,202,194 115,202,166  /build/glibc-Cl5G7W/glibc-2.23/string/../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:__memcpy_sse2_unaligned
+14,983,314,044   18   18 2,998,142,033       7,004       7,004 1,613,529,004           0           0  /usr/include/x86_64-linux-gnu/bits/string3.h:void h5::impl::write_chunk<unsigned int, 3ul>(std::array<int, 3ul>, std::array<int, 3ul>, unsigned int*)
+ 3,456,000,000    1    1             0           0           0 2,304,000,000           0           0  /usr/include/x86_64-linux-gnu/bits/string3.h:h5::impl::filter::mock(void*, void*, unsigned long)
+ 3,456,000,000    0    0 2,304,000,000           0           0             0           0           0  /usr/local/include/h5cpp/H5Zall.hpp:h5::impl::filter::mock(void*, void*, unsigned long)
+ 1,383,168,225  692  411 1,383,166,529         780         142           924          25          16  ???:???
+ 1,036,800,073    8    7            17           6           6   230,400,019  57,600,002  57,600,002  /home/steven/research/tile.cpp:main
+
+--------------------------------------------------------------------------------
+I1 cache:         32768 B, 64 B, 8-way associative
+D1 cache:         32768 B, 64 B, 8-way associative
+LL cache:         4194304 B, 64 B, 16-way associative
+Command:          ./tile
+Data file:        tile.cache
+Events recorded:  Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Events shown:     Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Event sort order: Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Thresholds:       0.1 100 100 100 100 100 100 100 100
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+           Ir  I1mr  ILmr            Dr        D1mr       DLmr            Dw        D1mw       DLmw 
+--------------------------------------------------------------------------------
+7,777,214,644 9,694 5,579 1,626,889,027 404,517,625 57,616,104 1,849,378,176 460,929,188 57,612,836  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+           Ir I1mr ILmr            Dr        D1mr       DLmr            Dw        D1mw       DLmw  file:function
+--------------------------------------------------------------------------------
+6,715,831,775   35   19 1,617,127,195 403,480,245 57,600,134 1,616,165,841 403,280,195      5,923  /build/glibc-Cl5G7W/glibc-2.23/string/../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:__memcpy_sse2_unaligned
+1,036,800,073    8    7            17           6          6   230,400,019  57,600,002 57,600,002  /home/steven/research/tile.cpp:main
+   14,325,044   18   18     5,924,033     720,004          3     1,400,004      40,000          0  /usr/include/x86_64-linux-gnu/bits/string3.h:void h5::impl::write_chunk<unsigned int, 3ul>(std::array<int, 3ul>, std::array<int, 3ul>, unsigned int*)
+
+--------------------------------------------------------------------------------
+I1 cache:         32768 B, 64 B, 8-way associative
+D1 cache:         32768 B, 64 B, 8-way associative
+LL cache:         4194304 B, 64 B, 16-way associative
+Command:          ./tile
+Data file:        tile.cache
+Events recorded:  Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Events shown:     Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Event sort order: Ir I1mr ILmr Dr D1mr DLmr Dw D1mw DLmw
+Thresholds:       0.1 100 100 100 100 100 100 100 100
+Include dirs:     
+User annotated:   
+Auto-annotation:  off
+
+--------------------------------------------------------------------------------
+             Ir   I1mr  ILmr             Dr        D1mr       DLmr             Dw        D1mw       DLmw 
+--------------------------------------------------------------------------------
+166,068,107,930 17,962 9,631 48,319,181,473 434,028,549 57,623,451 25,519,536,324 352,327,369 57,622,291  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+             Ir  I1mr ILmr             Dr        D1mr       DLmr             Dw        D1mw       DLmw  file:function
+--------------------------------------------------------------------------------
+150,082,698,102 1,825  936 43,058,335,767 223,301,655        393 24,103,101,654 117,120,025      1,088  ???:???
+ 12,445,100,000    18   18  4,611,420,000  52,920,000          0    464,440,000     120,000          0  ???:adler32
+  2,284,662,825    97   24    629,290,370 156,540,464 57,603,081    628,328,782 156,420,501      4,240  /build/glibc-Cl5G7W/glibc-2.23/string/../sysdeps/x86_64/multiarch/memcpy-sse2-unaligned.S:__memcpy_sse2_unaligned
+  1,036,800,178    21   18             31          11          6    230,400,070  57,600,017 57,600,009  /home/steven/projects/h5cpp/docs/research/tile.cpp:main
+

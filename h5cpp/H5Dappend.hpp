@@ -25,6 +25,7 @@ namespace h5 {
 
 		pt_t& operator=( h5::pt_t&& pt ){
 			init(pt.ds);
+			return pt;
 		}
 		friend std::ostream& ::operator<<(std::ostream &os, const h5::pt_t& pt);
 		template<class T>
@@ -57,7 +58,7 @@ namespace h5 {
 /* initialized to invalid state
  * */
 inline h5::pt_t::pt_t() :
-	dxpl{H5Pcreate(H5P_DATASET_XFER)},ds{H5I_UNINIT},n{0},fill_value{NULL}{
+	dxpl{H5Pcreate(H5P_DATASET_XFER)},ds{H5I_UNINIT},n{0},element_size{0},rank{0},fill_value{nullptr},ptr{nullptr}{
 		for( int i=0; i<H5CPP_MAX_RANK; i++ )
 			count[i] = 1, offset[i] = 0;
 	}
@@ -83,7 +84,6 @@ inline
 void h5::pt_t::init( const h5::ds_t& handle ){
 	try {
 		ds = handle; // copy handle inc ref, behaves as unique_ptr
-
 		h5::sp_t file_space = h5::get_space( handle );
 		rank = h5::get_simple_extent_dims( file_space, current_dims, nullptr );
 

@@ -7,9 +7,19 @@
 
 #ifndef  H5CPP_ACREATE_HPP
 #define  H5CPP_ACREATE_HPP
+
+namespace h5::impl::attr {
+	/*Define what qualifies as valid location for an attribute*/
+	template <class HID_T, class T = typename impl::decay<HID_T>::type>
+	using is_location = typename std::integral_constant<bool,
+		std::is_same<HID_T, ::hid_t>::value || //FIXME: removing this results error, it shouldn't!!!
+		std::is_same<HID_T, h5::gr_t>::value || std::is_same<HID_T, h5::ds_t>::value ||
+	   	std::is_same<HID_T, h5::ob_t>::value || std::is_same<HID_T, h5::dt_t<T>>::value>;
+}
+
 namespace h5 {
 	template<class T, class HID_T, class... args_t> 
-	inline typename std::enable_if<h5::impl::is_valid_attr<HID_T>::value,
+	inline typename std::enable_if<impl::attr::is_location<HID_T>::value,
 	h5::at_t>::type acreate( const HID_T& parent, const std::string& path, args_t&&... args ){
 		try {
 			// compile time check of property lists: 

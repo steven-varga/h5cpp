@@ -20,26 +20,38 @@ int main(){
 	h5::fd_t fd = h5::create("001.h5", H5F_ACC_TRUNC, h5::default_fcpl,
 						h5::libver_bounds({H5F_LIBVER_V18, H5F_LIBVER_V18}) );
 	h5::ds_t ds = h5::write(fd,"directory/dataset", M);
-	{
-		/*
-		(gr_t | ds_t | dt_t = fd["/root/some/path"]) = some object;
-		ds_t ds = ... ;
 
-		gr["data set"] = some object;
-		ds["attribute"] = some attribute;
-		h5::ds_t obj = fd["/some/path"]["attribute"];
-		//h5::gr_t obj = fd["/some/path"];*/
+	{ // std::tuple
+		/* bundled up operations with std::tuple<...>
+		 */
+		auto tuple = std::make_tuple(
+				"temperature",           18,
+				"pressure",              0.5,
+				"const char*",           "const char[N]",
+				"std::il<const char*>",  std::initializer_list<const char*>{"A","B","C","..."},
+				"std::il<std::string>",  std::initializer_list<std::string>{"A","B","C","..."},
+				"std::il<record>",       std::initializer_list<sn::example::Record>{vector[0],vector[1],vector[2]},
+				"std::vec<const char*>",  std::vector<const char*>{"A","B","C","..."},
+			//	"std::vec<std::string>",  std::vector<std::string>{"A","B","C","..."},
+				"std::vec<record>",       std::vector<sn::example::Record>{vector[0],vector[1],vector[2]},
+	
+				"matrix",                matrix,
+				"vector",                vector,
+				"pod struct",            record
+				);
+		h5::gr_t gr = h5::gcreate(fd, "my-group" );
+		h5::awrite(gr, tuple);
 	}
-
+return 0;
 	{
 		ds["att_01"] = 42 ;
 		ds["att_02"] = {1.,2.,3.,4.};
 		ds["att_03"] = {'1','2','3','4'};
 		ds["att_04"] = {"alpha", "beta","gamma","..."};
 
-		ds["att_05"] = "const char[N]";
-		ds["att_06"] = u8"const char[N]áééé";
-		ds["att_07"] = std::string( "std::string");
+		ds["att_05"] = "#05 const char[N]";
+		ds["att_06"] = u8"#06 const char[N]áééé";
+		ds["att_07"] = std::string( "#07 std::string");
 
 		ds["att_08"] = record; // pod/compound datatype
 		ds["att_09"] = vector; // vector of pod/compound type
@@ -57,9 +69,9 @@ int main(){
 		h5::awrite(ds,"att_23", {'1','3','4','5'} );
 		h5::awrite(ds,"att_24", {"alpha", "beta","gamma","..."} );
 
-		h5::awrite(ds,"att_25", "const char[N]");
-		h5::awrite(ds,"att_26", u8"const char[N]áééé");
-		h5::awrite(ds,"att_27", std::string( "std::string") );
+		h5::awrite(ds,"att_25", "#25 const char[N]");
+		h5::awrite(ds,"att_26", u8"#26 const char[N]áééé");
+		h5::awrite(ds,"att_27", std::string( "#27 std::string") );
 
 		h5::awrite(ds,"att_28", record ); // pod/compound datatype
 		h5::awrite(ds,"att_29", vector ); // vector of pod/compound type
@@ -67,18 +79,18 @@ int main(){
 	}
 	{//directory
 		h5::gr_t gr{H5Gopen(fd,"/directory", H5P_DEFAULT)};
-		h5::awrite(gr,"att_21", 42 );
-		h5::awrite(gr,"att_22", {1.,3.,4.,5.} );
-		h5::awrite(gr,"att_23", {'1','3','4','5'} );
-		h5::awrite(gr,"att_24", {"alpha", "beta","gamma","..."} );
+		h5::awrite(gr,"att_32", 42 );
+		h5::awrite(gr,"att_33", {1.,3.,4.,5.} );
+		h5::awrite(gr,"att_34", {'1','3','4','5'} );
+		h5::awrite(gr,"att_35", {"alpha", "beta","gamma","..."} );
 
-		h5::awrite(gr,"att_25", "const char[N]");
-		h5::awrite(gr,"att_26", u8"const char[N]áééé");
-		h5::awrite(gr,"att_27", std::string( "std::string") );
+		h5::awrite(gr,"att_36", "#36 const char[N]");
+		h5::awrite(gr,"att_37", u8"#37 const char[N]áééé");
+		h5::awrite(gr,"att_38", std::string( "#38 std::string") );
 
-		h5::awrite(gr,"att_28", record ); // pod/compound datatype
-		h5::awrite(gr,"att_29", vector ); // vector of pod/compound type
-		h5::awrite(gr,"att_30", matrix ); // linear algebra object
+		h5::awrite(gr,"att_39", record ); // pod/compound datatype
+		h5::awrite(gr,"att_40", vector ); // vector of pod/compound type
+		h5::awrite(gr,"att_41", matrix ); // linear algebra object
 	}
 
 
@@ -117,7 +129,10 @@ int main(){
 		// vector of strings, NOTE: charaters or initializer lists are not yet supported
 		std::cout << "att_04 : "; auto att_04 = h5::aread<std::vector<std::string>>(ds,"att_04");
 		std::cout<< att_04 <<"\n";
-		// POD type rank 0
+		// single string
+		std::cout << "att_05 : "; auto att_05 = h5::aread<std::string>(ds,"att_05");
+		std::cout<< att_05 <<"\n";
+			// POD type rank 0
 		std::cout << "att_08 : "; sn::example::Record att_08 = h5::aread<sn::example::Record>(ds,"att_08");
 		std::cout<< att_08.idx <<"\n";
 		// POD type rank 1
@@ -125,19 +140,6 @@ int main(){
 		for(auto v: att_09) std::cout << v.idx <<","; std::cout <<std::endl;
 		// linear algebra object
 		std::cout << "att_10 : "; auto att_10 = h5::aread<arma::mat>(ds,"att_10"); std::cout << att_10 << "\n";
-	}
-	{ // std::tuple
-		/* bundled up operations with std::tuple<...>
-		 */ 
-
-		h5::gr_t gr = h5::gcreate(fd, "my-group" );
-		h5::awrite(gr, std::make_tuple(
-				"temperature", 18.0,
-				"pressure", 0.5,
-				"matrix", matrix,
-				"vector", vector,
-				"pod struct", record
-				));
 	}
 }
 
