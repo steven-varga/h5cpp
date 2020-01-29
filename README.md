@@ -1,6 +1,15 @@
 # H5CPP documentation (Sandbox)
 
+<<<<<<< HEAD
 [H5CPP](http://h5cpp.org) is template only persistence for modern C++ with compiler assisted reflection. To take the notch a step higher, this DEVELOPER BRANCH comes with  improved documentation in addition to:
+=======
+Easy to use  [HDF5][hdf5] C++ templates for Serial and Paralell HDF5  
+----------------------------------------------------------------------
+**News:**
+h5cpp compiler can easily be compiled with stock LLVM6.0 and clang6.0 
+binary release h5cpp-dev_1.10.4-5.xxx contains bug fixes, and half float support, [deb](http://h5cpp.org/download/h5cpp-dev_1.10.4-5_amd64.deb),[rpm](http://h5cpp.org/download/h5cpp-dev-1.10.4-5.x86_64.rpm),[tarball](http://h5cpp.org/download/h5cpp-full_1.10.4-5.tar.gz)
+
+>>>>>>> 4be3967643f00b8f4929bd9a2cfbc9398a28b332
 
 * General C++ Class persistence PLANNED
 * Sparse Matrix Support IN-PROGRESS

@@ -9,7 +9,7 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 ## match hdf5 versioning x.x.x.h5cpp-version
-project(h5cpp-examples VERSION 1.10.4.1 LANGUAGES CXX C)
+project(h5cpp-examples VERSION 1.10.4.5 LANGUAGES CXX C)
 
 # check if the correct version of hdf5 available
 set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})

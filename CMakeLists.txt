@@ -9,7 +9,7 @@
 
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 ## match hdf5 versioning x.x.x.h5cpp-version
-project(h5cpp-dev VERSION 1.10.4.1 LANGUAGES CXX C)
+project(libh5cpp-dev VERSION 1.10.4.5 LANGUAGES CXX C)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
 	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
 set(CMAKE_CXX_STANDARD 17)
@@ -18,6 +18,7 @@ add_library(h5cpp INTERFACE)
 
 # check if the correct version of hdf5 available
 set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+set(HDF5_ROOT /usr/local/ /usr) # there maybe more upto date library in these places
 include(FindHDF5)
 if(HDF5_VERSION VERSION_LESS ${H5CPP_VERSION})
 	message(FATAL_ERROR "-- !!! H5CPP examples require of HDF5 v${H5CPP_VERSION} or greater!!!")
@@ -25,9 +26,9 @@ else()
 	message("-- H5CPP ${PROJECT_VERSION} matches with minimum required HDF5 v${HDF5_VERSION}")
 endif()
 
-#if(HDF5_VERSION VERSION_GREATER 1.12.0)
-#	message("H5CPP KITA support is available, see webpage for details...")
-#endif()
+if(HDF5_VERSION VERSION_GREATER 1.12.0)
+	message("H5CPP KITA support is available, see webpage for details...")
+endif()
 
 include(FindMPI)
 if( MPI_FOUND AND HDF5_IS_PARALLEL )
@@ -35,20 +36,23 @@ if( MPI_FOUND AND HDF5_IS_PARALLEL )
 endif()
 
 if(WIN32)
-	message(STATUS "***WARNING: h5cpp is not fully tested on windows, but know to work ***")
+	message(STATUS "***WARNING: h5cpp is not fully tested on windows, use this port: https://github.com/ChrisDrozdowski/h5cpp ***")
 endif()
 if(APPLE)
 	message(STATUS "***WARNING: h5cpp is not fully tested on apple ***")
+endif()
+if(ANDROID)
+	message(STATUS "***WARNING: h5cpp currently doesn't work on 32bit systems nor clang > 6.0.0 ***")
+	message(STATUS "***WARNING: cross compiling HDF5 CAPI will not work, instead either download the binary from ***")
+	message(STATUS "***WARNING: authors github page, or compile the libhdf5 on device | in emulator then tarball the ***")
+	message(STATUS "***WARNING: binaries, copy them back to host, link against the libraries, enjoy the coffee.... ***")
 endif()
 
 include(GNUInstallDirs)
 find_package(Doxygen QUIET)
 
-if(DOXYGEN_FOUND)
-	#add_subdirectory (doxy)
-endif()
-
 #add_subdirectory(examples)
+<<<<<<< HEAD
 find_package(GTest)
 if(GTest_FOUND)
 	option(H5CPP_BUILD_TESTS "Build tests" ON)
@@ -56,6 +60,9 @@ elseif()
 	option(H5CPP_BUILD_TESTS "Build tests" OFF)
 endif()
 
+=======
+option(H5CPP_BUILD_TESTS "Build tests" OFF)
+>>>>>>> 4be3967643f00b8f4929bd9a2cfbc9398a28b332
 if(H5CPP_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
@@ -111,8 +118,4 @@ install(FILES
     ${CMAKE_BINARY_DIR}/h5cpp-config-version.cmake
     DESTINATION ${INSTALL_DIR_CMAKE}
 )
-
-#include("CPackConfig.cmake")
-#include(CPack)
-#add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 

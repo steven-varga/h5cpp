@@ -1,6 +1,5 @@
 2020 jan 06 added half float support
 2020 jan 04 fixed clang compile problem for version 6.0
-	 added distclean target to example makefiles to reset generated header files
 2019 oct 20 std::tuple creates multiple objects 
 2019 oct 20 added README-s to examples
 2019 oct 09 fixed property list version related problems, added some missing properties
@@ -14,5 +13,3 @@
 2018 may 13 property lists added
 2018 feb 28 Linalg libraries: ETL, dlib, blaze, blitz++, it++, boost, eigen3
 2017 dec 08 Project Started 
-
-
