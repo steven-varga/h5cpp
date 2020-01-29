@@ -1,8 +1,8 @@
 
 PREFIX = /usr/local
 
-VERSION = 1.10.4-1
-PROGRAM_NAME=h5cpp-dev
+VERSION = 1.10.4.5-1
+PROGRAM_NAME=libh5cpp-dev
 BIN_DIR = $(PREFIX)/bin
 INCLUDE_DIR = $(PREFIX)/include
 EXAMPLE_DIR = $(PREFIX)/share
@@ -34,7 +34,7 @@ OBJECT_FILES =
 
 all: 
 
-h5cpp-dev: 
+libh5cpp-dev: 
 
 installdirs:
 	test -d $(INCLUDE_DIR) || $(MKDIR) $(MAN_DIR)
@@ -47,11 +47,14 @@ install: installdirs
 	find examples -type f -exec install -Dm 644 "{}" "${EXAMPLE_DIR}/h5cpp/{}" \;
 
 tar-gz:
-	tar -czvf ../h5cpp-dev_1.10.4-1.tar.gz ./
+	tar --exclude='.[^/]*' -czvf ../libh5cpp_1.10.4.5.orig.tar.gz ./
 
 clean:
+	@$(RM) h5cpp-* 
 
-dist: h5cpp-dev
+dist-debian: libh5cpp-dev
 	debuild -i -us -uc -b
-	sudo alien -r ../h5cpp-dev_1.10.4-1_amd64.deb
+
+dist-rpm: dist-debian
+	sudo alien -r ../libh5cpp-dev_1.10.4.5-1_all.deb
 
