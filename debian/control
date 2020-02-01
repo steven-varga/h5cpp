@@ -3,7 +3,7 @@ Section: utils
 Priority: optional
 Maintainer: Steven Varga <steven@vargaconsulting.ca>
 Build-Depends: debhelper (>= 9), cmake, libgtest-dev, libarmadillo-dev, libgoogle-perftools-dev, libgoogle-glog-dev
-Standards-Version: 4.5.04.5.0
+Standards-Version: 4.5.0
 Homepage: http://h5cpp.org
 Vcs-Git: https://github.com/steven-varga/h5cpp.git
 
