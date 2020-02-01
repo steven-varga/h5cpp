@@ -3,15 +3,15 @@ Section: utils
 Priority: optional
 Maintainer: Steven Varga <steven@vargaconsulting.ca>
 Build-Depends: debhelper (>= 9), cmake, libgtest-dev, libarmadillo-dev, libgoogle-perftools-dev, libgoogle-glog-dev
-Standards-Version: 3.9.5
+Standards-Version: 4.5.04.5.0
 Homepage: http://h5cpp.org
 Vcs-Git: https://github.com/steven-varga/h5cpp.git
 
 Package: libh5cpp-dev
 Architecture: all
-Depends: libhdf5-dev (>=1.10.4), libarmadillo-dev
+Depends: libhdf5-dev (>= 1.10.4) | libhdf5-mpi-dev (>= 1.10.4) | libhdf5-openmpi-dev (>= 1.10.4)  | libhdf5-mpich-dev  (>= 1.10.4), ${misc:Depends}
 Recommends: h5cpp-compiler 
-Description: C++ header only low latency IO library for HDF5
+Description: HDF5 IO library for modern C++
  H5CPP provides high performance C++ IO templates to save or restore 
  structured or homogeneous data into/from HDF5 format. Its companion, the 
  h5cpp-compiler, assists this library with seamless non-intrusive persistence
