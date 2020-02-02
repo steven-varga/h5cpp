@@ -6,6 +6,7 @@ Build-Depends: debhelper (>= 9), cmake, libgtest-dev, libarmadillo-dev, libgoogl
 Standards-Version: 4.5.0
 Homepage: http://h5cpp.org
 Vcs-Git: https://github.com/steven-varga/h5cpp.git
+Vcs-Browser: https://github.com/steven-varga/h5cpp
 
 Package: libh5cpp-dev
 Architecture: all
