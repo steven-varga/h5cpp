@@ -9,25 +9,8 @@ endif
 
 %:
 	dh $@
-
-override_dh_auto_install:
-	cmake -DCMAKE_INSTALL_PREFIX:PATH=$(CURDIR)/debian/libh5cpp-dev/usr ./
-	make install
+override_dh_auto_configure:
+	 dh_auto_configure -- -DCMAKE_INSTALL_PREFIX:PATH=/usr -DCMAKE_INSTALL_LIBDIR=lib
 
 override_dh_installdocs:
 	dh_installdocs		CONTRIBUTORS TODO
-
-clean:
-
-binary:
-
-binary-arch:
-
-binary-indep:
-
-build:
-
-build-arch:
-
-build-indep:
-

@@ -1,5 +1,5 @@
-libh5cpp (1.10.4.5-1) unstable; urgency=medium
+libh5cpp (1.10.4.5-1~exp1) experimental; urgency=medium
 
   * first official debian release for libh5cpp (closes: #949950)
 
- -- steven varga <steven@vargaconsulting.ca>  Mon, 27 Jan 2020 14:28:00 +0500
+ -- Steven Varga <steven@vargaconsulting.ca>  Mon, 27 Jan 2020 14:28:00 +0500

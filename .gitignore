@@ -21,22 +21,18 @@ docs/html/
 data/
 **/.ycm_extra_conf.py
 
+.git/
+debian/libh5cpp*
 examples/arma
 examples/arma-partial
-examples/raw
-examples/stl
-examples/string
+examples/raw_memory/raw
+examples/stl/stl
+examples/string/string
 examples/struct
 profiling/gperf/arma-perf
 profiling/gperf/stl-perf
 profiling/gperf/struct-perf
 profiling/grid-engine/bandwidth
-tests/armadillo
-tests/integral
-tests/macros
-tests/stl
-tests/struct
-tests/utils
 
 build
 CMakeLists.txt.user*
