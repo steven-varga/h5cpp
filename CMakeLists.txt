@@ -1,8 +1,8 @@
 #  _____________________________________________________________________________
-#  Copyright (c) <2019> <copyright Steven Varga, Toronto, On>
+#  Copyright (c) <2018-2020> <copyright Steven Varga, Toronto, On>
 #  Contact: Steven Varga
 #           steven@vargaconsulting.ca
-#           2019 Toronto, On Canada
+#           2018-2020 Toronto, On Canada
 #  _____________________________________________________________________________
 
 

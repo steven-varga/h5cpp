@@ -37,3 +37,45 @@ To package the library check out the relevant branch, ie: debian, then run `make
 which in turn will run the cmake based configuration scripts, generates new make file and finally the
 installation package.
 
+
+On AWS EC2 with ubuntu 18.04
+-----------
+1. start an image us-east-1: ami-046842448f9e74e7d
+2. connect to running instance with ssh
+
+HDF5
+```
+sudo apt update && sudo apt upgrade
+sudo apt install build-essential g++ gcc cmake
+cd ~/ && wget http://h5cpp.org/download/hdf5-1.10.6.tar.gz
+tar -xvzf hdf5-1.10.6.tar.gz && cd hdf5-1.10.6/
+./configure --prefix=/usr/local --enable-build-mode=production
+make -j4 && sudo make install
+```
+compiler:
+```
+cd ~/ && wget http://h5cpp.org/download/h5cpp_1.10.4-5_amd64.deb
+sudo apt install libllvm6.0 libclang-common-6.0-dev
+sudo dpkg -i h5cpp_1.10.4-5_amd64.deb
+```
+
+header only:
+```
+cd ~/ && wget http://h5cpp.org/download/h5cpp-dev_1.10.4-5_amd64.deb
+sudo dpkg -i h5cpp-dev_1.10.4-5_amd64.deb
+```
+
+cleanup: `cd ~/ && rm -rf h5cpp* hdf5*`
+
+running examples:
+```
+cp -R /usr/share/h5cpp/ ./ && cd h5cpp/examples
+```
+
+Running examples:
+```
+sudo apt install libarmadillo-dev
+cd ~/ && cp -R /usr/share/h5cpp/ ./  && cd h5cpp/examples
+```
+I am checking the examples as of now, and will get back to you if everything checks 
+

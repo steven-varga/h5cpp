@@ -1,7 +1,8 @@
 
 PREFIX = /usr/local
 
-VERSION = 1.10.4.5-1
+VERSION = 1.10.4.5
+DEB = -1~exp1
 PROGRAM_NAME=libh5cpp-dev
 BIN_DIR = $(PREFIX)/bin
 INCLUDE_DIR = $(PREFIX)/include
@@ -34,7 +35,6 @@ OBJECT_FILES =
 
 all: 
 
-libh5cpp-dev: 
 
 installdirs:
 	test -d $(INCLUDE_DIR) || $(MKDIR) $(MAN_DIR)
@@ -47,14 +47,22 @@ install: installdirs
 	find examples -type f -exec install -Dm 644 "{}" "${EXAMPLE_DIR}/h5cpp/{}" \;
 
 tar-gz:
-	tar --exclude='.[^/]*' -czvf ../libh5cpp_1.10.4.5.orig.tar.gz ./
-
+	tar --exclude='.[^/]*' --exclude-vcs-ignores -czvf ../libh5cpp_${VERSION}.orig.tar.gz ./ 
+	gpg --detach-sign --armor ../libh5cpp_${VERSION}.orig.tar.gz	
+	scp ../libh5cpp_${VERSION}.orig.tar.* osaka:h5cpp.org/download/ 
 clean:
 	@$(RM) h5cpp-* 
 
-dist-debian: libh5cpp-dev
+dist-debian-src: tar-gz
+	debuild -i -us -uc -S
+
+dist-debian-bin:
 	debuild -i -us -uc -b
 
+dist-debian-src-upload: dist-debian-src
+	debsign -k 1B04044AF80190D78CFBE9A3B971AC62453B78AE ../libh5cpp_${VERSION}${DEB}_source.changes
+	dput mentors ../libh5cpp_${VERSION}${DEB}_source.changes
+
 dist-rpm: dist-debian
-	sudo alien -r ../libh5cpp-dev_1.10.4.5-1_all.deb
+	sudo alien -r ../libh5cpp-dev_${VERSION}_all.deb
 
