@@ -1,8 +1,8 @@
 #  _____________________________________________________________________________
-#  Copyright (c) <2019> <copyright Steven Varga, Toronto, On>
+#  Copyright (c) <2018-2020> <copyright Steven Varga, Toronto, On>
 #  Contact: Steven Varga
 #           steven@vargaconsulting.ca
-#           2019 Toronto, On Canada
+#           2018-2020 Toronto, On Canada
 #  _____________________________________________________________________________
 
 
@@ -24,10 +24,6 @@ if(HDF5_VERSION VERSION_GREATER 1.12.0)
 	message("H5CPP KITA support is available, see webpage for details...")
 endif()
 
-
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
-	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
 set(CMAKE_CXX_STANDARD 17)
 
 if(WIN32)
@@ -38,7 +34,6 @@ if(APPLE)
 endif()
 
 include(GNUInstallDirs)
-find_package(Doxygen QUIET)
 
 list(APPEND CMAKE_INCLUDE_PATH "/usr/include")
 list(APPEND CMAKE_INCLUDE_PATH "/usr/local/include" )
@@ -50,19 +45,13 @@ find_program(H5CPP
 	HINTS /usr/bin /usr/local/bin
 	DOC "path to h5cpp source code transformation tool")
 
-find_file(H5CPP_LLVM_PATH
-	NAME h5cpp-llvm
-	HINTS /usr/include /usr/local/include
-	DOC "path to h5cpp llvm specific header files")
-
-if( H5CPP AND H5CPP_LLVM_PATH)
-	message("-- H5CPP compiler found: ${H5CPP} with llvm path: ${H5CPP_LLVM_PATH}")
+if( H5CPP )
+	message("-- H5CPP compiler found: ${H5CPP}")
 	set(H5CPP_COMPILER_FOUND TRUE)
 else()
 	set(H5CPP_COMPILER_FOUND FALSE)
 endif()
 
-#find_package(HDF5 1.10.4 REQUIRED QUIET)
 include(FindHDF5)
 if(HDF5_VERSION VERSION_LESS 1.10.4)
 	message(FATAL_ERROR "H5CPP examples require HDF5 minimum version is 1.10.4")
@@ -78,24 +67,29 @@ find_package(blaze QUIET)
 find_package(ublas QUIET )
 find_package(Boost QUIET)
 
-
 # these ones are pkg-config based
 pkg_check_modules(ITPP QUIET itpp)
 pkg_check_modules(Blitz QUIET blitz)
 
 list(APPEND LIBS ${HDF5_C_LIBRARIES} ${ZLIB_LIBRARIES})
-list(APPEND INCLUDE_DIRS ${CMAKE_SOURCE_DIR} ${HDF5_INCLUDE_DIRS}  ${ZLIB_INCLUDE_DIRS})
+list(APPEND INCLUDE_DIRS ${CMAKE_SOURCE_DIR} 
+	${HDF5_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR}
+	${ARMADILLO_INCLUDE_DIR}
+)
+include_directories(BEFORE ${CMAKE_SOURCE_DIR} ${EIGEN3_INCLUDE_DIR})
 
-include_directories(BEFORE ${CMAKE_SOURCE_DIR})
+#foreach(entry  ${INCLUDE_DIRS})
+#	string(APPEND CMAKE_CXXFLAGS -I${entry} " " )
+#endforeach()
 
 if( H5CPP_COMPILER_FOUND )
 	add_custom_target(h5cpp-compiler-generated ALL
-		COMMAND	${H5CPP}  attributes/attributes.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dattributes/generated.h
-		COMMAND	${H5CPP}  before-after/compound.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dbefore-after/generated.h
-		COMMAND	${H5CPP}  compound/struct.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dcompound/generated.h
-		COMMAND	${H5CPP}  multi-tu/tu-01.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dmulti-tu/tu-01.h
-		COMMAND	${H5CPP}  multi-tu/tu-02.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dmulti-tu/tu-02.h
-		COMMAND	${H5CPP}  packet-table/packettable.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dpacket-table/generated.h
+		COMMAND	${H5CPP}  attributes/attributes.cpp -- ${CMAKE_CXXFLAGS} -Dattributes/generated.h
+		COMMAND	${H5CPP}  before-after/compound.cpp -- ${CMAKE_CXXFLAGS} -Dbefore-after/generated.h
+		COMMAND	${H5CPP}  compound/struct.cpp -- ${CMAKE_CXXFLAGS} -Dcompound/generated.h
+		COMMAND	${H5CPP}  multi-tu/tu-01.cpp -- ${CMAKE_CXXFLAGS} -Dmulti-tu/tu-01.h
+		COMMAND	${H5CPP}  multi-tu/tu-02.cpp -- ${CMAKE_CXXFLAGS} -Dmulti-tu/tu-02.h
+		COMMAND	${H5CPP}  packet-table/packettable.cpp -- ${CMAKE_CXXFLAGS} -I${EIGEN3_INCLUDE_DIR} -Dpacket-table/generated.h
 		COMMENT "-- generating hdf5 compound type descriptors with h5cpp compiler ...")
 	add_custom_target(examples ALL DEPENDS h5cpp-compiler-generated)
 else()
@@ -125,6 +119,11 @@ if( ${ARMADILLO_FOUND} )
 	add_executable(examples-arma EXCLUDE_FROM_ALL "linalg/arma.cpp")
 	target_link_libraries(examples-arma ${LIBS})
 	add_dependencies(examples examples-arma)
+
+	add_executable(examples-multi-tu EXCLUDE_FROM_ALL 
+		multi-tu/main.cpp multi-tu/tu-01.cpp multi-tu/tu-02.cpp )
+	target_link_libraries(examples-multi-tu ${LIBS})
+	add_dependencies(examples examples-multi-tu)
 endif()
 
 if( ${blaze_FOUND} )
@@ -200,9 +199,9 @@ if( MPI_FOUND AND HDF5_IS_PARALLEL )
 endif()
 
 ## attributes ###
-#add_executable(examples-attributes EXCLUDE_FROM_ALL "attributes/attributes.cpp")
-#target_link_libraries(examples-attributes ${LIBS} )
-#add_dependencies(examples examples-attributes)
+add_executable(examples-attributes EXCLUDE_FROM_ALL "attributes/attributes.cpp")
+target_link_libraries(examples-attributes ${LIBS} )
+add_dependencies(examples examples-attributes)
 
 ## before-after: before ###
 add_executable(examples-before EXCLUDE_FROM_ALL "before-after/compound.c")
@@ -218,14 +217,6 @@ add_dependencies(examples examples-after)
 add_executable(examples-compound EXCLUDE_FROM_ALL "compound/struct.cpp")
 target_link_libraries(examples-compound ${LIBS} )
 add_dependencies(examples examples-compound)
-
-## multi translation unit ###
-#add_library(examples-multi-tu01 OBJECT "multi-tu/tu_01.cpp")
-#add_library(examples-multi-tu02 OBJECT "multi-tu/tu_02.cpp")
-
-#add_executable(examples-multi-tu EXCLUDE_FROM_ALL "multi-tu/main.cpp")
-#target_link_libraries(examples-multi-tu  examples-multi-tu01 examples-multi-tu02 ${LIBS}   )
-#add_dependencies(examples examples-multi-tu)
 
 ## basics ###
 add_executable(examples-basics EXCLUDE_FROM_ALL "basics/basics.cpp")
@@ -247,5 +238,13 @@ add_executable(examples-transform EXCLUDE_FROM_ALL "transform/transform.cpp")
 target_link_libraries(examples-transform ${LIBS} )
 add_dependencies(examples examples-transform)
 
+## utf ###
+add_executable(examples-utf EXCLUDE_FROM_ALL "utf/utf.cpp")
+target_link_libraries(examples-utf ${LIBS} )
+add_dependencies(examples examples-utf)
 
+## half-float: christian rau ###
+add_executable(examples-rau-half EXCLUDE_FROM_ALL "half-float/christian-rau/half-float.cpp")
+target_link_libraries(examples-rau-half ${LIBS} )
+add_dependencies(examples examples-rau-half)
 

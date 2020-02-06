@@ -7,10 +7,10 @@
 #include <h5cpp/core>
 	// generated file must be sandwiched between core and io 
 	// to satisfy template dependencies in <h5cpp/io>  
-	#include "tu_02.h"
+	#include "tu-02.h"
 	// multiple inclusion is on purpose to test 
 	// include guards in generated file: tu_02.h 
-	#include "tu_02.h"
+	#include "tu-02.h"
 #include <h5cpp/io>
 #include "utils.hpp"
 

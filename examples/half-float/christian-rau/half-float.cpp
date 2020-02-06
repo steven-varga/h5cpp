@@ -7,12 +7,7 @@
 #include <limits>
 #include <random>
 #include "half.hpp"  // this should be obtained from http://half.sourceforge.net/
-#include "struct.h"
-#include <h5cpp/core>
-	// generated file must be sandwiched between core and io 
-	// to satisfy template dependencies in <h5cpp/io>  
-	#include "generated.h"
-#include <h5cpp/io>
+#include <h5cpp/all>
 #include "utils.hpp"
 
 #define CHUNK_SIZE 5

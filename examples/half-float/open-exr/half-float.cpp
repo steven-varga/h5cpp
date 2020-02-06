@@ -9,13 +9,8 @@
 
 // OpenEXR doesn't use namespace!!!
 #include <OpenEXR/half.h>
-
-#include "struct.h"
-#include <h5cpp/core>
-	#include "generated.h"
-#include <h5cpp/io>
+#include <h5cpp/all>
 #include "utils.hpp"
-
 
 int main(){
 

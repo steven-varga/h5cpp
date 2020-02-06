@@ -7,7 +7,7 @@
 #include <h5cpp/core>
 	// generated file must be sandwiched between core and io 
 	// to satisfy template dependencies in <h5cpp/io>  
-	#include "tu_01.h"
+	#include "tu-01.h"
 #include <h5cpp/io>
 #include "utils.hpp"
 

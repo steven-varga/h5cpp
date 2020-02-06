@@ -26,29 +26,29 @@ test: app
 
 # invoke `h5cpp` compiler separately for any given TU translation unit
 # to produce tu_0?.h header file which must be included exactly once in each given TU. 
-tu_01.h: struct.h
-	h5cpp  tu_01.cpp -- $(CXXFLAGS) $(INCLUDES) -Dtu_01.h
-tu_02.h: struct.h
-	h5cpp  tu_02.cpp -- $(CXXFLAGS) $(INCLUDES)  -Dtu_02.h
+tu-01.h: struct.h
+	h5cpp  tu-01.cpp -- $(CXXFLAGS) $(INCLUDES) -Dtu-01.h
+tu-02.h: struct.h
+	h5cpp  tu-02.cpp -- $(CXXFLAGS) $(INCLUDES)  -Dtu-02.h
 
 # for simplicity let's use explicit rules to compile TU-s into object files
-tu_01.o : tu_01.cpp tu_01.h 
-	$(CXX) $(INCLUDES) -o tu_01.o  $(CXXFLAGS) -c tu_01.cpp
+tu-01.o : tu-01.cpp tu-01.h 
+	$(CXX) $(INCLUDES) -o tu-01.o  $(CXXFLAGS) -c tu-01.cpp
 
-tu_02.o : tu_02.cpp tu_02.h 
-	$(CXX) $(INCLUDES) -o tu_02.o  $(CXXFLAGS) -c tu_02.cpp
+tu-02.o : tu-02.cpp tu-02.h 
+	$(CXX) $(INCLUDES) -o tu-02.o  $(CXXFLAGS) -c tu-02.cpp
 
 main.o : main.cpp 
 	$(CXX) -o main.o  $(CXXFLAGS) -c main.cpp
 
-app: tu_01.o tu_02.o main.o 
+app: tu-01.o tu-02.o main.o 
 	$(CXX) $^ $(LIBS) -o $@	
 
 clean:
 	@$(RM) *.o *.h5  app
 
 distclean: clean
-	@$(RM) tu_01.h tu_02.h
+	@$(RM) tu-01.h tu-02.h
 
 .PHONY: test
 
