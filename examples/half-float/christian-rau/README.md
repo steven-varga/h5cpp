@@ -11,6 +11,8 @@ The IEEE 754 standard specifies a binary16 as having the following format:
 The format is laid out as follows:
 `[1 bit sign | 5 bit exponent | 10 bit mantissa]` the exponent encoded using an offset-binary representation, with the zero offset being 15.
 
+**compiler assisted reflection:** not available, as half is not a POD type, but standard layout, keep tuned...
+
 ```bash
 HDF5 "example.h5" {
 GROUP "/" {

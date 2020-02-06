@@ -12,6 +12,8 @@ usage and caveats
 --------
 `-D WITH_OPENXDR_HALF` activates the shim code, since the internal include guards are `_HALF_H` deemed to be inadequate, to make it even less cheerful OpenEXR half precision add-on is **not embedded in namespace**. As a workaround, there is an optional by default empty `OPENEXR_NAMESPACE` macro to control namespaces. In order to make this work **you must hack the OpenEXR library** and recompile it with **namespace added**.
 
+**compiler assisted reflection:** not available, as half is not a POD type
+
 *Contacting listed authors failed, posted on mailing list, waiting for their reply.*
 
 
