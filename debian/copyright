@@ -1,5 +1,5 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: libh5cpp
+Upstream-Name: h5cpp
 Upstream-Contact: Steven Varga <steven@vargaconsulting.ca>
 Source: https://github.com/steven-varga/h5cpp.git
 
