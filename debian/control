@@ -1,5 +1,5 @@
 Source: libh5cpp
-Section: utils
+Section: libdevel
 Priority: optional
 Maintainer: Steven Varga <steven@vargaconsulting.ca>
 Build-Depends: debhelper (>= 12~), cmake, libgtest-dev, libarmadillo-dev, libgoogle-perftools-dev, libgoogle-glog-dev
