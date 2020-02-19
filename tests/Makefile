@@ -7,18 +7,21 @@ LIBS = -lprofiler -lglog -lgtest -lgtest_main -lhdf5 -lz -ldl -lm  -lpthread -lf
 flags =  --gtest_print_time=0 --gtest_color=auto
 
 ## list test cases here, be certain to begin them with `H`
-apps = H5E
+apps = H5E H5Fcreate
 all: $(apps)
 
 # compile object files 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX) -o $@  $(CXXFLAGS) -c $^
 
-# link to libraries, and run test cases as well
+# link to libraries, and runtest cases as well
 H%:  H%.o 
 	$(CXX) $^ $(LIBS) -o $@	
-	- ./$@
-	cat pix/typemap.svg
+	./$@
+
+clean_data: 
+	@$(RM) *.h5
+
 test: $(apps)
 
 clean:
