@@ -1,0 +1,17 @@
+#!/bin/bash
+
+
+#  _____________________________________________________________________________
+#
+#  Copyright (c) <2015> <copyright Steven Istvan Varga, Toronto, On>
+#
+#  Contact: Steven Varga
+#           steven.varga@gmail.com
+#           2015 Toronto, On Canada
+#  _____________________________________________________________________________
+
+inotifywait -e modify -m . |
+while read -r directory events filename; do
+	[[ $filename == *.dot ]] && dot -Tsvg $filename -o ../pix/meta.svg
+done
+

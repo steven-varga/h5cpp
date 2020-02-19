@@ -1,0 +1,264 @@
+/*
+blue: #0074D9  shade: 200
+red: #FF4136
+orange: #FF851B shade: 255
+yellow: #FFDC00
+green: #2ECC40
+
+
+*/
+
+
+
+
+digraph type_system {
+
+//	splines = "curved";
+//	bgcolor="transparent" # RGBA (with alpha)
+	overlap=scale
+	compound=true;
+	subgraph hdf5 {
+		node [shape=note, style=filled]
+		h5_types [label = "HDF5 types"];
+		h5_atomic [label = "Atomic" tooltip="C++ Fundamental"];
+		h5_composite [label = "Composite"];
+		h5_bitfield [label = "Bitfield"];
+		h5_string [label = "String"];
+		h5_reference [label = "Reference"];
+		h5_opaque [label = "Opaque"];
+		h5_integer [label = "Integer"];
+		h5_float [label = "Float"];
+		h5_array [label = "Array"];
+		h5_enumeration [label = "Enumeration"];
+		h5_variable_length [label = "Variable Length"];
+		h5_compound [label = "Compound"];
+	}
+	subgraph cpp {
+
+		node [shape=tab, style=filled]
+		cpp_types [label = "C++ Types"]
+		cpp_compound [label = "Compound"]
+		cpp_fundamental [label="Fundamental"]
+		cpp_array [label="Array"]
+		cpp_enum [label="Enum"]
+		cpp_union [label="Union"]
+		cpp_class [label="Class"]
+		cpp_pointer [label="Pointer"]
+		cpp_reference [label="Reference"]
+		cpp_nullptr [label="std::nullptr_t"]
+
+		cpp_arithmetic [label = "Arithmetic"]
+		cpp_integral [label = "Integral"]
+
+		cpp_floating_point [label = "Floating Point"]
+		cpp_void [label="Void"]
+	}
+	subgraph stl {
+
+		node [shape=oval, style=filled]
+		stl_types [label="Standard Templates"]
+		stl_string [label="std::string"]
+		stl_containers [label = "STL like containers"]
+
+		stl_associative [label = "Associative"]
+		stl_sequential [label = "Sequential"]
+		stl_adaptor [label = "Adaptor"]
+
+		stl_array [label = "std::array<T>"]
+		stl_array_array [label = "std::array<std::array<T>>"]
+		stl_array_vector [label = "std::array<std::vector<T>>"]
+
+		stl_vector [label = "std::vector<T>"]
+		stl_vector_vector [label = "std::vector<std::vector<T>>"]
+		stl_vector_array [label = "std::vector<std::array<T>>"]
+
+		stl_deque [label = "std::deque<T>"]
+		stl_forward_list [label = "std::forward_list<T>"]
+		stl_list [label = "std::list<T>"]
+		stl_set [label = "std::set<T>"]
+		stl_multiset [label = "std::multiset<T>"]
+		stl_map [label = "std::map<K,V>"]
+		stl_multimap [label = "std::multimap<K,V>"]
+		stl_unordered_set [label = "std::unordered_set<T>"]
+		stl_unordered_multiset [label = "std::unordered_multimap<T>"]
+		stl_unordered_map [label = "std::unordered_map<K,V>"]
+		stl_unordered_multimap [label = "std::unordered_multimap<K,V>"]
+		stl_stack [label = "std::stack<T>"]
+		stl_queue [label = "std::queue<T>"]
+		stl_priority_queue [label = "std::priority_queue<T>"]
+	}
+	subgraph linalg {
+		linalg [label="Linear Algebra"]
+		armadillo [label="Armadillo C++"]
+		arma_col [label="Col<T>"]
+		arma_row [label="Row<T>"]
+		arma_mat [label="Mat<T>"]
+		arma_cube [label="Cube<T>"]
+		arma_sparse [label="SpMat<T>"]
+		raw_memory [label="raw memory pointers"]
+		lapack [label="LAPACK"]
+		blas [label="BLAS"]
+
+		eigen [label="Eigen 3"]
+		eigen_matrix [label="<Matrix<T,...>"]
+		eigen_array [label="<Array<T,...>"]
+
+		blitz [label="Blitz"]
+		blaze [label="Blaze"]
+		blaze_row [label="DynamicVector<T,rowVector>"]
+		blaze_col [label="DynamicVector<T,columnVector>"]
+		blaze_rowmat [label="DynamicMatrix<T,rowMajor>"]
+		blaze_colmat [label="DynamicMatrix<T,columnMajor>"]
+
+		itpp  [label="IT++"]
+		itpp_mat [label="Mat<T>"]
+		dlib [label="Dlib"]
+		dlib_mat [label="matrix<T,...>"]
+		ublas [label="Boost UBlas"]
+		ublas_vec [label="matrix<T>"]
+		ublas_mat [label="vector<T>"]
+	}
+
+	subgraph h5_dataset {
+		node [shape=plaintext]
+	
+		a_vector [label="" image="../icons/vector.svg"]
+		a_matrix [label="" image="../icons/matrix.svg"]
+		a_ragged [label="" image="../icons/ragged.svg"]
+		a_hash [label="" image="../icons/key-value.svg"]
+		a_hypercube [label="" image="../icons/hypercube.svg"]
+
+		b_vector [label="" image="../icons/vector.svg"]
+		b_matrix [label="" image="../icons/matrix.svg"]
+		b_ragged [label="" image="../icons/ragged.svg"]
+		b_hash [label="" image="../icons/key-value.svg"]
+		b_hypercube [label="" image="../icons/hypercube.svg"]
+		b_struct [label="" image="../icons/struct.svg"]
+	}
+
+	stl_set -> a_vector;
+	stl_unordered_set -> a_vector;
+	stl_unordered_multiset -> a_vector;
+	stl_multiset -> a_vector;
+	stl_array -> a_hypercube;
+	stl_vector -> a_hypercube;
+	
+	a_ragged -> stl_array_array;
+	a_ragged -> stl_array_vector;
+	a_ragged -> stl_vector_vector;
+	a_ragged -> stl_vector_array;
+
+
+	stl_deque -> a_vector;
+	stl_forward_list -> a_vector;
+	stl_list -> a_vector;
+
+	stl_map -> a_hash;
+	stl_multimap -> a_hash;
+	stl_unordered_map -> a_hash;
+	stl_unordered_multimap -> a_hash;
+
+	stl_stack -> a_vector;
+	stl_queue -> a_vector;
+	stl_priority_queue -> a_vector;
+
+
+	h5_types -> h5_atomic;
+	h5_types -> h5_composite;
+	h5_atomic -> h5_bitfield;
+	h5_atomic -> h5_string;
+	h5_atomic -> h5_reference;
+	h5_atomic -> h5_opaque;
+	h5_atomic -> h5_integer;
+	h5_atomic -> h5_float;
+
+	h5_composite -> h5_array;
+	h5_composite -> h5_enumeration;
+	h5_composite -> h5_variable_length;
+	h5_composite -> h5_compound;
+
+
+	cpp_types -> cpp_compound;
+	cpp_types -> cpp_fundamental;
+
+
+	cpp_arithmetic -> cpp_integral;
+	cpp_arithmetic -> cpp_floating_point;
+
+	cpp_compound -> cpp_enum;
+	cpp_compound -> cpp_array;
+	cpp_compound -> cpp_class;
+	cpp_compound -> cpp_pointer;
+	cpp_compound -> cpp_reference;
+	cpp_compound -> cpp_union;
+
+	cpp_fundamental -> cpp_arithmetic;
+	cpp_fundamental -> cpp_void;
+	cpp_fundamental -> cpp_nullptr;
+
+	cpp_class -> stl_types;
+
+	/*The STL like objects*/
+	stl_types -> stl_string;
+	stl_types -> stl_containers;
+
+
+
+	stl_containers -> stl_associative;
+	stl_containers -> stl_sequential;
+	stl_containers -> stl_adaptor;
+
+	stl_sequential -> stl_array;
+	stl_sequential -> stl_vector;
+	stl_sequential -> stl_deque;
+	stl_sequential -> stl_forward_list;
+	stl_sequential -> stl_list;
+
+	stl_associative -> stl_set;
+	stl_associative -> stl_multiset;
+	stl_associative -> stl_unordered_set;
+	stl_associative -> stl_unordered_multiset;
+	stl_associative -> stl_map;
+	stl_associative -> stl_multimap;
+	stl_associative -> stl_unordered_map;
+	stl_associative -> stl_unordered_multimap;
+
+	stl_adaptor -> stl_stack;
+	stl_adaptor -> stl_queue;
+	stl_adaptor -> stl_priority_queue;
+
+	/*Linear algebra */
+
+	cpp_class -> linalg;
+	linalg -> armadillo;
+	linalg -> eigen;
+	linalg -> blaze;
+	linalg -> itpp;
+	linalg -> dlib;
+	linalg -> ublas;
+	linalg -> raw_memory;
+	linalg -> blitz;
+	raw_memory -> lapack;
+	raw_memory -> blas;
+
+	armadillo -> arma_col;
+	armadillo -> arma_row;
+	armadillo -> arma_mat;
+	armadillo -> arma_cube;
+	armadillo -> arma_sparse;
+
+	eigen -> eigen_matrix;
+	eigen -> eigen_array;
+
+	blaze -> blaze_row;
+	blaze -> blaze_col;
+	blaze -> blaze_rowmat;
+	blaze -> blaze_colmat;
+
+	dlib -> dlib_mat;
+	itpp -> itpp_mat;
+
+	ublas -> ublas_vec;
+	ublas -> ublas_mat;
+	/* HDF5 and C++ typemapping*/
+ }

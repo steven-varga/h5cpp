@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="250mm"
+   height="105mm"
+   viewBox="0 0 250 105"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="cpp_types.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.47707683"
+     inkscape:cx="495.925"
+     inkscape:cy="367.3601"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     inkscape:window-width="1366"
+     inkscape:window-height="768"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid10"
+       units="mm"
+       spacingx="5.0000001"
+       spacingy="5.0000001" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-192)">
+    <g
+       id="g7293"
+       transform="translate(-19.050006,82.020879)">
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node14"
+         class="node">
+        <title
+           id="title2789">cpp_types</title>
+        <polygon
+           points="3830.094,-619 3830.094,-579 3909.094,-579 3909.094,-615 3842.094,-615 3842.094,-619 "
+           id="polygon2791"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="3830.094,-615 3842.094,-615 "
+           id="polyline2793"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="3869.594"
+           y="-593.29999"
+           font-size="14.00"
+           id="text2795"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">C++ Types</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node15"
+         class="node">
+        <title
+           id="title2798">cpp_compound</title>
+        <polygon
+           points="3705.094,-522 3705.094,-482 3782.094,-482 3782.094,-518 3717.094,-518 3717.094,-522 "
+           id="polygon2800"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="3705.094,-518 3717.094,-518 "
+           id="polyline2802"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="3743.594"
+           y="-496.29999"
+           font-size="14.00"
+           id="text2804"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Compound</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge33"
+         class="edge">
+        <title
+           id="title2807">cpp_types-&gt;cpp_compound</title>
+        <path
+           d="m 3846.1897,-578.9824 c -19.9417,15.3519 -48.7844,37.5562 -70.8129,54.5147"
+           id="path2809"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="3777.3596,-521.5771 3767.3006,-518.2503 3773.0894,-527.1239 "
+           id="polygon2811"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node16"
+         class="node">
+        <title
+           id="title2814">cpp_fundamental</title>
+        <polygon
+           points="4000.594,-522 4000.594,-482 4088.594,-482 4088.594,-518 4012.594,-518 4012.594,-522 "
+           id="polygon2816"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="4000.594,-518 4012.594,-518 "
+           id="polyline2818"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="4044.594"
+           y="-496.29999"
+           font-size="14.00"
+           id="text2820"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Fundamental</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge34"
+         class="edge">
+        <title
+           id="title2823">cpp_types-&gt;cpp_fundamental</title>
+        <path
+           d="m 3902.1,-578.9824 c 28.5188,15.8076 70.1448,38.8803 101.0498,56.0105"
+           id="path2825"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="4004.9161,-525.9947 4011.9656,-518.0855 4001.5225,-519.8722 "
+           id="polygon2827"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node17"
+         class="node">
+        <title
+           id="title2830">cpp_array</title>
+        <polygon
+           points="3500.594,-450 3500.594,-410 3554.594,-410 3554.594,-446 3512.594,-446 3512.594,-450 "
+           id="polygon2832"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="3500.594,-446 3512.594,-446 "
+           id="polyline2834"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="3527.594"
+           y="-424.29999"
+           font-size="14.00"
+           id="text2836"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Array</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge38"
+         class="edge">
+        <title
+           id="title2839">cpp_compound-&gt;cpp_array</title>
+        <path
+           d="m 3705.0193,-490.4908 c -34.8076,9.0334 -87.4272,23.8123 -140.5583,44.4537"
+           id="path2841"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="3565.4756,-442.6747 3554.8891,-442.2557 3562.9036,-449.1851 "
+           id="polygon2843"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node18"
+         class="node">
+        <title
+           id="title2846">cpp_enum</title>
+        <polygon
+           points="3572.594,-450 3572.594,-410 3626.594,-410 3626.594,-446 3584.594,-446 3584.594,-450 "
+           id="polygon2848"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="3572.594,-446 3584.594,-446 "
+           id="polyline2850"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="3599.594"
+           y="-424.29999"
+           font-size="14.00"
+           id="text2852"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Enum</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge37"
+         class="edge">
+        <title
+           id="title2855">cpp_compound-&gt;cpp_enum</title>
+        <path
+           d="m 3707.2567,-481.8314 c -21.871,10.9355 -49.6155,24.8078 -71.4619,35.731"
+           id="path2857"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="3637.337,-442.9584 3626.8274,-441.6167 3634.2064,-449.2194 "
+           id="polygon2859"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node19"
+         class="node">
+        <title
+           id="title2862">cpp_union</title>
+        <polygon
+           points="3644.594,-450 3644.594,-410 3698.594,-410 3698.594,-446 3656.594,-446 3656.594,-450 "
+           id="polygon2864"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="3644.594,-446 3656.594,-446 "
+           id="polyline2866"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="3671.594"
+           y="-424.29999"
+           font-size="14.00"
+           id="text2868"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Union</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge42"
+         class="edge">
+        <title
+           id="title2871">cpp_compound-&gt;cpp_union</title>
+        <path
+           d="m 3725.4254,-481.8314 c -8.5466,8.5466 -18.8871,18.8871 -28.2116,28.2116"
+           id="path2873"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="3699.5532,-451.0095 3690.0073,-446.4133 3694.6035,-455.9592 "
+           id="polygon2875"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node20"
+         class="node">
+        <title
+           id="title2878">cpp_class</title>
+        <polygon
+           points="3716.594,-450 3716.594,-410 3770.594,-410 3770.594,-446 3728.594,-446 3728.594,-450 "
+           id="polygon2880"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="3716.594,-446 3728.594,-446 "
+           id="polyline2882"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="3743.594"
+           y="-424.29999"
+           font-size="14.00"
+           id="text2884"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Class</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge39"
+         class="edge">
+        <title
+           id="title2887">cpp_compound-&gt;cpp_class</title>
+        <path
+           d="m 3743.594,-481.8314 c 0,7.7004 0,16.8571 0,25.4148"
+           id="path2889"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="3747.0941,-456.4132 3743.594,-446.4133 3740.0941,-456.4133 "
+           id="polygon2891"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node21"
+         class="node">
+        <title
+           id="title2894">cpp_pointer</title>
+        <polygon
+           points="3788.594,-450 3788.594,-410 3844.594,-410 3844.594,-446 3800.594,-446 3800.594,-450 "
+           id="polygon2896"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="3788.594,-446 3800.594,-446 "
+           id="polyline2898"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="3816.594"
+           y="-424.29999"
+           font-size="14.00"
+           id="text2900"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Pointer</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge40"
+         class="edge">
+        <title
+           id="title2903">cpp_compound-&gt;cpp_pointer</title>
+        <path
+           d="m 3762.015,-481.8314 c 8.7319,8.6124 19.3107,19.0463 28.8213,28.4266"
+           id="path2905"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="3793.517,-455.6769 3798.1789,-446.1628 3788.6015,-450.6931 "
+           id="polygon2907"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node22"
+         class="node">
+        <title
+           id="title2910">cpp_reference</title>
+        <polygon
+           points="3863.094,-450 3863.094,-410 3934.094,-410 3934.094,-446 3875.094,-446 3875.094,-450 "
+           id="polygon2912"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="3863.094,-446 3875.094,-446 "
+           id="polyline2914"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="3898.594"
+           y="-424.29999"
+           font-size="14.00"
+           id="text2916"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Reference</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge41"
+         class="edge">
+        <title
+           id="title2919">cpp_compound-&gt;cpp_reference</title>
+        <path
+           d="m 3782.3072,-482.0171 c 21.7515,10.1039 48.9951,22.759 71.644,33.2798"
+           id="path2921"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="3855.43,-451.9096 3863.0248,-444.5225 3852.4809,-445.5611 "
+           id="polygon2923"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node23"
+         class="node">
+        <title
+           id="title2926">cpp_nullptr</title>
+        <polygon
+           points="3952.594,-450 3952.594,-410 4038.594,-410 4038.594,-446 3964.594,-446 3964.594,-450 "
+           id="polygon2928"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="3952.594,-446 3964.594,-446 "
+           id="polyline2930"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="3995.594"
+           y="-424.29999"
+           font-size="14.00"
+           id="text2932"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">std::nullptr_t</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge45"
+         class="edge">
+        <title
+           id="title2935">cpp_fundamental-&gt;cpp_nullptr</title>
+        <path
+           d="m 4032.2292,-481.8314 c -5.5861,8.2082 -12.2982,18.0708 -18.4424,27.0991"
+           id="path2937"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="4016.645,-452.7112 4008.1253,-446.4133 4010.858,-456.6496 "
+           id="polygon2939"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node24"
+         class="node">
+        <title
+           id="title2942">cpp_arithmetic</title>
+        <polygon
+           points="4056.594,-450 4056.594,-410 4132.594,-410 4132.594,-446 4068.594,-446 4068.594,-450 "
+           id="polygon2944"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="4056.594,-446 4068.594,-446 "
+           id="polyline2946"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="4094.594"
+           y="-424.29999"
+           font-size="14.00"
+           id="text2948"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Arithmetic</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge43"
+         class="edge">
+        <title
+           id="title2951">cpp_fundamental-&gt;cpp_arithmetic</title>
+        <path
+           d="m 4057.2111,-481.8314 c 5.7001,8.2082 12.5492,18.0708 18.8188,27.0991"
+           id="path2953"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="4078.9778,-456.6234 4081.807,-446.4133 4073.2282,-452.6306 "
+           id="polygon2955"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node27"
+         class="node">
+        <title
+           id="title2958">cpp_void</title>
+        <polygon
+           points="4150.594,-450 4150.594,-410 4204.594,-410 4204.594,-446 4162.594,-446 4162.594,-450 "
+           id="polygon2960"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="4150.594,-446 4162.594,-446 "
+           id="polyline2962"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="4177.5942"
+           y="-424.29999"
+           font-size="14.00"
+           id="text2964"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Void</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge44"
+         class="edge">
+        <title
+           id="title2967">cpp_fundamental-&gt;cpp_void</title>
+        <path
+           d="m 4078.1555,-481.8314 c 19.2654,10.4294 43.4652,23.5301 63.1677,34.1961"
+           id="path2969"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="4143.1804,-450.6099 4150.3083,-442.7712 4139.8479,-444.454 "
+           id="polygon2971"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node25"
+         class="node">
+        <title
+           id="title3002">cpp_integral</title>
+        <polygon
+           points="4017.094,-378 4017.094,-338 4076.094,-338 4076.094,-374 4029.094,-374 4029.094,-378 "
+           id="polygon3004"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="4017.094,-374 4029.094,-374 "
+           id="polyline3006"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="4046.594"
+           y="-352.29999"
+           font-size="14.00"
+           id="text3008"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Integral</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge35"
+         class="edge">
+        <title
+           id="title3011">cpp_arithmetic-&gt;cpp_integral</title>
+        <path
+           d="m 4082.4816,-409.8314 c -5.4157,8.1235 -11.9118,17.8677 -17.8797,26.8196"
+           id="path3013"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="4067.3287,-380.7923 4058.8695,-374.4133 4061.5044,-384.6753 "
+           id="polygon3015"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="node26"
+         class="node">
+        <title
+           id="title3018">cpp_floating_point</title>
+        <polygon
+           points="4094.594,-378 4094.594,-338 4188.594,-338 4188.594,-374 4106.594,-374 4106.594,-378 "
+           id="polygon3020"
+           style="fill:#d3d3d3;stroke:#000000" />
+        <polyline
+           points="4094.594,-374 4106.594,-374 "
+           id="polyline3022"
+           style="fill:none;stroke:#000000" />
+        <text
+           x="4141.5942"
+           y="-352.29999"
+           font-size="14.00"
+           id="text3024"
+           style="font-size:14px;font-family:Times, serif;text-anchor:middle;fill:#000000">Floating Point</text>
+      </g>
+      <g
+         transform="matrix(0.35277777,0,0,0.35277777,-1214.2478,332.82646)"
+         id="edge36"
+         class="edge">
+        <title
+           id="title3027">cpp_arithmetic-&gt;cpp_floating_point</title>
+        <path
+           d="m 4106.4541,-409.8314 c 5.3028,8.1235 11.6636,17.8677 17.5072,26.8196"
+           id="path3029"
+           inkscape:connector-curvature="0"
+           style="fill:none;stroke:#000000" />
+        <polygon
+           points="4127.0388,-384.7003 4129.5742,-374.4133 4121.1771,-380.8739 "
+           id="polygon3031"
+           style="fill:#000000;stroke:#000000" />
+      </g>
+    </g>
+  </g>
+</svg>
