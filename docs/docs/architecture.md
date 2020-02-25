@@ -1,3 +1,7 @@
+[^nt]: not tested, please contact author with use case
+[^na]: this function call is not available in C++ API, use C API interop instead
+[^failed]: test case failed, contact author with use case
+[^ok]: tested function, performs as advertised
 
 # HDF5
 <p align='justify'>
@@ -757,7 +761,7 @@ auto fd = h5::create("002.h5", H5F_ACC_TRUNC,
 * [`h5::sym_k{unsigned,unsigned}`][1003] Sets the size of parameters used to control the symbol table nodes.
 * [`h5::istore_k{unsigned}`][1004] Sets the size of the parameter used to control the B-trees for indexing chunked datasets.
 * [`h5::file_space_page_size{hsize_t}`][1005] Sets the file space page size for a file creation property list.
-* [`h5::file_space_page_strategy{H5F_fspace_strategy_t strategy, hbool_t persist, hsize_t threshold}`][1010] Sets the file space handling strategy and persisting free-space values for a file creation property list. <br/>
+* [`h5::file_space_page_strategy{H5F_fspace_strategy_t strategy, hbool_t persist, hsize_t threshold}`][1010] Sets the file space handling strategy and persisting free-space values for a file creation property list.[^failed] <br/>
 * [`h5::shared_mesg_nindexes{unsigned}`][1007] Sets number of shared object header message indexes. `N <= H5O_SHMESG_MAX_NINDEXES` 
 * [`h5::shared_mesg_index{unsigned,unsigned,unsigned}`][1008] Configures the specified shared object header message index.
 order matters, right to left: `h5::shared_mesg_index{...} | h5::shared_mesg_nindexes{unsigned}`
@@ -770,12 +774,13 @@ h5::fapl_t fapl = h5::fclose_degree_weak | h5::fapl_core{2048,1} | h5::core_writ
 			| h5::fapl_family{H5F_FAMILY_DEFAULT,0};
 			
 ```
-* [`h5::driver{hid_t new_driver_id, const void *new_driver_info}`][1055] Sets a file driver.<br/>
+
+* [`h5::driver{hid_t new_driver_id, const void *new_driver_info}`][1055] Sets a file driver.[^nt]<br/>
 * [`h5::fclose_degree{H5F_close_degree_t}`][1022] Sets the file close degree.<br/>
 	**Flags:** `h5::fclose_degree_weak`, `h5::fclose_degree_semi`, `h5::fclose_degree_strong`, `h5::fclose_degree_default`
 * [`h5::fapl_core{size_t increment, hbool_t backing_store}`][1023] Modifies the file access property list to use the H5FD_CORE driver.
 * [`h5::core_write_tracking{hbool_t is_enabled, size_t page_size}`][1024] Sets write tracking information for core driver, H5FD_CORE. 
-* [`h5::fapl_direct{size_t alignment, size_t block_size, size_t cbuf_size}`][1025] Sets up use of the direct I/O driver.
+* (na) [`h5::fapl_direct{size_t alignment, size_t block_size, size_t cbuf_size}`][1025] Sets up use of the direct I/O driver.[^failed]
 * [`h5::fapl_family{hsize_t memb_size, hid_t memb_fapl_id}`][1026] Sets the file access property list to use the family driver.
 * [`h5::family_offset{hsize_t offset}`][1027] Sets offset property for low-level access to a file in a family of files.
 * [`h5::fapl_log{const char *logfile, unsigned long long flags, size_t buf_size}`][1028] Sets up the logging virtual file driver (H5FD_LOG) for use.

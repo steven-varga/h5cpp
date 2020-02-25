@@ -57,7 +57,8 @@ namespace h5 { namespace impl {
 	T*>::type data( Object& ref ){
 			return ref._data();
 	}
-	template<class T> struct rank<h5::itpp::rowvec<T>> : public std::integral_constant<size_t,2>{};
+	template<class T> struct rank<h5::itpp::rowvec<T>> : public std::integral_constant<size_t,1>{};
+
 	template <class T> inline std::array<size_t,1> size( const h5::itpp::rowvec<T>& ref ){ return { (hsize_t)ref.size() };}
 	template <class T> struct get<h5::itpp::rowvec<T>> {
 		static inline h5::itpp::rowvec<T> ctor( std::array<size_t,1> dims ){

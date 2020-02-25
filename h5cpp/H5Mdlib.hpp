@@ -11,11 +11,17 @@
 namespace h5 { 	namespace dlib {
 // dlib template:
 // const dlib::matrix<short int, 0, 0, dlib::memory_manager_stateless_kernel_1<char>, dlib::row_major_layout>&
-		template<class T> using rowmat = ::dlib::matrix<T, 0, 0,
-			::dlib::memory_manager_stateless_kernel_1<char>,
+		template<class T, long NR=0, long NC=0, class MM=char> using rowmat = ::dlib::matrix<T, NR, NC,
+			::dlib::memory_manager_stateless_kernel_1<MM>,
 			::dlib::row_major_layout>;
+		template<class T, long NR=0, long NC=0, class MM=char> using colmat = ::dlib::matrix<T, NR, NC,
+			::dlib::memory_manager_stateless_kernel_1<MM>,
+			::dlib::column_major_layout>;
+
 		template <class Object, class T = typename impl::decay<Object>::type>
 			using is_supported = std::integral_constant<bool, std::is_same<Object,h5::dlib::rowmat<T>>::value>;
+		//template <class Object, class T = typename impl::decay<Object>::type>
+		//	using is_supported = std::integral_constant<bool, std::is_same<Object,h5::dlib::colmat<T>>::value>;
 }}
 namespace h5 { namespace impl {
 	// 1.) object -> H5T_xxx

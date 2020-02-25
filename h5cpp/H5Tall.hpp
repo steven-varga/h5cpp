@@ -35,6 +35,13 @@ namespace h5 { namespace impl { namespace detail {
  * IF the data is not in a continuous memory region then it must be copied! 
  */
 
+#define H5CPP_REGISTER_NAME_( C_TYPE )                                                    \
+namespace h5 {                                                                            \
+	template <> struct name<C_TYPE> {                                                     \
+		static constexpr char const * value = #C_TYPE;                                    \
+	};                                                                                    \
+}                                                                                         \
+
 #define H5CPP_REGISTER_TYPE_( C_TYPE, H5_TYPE )                                           \
 namespace h5 { namespace impl { namespace detail { 	                                      \
 	template <> struct hid_t<C_TYPE,H5Tclose,true,true,hdf5::type> : public dt_p<C_TYPE> {\
@@ -48,12 +55,9 @@ namespace h5 { namespace impl { namespace detail { 	                            
 		}                                                                                 \
 	};                                                                                    \
 }}}                                                                                       \
-namespace h5 {                                                                            \
-	template <> struct name<C_TYPE> {                                                     \
-		static constexpr char const * value = #C_TYPE;                                    \
-	};                                                                                    \
-}                                                                                         \
+H5CPP_REGISTER_NAME_( C_TYPE );                                                           \
 
+H5CPP_REGISTER_NAME_( std::string );
 /* registering integral data-types for NATIVE ones, which means all data is stored in the same way 
  * in file and memory: TODO: allow different types for file storage
  * */

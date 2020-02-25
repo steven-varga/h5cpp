@@ -171,7 +171,7 @@ namespace h5::mock {
 		} else if constexpr ( impl::is_iterable<T>::value ){
 		//	using value_t = typename element_t::value_t;
 			std::cout << " it";
-		} else if constexpr ( impl::is_adapter<T>::value ) {
+		} else if constexpr ( impl::is_adaptor<T>::value ) {
 			using container_t = typename T::container_type;
 			using value_t = typename T::value_type;
 			std::cout << " ad";

@@ -8,18 +8,52 @@
 #define  H5CPP_STL_HPP
 
 #include <type_traits>
-
+#include <array>
+#include <vector>
+#include <deque>
+#include <forward_list>
+#include <list>
+#include <set>
+#include <map>
+#include <unordered_set>
+#include <unordered_map>
+#include <stack>
+#include <queue>
+#include <any>
 
 //FIXME: move it elsewhere
 #define H5CPP_supported_elementary_types "supported elementary types ::= pod_struct | float | double |  [signed](int8 | int16 | int32 | int64)"
 
 namespace h5 { namespace utils {
-	template <class T>
+	template <class T, class... Ts>
 	static constexpr bool is_supported = std::is_class<T>::value | std::is_arithmetic<T>::value;
 }}
+// stl detection with templates, this probably should stay until concepts become mainstream
+namespace h5::impl {
+	template <class T, class... Ts> struct is_container : std::false_type {};
+	template <class T, class... Ts> struct is_container <std::vector<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::deque<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::list<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::forward_list<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::set<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::multiset<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::map<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::multimap<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::unordered_set<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::unordered_map<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::unordered_multiset<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_container <std::unordered_multimap<T,Ts...>> : std::true_type{};
+	template <class T, size_t N> struct is_container <std::array<T,N>> : std::true_type{};
 
-//END FIXME
-namespace h5::impl { // feature detection
+	template <class T, class... Ts> struct is_adaptor : std::false_type {};
+	template <class T, class... Ts> struct is_adaptor <std::stack<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_adaptor <std::queue<T,Ts...>> : std::true_type{};
+	template <class T, class... Ts> struct is_adaptor <std::priority_queue<T,Ts...>> : std::true_type{};
+
+	template<class T, class... Ts> using is_stl =
+		std::disjunction<is_container<T,Ts...>,is_adaptor<T,Ts...>>;
+
+	// feature detection: leave this code here until concepts
 	using h5::impl::compat::is_detected;
 	template<class T> using copy_assign_t = decltype(std::declval<T&>() = std::declval<const T&>());
 	template<class T> using has_data_t = decltype(std::declval<T&>().data());
@@ -38,35 +72,8 @@ namespace h5::impl { // feature detection
 	template<class T> using has_const_iterator_t = typename T::const_iterator;
 	template<class T> using has_difference_t = typename T::difference_type;
 
-	// ADAPTER detection
-	template<class T, typename... Args>
-	using push_t = typename std::integral_constant<
-   		decltype(std::declval<T>().push( std::declval<Args>()...)) (T::*)(Args...), &T::push >::value_type;
-
-	template<class T, class... Args>
-	using is_adaptor_h = std::conjunction<
-		is_detected<has_container_t, T>,
-	//	is_detected<push_t, T, typename T::value_type&&>, error with SpMat
-		is_detected<has_emplace_t,T>, is_detected<has_size_t,T>
-	>;
-
-	template<class T, class E = void> struct is_adaptor : std::false_type {};
-	template<class T, int N> struct is_adaptor <T[N]> : std::false_type {};
-	template<class T> struct is_adaptor <T, class std::enable_if<!std::is_pod<T>::value>::type> {
-		static constexpr bool value = is_adaptor_h<T>::value;
-	};
-	// END adapater
-	template<class T, class... Args> using is_container = std::conjunction<
-		is_detected<has_difference_t,T>, is_detected<has_begin_t,T>,
-		is_detected<has_const_begin_t,T>, is_detected<has_end_t,T>>;
-
-	template<class T, class... Args> using is_stl = std::disjunction<
-		is_adaptor<T>, is_container<T>>;
-
 	template<class T, class... Args> using is_iterable = std::conjunction<
 		is_detected<has_begin_t,T>>;
-	template<class T, class... Args> using is_adapter = std::conjunction<
-		is_detected<has_container_t,T>>;
 	template<class T, class... Args> using is_compare = std::conjunction<
 		is_detected<has_value_compare_t,T>>;
 	template<class T, class... Args> using not_supported = std::conjunction<
@@ -96,6 +103,10 @@ namespace h5::exp {
 		template<class C, class E = void> struct is_dense;
 		template<class C, class E = void> struct is_sparse;
 	}
+}
+namespace h5::impl {
+	using h5::exp::enable_or;
+	using h5::exp::enable_and;
 	/* all numerical types listed here are supported by HDF5 as builtin NATIVE types, FIXME: add complex types 
 	 * Passing by `values` strictly where copies are cheap, `references` are for larger objects, `pointers` are
 	 * special cases to provide controlled direct access to underlying datastore: arma::mat<T>().mem_ptr();
@@ -105,35 +116,19 @@ namespace h5::exp {
 
 	/* std::array<...,R> size<T>(){} template has to compute rank R at compile 
 	 * time, these templates aid to accomplish that. In addition to the provided */
-	template<class T, class E = void> struct rank : public std::integral_constant<int,0> {}; // definition
+	template<class T, class... Ts> struct rank : public std::integral_constant<int,0> {}; // definition
 	template <class T, size_t N> struct rank<T[N]> : public std::rank<T[N]> {}; // arrays
-	template <class T> struct rank<T, class std::enable_if<
-		h5::impl::is_adaptor<T>::value>::type> : public std::integral_constant<size_t, 0> {};
+	template<class T, int N, class... Ts> using is_rank = std::integral_constant<bool, rank<T, Ts...>::value == N >;
 
-	template<class T, int N> using is_rank = std::integral_constant<bool, rank<T>::value == N >;
-
-	template<class T> using is_scalar = is_rank<T,0>; // numerical | pod 
-	template<class T> using is_vector = is_rank<T,1>;
-	template<class T> using is_matrix = is_rank<T,2>;
-	template<class T> using is_cube   = is_rank<T,3>;
+	template<class T, class... Ts> using is_scalar = is_rank<T,0,Ts...>; // numerical | pod 
+	template<class T, class... Ts> using is_vector = is_rank<T,1,Ts...>;
+	template<class T, class... Ts> using is_matrix = is_rank<T,2,Ts...>;
+	template<class T, class... Ts> using is_cube   = is_rank<T,3,Ts...>;
 
 	template<class T, class E = void> struct is_standard_layout : public std::false_type{};
 	template <class T> class is_standard_layout<T, class enable_or<
 		std::is_array<T>, h5::impl::is_detected<h5::impl::has_data_t,T>>::type>
 	: public std::true_type{ };
-}
-
-namespace h5::impl {
-	template <class T> using is_standard_layout = h5::exp::is_standard_layout<T>;
-}
-
-
-
-
-
-
-namespace h5 { namespace impl {
-
 
 	template <class T, class...> struct decay { using type = T; };
 #define h5cpp_decay( OBJECT )\
@@ -161,12 +156,11 @@ namespace h5 { namespace impl {
 	h5cpp_decay(std::initializer_list)
 	h5cpp_decay(std::vector)
 
-
 //TODO: REMOVE FROM	
 	// type trait helpers
-	template <class T>
-	using is_scalar = std::integral_constant<bool,
-		std::is_integral<T>::value || std::is_pod<T>::value || std::is_same<T,std::string>::value>;
+	//template <class T>
+	//using is_scalar = std::integral_constant<bool,
+	//	std::is_integral<T>::value || std::is_pod<T>::value || std::is_same<T,std::string>::value>;
 	template <class T, class D=typename impl::decay<T>::type>
 	using is_arithmetic = typename std::integral_constant<bool,
 		std::is_integral<D>::value || std::is_floating_point<D>::value>;
@@ -179,13 +173,6 @@ namespace h5 { namespace impl {
 	using is_pod = typename std::integral_constant<bool,
 		!is_arithmetic<T>::value && std::is_pod<D>::value && !is_string<T>::value>;
 
-
-
-	template <class T, class B = typename impl::decay<T>::type, size_t N=0>
-	using is_rank01 = std::integral_constant<bool,
-		std::is_same<T,std::initializer_list<B>>::value ||
-		std::is_same<T,std::vector<B>>::value ||
-		std::is_same<T,std::array<B,N>>::value>;
 
 	/* Objects may reside in continuous memory region such as vectors, matrices, POD structures can be saved/loaded in a single transfer,
 	 * the rest needs to be handled on a member variable bases, `h5::impl::is_coalesced` divides objects at compile time*/
@@ -203,7 +190,6 @@ namespace h5 { namespace impl {
 	const constexpr std::tuple<const char*, const char*, const char*> 
 		csc_names = {"indices", "indptr","data"};
 /*TODO: figure out */
-	template<class T> struct rank : public std::integral_constant<size_t,0>{};
 	template<> struct rank<std::string>: public std::integral_constant<size_t,1>{};
 	template<class T> struct rank<T*>: public std::integral_constant<size_t,1>{};
 	template<class T> struct rank<std::vector<T>>: public std::integral_constant<size_t,1>{};
@@ -227,7 +213,7 @@ namespace h5 { namespace impl {
 	// 5.) obtain dimensions of extents
 	template <class T> inline constexpr typename std::enable_if< impl::is_scalar<T>::value,
 		std::array<size_t,0>>::type size( T value ){ return{}; }
-	template <class T> inline typename std::enable_if< impl::is_rank01<T>::value,
+	template <class T> inline typename std::enable_if< impl::is_vector<T>::value,
 		std::array<size_t,1>>::type size( const T& ref ){ return {ref.size()}; }
 	// 6.) ctor with right dimensions
 	template <class T> struct get {
@@ -244,30 +230,19 @@ namespace h5 { namespace impl {
 	template <class T, size_t N> struct decay<std::array<T*,N>>{ typedef T* type; };
 	template <class T, size_t N> struct decay<std::array<T,N>>{ typedef T type; };
 
-
-	//template<class T, size_t N> struct rank<std::array<T,N>>: public std::integral_constant<size_t,1>{};
-
 	// 3.) read access
 	template <class T, size_t N> inline const T* data( const std::array<T,N>& ref ){ return ref.data(); }
 	template <class T, size_t N> inline T* data( std::array<T,N>& ref ){ return ref.data(); }
 
 	template <class T, size_t N> inline typename std::array<size_t,1> size( const std::array<T,N>& ref ){ return {N}; }
+	template <class T, size_t N> struct rank<std::array<T,N>> : public std::integral_constant<int,1> {};
 
-// STD::FORWARD_LIST<T>
-
-
-#ifdef H5CPP_STL_FORWARD_LIST
 	template <class T> struct decay<std::forward_list<const T*>>{ typedef const T* type; };
 	template <class T> struct decay<std::forward_list<T*>>{ typedef T* type; };
 	template <class T> struct decay<std::forward_list<T>>{ typedef T type; };
-#endif
-#ifdef H5CPP_STL_LIST
+
 	template <class T> struct decay<std::list<const T*>>{ typedef const T* type; };
 	template <class T> struct decay<std::list<T*>>{ typedef T* type; };
 	template <class T> struct decay<std::list<T>>{ typedef T type; };
-#endif
-
-#undef h5cpp_decay
-}}
-
+}
 #endif

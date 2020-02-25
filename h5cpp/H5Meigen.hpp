@@ -16,6 +16,8 @@
        int MaxRowsAtCompileTime = RowsAtCompileTime,
        int MaxColsAtCompileTime = ColsAtCompileTime>
 */
+namespace h5::impl {
+}
 
 namespace h5 { namespace impl {
 	// 1.) object -> H5T_xxx
@@ -51,19 +53,28 @@ namespace h5 { namespace impl {
 	inline std::array<size_t,2> size( const ::Eigen::Array<T,R,C,::Eigen::ColMajor,MR,MC>& ref ){
 		return {(hsize_t)ref.cols(), (hsize_t)ref.rows()};
 	}
+	// RANK: define the exceptions, then the general case
+	template <class T,int Major> // scalar
+	   	struct rank<Eigen::Matrix<T, 1,1, Major>> : public std::integral_constant<int,0> {};
+	template <class T,int Major> // scalar
+	   	struct rank<Eigen::Array<T, 1,1, Major>> : public std::integral_constant<int,0> {};
 
-	/*rank:
-	// MATRICES:
-	template<class T,int R,int C,int MR=R,int MC=C>
-	inline struct rank<const ::Eigen::Matrix<T,R,C,::Eigen::RowMajor,MR,MC>> : public std::integral_constant<size_t,2>{};
-	template<class T,int R,int C,int MR=R,int MC=C>
-	inline struct rank<const ::Eigen::Matrix<T,R,C,::Eigen::ColMajor,MR,MC>> : public std::integral_constant<size_t,2>{};
-	// ARRAYS
-	template<class T,int R,int C,int MR=R,int MC=C>
-	inline struct rank<const ::Eigen::Array<T,R,C,::Eigen::RowMajor,MR,MC>> : public std::integral_constant<size_t,2>{};
-	template<class T,int R,int C,int MR=R,int MC=C>
-	inline struct rank<const ::Eigen::Array<T,R,C,::Eigen::ColMajor,MR,MC>> : public std::integral_constant<size_t,2>{};
-*/
+	template <class T,int N, int Major> // row vector
+	   	struct rank<Eigen::Matrix<T, 1,N, Major>> : public std::integral_constant<int,1> {};
+	template <class T,int M, int Major> // col vector
+	   	struct rank<Eigen::Matrix<T, M,1, Major>> : public std::integral_constant<int,1> {};
+	template <class T,int M, int N, int Major> // matrices
+	   	struct rank<Eigen::Matrix<T, M, N, Major>> : public std::integral_constant<int,2> {};
+	template <class T,int N, int Major> // row vector
+	   	struct rank<Eigen::Array<T, 1,N, Major>> : public std::integral_constant<int,1> {};
+	template <class T,int M, int Major> // col vector
+	   	struct rank<Eigen::Array<T, M,1, Major>> : public std::integral_constant<int,1> {};
+	template <class T,int M, int N, int Major> // matrices
+	   	struct rank<Eigen::Array<T, M, N, Major>> : public std::integral_constant<int,2> {};
+
+	// DENSE-SPARSE
+
+
 	// CTOR-s
 	// MATRICES
 	template<class T,int R,int C>

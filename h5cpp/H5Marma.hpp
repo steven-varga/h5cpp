@@ -8,7 +8,7 @@
 #define  H5CPP_ARMA_HPP
 
 #if defined(ARMA_INCLUDES) || defined(H5CPP_USE_ARMADILLO)
-namespace h5 { 	namespace arma {
+namespace h5::arma {
 	template<class T> using rowvec = ::arma::Row<T>;
 	template<class T> using colvec = ::arma::Col<T>;
 	template<class T> using colmat = ::arma::Mat<T>;
@@ -37,7 +37,7 @@ namespace h5 { 	namespace arma {
 			h5::arma::rowvec<::arma::uword>((::arma::uword*)sp.col_ptrs, sp.n_cols, true, false),
 			h5::arma::rowvec<T>((T*) sp.values, sp.n_nonzero, true, false) );
 	}
-}}
+}
 
 namespace h5::impl {
 	template <class T> struct decay<h5::arma::rowvec<T>>{ typedef T type; };
@@ -142,7 +142,7 @@ namespace h5 { namespace impl {
 	}
 }}
 
-namespace h5::exp {
+namespace h5::impl {
 	template <class T> struct rank<::arma::Row<T>> : public std::integral_constant<int,1> {};
 	template <class T> struct rank<::arma::Col<T>> : public std::integral_constant<int,1> {};
 	template <class T> struct rank<::arma::Mat<T>> : public std::integral_constant<int,2> {};

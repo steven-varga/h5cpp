@@ -30,11 +30,11 @@ namespace h5 { namespace impl {
 			rhs.copy( handle );
 			return *this;
 		 }
-		// convert to propery
+		// convert to property
 		void copy(::hid_t handle_) const { /*CRTP idiom*/
 			static_cast<const Derived*>(this)->copy_impl( handle_ );
 		}
-		/*transfering ownership to managed handle*/
+		/*transferring ownership to managed handle*/
 		operator phid_t( ) const {
 			static_cast<const Derived*>(this)->copy_impl( handle );
 			H5Iinc_ref( handle ); /*keep this alive */
@@ -53,6 +53,11 @@ namespace h5 { namespace impl {
 		using type = phid_t;
 
 		prop_t( typename capi::args_t values ) : args( values ) {
+			H5CPP_CHECK_NZ( (this->handle = H5Pcreate(init())),
+				   h5::error::property_list::misc, "failed to create property");
+		}
+		template <class... Ts> // allow prop{value_0, value_1} call instead of less appealing: prop{{...}}
+		prop_t( Ts... values ) : args( values... ) {
 			H5CPP_CHECK_NZ( (this->handle = H5Pcreate(init())),
 				   h5::error::property_list::misc, "failed to create property");
 		}
@@ -107,12 +112,17 @@ namespace h5 { namespace impl {
 		hsize_t values[H5CPP_MAX_RANK];
 	};
 
-	/* CAPI macros are sequence calls: (H5OPEN, register_property_class), these are all meant to be read only/copied from,
+	/* CAPI macros are sequence calls: (H5OPEN, register_property_class), these are all meant to be read only/copied from
 	 */
 	#define H5CPP__capicall( name, default_id ) ::hid_t inline default_##name(){ return default_id; } 	\
 		template <class... args> using name##_args = impl::capi_t<args...>; 						\
 		template <class capi, typename capi::fn_t capi_call>                                        \
 			using name##_call = prop_t<h5::name##_t, default_##name,  capi, capi_call>; 	        \
+		template <class capi, typename capi::fn_t capi_call>                                        \
+			using name##_acall = aprop_t<h5::name##_t, default_##name,  capi, capi_call>; 	        \
+		template <class capi, typename capi::fn_t capi_call, class T>                               \
+			using name##_tcall = tprop_t<h5::name##_t, default_##name,  capi, capi_call, T>;        \
+
 
 	//impl::fapl_call< impl::fapl_args<hid_t,H5F_libver_t,H5F_libver_t>,H5Pset_libver_bounds>;
 
@@ -130,11 +140,12 @@ namespace h5 { namespace impl {
 
 	// only data control property list set_chunk has this pattern, lets allow to define CAPI argument lists 
 	// the same way as with others
-	template <class capi, typename capi::fn_t capi_call>
-		using dcpl_acall = aprop_t<h5::dcpl_t,default_dcpl, capi,capi_call>;
+	//template <class capi, typename capi::fn_t capi_call>
+	//	using dcpl_acall = aprop_t<h5::dcpl_t,default_dcpl, capi,capi_call>;
+
 	// only data control property list set_value has this pattern, lets allow to define CAPI argument lists 
 	// the same way as with others
-	template <class capi, typename capi::fn_t capi_call, class T> using dcpl_tcall = tprop_t<h5::dcpl_t,default_dcpl, capi, capi_call, T>;
+	//template <class capi, typename capi::fn_t capi_call, class T> using dcpl_tcall = tprop_t<h5::dcpl_t,default_dcpl, capi, capi_call, T>;
 }}
 
 namespace h5::impl {
@@ -161,14 +172,12 @@ using userblock                = impl::fcpl_call< impl::fcpl_args<hid_t,hsize_t>
 #endif
 #if H5_VERSION_GE(1,10,1)
 using file_space_page_size     = impl::fcpl_call< impl::fcpl_args<hid_t,hsize_t>,           H5Pset_file_space_page_size>;
-using file_space_page_strategy = impl::fcpl_call< impl::fcpl_args<hid_t,H5F_fspace_strategy_t,hbool_t,hsize_t>,H5Pset_file_space_strategy>;
-/* FIXME: takes arguments, should be a template!
-const static h5::file_space_page_strategy strategy_fsm_aggr{H5F_FSPACE_STRATEGY_FSM_AGGR};
-const static h5::file_space_page_strategy strategy_aggr{H5F_FSPACE_STRATEGY_AGGR};
-const static h5::file_space_page_strategy strategy_none{H5F_FSPACE_STRATEGY_NONE};
-*/
+using file_space_strategy = impl::fcpl_call< impl::fcpl_args<hid_t,H5F_fspace_strategy_t,hbool_t,hsize_t>,H5Pset_file_space_strategy>;
+//const static h5::file_space_strategy strategy_fsm_aggr{H5F_FSPACE_STRATEGY_FSM_AGGR};
+//const static h5::file_space_strategy strategy_aggr{H5F_FSPACE_STRATEGY_AGGR};
+//const static h5::file_space_strategy strategy_none{H5F_FSPACE_STRATEGY_NONE};
 	#ifdef H5_HAVE_PARALLEL
-		const static h5::file_space_page_strategy strategy_page{H5F_FSPACE_STRATEGY_PAGE};
+//		const static h5::file_space_strategy strategy_page{H5F_FSPACE_STRATEGY_PAGE};
 	#endif
 #endif
 
@@ -207,7 +216,7 @@ using mdc_config               = impl::fapl_call< impl::fapl_args<hid_t,H5AC_cac
 using mdc_image_config         = impl::fapl_call< impl::fapl_args<hid_t,H5AC_cache_image_config_t*>,H5Pset_mdc_image_config>;
 using mdc_log_options          = impl::fapl_call< impl::fapl_args<hid_t,hbool_t,const char*,hbool_t>,H5Pset_mdc_log_options>;
 #endif
-#if H5_VERSION_GE(1,14,0) //FIXME: find out why the compile error with valid 1.8.0 version 
+#if H5_VERSION_GE(1,20,0) //FIXME: find out why the compile error with valid 1.8.0 version 
 using fapl_direct              = impl::fapl_call<impl::fapl_args<hid_t,size_t,size_t,size_t, H5Pset_fapl_direct>;
 #endif
 //
@@ -218,7 +227,7 @@ namespace flag {
 	using fapl_windows         = impl::fapl_call< impl::fapl_args<hid_t>,H5Pset_fapl_windows>;
 #endif
 }
-const static h5::libver_bounds latest_version({H5F_LIBVER_LATEST, H5F_LIBVER_LATEST});
+const static h5::libver_bounds latest_version(H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
 const static flag::fapl_sec2  sec2;
 const static flag::fapl_stdio stdio;
 const static h5::fclose_degree fclose_degree_weak{H5F_CLOSE_WEAK};
