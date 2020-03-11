@@ -39,7 +39,7 @@ namespace h5 { namespace impl { namespace detail {
 namespace h5 { namespace impl { namespace detail { 	                                      \
 	template <> struct hid_t<C_TYPE,H5Tclose,true,true,hdf5::type> : public dt_p<C_TYPE> {\
 		using parent = dt_p<C_TYPE>;                                                      \
-		using parent::hid_t;                                                              \
+		using dt_p<C_TYPE>::hid_t;                                                              \
 		using hidtype = C_TYPE;                                                           \
 		hid_t() : parent( H5Tcopy( H5_TYPE ) ) { 										  \
 			hid_t id = static_cast<hid_t>( *this );                                       \
@@ -75,7 +75,7 @@ namespace h5 {                                                                  
    namespace h5::impl::detail {
 	template <> struct hid_t<half_float::half, H5Tclose,true,true, hdf5::type> : public dt_p<half_float::half> {
 		using parent = dt_p<half_float::half>;
-		using parent::hid_t;
+		using dt_p<half_float::half>::hid_t;
 		using hidtype = half_float::half;
 		hid_t() : parent( H5Tcopy( H5T_NATIVE_FLOAT ) ) {
 
@@ -98,7 +98,7 @@ namespace h5 {
    namespace h5::impl::detail {
 	template <> struct hid_t<OPENEXR_NAMESPACE::half, H5Tclose,true,true, hdf5::type> : public dt_p<OPENEXR_NAMESPACE::half> {
 		using parent = dt_p<OPENEXR_NAMESPACE::half>;
-		using parent::hid_t;
+		using dt_p<OPENEXR_NAMESPACE::half>::hid_t;
 		using hidtype = OPENEXR_NAMESPACE::half;
 		hid_t() : parent( H5Tcopy( H5T_NATIVE_FLOAT ) ) {
 

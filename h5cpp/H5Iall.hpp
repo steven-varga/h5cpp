@@ -113,7 +113,9 @@ namespace h5 { namespace impl { namespace detail {
 	struct hid_t<T,capi_close, true,true,hdf5::property> : public hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
 		using hidtype = T;
-		using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
+		//FIXME: delegating ctor, don't use `parent::hid_t` as crashes clang
+        using hid_t<T,capi_close,true,true,hdf5::any>::hid_t;
+        //using parent::hid_t; // is a must because of ds_t{hid_t} ctor 
 		//hid_t( ::hid_t handle_ )  {}
 		//hid_t& operator =( ::hid_t ref ) {}
 
@@ -130,8 +132,9 @@ namespace h5 { namespace impl { namespace detail {
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, true,true,hdf5::dataset> : public hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
-		using parent::hid_t;  // is a must because of ds_t{hid_t} ctor 
-		using parent::handle; // is a must because of ds_t{hid_t} ctor 
+		//using parent::hid_t;  // is a must because of ds_t{hid_t} ctor 
+		using hid_t<T,capi_close,true,true,hdf5::any>::hid_t;
+        using parent::handle; // is a must because of ds_t{hid_t} ctor 
 		using hidtype = T;
 		using at_t = hid_t<h5::impl::at_t,H5Aclose,true,true,hdf5::attribute>;
 
@@ -147,7 +150,7 @@ namespace h5 { namespace impl { namespace detail {
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, true,true,hdf5::attribute> : public hid_t<T,capi_close,true,true,hdf5::any> {
 		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
-		using parent::hid_t;  // is a must because of ds_t{hid_t} ctor 
+		using hid_t<T,capi_close,true,true,hdf5::any>::hid_t;  // inhereting ctor 
 		using parent::handle;
 		using hidtype = T;
 		using at_t = hid_t<h5::impl::at_t,H5Aclose,true,true,hdf5::attribute>;
