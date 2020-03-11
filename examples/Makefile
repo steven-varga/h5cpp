@@ -6,7 +6,7 @@
 #  _____________________________________________________________________________
 #
 
-DIRS = basics before-after compound packet-table  raw_memory linalg transform multi-tu stl utf
+DIRS = attributes basics before-after compound csv datatypes half-float/christian-rau linalg multi-tu packet-table  raw_memory stl string transform utf
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)

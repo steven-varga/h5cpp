@@ -22,7 +22,8 @@ namespace bitstring {
 namespace h5::impl::detail {
 	template <> struct hid_t<bitstring::n_bit, H5Tclose,true,true, hdf5::type> : public dt_p<bitstring::n_bit> {
 		using parent = dt_p<bitstring::n_bit>;  // h5cpp needs the following typedefs
-		using parent::hid_t;
+		using dt_p<bitstring::n_bit>::hid_t;
+		//using parent::hid_t; --> this style of inheriting ctor will not work with clang :(
 		using hidtype = bitstring::n_bit;
 
 		// opaque doesn't care of byte order, also since you are using single byte
