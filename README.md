@@ -6,6 +6,9 @@
 Easy to use  [HDF5][hdf5] C++ templates for Serial and Paralell HDF5  
 ----------------------------------------------------------------------
 **News:**
+bugfix: #41,#45 inheriting ctor related problems has been fixed, tested with:
+clang++6.0, clang++-7, clang++-8, clang++-9, clang++-10 and g++-7, g++-8, g++-9
+
 h5cpp compiler can easily be compiled with stock LLVM6.0 and clang6.0 
 binary release h5cpp-dev_1.10.4-5.xxx contains bug fixes, and half float support, [deb](http://h5cpp.org/download/h5cpp-dev_1.10.4-5_amd64.deb),[rpm](http://h5cpp.org/download/h5cpp-dev-1.10.4-5.x86_64.rpm),[tarball](http://h5cpp.org/download/h5cpp-full_1.10.4-5.tar.gz)
 
