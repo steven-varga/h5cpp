@@ -5,7 +5,7 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 
-CXXFLAGS =  -std=c++11  -I/usr/local/include -I/usr/include/eigen3 
+CXXFLAGS =  -std=c++17  -I/usr/local/include -I/usr/include/eigen3 
 LIBS =  -lhdf5 -lhdf5_hl  -lz -ldl -lm -lblas -llapack
 
 test: packettable

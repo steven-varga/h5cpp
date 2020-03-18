@@ -6,6 +6,8 @@
 Easy to use  [HDF5][hdf5] C++ templates for Serial and Paralell HDF5  
 ----------------------------------------------------------------------
 **News:**
+Intel compiler support for icpc (ICC) 19.1.0.166 20191121 added
+
 bugfix: #41,#45 inheriting ctor related problems has been fixed, tested with:
 clang++6.0, clang++-7, clang++-8, clang++-9, clang++-10 and g++-7, g++-8, g++-9
 

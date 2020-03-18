@@ -6,7 +6,7 @@
 #  _____________________________________________________________________________
 
 apps = raw
-CXXFLAGS =  -std=c++11 -Wno-deprecated
+CXXFLAGS =  -std=c++17
 LIBS =  -lhdf5  -lz -ldl -lm
 
 test: $(apps)
