@@ -12,8 +12,7 @@
 #include "abstract.h"
 
 template <typename T> class IntegralTest : public AbstractTest<T>{};
-typedef ::testing::Types<float> PrimitiveTypes;
-//typedef ::testing::Types<H5CPP_TEST_PRIMITIVE_TYPES> PrimitiveTypes;
+typedef ::testing::Types<H5CPP_TEST_PRIMITIVE_TYPES> PrimitiveTypes;
 TYPED_TEST_CASE(IntegralTest, PrimitiveTypes);
 
 
@@ -173,8 +172,6 @@ TYPED_TEST(IntegralTest, read_reference ) {
 	h5::read<std::vector<TypeParam>>(this->fd, this->name + ext, buf );
 	// compile error: h5::count_t is present!!!
 	//h5::read<std::vector<TypeParam>>(this->fd, this->name + ext, buf, h5::count{5} );
-//FIXME: what does this mean???
-	//	h5::read<std::vector<TypeParam>>(this->fd, this->name + ext, buf, h5::offset{2}, h5::stride{2}, h5::count{3} );
 }
 
 TYPED_TEST(IntegralTest, read_pointer ) {

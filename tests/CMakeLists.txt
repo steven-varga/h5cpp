@@ -26,7 +26,6 @@ function(h5cpp_test target)
             glog
             gtest
             gtest_main
-            boost_date_time
             ${HDF5_C_LIBRARIES}
             ${HDF5_C_HL_LIBRARIES}
             z
@@ -40,6 +39,5 @@ endfunction()
 
 h5cpp_test(test-stl         stl.cpp         event_listener.hpp abstract.h)
 h5cpp_test(test-integral    integral.cpp    event_listener.hpp abstract.h)
-h5cpp_test(test-pipeline    pipeline.cpp    event_listener.hpp abstract.h)
 h5cpp_test(test-armadillo   armadillo.cpp   event_listener.hpp abstract.h)
 h5cpp_test(test-packettable packettable.cpp event_listener.hpp struct.h)
