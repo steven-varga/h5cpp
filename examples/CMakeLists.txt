@@ -24,7 +24,8 @@ if(HDF5_VERSION VERSION_GREATER 1.12.0)
 	message("H5CPP KITA support is available, see webpage for details...")
 endif()
 
-
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
 	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
@@ -101,10 +102,14 @@ if( H5CPP_COMPILER_FOUND )
 		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/compound/struct.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/compound/generated.h
 		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-01.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-01.h
 		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-02.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-02.h
-		## yanked for now due to eigen dependency
-		#COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/packet-table/packettable.cpp -- ${CMAKE_CXXFLAGS} Eigen3::Eigen -D${CMAKE_CURRENT_SOURCE_DIR}/packet-table/generated.h
 		COMMENT "-- generating hdf5 compound type descriptors with h5cpp compiler ...")
-	add_custom_target(examples ALL DEPENDS h5cpp-compiler-generated)
+	if( ${Eigen3_FOUND} )
+		add_custom_target(h5cpp-compiler-generated-eigen ALL
+			${H5CPP} ${CMAKE_CURRENT_SOURCE_DIR}/packet-table/packettable.cpp -- 
+			${CMAKE_CXXFLAGS}  -I${EIGEN3_INCLUDE_DIR} -D${CMAKE_CURRENT_SOURCE_DIR}/packet-table/generated.h
+		COMMENT "-- generating hdf5 compound type descriptors with h5cpp compiler ...")
+	endif()
+	add_custom_target(examples ALL DEPENDS h5cpp-compiler-generated h5cpp-compiler-generated-eigen )
 else()
 	add_custom_target(examples ALL)
 	message("-- H5CPP compiler NOT found: using `generated.h` already present...")
@@ -123,6 +128,7 @@ endif()
 if( ${Eigen3_FOUND} )
 	message( "-- Found: eigen3 ${Eigen3_VERSION} added to examples" )
 	add_executable(examples-eigen3 EXCLUDE_FROM_ALL "linalg/eigen3.cpp")
+	include_directories(${EIGEN3_INCLUDE_DIR})
 	target_link_libraries(examples-eigen3 ${LIBS} Eigen3::Eigen )
 	add_dependencies(examples examples-eigen3)
 endif()
@@ -188,7 +194,7 @@ if( MPI_FOUND AND HDF5_IS_PARALLEL )
 	target_compile_definitions(examples-mpi-collective PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
 	target_include_directories(examples-mpi-collective PUBLIC ${MPI_CXX_INCLUDE_DIRS})
 	add_dependencies(examples examples-mpi-collective)
-	
+
 	## mpi-independent ###
 	add_executable(examples-mpi-independent EXCLUDE_FROM_ALL "mpi/independent.cpp")
 	target_link_libraries(examples-mpi-independent ${LIBS} ${MPI_CXX_LIBRARIES} )
@@ -207,9 +213,15 @@ if( MPI_FOUND AND HDF5_IS_PARALLEL )
 endif()
 
 ## attributes ###
-#add_executable(examples-attributes EXCLUDE_FROM_ALL "attributes/attributes.cpp")
-#target_link_libraries(examples-attributes ${LIBS} )
-#add_dependencies(examples examples-attributes)
+add_executable(examples-attributes EXCLUDE_FROM_ALL "attributes/attributes.cpp")
+target_link_libraries(examples-attributes ${LIBS} )
+add_dependencies(examples examples-attributes)
+
+## basics ###
+add_executable(examples-basics EXCLUDE_FROM_ALL "basics/basics.cpp")
+target_link_libraries(examples-basics ${LIBS} )
+add_dependencies(examples examples-basics)
+
 
 ## before-after: before ###
 add_executable(examples-before EXCLUDE_FROM_ALL "before-after/compound.c")
@@ -226,6 +238,29 @@ add_executable(examples-compound EXCLUDE_FROM_ALL "compound/struct.cpp")
 target_link_libraries(examples-compound ${LIBS} )
 add_dependencies(examples examples-compound)
 
+## csv ###
+add_executable(examples-csv EXCLUDE_FROM_ALL "csv/csv2hdf5.cpp")
+target_link_libraries(examples-csv ${LIBS} Threads::Threads )
+add_dependencies(examples examples-csv)
+
+## datasets ###
+add_executable(examples-datasets EXCLUDE_FROM_ALL "datasets/datasets.cpp")
+target_link_libraries(examples-datasets ${LIBS} )
+add_dependencies(examples examples-datasets)
+
+if( ${Eigen3_FOUND} )
+## datatypes nbit ###
+	add_executable(examples-nbit EXCLUDE_FROM_ALL "datatypes/n-bit.cpp")
+	target_link_libraries(examples-nbit ${LIBS}  )
+	include_directories(${EIGEN3_INCLUDE_DIR})
+	add_dependencies(examples examples-nbit)
+endif()
+
+## datatypes twobit ###
+add_executable(examples-twobit EXCLUDE_FROM_ALL "datatypes/two-bit.cpp")
+target_link_libraries(examples-twobit ${LIBS} )
+add_dependencies(examples examples-twobit)
+
 ## multi translation unit ###
 #add_library(examples-multi-tu01 OBJECT "multi-tu/tu_01.cpp")
 #add_library(examples-multi-tu02 OBJECT "multi-tu/tu_02.cpp")
@@ -234,10 +269,15 @@ add_dependencies(examples examples-compound)
 #target_link_libraries(examples-multi-tu  examples-multi-tu01 examples-multi-tu02 ${LIBS}   )
 #add_dependencies(examples examples-multi-tu)
 
-## basics ###
-add_executable(examples-basics EXCLUDE_FROM_ALL "basics/basics.cpp")
-target_link_libraries(examples-basics ${LIBS} )
-add_dependencies(examples examples-basics)
+## optimized ###
+add_executable(examples-optimized EXCLUDE_FROM_ALL "optimized/optimized.cpp")
+target_link_libraries(examples-optimized ${LIBS} )
+add_dependencies(examples examples-optimized)
+
+## packet-table ###
+add_executable(examples-packet-table EXCLUDE_FROM_ALL "packet-table/packettable.cpp")
+target_link_libraries(examples-optimized ${LIBS} )
+add_dependencies(examples examples-optimized)
 
 ## raw memory ###
 add_executable(examples-raw EXCLUDE_FROM_ALL "raw_memory/raw.cpp")
@@ -249,10 +289,17 @@ add_executable(examples-stl EXCLUDE_FROM_ALL "stl/vector.cpp")
 target_link_libraries(examples-stl ${LIBS} )
 add_dependencies(examples examples-stl)
 
+## string ###
+add_executable(examples-string EXCLUDE_FROM_ALL "string/string.cpp")
+target_link_libraries(examples-string ${LIBS} )
+add_dependencies(examples examples-string)
+
 ## transform ###
 add_executable(examples-transform EXCLUDE_FROM_ALL "transform/transform.cpp")
 target_link_libraries(examples-transform ${LIBS} )
 add_dependencies(examples examples-transform)
 
-
-
+## utf ###
+add_executable(examples-utf EXCLUDE_FROM_ALL "utf/utf.cpp")
+target_link_libraries(examples-utf ${LIBS} )
+add_dependencies(examples examples-utf)

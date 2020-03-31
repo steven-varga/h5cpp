@@ -1,8 +1,8 @@
 /* Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
  *     Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-#ifndef H5CPP_GUARD_AbuBg
-#define H5CPP_GUARD_AbuBg
+#ifndef H5CPP_GUARD_RMyHg
+#define H5CPP_GUARD_RMyHg
 
 namespace h5{
     //template specialization of s1_t to create HDF5 COMPOUND type

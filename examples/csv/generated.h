@@ -1,8 +1,8 @@
 /* Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
  *     Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-#ifndef H5CPP_GUARD_wkxnx
-#define H5CPP_GUARD_wkxnx
+#ifndef H5CPP_GUARD_GCBLl
+#define H5CPP_GUARD_GCBLl
 
 namespace h5{
     //template specialization of input_t to create HDF5 COMPOUND type
