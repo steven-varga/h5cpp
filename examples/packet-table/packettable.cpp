@@ -54,6 +54,7 @@ int main(){
 	} catch ( const h5::error::any& e ){
 		std::cerr << "ERROR:" << e.what();
 	}
+	
 
 	// SCALAR: pod 
 	try { //
@@ -75,42 +76,17 @@ int main(){
 		std::cerr << "ERROR:" << e.what();
 	}
 
-/*
-	// CONTAINERS : WORK IN PROGRESS!!!
 	{ 	// packet table for a collection of matrices modelling a HD resolution of gray scale images
-		// c++ objects may be factored into:
-		// 1. information available compile time: underlying type or element_type, ... 
-		// 2. runtime information: actual place and size in memory
-		// because of the latter, there is no 'type' safe way to declare a packet table but agree upon that 
-		// the slowest growing dimension -- the left most in current_dims{ index, rows,cols } 
-		// is the object index, the rest : [rows*cols] is the data content of the object being indexed
-
-		// creates and transfers ownership to pt
-		//size_t nrows = 1280, ncols=720, nframes=25*60*1;
-		size_t nrows = 3, ncols=13, nframes=7;
-		h5::pt_t pt = h5::create<double>(fd, "stream of matrices", // 1280 x 720
-				h5::max_dims{H5S_UNLIMITED,nrows,ncols},
-				// currently chunk dimensions must match object size
-				h5::chunk{1,nrows,ncols} ); // chunk size controls h5::append internal cache size
+		size_t nrows = 2, ncols=256, nframes=100;
+		h5::pt_t pt = h5::create<double>(fd, "stream of matrices",
+				h5::max_dims{H5S_UNLIMITED,nrows,ncols}, h5::chunk{1,nrows,ncols} );
 		Matrix<double> M(nrows,ncols);
-		// paint matrix with a sequence -- arma::mat doesn't know iterators
 		int k=0;
-	   	for( int i=0; i<nrows; i++)
-			for(int j=0; j<ncols; j++) M(i,j) = ++k;
-		// actual performance: create 'movie' frame by frame
-		for( int i = 1; i < nframes; i++) 	//
-			h5::append( pt, M);  			// save it into file
+	   	for( int i=0; i<nrows; i++) for(int j=0; j<ncols; j++) M(i,j) = ++k;
+		// actual code, you may insert arbitrary number of frames: nrows x ncols
+		for( int i = 0; i < nframes; i++)
+			h5::append( pt, M);
 	}
 
-	{
-		h5::pt_t pt = h5::create<double>(fd, "stream of vectors",
-				h5::max_dims{H5S_UNLIMITED,5}, h5::chunk{1,5} );
-
-		arma::vec V(5); for(int i=0; i<5; i++) V(i) = i;
-
-		for( int i = 0; i < 7; i++)
-			V[0] = i, h5::append( pt, V);  			// save it into file
-	}
-*/
 	return 0;
 }

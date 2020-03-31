@@ -1,0 +1,20 @@
+site_name: H5CPP
+nav:
+    - Introduction: index.md
+    - Documentation: architecture.md
+    - Type System: typesystem.md
+    - Compiler: compiler.md
+    - Examples: examples.md
+    - Presentations: presentations.md
+    - Install: install.md
+
+theme:
+    name: mkdocs
+    custom_dir: theme/
+    include_sidebar: true
+
+markdown_extensions:
+    - footnotes
+    - toc:
+        permalink: "#"
+        separator: "-"

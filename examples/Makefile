@@ -10,7 +10,7 @@ DIRS = basics before-after compound packet-table  raw_memory linalg transform mu
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
-DISTCLEANDIRS = $(DIRS:%=distclean-%)
+DISTCLEANDIRS = $(DIRS:%=dist-clean-%)
 TESTDIRS = $(DIRS:%=test-%)
 
 all: $(BUILDDIRS)
@@ -28,9 +28,9 @@ clean: $(CLEANDIRS)
 $(CLEANDIRS): 
 	$(MAKE) -C $(@:clean-%=%) clean
 
-distclean: $(DISTCLEANDIRS)
+dist-clean: $(DISTCLEANDIRS)
 $(DISTCLEANDIRS): 
-	$(MAKE) -C $(@:distclean-%=%) distclean
+	$(MAKE) -C $(@:dist-clean-%=%) dist-clean
 
 .PHONY: subdirs $(DIRS)
 .PHONY: subdirs $(BUILDDIRS)

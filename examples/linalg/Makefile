@@ -5,19 +5,14 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 #
-apps = arma eigen3 blaze itpp ublas dlib
+apps = armadillo eigen3 blaze itpp ublas dlib
 
 CXXFLAGS = -Wno-deprecated  -Wall
 LIBS =  -lhdf5 -lz -ldl -lm
 INCLUDES=/usr/include/eigen3
 
 test: $(apps)
-	@./arma
-	@./eigen3
-	@./itpp
-	@./blaze
-	@./ublas
-	@./dlib
+	$(foreach app, $(apps), ./$(app) )
 
 all: $(apps)
 
@@ -37,7 +32,7 @@ ublas: ublas.cpp
 	$(CXX) $^ $(LIBS)  -o $@
 
 dlib: dlib.cpp
-	$(CXX) $^ $(LIBS)  -o $@
+	$(CXX) $^ $(LIBS) -ldlib  -o $@
 
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)

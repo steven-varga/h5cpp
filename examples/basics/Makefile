@@ -26,7 +26,7 @@ basics: basics.o
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)
 
-distclean: clean
+dist-clean: clean
 
 .PHONY: test
 
