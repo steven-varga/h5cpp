@@ -1,0 +1,49 @@
+/* Copyright (c) 2018-2020 vargaconsulting, Toronto,ON Canada
+ * Author: Varga, Steven <steven@vargaconsulting.ca>
+ */
+
+/* 
+cmake detects library and defines -DH5CPP_USE_ABC, otherwise define and empty tuple
+1. write traits for subsystem
+2. add test case
+3. update CMakeList.txt
+*/
+
+#ifdef H5CPP_USE_ARMADILLO
+	#include "armadillo.hpp"
+#else
+	namespace h5::test{ template <class T> using armadillo_t = std::tuple<>; }
+#endif
+
+#ifdef H5CPP_USE_EIGEN3
+	#include "eigen3.hpp"
+#else
+	namespace h5::test{ template <class T> using eigen_t = std::tuple<>;}
+#endif
+#ifdef H5CPP_USE_BLAZE
+	#include "blaze.hpp"
+#else
+	namespace h5::test{ template <class T> using blaze_t = std::tuple<>;}
+#endif
+#ifdef H5CPP_USE_BLITZ
+	#include "blitz.hpp"
+#else
+	namespace h5::test{ template <class T> using blitz_t = std::tuple<>;}
+#endif
+#ifdef H5CPP_USE_ITPP
+	#include "itpp.hpp"
+#else
+	namespace h5::test{template <class T> using itpp_t = std::tuple<>;}
+#endif
+#ifdef H5CPP_USE_UBLAS
+	#include "ublas.hpp"
+#else
+	namespace h5::test{	template <class T> using ublas_t = std::tuple<>;}
+#endif
+
+#ifdef H5CPP_USE_DLIB
+	#include "dlib.hpp"
+#else
+	namespace h5::test{template <class T> using dlib_t = std::tuple<>;}
+#endif
+

@@ -10,67 +10,67 @@
 // to activate must include: #include "rest_vol_public.h"
 // see: https://bitbucket.hdfgroup.org/users/jhenderson/repos/rest-vol/browse
 #ifdef H5CPP_WITH_KITA
-	#define H5CPP_HAVE_KITA
+    #define H5CPP_HAVE_KITA
 #endif
 
 #ifndef H5CPP_MAX_RANK
-	#define H5CPP_MAX_RANK 7 //< maximum dimensions of stored arrays
+    #define H5CPP_MAX_RANK 7 //< maximum dimensions of stored arrays
 #endif
 
 #ifndef H5CPP_MAX_FILTER
-	#define H5CPP_MAX_FILTER 16 //< maximum number of filters in a chain
+    #define H5CPP_MAX_FILTER 16 //< maximum number of filters in a chain
 #endif
 #ifndef H5CPP_MAX_FILTER_PARAM
-	#define H5CPP_MAX_FILTER_PARAM 16 //< maximum number of filters in a chain
+    #define H5CPP_MAX_FILTER_PARAM 16 //< maximum number of filters in a chain
 #endif
 #ifndef H5CPP_MEM_ALIGNMENT
-	#define H5CPP_MEM_ALIGNMENT 64 //< maximum number of filters in a chain
+    #define H5CPP_MEM_ALIGNMENT 64 //< maximum number of filters in a chain
 #endif
 
 #ifndef H5CPP_NO_COMPRESSION 
-	#define H5CPP_NO_COMPRESSION 0 //< maximum dimensions of stored arrays
+    #define H5CPP_NO_COMPRESSION 0 //< maximum dimensions of stored arrays
 #endif
 #ifndef H5CPP_DEFAULT_COMPRESSION 
-	#define H5CPP_DEFAULT_COMPRESSION 9 //< maximum dimensions of stored arrays
+    #define H5CPP_DEFAULT_COMPRESSION 9 //< maximum dimensions of stored arrays
 #endif
 #ifndef H5CPP_RANK_VEC 
-	#define H5CPP_RANK_VEC 1
+    #define H5CPP_RANK_VEC 1
 #endif
 #ifndef H5CPP_RANK_MAT 
-	#define H5CPP_RANK_MAT 2
+    #define H5CPP_RANK_MAT 2
 #endif
 #ifndef H5CPP_RANK_CUBE 
-	#define H5CPP_RANK_CUBE 3
+    #define H5CPP_RANK_CUBE 3
 #endif
 
 // implicit conversion enabled by default `-DH5CPP_CONVERSION_EXPLICIT` to disable 
 #ifndef H5CPP_CONVERSION_EXPLICIT
-	#define H5CPP_CONVERSION_IMPLICIT
+    #define H5CPP_CONVERSION_IMPLICIT
 #endif
 // conversion from CAPI enabled by default `-DH5CPP_CONVERSION_FROM_CAPI_DISABLED` to disable 
 #ifndef H5CPP_CONVERSION_FROM_CAPI_DISABLED
-	#define H5CPP_CONVERSION_FROM_CAPI
+    #define H5CPP_CONVERSION_FROM_CAPI
 #endif
 // conversion to CAPI enabled by default `-DH5CPP_CONVERSION_TO_CAPI_DISABLED` to disable 
 #ifndef H5CPP_CONVERSION_TO_CAPI_DISABLED
-	#define H5CPP_CONVERSION_TO_CAPI
+    #define H5CPP_CONVERSION_TO_CAPI
 #endif
 // redefine to your liking
 #ifndef H5CPP_ERROR_MSG
-	#define H5CPP_ERROR_MSG( msg ) std::string( __FILE__ ) + " line#  " + std::to_string( __LINE__ ) + " : " + msg
+    #define H5CPP_ERROR_MSG( msg ) std::string( __FILE__ ) + " line#  " + std::to_string( __LINE__ ) + " : " + msg
 #endif
 
 #ifndef H5CPP_ERROR_MSG
-	#define H5CPP_ERROR_MSG( msg ) std::string( __FILE__ ) + " line#  " + std::to_string( __LINE__ ) + " : " + msg
+    #define H5CPP_ERROR_MSG( msg ) std::string( __FILE__ ) + " line#  " + std::to_string( __LINE__ ) + " : " + msg
 #endif
 
 // detecting c++17 if constexpr cond ( ... ){} 
 #ifdef __cpp_if_constexpr
-	#define h5cpp__constexpr constexpr
-	#define h5cpp__assert( condition, msg ) static_assert( condition, msg )
+    #define h5cpp__constexpr constexpr
+    #define h5cpp__assert( condition, msg ) static_assert( condition, msg )
 #else
-	#define h5cpp__constexpr
-	#define h5cpp__assert( condition, msg ) if( !condition ) throw std::runtime_error( "ERROR: "  msg )
+    #define h5cpp__constexpr
+    #define h5cpp__assert( condition, msg ) if( !condition ) throw std::runtime_error( "ERROR: "  msg )
 #endif
 
 #define H5CPP_CHECK_EQ( call, exception, msg ) if( call == 0 ) throw exception( H5CPP_ERROR_MSG( msg ));
@@ -80,46 +80,46 @@
 #define H5CPP_CHECK_ID( id, exception, msg ) if( !static_cast<::hid_t>( id ) ) throw exception( H5CPP_ERROR_MSG( msg ));
 
 #ifndef H5CPP_CONSOLE_WIDTH 
-	#define H5CPP_CONSOLE_WIDTH 30
+    #define H5CPP_CONSOLE_WIDTH 30
 #endif
 /* uncomment for automatically detext OpenHDR half 
 #ifdef _HALF_H // prefix openxdr half float
-	#define WITH_OPENEXR_HALF
+    #define WITH_OPENEXR_HALF
 #endif
 */
 #ifndef OPENEXR_NAMESPACE // prefix openxdr half float
-	#define OPENEXR_NAMESPACE
+    #define OPENEXR_NAMESPACE
 #endif
 
 
 
 
 #ifdef _GLIBCXX_ARRAY
-	#define H5CPP_STL_ARRAY
+    #define H5CPP_STL_ARRAY
 #endif
 #ifdef _GLIBCXX_FORWARD_LIST
-	#define H5CPP_STL_FORWARD_LIST
+    #define H5CPP_STL_FORWARD_LIST
 #endif
 #ifdef _GLIBCXX_MAP
-	#define H5CPP_STL_MAP
+    #define H5CPP_STL_MAP
 #endif
 #ifdef _GLIBCXX_LIST
-	#define H5CPP_STL_LIST
+    #define H5CPP_STL_LIST
 #endif
 #ifdef _GLIBCXX_QUEUE
-	#define H5CPP_STL_QUEUE
+    #define H5CPP_STL_QUEUE
 #endif
 #ifdef _GLIBCXX_SET
-	#define H5CPP_STL_SET
+    #define H5CPP_STL_SET
 #endif
 #ifdef _GLIBCXX_STACK
-	#define H5CPP_STL_STACK
+    #define H5CPP_STL_STACK
 #endif
 #ifdef _GLIBCXX_UNORDERED_MAP
-	#define H5CPP_STL_UNORDERED_MAP
+    #define H5CPP_STL_UNORDERED_MAP
 #endif
 #ifdef _GLIBCXX_UNORDERED_SET
-	#define H5CPP_STL_UNORDERED_SET
+    #define H5CPP_STL_UNORDERED_SET
 #endif
 
 /*

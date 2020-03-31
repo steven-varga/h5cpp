@@ -6,7 +6,7 @@ nav:
     - Compiler: compiler.md
     - Examples: examples.md
     - Presentations: presentations.md
-    - Download: install.md
+    - Install: install.md
 
 theme:
     name: mkdocs

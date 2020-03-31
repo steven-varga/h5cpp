@@ -114,6 +114,11 @@ is used to test integrity, here are the steps:
 4. `sudo cmake CMakeLists.txt && make`
 
 
+# API TEST details
+### H5I
+tests against descriptors
+
+
 [gcc]: https://gcc.gnu.org/projects/cxx-status.html#cxx14
 [clang]: https://clang.llvm.org/cxx_status.html
 

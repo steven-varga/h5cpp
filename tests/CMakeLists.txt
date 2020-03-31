@@ -1,43 +1,56 @@
-# check if the correct version of hdf5 available
-set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
-set(HDF5_FIND_DEBUG FALSE)
-include(FindHDF5)
-if(HDF5_VERSION VERSION_LESS ${H5CPP_VERSION})
-	message(FATAL_ERROR "H5CPP examples require of HDF5 v${H5CPP_VERSION} or greater!!!")
-else()
-	message("-- H5CPP ${PROJECT_VERSION} matches with minimum required HDF5 v${HDF5_VERSION}")
-endif()
+#  _____________________________________________________________________________
+#  Copyright (c) <2018-2020> <copyright Steven Varga, Toronto, On>
+#  Contact: Steven Varga
+#           steven@vargaconsulting.ca
+#           2018-2020 Toronto, On Canada
+#  _____________________________________________________________________________
 
+enable_testing()
+include(GoogleTest)
+find_package(ZLIB REQUIRED)
+
+
+list(APPEND CMAKE_INCLUDE_PATH "/usr/include")
+list(APPEND CMAKE_INCLUDE_PATH "/usr/local/include" )
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
 	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
-set(CMAKE_CXX_STANDARD 17)
 
-function(h5cpp_test target)
-    add_executable(${target} ${ARGN})
-    target_include_directories(${target}
-        PRIVATE
-            ${HDF5_C_INCLUDE_DIRS}
-    )
-    target_link_libraries(${target}
-        PRIVATE
-            h5cpp
+find_package(dlib QUIET)
+find_package(Eigen3 QUIET)
+find_package(Armadillo QUIET)
+find_package(Blitz QUIET)
+find_package(blaze QUIET)
+find_package(ublas QUIET)
 
-            profiler
-            glog
-            gtest
-            gtest_main
-            ${HDF5_C_LIBRARIES}
-            ${HDF5_C_HL_LIBRARIES}
-            z
-            dl
-            m
-            pthread
-    )
+pkg_check_modules(ITPP QUIET itpp)
+pkg_check_modules(Blitz QUIET blitz)
 
-    add_test(NAME ${target} COMMAND ${target} --gtest_color=auto --gtest_print_time=0)
+# propagate macro definitions into source files
+# -DNAME_FOUND=0|1
+function(add_def name)
+	string(TOUPPER ${name} macro)
+	if( ${name}_FOUND )
+		add_definitions(-DH5CPP_USE_${macro})
+	endif()
 endfunction()
 
-h5cpp_test(test-stl         stl.cpp         event_listener.hpp abstract.h)
-h5cpp_test(test-integral    integral.cpp    event_listener.hpp abstract.h)
-h5cpp_test(test-armadillo   armadillo.cpp   event_listener.hpp abstract.h)
-h5cpp_test(test-packettable packettable.cpp event_listener.hpp struct.h)
+add_def(EIGEN3)
+add_def(ARMADILLO)
+add_def(dlib)
+add_def(blaze)
+add_def(ITPP)
+add_def(Blitz)
+add_def(UBLAS)
+
+# define test case with dependencies
+function(h5cpp_test target)
+    add_executable(test-${target} ${target}.cpp)
+	set_property(TARGET test-${target} PROPERTY CXX_STANDARD 17)
+	target_include_directories(test-${target} PRIVATE ${HDF5_C_INCLUDE_DIRS} Gtest::Gtest Eigen3::Eigen)
+	target_link_libraries(test-${target} ${HDF5_LIBRARIES} GTest::GTest GTest::Main Eigen3::Eigen dlib::dlib fmt::fmt)
+	gtest_discover_tests(test-${target})
+endfunction()
+# test cases are lifted out from the following test programs
+h5cpp_test(H5cmake)
+h5cpp_test(H5Tmeta)
+

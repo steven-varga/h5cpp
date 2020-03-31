@@ -25,11 +25,6 @@ namespace h5 { namespace impl {
 		using unique_ptr = std::unique_ptr<T,h5::impl::free>;
 }}
 
-namespace h5 { namespace impl {
-	template <class H, class T=void> using is_location =
-		std::integral_constant<bool,
-			std::is_same<H, h5::gr_t>::value || std::is_same<H, h5::fd_t>::value>;
-}}
 
 namespace h5 {
 	inline ::hid_t get_access_plist( const ds_t& ds ){
@@ -184,15 +179,11 @@ namespace h5 {
 		H5CPP_CHECK_NZ(
 				H5Pset_chunk(static_cast<::hid_t>(dcpl), chunk.rank, *chunk ), std::runtime_error,	 h5::error::msg::set_chunk );
 	}
-
-
-
-	template<class T, class L>
-	inline typename std::enable_if< impl::is_location<L>::value,
-	h5::ds_t>::type createds(const L& loc, const std::string& path, const h5::dt_t<T>& type,
+	template<class T>
+	inline h5::ds_t createds(const h5::fd_t& fd, const std::string& path, const h5::dt_t<T>& type,
 		  const h5::sp_t& sp, const h5::lcpl_t& lcpl, const h5::dcpl_t& dcpl, const h5::dapl_t& dapl ){
 		hid_t ds;
-		H5CPP_CHECK_NZ(( ds = H5Dcreate2( static_cast<hid_t>(loc), path.data(), type, static_cast<hid_t>(sp),
+		H5CPP_CHECK_NZ(( ds = H5Dcreate2( static_cast<hid_t>(fd), path.data(), type, static_cast<hid_t>(sp),
 								static_cast<hid_t>(lcpl), static_cast<hid_t>(dcpl), static_cast<hid_t>( dapl )  )),
 			   std::runtime_error,	h5::error::msg::create_dataset );
 		//FIXME: hack to carry prop over
@@ -212,6 +203,7 @@ namespace h5 {
 				}
 				break;
 			case H5D_VIRTUAL: break;
+			default: break;
 		}
 		ds_.dapl = static_cast<::hid_t>( dapl );
 		return ds_;

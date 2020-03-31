@@ -37,8 +37,12 @@
 	//#include "H5misc.hpp"
 	#include "H5Sall.hpp"
 	
+	#include "H5Iall.hpp"
+	#include "H5Tall.hpp"
+
 	#include "H5meta.hpp"
 	#include "H5Tmeta.hpp"
+
 	#include "H5Meigen.hpp"
 	#include "H5Marma.hpp"
 	#include "H5Mdlib.hpp"
@@ -47,8 +51,7 @@
 	#include "H5Mitpp.hpp"
 	#include "H5Mublas.hpp"
 	
-	#include "H5Iall.hpp" /* base hid_t type definitions */
-	#include "H5Tall.hpp"
+
 	#include "H5Zall.hpp"
 	#include "H5Pall.hpp"
 	#include "H5Zpipeline.hpp"
@@ -58,4 +61,7 @@
 	#include "H5Ialgorithm.hpp"
 	#include "H5capi.hpp"
 	#include "H5cout.hpp"
+
+	#include "H5Fcreate.hpp"
+	#include "H5Fopen.hpp"
 #endif	

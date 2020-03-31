@@ -6,19 +6,7 @@
 
 #ifndef  H5CPP_IO_H
 #define H5CPP_IO_H
-namespace h5 { namespace impl {
-	/*this template defines what HDF5 object types may have attributes */
-	template <class H, class T=void> using is_valid_attr =
-		std::integral_constant<bool, std::is_same<H, ::hid_t>::value ||
-			std::is_same<H, h5::gr_t>::value || std::is_same<H, h5::ds_t>::value ||
-			std::is_same<H, h5::ob_t>::value || std::is_same<H, h5::dt_t<T>>::value>;
 
-	template <class H, class T=void> using is_location =
-		std::integral_constant<bool,
-			std::is_same<H, h5::gr_t>::value || std::is_same<H, h5::fd_t>::value>;
-}}
-	#include "H5Fcreate.hpp"
-	#include "H5Fopen.hpp"
 
 	// attributes precede regular operations so one can attach 
 	// them to datasets created

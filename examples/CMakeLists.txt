@@ -68,8 +68,19 @@ if(HDF5_VERSION VERSION_LESS 1.10.4)
 	message(FATAL_ERROR "H5CPP examples require HDF5 minimum version is 1.10.4")
 endif()
 
+if(WIN32)
+	set(CMAKE_PREFIX_PATH  "C:/linalg"  "C:/linalg/lib"  "C:/linalg/lib/cmake"  "C:/linalg/share")
+	set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
+			"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
+	set(ARMADILLO_LIBRARY_DIRS  "C:/linalg/bin")
+
+elseif(UNIX)
+	set(HDF5_ROOT /usr/local/ /usr) # there maybe more upto date library in these places
+	include(GNUInstallDirs)
+	find_package(PkgConfig REQUIRED QUIET)
+endif()
+
 find_package(ZLIB REQUIRED QUIET)
-find_package(PkgConfig REQUIRED QUIET)
 
 find_package(dlib QUIET)
 find_package(Eigen3 QUIET)

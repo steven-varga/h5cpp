@@ -5,20 +5,36 @@
 #           2019 Toronto, On Canada
 #  _____________________________________________________________________________
 
-
-
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.12.4 FATAL_ERROR)
+if(${CMAKE_VERSION} VERSION_GREATER "3.17.0")
+	cmake_policy(SET CMP0074 NEW)
+endif()
 ## match hdf5 versioning x.x.x.h5cpp-version
 project(libh5cpp-dev VERSION 1.10.4.5 LANGUAGES CXX C)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
-	"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
 set(CMAKE_CXX_STANDARD 17)
+find_package( Threads REQUIRED QUIET)
 
 add_library(h5cpp INTERFACE)
-
 # check if the correct version of hdf5 available
 set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
-set(HDF5_ROOT /usr/local/ /usr) # there maybe more upto date library in these places
+if(WIN32)
+	set(CMAKE_PREFIX_PATH  "C:/linalg"  "C:/linalg/lib"  "C:/linalg/lib/cmake"  "C:/linalg/share")
+	set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/"
+			"${CMAKE_SOURCE_DIR}/cmake/eigen3"  "${CMAKE_SOURCE_DIR}/cmake/dlib" )
+	set(ARMADILLO_LIBRARY_DIRS  "C:/linalg/bin")
+
+elseif(UNIX)
+	set(HDF5_ROOT /usr/local/ /usr) # there maybe more upto date library in these places
+	include(GNUInstallDirs)
+	find_package(PkgConfig REQUIRED QUIET)
+endif()
+if(APPLE)
+	message(STATUS "***WARNING: h5cpp is not fully tested on apple ***")
+endif()
+if(ANDROID)
+	message(STATUS "***WARNING: h5cpp is not fully tested on android ***")
+endif()
+
 include(FindHDF5)
 if(HDF5_VERSION VERSION_LESS ${H5CPP_VERSION})
 	message(FATAL_ERROR "-- !!! H5CPP examples require of HDF5 v${H5CPP_VERSION} or greater!!!")
@@ -30,40 +46,24 @@ if(HDF5_VERSION VERSION_GREATER 1.12.0)
 	message("H5CPP KITA support is available, see webpage for details...")
 endif()
 
-include(FindMPI)
+include(FindMPI MPI_SKIP_COMPILER_WRAPPER)
 if( MPI_FOUND AND HDF5_IS_PARALLEL )
 	message("-- MPI and PHDF5 found: Parallel H5CPP enabled")
 endif()
 
-if(WIN32)
-	message(STATUS "***WARNING: h5cpp is not fully tested on windows, use this port: https://github.com/ChrisDrozdowski/h5cpp ***")
-endif()
-if(APPLE)
-	message(STATUS "***WARNING: h5cpp is not fully tested on apple ***")
-endif()
-if(ANDROID)
-	message(STATUS "***WARNING: h5cpp currently doesn't work on 32bit systems nor clang > 6.0.0 ***")
-	message(STATUS "***WARNING: cross compiling HDF5 CAPI will not work, instead either download the binary from ***")
-	message(STATUS "***WARNING: authors github page, or compile the libhdf5 on device | in emulator then tarball the ***")
-	message(STATUS "***WARNING: binaries, copy them back to host, link against the libraries, enjoy the coffee.... ***")
-endif()
-
-include(GNUInstallDirs)
-find_package(Doxygen QUIET)
 
 #add_subdirectory(examples)
-<<<<<<< HEAD
 find_package(GTest)
+find_package(fmt)
 if(GTest_FOUND)
 	option(H5CPP_BUILD_TESTS "Build tests" ON)
 elseif()
 	option(H5CPP_BUILD_TESTS "Build tests" OFF)
 endif()
 
-=======
-option(H5CPP_BUILD_TESTS "Build tests" OFF)
->>>>>>> 4be3967643f00b8f4929bd9a2cfbc9398a28b332
+#option(H5CPP_BUILD_TESTS "Build tests" OFF)
 if(H5CPP_BUILD_TESTS)
+	message("-- gtest is enabled, optionally execute: `make test`")
     enable_testing()
     add_subdirectory(tests)
 endif()
@@ -74,9 +74,18 @@ target_include_directories(h5cpp INTERFACE
 	$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
 
-set(INSTALL_DIR_CMAKE    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/cmake/h5cpp")
-set(INSTALL_DIR_INCLUDE  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
-set(INSTALL_DIR_EXAMPLES "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp")
+if(WIN32)
+	if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+		set (CMAKE_INSTALL_PREFIX "C:/linalg" CACHE PATH "default install path" FORCE )
+	endif()
+	set(INSTALL_DIR_CMAKE "${CMAKE_INSTALL_PREFIX}/share/h5cpp/cmake")
+	set(INSTALL_DIR_INCLUDE  "${CMAKE_INSTALL_PREFIX}/include")
+	set(INSTALL_DIR_EXAMPLES "${CMAKE_INSTALL_PREFIX}/examples")
+elseif(UNIX)
+	set(INSTALL_DIR_CMAKE    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/cmake/h5cpp")
+	set(INSTALL_DIR_INCLUDE  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
+	set(INSTALL_DIR_EXAMPLES "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp")
+endif()
 
 message( "-- Install directory: ${INSTALL_DIR_INCLUDE}")
 

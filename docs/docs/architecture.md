@@ -6,7 +6,7 @@
 # HDF5
 <p align='justify'>
 Within an HDF5 container, datasets may be stored in [compact, chunked or contiguous](#dataset-creation-property-list) layouts. The  stored datasets are referenced by strings separated with backslash character: `/`.
-The directory entries (non-leaf nodes) are called groups `h5::gr_t`, and the (terminal) leaf nodes are the datasets `h5::ds_t` and named types `h5::dt_t`. Groups, datasets and named types can have `h5::att_t` attributes attached. At first glance, an HDF5 container appears as a regular file system with a rich set of API calls.
+The directory entries (non-leaf nodes) are called groups `h5::gr_t`, and the (terminal) leaf nodes are the datasets `h5::ds_t` and named types `h5::dt_t`. Groups, datasets and named types can have `h5::at_t` attributes attached. At first glance, an HDF5 container appears as a regular file system with a rich set of API calls.
 </p>
 ## Layouts
 #### Chunked Layout and Partial IO
@@ -321,7 +321,7 @@ The following templates are defined, where `P ::= h5::ds_t | h5::gr_t | h5::ob_t
 * `h5::at_t acreate( const P& parent, const std::string& name, args_t&&... args );`
 * `h5::at_t aopen(const  P& parent, const std::string& name, const h5::acpl_t& acpl);`
 * `T aread( const P& parent, const std::string& name, const h5::acpl_t& acpl)`
-* `h5::att_t awrite( const P& parent, const std::string& name, const T& ref, const h5::acpl_t& acpl)`
+* `h5::at_t awrite( const P& parent, const std::string& name, const T& ref, const h5::acpl_t& acpl)`
 * `void awrite( const P& parent, const std::tuple<Field...>& fields, const h5::acpl_t& acpl)`
 
 **Example:** The following snippet will create 3 sets of attribute then decorate the `h5::gr_t group` with them. Notice the use of mixed CAPI calls and how to wrap the returning `hid_t` type to RAII capable `h5::gr_t` thin template class.
@@ -674,18 +674,19 @@ Record/POD struct types are registered through this macro:
 **FYI:** there are no other public/unregistered macros other than `H5CPP_REGISTER_STRUCT`
 
 ### Resource Handles and CAPI Interop
-By default the `hid_t` type is automatically converted to / from H5CPP `h5::hid_t<T>` templated identifiers. All HDF5 CAPI identifiers are wrapped via the `h5::impl::hid_t<T>` internal template, maintaining binary compatibility, with the exception of `h5::pt_t` packet table handle.
+By default the `hid_t` type is automatically converted to / from H5CPP `h5::hid_t<T>` templated identifiers. All HDF5 CAPI identifiers are wrapped via the `h5::impl::hid_t<T>` internal template, maintaining binary compatibility, with the exception of `h5::pt_t` packet table handle. 
+Here are the properties of descriptors,`h5::ds_t` and `h5::open` are used only for the demonstration purposes.
 
-
-Here are some properties of descriptors,`h5::ds_t` and `h5::open` are used only for the demonstration, replace them with arbitrary descriptors.
-
-* `h5::ds_t ds` default CTOR, is initialized with `H5I_UNINIT`
-* `h5::ds_t res = h5::open(...)` RVO  with RAII maneged resource `H5Iinc_ref` not called, best way to initialize
-* `h5::ds_t res = std::move(h5::ds_t(...))` move assignment with RAII enabled for each handles, `H5Iinc_ref` called once
-* `h5::ds_t res = h5::ds_t(...)` copy assignment with RAII enabled for each handles, `H5Iinc_ref` called twice, considered inexpensive
-* `h5::ds_t res(hid_t)` creates resource with RAII, increments reference counts of `hid_t` with `H5Iinc_ref` 
-* `h5::ds_t res{hid_t}` create resource without RAII, for managed CAPI handles, try not using it, a full copy of a handle is cheap
-
+* `h5::ds_t ds;` [default constructor][500], is initialized with `H5I_UNINIT`
+* `h5::ds_t ds(h5::ds_t arg);` [copy constructor][501], will increment underlying `hid_t` descriptor with `H5Iinc_ref`, both `arg` and `ds` remain valid within scope
+* `h5::ds_t ds(std::move(arg));` [move constructor][502] moves handle to `ds` then invalidates `arg`
+* `h5::ds_t res = ds`  [copy assignment operator][503] increments underlying resource, `ds` remains valid.
+* `h5::ds_t res = std::move( ds )`[move assignment operator][504] moves `ds` internal descriptor to `res` then invalidates `ds` by setting its state to `H5I_UNINIT`, it allows to move resource in and outside of a scope.
+* `h5::ds_t res = h5::open(...)`  [copy elision][505]  `H5Iinc_ref` not called, best way to initialize. 
+* `h5::ds_t res(hid_t)` [converting constructor][506] creates resource with RAII, increments reference counts of `hid_t` with `H5Iinc_ref` 
+* `h5::ds_t res{hid_t}` [value initialization][507] no reference increment  `H5Iinc_ref` called, used to assign ownership with zero overhead: `ds_t ds{H5Dopen(...)}` when interacting with CAPI.
+* explicit cast: `::hid_t hid = static_cast<::hid_t>(ds)` explicit cast to HDF5 CAPI `::hid_t` which is just reading the otherwise `private` internal handle. **Note:** `::` denotes global namespace/scope
+* implicit cast: `::hid_t hid = ds` is when blending HDF5 CAPI calls with C++ calls is OK.
 The Packet Table interface has an additional conversion CTOR defined from `h5::ds_t` to `h5::pt_t` and is the preffered way to obtain a handle:
 
 * `h5::pt_t pt = h5::open(fd, 'path/to/dataset', ...)` obtains a `h5::ds_t` resource, converts it to `h5::pt_t` type then assigns it to names variable, this process will result in 2 increments to underlying CAPI handle or 2 calls to `H5Iinc_ref`. 
@@ -696,7 +697,7 @@ During the lifespan of H5CPP handles all of the underlying HDF5 desciptors are *
 Resources may be grouped into `handles` and `property_lists`-s. 
 ```yacc
 T := [ handles | property_list ]
-handles   := [ fd_t | ds_t | att_t | err_t | grp_t | id_t | obj_t ]
+handles   := [ fd_t | ds_t | at_t | err_t | gr_t | id_t | obj_t ]
 property_lists := [ file | dataset | attrib | group | link | string | type | object ]
 
 #            create       access       transfer     copy 
@@ -943,10 +944,10 @@ In addition to CAPI properties the follwoing properties are added to provide fin
 
 
 
-## C++ Idioms
+# C++ Idioms
 
 
-### RAII 
+## RAII 
 
 There is a C++ mapping for `hid_t` id-s, which reference objects, with `std::shared_ptr` type of behaviour with HDF5 CAPI internal reference counting.
 
@@ -960,7 +961,69 @@ of an CAPI `hid_t` object handle. This is equivalent behaviour to `std::shared_p
 } // resources are guaranteed to be released
 ```
 
-### Error handling 
+## Concurrency
+### Reentrant vs Threadsafe
+The action when a code block is **interrupted at any given point, then invoked again is called reentry**. This reentry doesn't necessary have to be parallel in time, although the possibility is not excluded. If this code block has a global mutable state which is modified then the consecutive reentry will leave the state undefined. The code block is said to be **reentrant if the state is well defined regardless of interruption** and consecutive reentries. Think of software/hardware interrupts, recursive calls being equivalent of reentry and the state as a global variable see: [ singleton pattern in GoF](https://en.wikipedia.org/wiki/Singleton_pattern), [static variable](https://en.wikipedia.org/wiki/Static_variable), memory reference/pointer . However [automatic storage](https://en.wikipedia.org/wiki/Automatic_variable) of standard layout types within a method/function are reentrant since each function call has it's own copy on the current stack.
+
+**Thread safety** is concerned whether a state of a code block remains well defined when executed from different threads of the OS. This is disjoint from reentry as allows datastructures stored in thread local place, making it safe when ran concurrently but unsafe for reentry as that happens from the same thread.
+
+Lifted from [wikipedia](https://en.wikipedia.org/wiki/Reentrancy_(computing)) here is the cross product of reentry and thread safety explained with examples:
+#### not thread-safe, not reentrant
+```
+int tmp; 
+// shared/global datastructure:  think of HDF5 skiplists, 
+// B-link-tree (balanced sibling linked N-ary Tree) [...] 
+
+void swap(int* x, int* y) { // mutatating operator such as awrite, write, create, acreate, 
+// increment/decrement reference counting, basically any HDF5 CAPI call that changes the HDF5 internal state
+
+    tmp = *x;
+    *x = *y;
+    /* Hardware interrupt might invoke isr() here. */
+    *y = tmp;    
+}
+// inerrupt service routine ISR used throughout the examples
+void isr() {
+    int x = 1, y = 2;
+    swap(&x, &y);
+} 
+```
+#### thread-safe, not reentrant
+```
+thread_local int tmp; // dedicate storage per thread
+void swap(int* x, int* y) {
+    tmp = *x;
+    *x = *y;
+    *y = tmp; //Hardware interrupt might invoke isr() here.
+}
+```
+
+#### not thread-safe, reentrant
+```
+thread_local int tmp;
+void swap(int* x, int* y) {
+    int s = tmp; // Save global variable, must be atomic op 
+    tmp = *x;
+    *x = *y;
+    *y = tmp;    // Hardware interrupt might invoke isr() here.
+    tmp = s;     // Restore global variable, must be atomic op 
+}
+```
+
+#### thread-safe, reentrant
+```
+void swap(int* x, int* y){
+    int tmp;     // allocated on stack, different for each function fall
+    tmp = *x;
+    *x = *y;
+    *y = tmp;    // Hardware interrupt might invoke isr() here.
+}
+```
+
+### Threads
+### Processes
+
+## Error handling 
 
 Error handling follows the C++ [Guidline][11] and the H5CPP "philosophy" which is to  help you to get started without reading a lot of documentation, and to provide ample room for more should you require it. The root of the exception tree is: `h5::error::any` derived from std::`runtime_exception` in accordance with the C++ guidelines [custom exceptions][12]. 
 All HDF5 CAPI calls are considered resources, and, in case of an error, H5CPP aims to roll back to the last known stable state while cleaning up all resource allocations between the call entry and the thrown error. This mechanism is guaranteed by RAII. 
@@ -1098,6 +1161,7 @@ h5::error : public std::runtime_error
 </pre>
 
 This is a work in progress, if for any reasons you think it could be improved, or some real life scenario is not represented please shoot me an email with the use case, a brief working example.
+
 
 
 ### Diagnostics  
@@ -1245,6 +1309,17 @@ H5CPP controls what arguments accepted for various functions calls with `std::en
 [309]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html#ObjectCopyPropFuncs
 
 [400]: https://support.hdfgroup.org/HDF5/doc/HL/RM_HDF5Optimized.html
+
+[500]: https://en.cppreference.com/w/cpp/language/default_constructor
+[501]: https://en.cppreference.com/w/cpp/language/move_constructor
+[502]: https://en.cppreference.com/w/cpp/language/copy_constructor
+[503]: https://en.cppreference.com/w/cpp/language/copy_assignment
+[504]: https://en.cppreference.com/w/cpp/language/move_assignment
+[505]: https://en.cppreference.com/w/cpp/language/copy_elision
+[506]: https://en.cppreference.com/w/cpp/language/converting_constructor
+[507]: https://en.cppreference.com/w/cpp/language/value_initialization
+
+
 
 [1000]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html#FileCreatePropFuncs
 [1001]: https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html#Property-SetUserblock

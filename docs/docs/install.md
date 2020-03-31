@@ -1,7 +1,4 @@
-<!---
- Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
- Author: Varga, Steven <steven@vargaconsulting.ca>
---->
+# LINUX
 
 ### H5CPP Headers
 For Debian and Red Hat based systems [there are packages available](http://h5cpp.org/download/), or you can check out the latest version from [GitHUB](https://github.com/steven-varga/h5cpp). The headers have no other dependencies than an C++17 capable compiler. However H5CPP often installed along a linear algebra library [full list is here](#linear-algebra)
@@ -61,6 +58,13 @@ Here is the list of C++ supported Scientific/Linear Algebra libraries:
 
 ### Intel MKL
 download intel MKL from their website, and follow instructions, don't forget to set the environment variables by adding `source /opt/intel/bin/compilervars.sh intel64` to `.bashrc`.
+
+
+# WINDOWS
+
+# MACINTOSH
+
+
 
 [10]: http://arma.sourceforge.net/
 [11]: http://www.boost.org/doc/libs/1_66_0/libs/numeric/ublas/doc/index.html
