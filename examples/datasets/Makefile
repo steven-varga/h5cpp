@@ -6,21 +6,20 @@
 #  _____________________________________________________________________________
 
 
-apps = basics
+apps = datasets
 
 CXXFLAGS =  -std=c++17 -Wno-deprecated
 LIBS =  -lhdf5  -lz -ldl -lm
 
 test: $(apps)
-	@./basics
-	#h5dump -pH 004.h5
+	@./datasets
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX)   -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
 
 all: $(apps)
 
-basics: basics.o
+datasets: datasets.o
 	$(CXX) $^ $(LIBS) -o $@
 
 clean:

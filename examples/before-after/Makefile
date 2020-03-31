@@ -31,6 +31,7 @@ after: after.o
 
 clean:
 	@$(RM) *.o *.h5 $(apps) before after
-distclean: clean
+
+dist-clean: clean
 	@$(RM) generated.h
 .PHONY: test

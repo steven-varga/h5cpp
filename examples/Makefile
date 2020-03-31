@@ -6,11 +6,11 @@
 #  _____________________________________________________________________________
 #
 
-DIRS = attributes basics before-after compound csv datatypes half-float/christian-rau linalg multi-tu packet-table  raw_memory stl string transform utf
+DIRS = basics before-after compound packet-table  raw_memory linalg transform multi-tu stl utf
 
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
-DISTCLEANDIRS = $(DIRS:%=distclean-%)
+DISTCLEANDIRS = $(DIRS:%=dist-clean-%)
 TESTDIRS = $(DIRS:%=test-%)
 
 all: $(BUILDDIRS)
@@ -28,9 +28,9 @@ clean: $(CLEANDIRS)
 $(CLEANDIRS): 
 	$(MAKE) -C $(@:clean-%=%) clean
 
-distclean: $(DISTCLEANDIRS)
+dist-clean: $(DISTCLEANDIRS)
 $(DISTCLEANDIRS): 
-	$(MAKE) -C $(@:distclean-%=%) distclean
+	$(MAKE) -C $(@:dist-clean-%=%) dist-clean
 
 .PHONY: subdirs $(DIRS)
 .PHONY: subdirs $(BUILDDIRS)

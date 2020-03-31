@@ -40,7 +40,7 @@ attributes: attributes.o
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)
 
-distclean: clean
+dist-clean: clean
 	@$(RM) generated.h
 .PHONY: test
 

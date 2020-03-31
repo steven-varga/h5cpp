@@ -30,9 +30,9 @@ struct: struct.o
 	$(CXX) $^ $(LIBS) -o $@	
 
 clean:
-	@$(RM) *.o *.h5 $(apps) struct
+	@$(RM) *.o *.h5 $(apps)  struct
 
-distclean: clean
+dist-clean: clean
 	@$(RM) generated.h
 .PHONY: test
 

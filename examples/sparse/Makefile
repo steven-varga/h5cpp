@@ -5,38 +5,22 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 #
-apps = armadillo eigen3 blaze itpp ublas dlib
+apps = arma
 
 CXXFLAGS = -Wno-deprecated  -Wall
 LIBS =  -lhdf5 -lz -ldl -lm
-INCLUDES=/usr/include/eigen3
 
-test: $(apps)
-	$(foreach app, $(apps), ./$(app) )
+test: clean $(apps)
+	@./arma
 
 all: $(apps)
 
 arma: arma.cpp
 	$(CXX) $^ $(LIBS) -o $@
 
-blaze: blaze.cpp
-	$(CXX) $^ $(LIBS) -o $@
-
-itpp: itpp.cpp
-	$(CXX) $^ $(LIBS) -litpp -o $@
-
-eigen3: eigen3.cpp
-	$(CXX)  -I/usr/include/eigen3 $^ $(LIBS)  -o $@
-
-ublas: ublas.cpp
-	$(CXX) $^ $(LIBS)  -o $@
-
-dlib: dlib.cpp
-	$(CXX) $^ $(LIBS) -ldlib  -o $@
-
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)
 
-distclean: clean
+dist-clean: clean
 .PHONY: test
 

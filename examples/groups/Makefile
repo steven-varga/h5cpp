@@ -6,27 +6,25 @@
 #  _____________________________________________________________________________
 
 
-apps = basics
+apps = groups
 
 CXXFLAGS =  -std=c++17 -Wno-deprecated
 LIBS =  -lhdf5  -lz -ldl -lm
 
 test: $(apps)
-	@./basics
-	#h5dump -pH 004.h5
+	@./groups
 
 %.o : $(SRC_DIR)/%.cpp 
 	$(CXX)   -$(INCLUDES) -o $@  $(CPPFLAGS) $(CXXFLAGS) -c $^
 
 all: $(apps)
 
-basics: basics.o
+groups: groups.o
 	$(CXX) $^ $(LIBS) -o $@
 
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)
 
 dist-clean: clean
-
 .PHONY: test
 
