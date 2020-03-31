@@ -5,7 +5,7 @@
 #           2018 Toronto, On Canada
 #  _____________________________________________________________________________
 #
-apps = armadillo eigen3 blaze itpp ublas dlib
+apps = arma eigen3 blaze itpp ublas dlib
 
 CXXFLAGS = -Wno-deprecated  -Wall
 LIBS =  -lhdf5 -lz -ldl -lm
@@ -37,6 +37,6 @@ dlib: dlib.cpp
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps)
 
-distclean: clean
+dist-clean: clean
 .PHONY: test
 

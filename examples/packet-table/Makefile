@@ -39,7 +39,7 @@ packet_batches: packet_batches.o
 clean:
 	@$(RM) *.o *.h5 $(apps)  packettable packet_batches
 
-distclean: clean
+dist-clean: clean
 	@$(RM) generated.h
 .PHONY: test
 

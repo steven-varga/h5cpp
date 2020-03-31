@@ -24,7 +24,7 @@ csv2hdf5: csv2hdf5.o
 clean:
 	@$(RM) *.o *.h5 csv2hdf5
 
-distclean: clean
+dist-clean: clean
 	@$(RM) generated.h
 .PHONY: test
 

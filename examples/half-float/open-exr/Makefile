@@ -21,6 +21,6 @@ half-float: half-float.o
 clean:
 	@$(RM) *.o *.h5 half-float
 
-distclean: clean
+dist-clean: clean
 .PHONY: test
 

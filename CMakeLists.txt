@@ -2,15 +2,15 @@
 #  Copyright (c) <2019> <copyright Steven Varga, Toronto, On>
 #  Contact: Steven Varga
 #           steven@vargaconsulting.ca
-#           2019 Toronto, On Canada
+#           2018-2020 Toronto, On Canada
 #  _____________________________________________________________________________
 
-cmake_minimum_required(VERSION 3.12.4 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 if(${CMAKE_VERSION} VERSION_GREATER "3.17.0")
 	cmake_policy(SET CMP0074 NEW)
 endif()
 ## match hdf5 versioning x.x.x.h5cpp-version
-project(libh5cpp-dev VERSION 1.10.4.5 LANGUAGES CXX C)
+project(libh5cpp-dev VERSION 1.10.4.6 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 find_package( Threads REQUIRED QUIET)
 
@@ -52,20 +52,12 @@ if( MPI_FOUND AND HDF5_IS_PARALLEL )
 endif()
 
 
-#add_subdirectory(examples)
 find_package(GTest)
 find_package(fmt)
-if(GTest_FOUND)
-	option(H5CPP_BUILD_TESTS "Build tests" ON)
-elseif()
-	option(H5CPP_BUILD_TESTS "Build tests" OFF)
-endif()
 
-#option(H5CPP_BUILD_TESTS "Build tests" OFF)
+option(H5CPP_BUILD_TESTS "Build tests" OFF)
 if(H5CPP_BUILD_TESTS)
-	message("-- gtest is enabled, optionally execute: `make test`")
-    enable_testing()
-    add_subdirectory(tests)
+	message("-- gtest is disabled in the version, new test framework in progress...")
 endif()
 
 
@@ -97,13 +89,21 @@ install(DIRECTORY examples/attributes     DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/basics         DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/before-after   DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/compound       DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/csv       	  DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/datasets    	  DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/datatypes   	  DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/half-float  	  DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/linalg         DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/multi-tu       DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/optimized      DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/packet-table   DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/raw_memory     DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/stl            DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/string         DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/transform      DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(DIRECTORY examples/utf            DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(FILES     examples/CMakeLists.txt DESTINATION "${INSTALL_DIR_EXAMPLES}")
+install(FILES     examples/Makefile       DESTINATION "${INSTALL_DIR_EXAMPLES}")
 
 #generate cmake config and version files
 include(CMakePackageConfigHelpers)

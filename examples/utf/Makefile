@@ -25,6 +25,6 @@ utf: utf.o
 clean:
 	@$(RM) *.o *.prof *.h5 $(apps) generated.h
 
-distclean: clean
+dist-clean: clean
 .PHONY: test
 

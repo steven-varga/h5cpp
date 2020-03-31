@@ -2,7 +2,7 @@ Source: libh5cpp
 Section: libdevel
 Priority: optional
 Maintainer: Steven Varga <steven@vargaconsulting.ca>
-Build-Depends: debhelper (>= 12~), cmake, libgtest-dev, libarmadillo-dev, libgoogle-perftools-dev, libgoogle-glog-dev
+Build-Depends: debhelper (>= 12~), cmake, libgtest-dev, libarmadillo-dev, libgoogle-perftools-dev
 Standards-Version: 4.5.0
 Homepage: http://h5cpp.org
 Vcs-Git: https://github.com/steven-varga/h5cpp.git

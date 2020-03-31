@@ -26,6 +26,6 @@ n-bit: n-bit.o
 clean:
 	@$(RM) *.o *.h5  n-bit two-bit
 
-distclean: clean
+dist-clean: clean
 .PHONY: test
 

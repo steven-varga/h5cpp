@@ -1,8 +1,8 @@
 /* Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
  *     Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-#ifndef H5CPP_GUARD_IYkyI
-#define H5CPP_GUARD_IYkyI
+#ifndef H5CPP_GUARD_pHjin
+#define H5CPP_GUARD_pHjin
 
 namespace h5{
     //template specialization of sn::example::Record to create HDF5 COMPOUND type
