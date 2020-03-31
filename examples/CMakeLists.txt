@@ -50,13 +50,8 @@ find_program(H5CPP
 	HINTS /usr/bin /usr/local/bin
 	DOC "path to h5cpp source code transformation tool")
 
-find_file(H5CPP_LLVM_PATH
-	NAME h5cpp-llvm
-	HINTS /usr/include /usr/local/include
-	DOC "path to h5cpp llvm specific header files")
-
-if( H5CPP AND H5CPP_LLVM_PATH)
-	message("-- H5CPP compiler found: ${H5CPP} with llvm path: ${H5CPP_LLVM_PATH}")
+if( H5CPP )
+	message("-- H5CPP compiler found: ${H5CPP}" )
 	set(H5CPP_COMPILER_FOUND TRUE)
 else()
 	set(H5CPP_COMPILER_FOUND FALSE)
@@ -75,7 +70,7 @@ if(WIN32)
 	set(ARMADILLO_LIBRARY_DIRS  "C:/linalg/bin")
 
 elseif(UNIX)
-	set(HDF5_ROOT /usr/local/ /usr) # there maybe more upto date library in these places
+	set(HDF5_CMAKE_CURRENT_SOURCE_DIR /usr/local/ /usr) # there maybe more upto date library in these places
 	include(GNUInstallDirs)
 	find_package(PkgConfig REQUIRED QUIET)
 endif()
@@ -101,12 +96,13 @@ include_directories(BEFORE ${CMAKE_SOURCE_DIR})
 
 if( H5CPP_COMPILER_FOUND )
 	add_custom_target(h5cpp-compiler-generated ALL
-		COMMAND	${H5CPP}  attributes/attributes.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dattributes/generated.h
-		COMMAND	${H5CPP}  before-after/compound.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dbefore-after/generated.h
-		COMMAND	${H5CPP}  compound/struct.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dcompound/generated.h
-		COMMAND	${H5CPP}  multi-tu/tu-01.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dmulti-tu/tu-01.h
-		COMMAND	${H5CPP}  multi-tu/tu-02.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dmulti-tu/tu-02.h
-		COMMAND	${H5CPP}  packet-table/packettable.cpp -- ${CMAKE_CXXFLAGS} -I${H5CPP_LLVM_PATH} -Dpacket-table/generated.h
+		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/attributes/attributes.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/attributes/generated.h
+		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/before-after/compound.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/before-after/generated.h
+		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/compound/struct.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/compound/generated.h
+		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-01.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-01.h
+		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-02.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-02.h
+		## yanked for now due to eigen dependency
+		#COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/packet-table/packettable.cpp -- ${CMAKE_CXXFLAGS} Eigen3::Eigen -D${CMAKE_CURRENT_SOURCE_DIR}/packet-table/generated.h
 		COMMENT "-- generating hdf5 compound type descriptors with h5cpp compiler ...")
 	add_custom_target(examples ALL DEPENDS h5cpp-compiler-generated)
 else()
