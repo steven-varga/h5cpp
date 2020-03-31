@@ -24,7 +24,7 @@ n-bit: n-bit.o
 	$(CXX) $^ $(LIBS) -o $@	
 
 clean:
-	@$(RM) *.o *.h5  n-bit
+	@$(RM) *.o *.h5  n-bit two-bit
 
 distclean: clean
 .PHONY: test
