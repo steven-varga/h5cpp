@@ -23,6 +23,6 @@ string: string.o
 clean:
 	@$(RM) *.o *.h5 $(apps)
 
-distclean: clean
+dist-clean: clean
 .PHONY: test
 

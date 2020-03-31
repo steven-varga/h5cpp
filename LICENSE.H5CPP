@@ -3,7 +3,7 @@
  H5CPP may be used for any purpose, including commercial purposes, at absolutely 
  no cost. It is distributed under  the terms of the MIT license reproduced here.
 
- Copyright (c) 20182-2020 vargaconsulting, Toronto,ON Canada
+ Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
  Author: Varga, Steven <steven@vargaconsulting.ca>
  -------------------------------------------------------------------------------
  
@@ -36,6 +36,14 @@
  NCSA HDF5 (Hierarchical Data Format 5) Software Library and Utilities
  Copyright (c) 1998-2006, The Board of Trustees of the University of Illinois. All rights reserved.
  see: LICENCE.HDF5
+ 
+ HALF FLOAT: examples/half-float/christian-rau/half.hpp
+ Copyright (c) 2012-2019 Christian Rau
+ see: LICENSE.HALF-FLOAT
+
+ CSV: examples/csv/csv.h
+ Copyright (c) 2015, ben-strasser
+ see: LICENSE.CSV
  
 
 

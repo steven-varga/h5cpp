@@ -47,7 +47,7 @@ app: tu-01.o tu-02.o main.o
 clean:
 	@$(RM) *.o *.h5  app
 
-distclean: clean
+dist-clean: clean
 	@$(RM) tu-01.h tu-02.h
 
 .PHONY: test
