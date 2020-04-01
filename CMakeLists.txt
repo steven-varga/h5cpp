@@ -10,7 +10,7 @@ if(${CMAKE_VERSION} VERSION_GREATER "3.17.0")
 	cmake_policy(SET CMP0074 NEW)
 endif()
 ## match hdf5 versioning x.x.x.h5cpp-version
-project(libh5cpp-dev VERSION 1.10.4.5 LANGUAGES CXX C)
+project(libh5cpp-dev VERSION 1.10.4.6 LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 17)
 find_package( Threads REQUIRED QUIET)
 

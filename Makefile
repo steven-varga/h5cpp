@@ -1,7 +1,7 @@
 
 PREFIX = /usr/local
 
-VERSION = 1.10.4.5
+VERSION = 1.10.4.6
 DEB = -1~exp1
 PROGRAM_NAME=libh5cpp-dev
 BIN_DIR = $(PREFIX)/bin
@@ -61,7 +61,7 @@ dist-debian-bin:
 
 dist-debian-src-upload: dist-debian-src
 	debsign -k 1B04044AF80190D78CFBE9A3B971AC62453B78AE ../libh5cpp_${VERSION}${DEB}_source.changes
-	dput mentors ../libh5cpp_${VERSION}${DEB}_source.changes
+	#dput mentors ../libh5cpp_${VERSION}${DEB}_source.changes
 
 dist-rpm: dist-debian
 	sudo alien -r ../libh5cpp-dev_${VERSION}_all.deb
