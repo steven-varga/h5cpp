@@ -6,12 +6,9 @@
 
 #ifndef  H5CPP_CAPI_HPP
 #define  H5CPP_CAPI_HPP
-
-
-
 /* rules:
  * h5::id_t{ hid_t } or direct initialization  doesn't increment reference count
- */ 
+ */
 namespace h5 { namespace impl {
 	struct free {
 		template <typename T>
@@ -114,7 +111,7 @@ namespace h5 {
 	}
 	template<class T>
 	inline size_t get_size( const h5::dt_t<T>& type ){
-		size_t size;
+		long long int size;
 		H5CPP_CHECK_NZ( (size =  H5Tget_size( static_cast<hid_t>(type) )), std::runtime_error, h5::error::msg::get_filetype_size );
 		return size;
 	}
@@ -179,11 +176,16 @@ namespace h5 {
 		H5CPP_CHECK_NZ(
 				H5Pset_chunk(static_cast<::hid_t>(dcpl), chunk.rank, *chunk ), std::runtime_error,	 h5::error::msg::set_chunk );
 	}
-	template<class T>
-	inline h5::ds_t createds(const h5::fd_t& fd, const std::string& path, const h5::dt_t<T>& type,
+	inline void set_compact_layout( h5::dcpl_t& dcpl ){
+		H5CPP_CHECK_NZ(
+				H5Pset_layout(static_cast<::hid_t>(dcpl), H5D_COMPACT), std::runtime_error,	 h5::error::msg::set_chunk );
+	}
+	template<class T, class L>
+    inline typename std::enable_if< impl::is_location<L>::value,
+    h5::ds_t>::type createds( const L& loc, const std::string& path, const h5::dt_t<T>& type,
 		  const h5::sp_t& sp, const h5::lcpl_t& lcpl, const h5::dcpl_t& dcpl, const h5::dapl_t& dapl ){
 		hid_t ds;
-		H5CPP_CHECK_NZ(( ds = H5Dcreate2( static_cast<hid_t>(fd), path.data(), type, static_cast<hid_t>(sp),
+		H5CPP_CHECK_NZ(( ds = H5Dcreate2( static_cast<hid_t>(loc), path.data(), type, static_cast<hid_t>(sp),
 								static_cast<hid_t>(lcpl), static_cast<hid_t>(dcpl), static_cast<hid_t>( dapl )  )),
 			   std::runtime_error,	h5::error::msg::create_dataset );
 		//FIXME: hack to carry prop over

@@ -9,10 +9,15 @@
 #ifndef H5CPP_GTEST_EVENT_LISTENER
 #define H5CPP_GTEST_EVENT_LISTENER
 
-#define KRED  "\x1B[31m"
-#define KGRN  "\x1B[32m"
-#define KNRM  "\x1B[0m"
-
+#ifdef H5CPP_TEST_NOCOLOR
+    #define KRED  ""
+    #define KGRN  ""
+    #define KNRM  ""
+#else
+    #define KRED  "\x1B[31m"
+    #define KGRN  "\x1B[32m"
+    #define KNRM  "\x1B[0m"
+#endif
 namespace testing { namespace internal {
 	/* 
 	 */
@@ -25,11 +30,10 @@ class MinimalistPrinter : public ::testing::EmptyTestEventListener {
 	public:
 	MinimalistPrinter( const std::string& file_name ) : file_name(file_name){};
      virtual void OnTestEnd(const ::testing::TestInfo& ti) {
-		// TimeInMillis elapsed_time() const { return elapsed_time_; }
 		auto status =  ti.result()->Passed() ? KGRN "[  OK  ]" KNRM :  KRED "[FAILED]" KNRM;
 
 		printf("%-40s %35s %-6s\n",
-				 				  ti.name(), ti.type_param() != nullptr ? ti.type_param():ti.test_case_name(), status );
+				 				  ti.name(), ti.test_case_name(), status );
 	}
 
 	virtual void OnTestProgramStart(const testing::UnitTest& ut){
@@ -50,8 +54,8 @@ class MinimalistPrinter : public ::testing::EmptyTestEventListener {
 
 	std::string file_name;
 };
-#undef KRED
-#undef KGRN
-#undef KNRM
 
+    #undef KRED
+    #undef KGRN
+    #undef KNRM
 #endif

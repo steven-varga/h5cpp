@@ -52,5 +52,7 @@ function(h5cpp_test target)
 endfunction()
 # test cases are lifted out from the following test programs
 h5cpp_test(H5cmake)
-h5cpp_test(H5Tmeta)
+h5cpp_test(H5Iall)
+
+#h5cpp_test(H5Tmeta)
 

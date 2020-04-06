@@ -31,6 +31,14 @@ namespace h5 {
         template<class T>
         friend void append( h5::pt_t& ds, const T& ref);
         void flush();
+		// TO CAPI
+		H5CPP__EXPLICIT operator ::hid_t() const {
+			return  handle;
+		}
+#ifndef DEBUG
+        protected:
+#endif // to keep compatibility
+        ::hid_t handle;
 
         private:
         void init(const h5::ds_t& ds_);
@@ -42,6 +50,7 @@ namespace h5 {
         template<class T> inline typename std::enable_if< !h5::impl::is_scalar<T>::value,
         void>::type append( const T& ref );
 
+
         impl::pipeline_t<impl::basic_pipeline_t> pipeline;
         h5::ds_t ds;
         h5::dxpl_t dxpl;
@@ -51,24 +60,28 @@ namespace h5 {
             count[H5CPP_MAX_RANK];
         size_t block_size,element_size,N,n,rank;
         void *ptr, *fill_value;
+
     };
+    template <> struct name<h5::pt_t> { static constexpr char const * value = "h5::pt_t"; };
 }
 
 
 /* initialized to invalid state
  * */
 inline h5::pt_t::pt_t() :
-    dxpl{H5Pcreate(H5P_DATASET_XFER)},ds{H5I_UNINIT},n{0},element_size{0},rank{0},fill_value{nullptr},ptr{nullptr}{
+    dxpl{H5Pcreate(H5P_DATASET_XFER)}, ds{H5I_UNINIT}, n{0}, element_size{0}, rank{0},
+    fill_value{nullptr}, ptr{nullptr}, handle{H5I_UNINIT} {
         for( int i=0; i<H5CPP_MAX_RANK; i++ )
             count[i] = 1, offset[i] = 0;
     }
 
 // conversion ctor
 inline
-h5::pt_t::pt_t( const h5::ds_t& handle ) : pt_t() {
+h5::pt_t::pt_t( const h5::ds_t& id ) : pt_t() {
     /*default ctor has an invalid state -- skip initialization */
-    if( !is_valid(handle) ) return;
-    init(handle);
+    if( !is_valid(id) ) return;
+    this->handle = static_cast<hid_t>(id);
+    init(id);
 }
 
 inline
@@ -84,6 +97,7 @@ inline
 void h5::pt_t::init( const h5::ds_t& handle ){
     try {
         ds = handle; // copy handle inc ref, behaves as unique_ptr
+        this->handle = static_cast<hid_t>(ds);
         h5::sp_t file_space = h5::get_space( handle );
         rank = h5::get_simple_extent_dims( file_space, current_dims, nullptr );
 

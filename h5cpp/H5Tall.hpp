@@ -8,10 +8,6 @@
 
 namespace h5 {
     template<class T> hid_t register_struct(){ return H5I_UNINIT; }
-    // type-name helper class for compile time id and printout 
-    template <class T> struct name {
-        static constexpr char const * value = "n/a";
-    };
 }
 
 /* template specialization from hid_t< .. > type which provides syntactic sugar in the form
@@ -26,7 +22,7 @@ namespace h5 { namespace impl { namespace detail {
         using parent = dt_p<T>;
         using hidtype = T;
         hid_t( std::initializer_list<::hid_t> fd ) : parent( fd ){}
-        hid_t() : parent( H5I_UNINIT){}
+        hid_t() : hid_t<T,H5Tclose,true,true,hdf5::any>( H5I_UNINIT ){}
     };
     template <class T> using dt_t = hid_t<T,H5Tclose,true,true,hdf5::type>;
 }}}
@@ -49,7 +45,7 @@ namespace h5 {                                                                  
 namespace h5 { namespace impl { namespace detail {                                        \
     template <> struct hid_t<C_TYPE,H5Tclose,true,true,hdf5::type> : public dt_p<C_TYPE> {\
         using parent = dt_p<C_TYPE>;                                                      \
-        using dt_p<C_TYPE>::hid_t;                                                              \
+        using dt_p<C_TYPE>::hid_t;                                                        \
         using hidtype = C_TYPE;                                                           \
         hid_t() : parent( H5Tcopy( H5_TYPE ) ) {                                          \
             hid_t id = static_cast<hid_t>( *this );                                       \
@@ -130,8 +126,6 @@ namespace h5 {
  * template parameters:
  *  hid_t< C_TYPE being mapped, conversion_from_capi, conversion_to_capi, marker_for_this_type>
  * */
-
-
 namespace h5 {
     template <class T> using dt_t = h5::impl::detail::hid_t<T,H5Tclose,true,true,h5::impl::detail::hdf5::type>;
 

@@ -5,6 +5,7 @@
  */
 #ifndef  H5CPP_DCREATE_HPP 
 #define  H5CPP_DCREATE_HPP
+#include <limits>
 
 //TODO: if constexpr(..){} >= c++17
 namespace h5 {
@@ -43,28 +44,55 @@ namespace h5 {
         // this mutable value will be referenced
         const h5::current_dims_t& current_dims = arg::get(current_dims_default, args...);
         const h5::max_dims_t& max_dims = arg::get(h5::max_dims_t{0}, args... );
-        bool has_unlimited_dimension = false;
-        size_t rank = 0;
         h5::sp_t space_id{H5I_UNINIT}; // set to invalid state 
         h5::ds_t ds{H5I_UNINIT};
 
-        if constexpr( tmax_dims::present ){
-            rank = max_dims.size();
-            if constexpr( !tcurrent_dims::present ){
-                // set current dimensions to given one or zero if H5S_UNLIMITED mimics matlab(tm) behavior while allowing extendable matrices
-                for(hsize_t i=0; i<rank; i++)
-                    current_dims_default[i] = max_dims[i] != H5S_UNLIMITED
-                        ? max_dims[i] : (has_unlimited_dimension=true, static_cast<hsize_t>(0));
-                current_dims_default.rank = rank;
-            }
-        } else static_assert( tcurrent_dims::present,"current or max dimensions must be present in order to create a dataset!" );
+        // accounting
+        bool is_equal_dims = true, is_unlimited = false,
+            is_extendable = true, is_filtering_on = false;
+        constexpr int max_compact_payload = 65520;
+        hsize_t total_space = sizeof(T);
 
-        if( !tdcpl::present && ( has_unlimited_dimension || (tcurrent_dims::present && tmax_dims::present)) ){
+        if constexpr( tmax_dims::present ){
+            size_t rank = max_dims.size();
+            if constexpr( !tcurrent_dims::present ) {
+                // set current dimensions to given one or zero if H5S_UNLIMITED mimics matlab(tm) behavior while allowing extendable matrices
+                for(hsize_t i=0; i<rank; i++){
+                    current_dims_default[i] = max_dims[i] != H5S_UNLIMITED
+                        ? max_dims[i] :  static_cast<hsize_t>(0);
+                    // taint compact | contiguous layout if unlimited
+                    if( !is_unlimited && max_dims[i] == H5S_UNLIMITED ) is_unlimited = true;
+                }
+                current_dims_default.rank = rank;
+            } else { // both dimensions are provided, check if match, unlimited 
+                for(hsize_t i=0; i<rank; i++) {
+                    if( is_equal_dims && max_dims[i] != current_dims[i] ) is_equal_dims = false;
+                    if( !is_unlimited && max_dims[i] == H5S_UNLIMITED ) is_unlimited = true;
+                    total_space *= max_dims[i];
+                }
+            }
+        } else {
+            // compiler error if no `current_dims` and `max_dims` present
+            static_assert( tcurrent_dims::present,"current or max dimensions must be present in order to create a dataset!" );
+            // we're here, great: at least having `current_dims` set, `current_dims` can't have H5S_UNLIMITED 
+            // and is consider both dimensions implicitly equal
+            is_equal_dims = true;
+            for(hsize_t i=0; i<current_dims.rank; i++) total_space *= current_dims[i];
+        }
+        //LAYOUT: by default it is contiguous
+        is_extendable = is_unlimited || !is_equal_dims;
+        if constexpr ( tdcpl::present ) is_filtering_on = H5Pget_nfilters(dcpl) > 0;
+
+        // at this point we have all the information to decide if compact dataset
+        if( !is_filtering_on && !is_extendable && total_space < max_compact_payload )
+            set_compact_layout(default_dcpl);
+        if( !tdcpl::present && ( is_unlimited || (tcurrent_dims::present && tmax_dims::present)) ) {
             chunk_t chunk{0}; chunk.rank = current_dims.rank;
-            for(hsize_t i=0; i<rank; i++)
+            for(hsize_t i=0; i<current_dims.rank; i++)
                 chunk[i] = current_dims[i] ? current_dims[i] : 1;
             h5::set_chunk(default_dcpl, chunk );
         }
+
         // use move semantics to set space
         space_id =  tmax_dims::present ?
             std::move( h5::create_simple( current_dims, max_dims ) ) :  std::move( h5::create_simple( current_dims ) );

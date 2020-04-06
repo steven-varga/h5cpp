@@ -17,6 +17,11 @@
     #define H5CPP_MAX_RANK 7 //< maximum dimensions of stored arrays
 #endif
 
+// compact dataset is 64K - book_keeping ~= 65396
+// see: https://forum.hdfgroup.org/t/what-is-the-maximum-payload-size-stored-in-compact-layout/6888?u=steven
+#ifndef H5CPP_COMPACT_PAYLOAD_MAX_SIZE
+    #define H5CPP_COMPACT_PAYLOAD_MAX_SIZE 65396 //< maximum payload stored in compact sotrage
+#endif
 #ifndef H5CPP_MAX_FILTER
     #define H5CPP_MAX_FILTER 16 //< maximum number of filters in a chain
 #endif
@@ -200,6 +205,12 @@
  *  **off** and **on**.  Typically used when failure is information: checking existence of [dataset|path] by call-fail pattern, etc...  
  *  \hdf5_links
  */
+namespace h5 {
+    template <class T> struct name {
+        static constexpr char const * value = "n/a";
+    };
+}
+
 
 #endif
 

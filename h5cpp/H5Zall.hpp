@@ -83,7 +83,6 @@ namespace h5 { namespace impl { namespace filter {
     }
     inline size_t error( void* dst, const void* src, size_t size, unsigned flags, size_t n, const unsigned params[] ){
         throw std::runtime_error("invalid filter");
-        return size;
     }
     inline call_t get_callback( H5Z_filter_t filter_id ){
 

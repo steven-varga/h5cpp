@@ -35,5 +35,3 @@ int main( int argc, char**  argv ) {
 	return RUN_ALL_TESTS();
 }
 
--DHDF5_BUILD_CPP_LIB=OFF -DHDF5_ENABLE_DIRECT_VFD=ON -DHDF5_ENABLE_ROS3_VFD=ON
-./configure --prefix=/usr/local --enable-direct-vfd  --enable-ros3-vfd --enable-build-mode=production

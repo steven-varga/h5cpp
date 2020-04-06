@@ -1,31 +1,37 @@
-/*
- * Copyright (c) 2017 vargaconsulting, Toronto,ON Canada
+/* Copyright (c) 2017-2020 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
-  */
-
+ */
 #include <gtest/gtest.h>
 namespace h5::test{
 	template <class T, class ...> struct name {
 		static constexpr char const * value = "T";
 	};
 }
+
 #include "../linalg/all"
 #include "../../h5cpp/core"
 #include "types.hpp"
+#include "pod_t.hpp"
 #include "names.hpp"
 #include "listener.hpp"
 
-template <typename T> class AbstractTest
-					: public ::testing::Test {
+template <typename T> 
+class TestWithOpenHDF5
+	: public ::testing::Test {
 public:
 	void SetUp() {
+        h5::mute();
 		dir = ::testing::UnitTest::GetInstance()->current_test_info()->name();
 		type = h5::name<T>::value;
-		name = dir + "/" + type;
-		this->fd = h5::open("test.h5", H5F_ACC_RDWR );
+		name = type + ":" + dir;
+        try {
+		    this->fd = h5::open("test.h5", H5F_ACC_RDWR );
+        } catch (const h5::error::any& err) {
+            this->fd = h5::create("test.h5", H5F_ACC_TRUNC);
+        }
 	}
 	void TearDown() {
-		// h5::close(fd);
+        h5::unmute();
 	}
 	std::string type;
 	std::string name;
@@ -33,12 +39,23 @@ public:
 	h5::fd_t fd; //< file descriptor
 };
 
-herr_t gtest_hdf5_error_handler (int a, void *unused) {
+herr_t gtest_hdf5_error_handler (long int a, void *unused) {
 	hid_t es = H5Eget_current_stack();
 	H5Eclear( es );
 	ADD_FAILURE();
 	return es;
 }
+#define H5CPP_ERROR_HANDLER_RUNNER( ARGC, ARGV ) 															\
+int main( ARGC, ARGV) { 		 																	\
+	testing::InitGoogleTest(&argc, argv); 															\
+	testing::TestEventListeners& listeners = testing::UnitTest::GetInstance()->listeners(); 		\
+	delete listeners.Release(listeners.default_result_printer()); 									\
+  	listeners.Append(new MinimalistPrinter( argv[0] ) ); 											\
+	hid_t es = H5Eget_current_stack(); 														        \
+	H5Eset_auto(H5E_DEFAULT,gtest_hdf5_error_handler, nullptr );                                    \
+	return RUN_ALL_TESTS(); 																		\
+}                                                                                                   \
+
 
 #define H5CPP_BASIC_RUNNER( ARGC, ARGV ) 															\
 int main( ARGC, ARGV) { 		 																	\

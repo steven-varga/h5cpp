@@ -1,0 +1,391 @@
+{
+  "tests": 19,
+  "failures": 0,
+  "disabled": 0,
+  "errors": 0,
+  "timestamp": "2020-04-03T15:01:08Z",
+  "time": "0s",
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "H5TallTest\/h5::fd_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::fd_t, &H5Fclose, true, true, 0>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::fd_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::ds_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::ds_t, &H5Dclose, true, true, 4>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::ds_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::pt_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::pt_t",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::pt_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::at_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::at_t, &H5Aclose, true, true, 5>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::at_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::gr_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::gr_t, &H5Gclose, true, true, 5>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::gr_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::ob_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::ob_t, &H5Oclose, true, true, 0>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::ob_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::sp_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::sp_t, &H5Sclose, true, true, 0>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::sp_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::acpl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::acpl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::acpl_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::dapl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::dapl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::dapl_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::dcpl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::dcpl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::dcpl_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::tapl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::tapl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::tapl_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::tcpl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::tcpl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::tcpl_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::gapl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::gapl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::gapl_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::gcpl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::gcpl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::gcpl_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::lapl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::lapl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::lapl_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::lcpl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::lcpl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::lcpl_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::ocpl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::ocpl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::ocpl_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::ocr_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::ocrl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::ocr_t"
+        }
+      ]
+    },
+    {
+      "name": "H5TallTest\/h5::scpl_t",
+      "tests": 1,
+      "failures": 0,
+      "disabled": 0,
+      "errors": 0,
+      "timestamp": "2020-04-03T15:01:08Z",
+      "time": "0s",
+      "testsuite": [
+        {
+          "name": "default_ctor",
+          "type_param": "h5::impl::detail::hid_t<h5::impl::scpl_t, &H5Pclose, true, true, 1>",
+          "status": "RUN",
+          "result": "COMPLETED",
+          "timestamp": "2020-04-03T15:01:08Z",
+          "time": "0s",
+          "classname": "H5TallTest\/h5::scpl_t"
+        }
+      ]
+    }
+  ]
+}

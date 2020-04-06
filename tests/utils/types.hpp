@@ -18,7 +18,7 @@
 #include <stack>
 #include <queue>
 #include <any>
-#include <h5cpp/utility>
+//#include <h5cpp/utility>
 
 namespace h5::test {
 	template <class T>
@@ -29,9 +29,12 @@ namespace h5::test {
 	template <class T> struct is_separator : std::false_type {};
 	template <class T> struct is_separator<separator_t<T>> : std::true_type {};
 
-	struct pod_t {
-		char data;
-	};
+    struct pod_t {
+      int    a;
+      float  b;
+      double c;
+    };
+
 
 	/*y axis are element types*/
 	using numerical_t = std::tuple<
@@ -87,4 +90,7 @@ namespace h5::test {
 		return data;
 	}
 }
+
+/*the type descriptor for pods*/
+#include "pod_t.hpp"
 #endif

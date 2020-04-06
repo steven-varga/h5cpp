@@ -120,7 +120,6 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
     block_size = n*element_size;
     unsigned filter_config;
     unsigned N = H5Pget_nfilters( dcpl );
-    H5Z_filter_t filter_id;
     for(unsigned i=0; i<N; i++){
         cd_size[i] = H5CPP_MAX_FILTER_PARAM;
         push(

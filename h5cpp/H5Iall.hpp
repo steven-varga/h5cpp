@@ -66,7 +66,7 @@ namespace h5 { namespace impl { namespace detail {
 		}
 		// TO CAPI
 		H5CPP__EXPLICIT operator ::hid_t() const {
-			return  handle;
+            return  handle;
 		}
         hid_t( std::initializer_list<::hid_t> fd ) // direct  initialization doesn't increment handle
 		   : handle( *fd.begin()){
@@ -93,10 +93,13 @@ namespace h5 { namespace impl { namespace detail {
 		}
 		~hid_t(){
 			::herr_t err = 0;
+            err +=0; // shuts up pgi compilers
 			if( H5Iis_valid( handle ) )
 				err = capi_close( handle );
 		}
+#ifndef DEBUG
 		protected:
+#endif
 		::hid_t handle;
 	};
 
@@ -181,11 +184,14 @@ namespace h5 { namespace impl {
 
 /*hide gory details, and stamp out descriptors */
 namespace h5 {
+	#define H5CPP__def_t( T_ ) namespace impl{struct T_ final {};} ;
+	#define H5CPP__def_n( T_ ) template <> struct name<T_> { static constexpr char const * value = "h5::"#T_; };
+
 	/*base template with no default ctors to prevent instantiation*/
-	#define H5CPP__defhid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::hid_t<impl::T_,D_>;
-	#define H5CPP__defpid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::pid_t<impl::T_,D_>;
-	#define H5CPP__defdid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::did_t<impl::T_,D_>;
-	#define H5CPP__defaid_t( T_, D_ ) namespace impl{struct T_ final {};} using T_ = impl::aid_t<impl::T_,D_>;
+	#define H5CPP__defhid_t( T_, D_ ) H5CPP__def_t( T_ ); using T_ = impl::hid_t<impl::T_,D_>; H5CPP__def_n(T_);
+    #define H5CPP__defpid_t( T_, D_ ) H5CPP__def_t( T_ ); using T_ = impl::pid_t<impl::T_,D_>; H5CPP__def_n(T_);
+	#define H5CPP__defdid_t( T_, D_ ) H5CPP__def_t( T_ ); using T_ = impl::did_t<impl::T_,D_>; H5CPP__def_n(T_);
+	#define H5CPP__defaid_t( T_, D_ ) H5CPP__def_t( T_ ); using T_ = impl::aid_t<impl::T_,D_>; H5CPP__def_n(T_);
 	/*file:  */ H5CPP__defhid_t(fd_t, H5Fclose) /*dataset:*/	H5CPP__defdid_t(ds_t, H5Dclose) /* <- packet table: is specialization enabled */
 	/*attrib:*/ H5CPP__defaid_t(at_t, H5Aclose) /*group:  */	H5CPP__defaid_t(gr_t, H5Gclose) /*object:*/	H5CPP__defhid_t(ob_t, H5Oclose)
 	/*space: */ H5CPP__defhid_t(sp_t, H5Sclose) 
@@ -204,6 +210,8 @@ namespace h5 {
 	#undef H5CPP__defaid_t
 	#undef H5CPP__defpid_t
 	#undef H5CPP__defhid_t
+    #undef H5CPP__def_n
+    #undef H5CPP__def_t
 }
 #endif
 // T ::= impl::T_ 
