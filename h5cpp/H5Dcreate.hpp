@@ -97,7 +97,7 @@ namespace h5 {
         space_id =  tmax_dims::present ?
             std::move( h5::create_simple( current_dims, max_dims ) ) :  std::move( h5::create_simple( current_dims ) );
         using element_t = typename impl::decay<T>::type;
-        h5::dt_t<element_t> type;
+        h5::dt_t<element_t> type = create<element_t>();
         return h5::createds(loc, dataset_path, type, space_id, lcpl, dcpl, dapl);
 
     } catch( const std::runtime_error& err ) {
