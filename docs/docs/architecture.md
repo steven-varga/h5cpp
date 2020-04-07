@@ -43,18 +43,16 @@ To learn more about this topic [through examples click here](examples.md).
 
 
 #### Contiguous Layout and IO Access
-The simplest form of IO is to read a dataset entirely into memory, or write it to disk. The upside is to reduce overhead when working with a large amount of small size datasets. Indeed, when objects are saved in a single IO op and no filtering is specified, H5CPP will choose this access pattern.  The downside of simplicity is the lack of filtering. This layout is handy for small datasets.
+The simplest form of IO is to read a dataset entirely into memory, or write it to disk. The upside is to reduce overhead when working with a large amount of small size datasets. Indeed, when objects are saved in a single IO op, no filtering is specified and the data is greater than `H5CPP_COMPACT_PAYLOAD_MAX_SIZE` , H5CPP will choose this layout.  The downside of simplicity is the lack of filtering.
 
 **Example:** in the simplest case, `h5::write` opens `arma.h5` with write access, then creates a data set with the right dimensions, and the data transfer commences.
 ```
 arma::vec V( {1.,2.,3.,4.,5.,6.,7.,8.});
 h5::write( "arma.h5", "one shot create write",  V);
 ```
-To force contiguous layout, you need to pass the `h5::contigous` flag with [`h5::dcpl_t`](#dataset-creation-property-list).
+Optionally, manually request contiguous layout with `h5::contigous` data control property set, see: [`h5::dcpl_t`](#dataset-creation-property-list).
 ```
 DATASET "one shot create write" {
-      DATATYPE  H5T_IEEE_F64LE
-      DATASPACE  SIMPLE { ( 8 ) / ( 8 ) }
       STORAGE_LAYOUT {
          CONTIGUOUS
          SIZE 64
@@ -63,31 +61,32 @@ DATASET "one shot create write" {
       FILTERS {
          NONE
       }
-      FILLVALUE {
-         FILL_TIME H5D_FILL_TIME_IFSET
-         VALUE  H5D_FILL_VALUE_DEFAULT
-      }
-      ALLOCATION_TIME {
-         H5D_ALLOC_TIME_LATE
-      }
+    [...]
    }
-
 ```
 
 #### Compact Layout
-is there to store tiny data sets, perhaps the nodes of a very large graph. 
+is there to store tiny data sets, perhaps the nodes of a very large graph. As documented on [this layout diagram](https://portal.hdfgroup.org/display/HDF5/File+Format+Specification) the total space for a message is upto `64K` minus some bookkeeping which may take up-to `140bytes`. By default, when no `h5::dcpl{..}` specified and the IO payload is less than `H5CPP_COMPACT_PAYLOAD_MAX_SIZE` then the data is saved as compact layout. 
 
 
 #### Data Space and Dimensions
-tell the system how in-memory data is mapped to a file (or in reverse). To give you an example, picture a block of data in consecutive memory locations that you wish to write to a cube-shaped dataset. A data space may be of a fixed extent (size) or capable of extentsion to a definite or unlimited size along one or more dimensions.
+tell the system how in-memory data is mapped to a file (or in reverse). To give you an example, picture a block of data in consecutive memory locations that you wish to write to a cube-shaped dataset. A data space may be of:
+
+- scalar
+- multi dimensional
+    - fixed size:  `current_dims` == `max_dims` 
+    - extendable upto max dims: `current_dims` <= `max_dims`
+    - unlimited dimension
 
 When working with supported objects, the in-memory dataspace is pre-computed for you. And when passing raw pointers to IO operators, the filespace will determine the amount of memory used.
 
-Lists to describe dimensions of a dataset:
+Lists to describe dimensions of a dataset (**multi dimensional** dataspace):
 
 * `h5::current_dims{i,j,k,..}` - actual extent (dimensions) `i,j,k \in {1 - max}`
-* `h5::max_dims{...}` - maximum extent (dimensions), use `H5S_UNLIMITED` for infinite extent 
+* `h5::max_dims{...}` - maximum extent (dimensions), use `H5S_UNLIMITED` for infinite length
 * `h5::chunk{...}` - define block size, clever blocking arrangement may increase throughout
+
+* when no `current_dims` and `max_dims` provided, **implicit scalar** type is defined 
 
 Lists to make selections from datasets for read or write:
 
@@ -95,6 +94,7 @@ Lists to make selections from datasets for read or write:
 * `h5::stride{...}` - every `n`-th element is considered 
 * `h5::block{...}` - every `m` block is considered
 * `h5::count{...}` - the number of blocks 
+
 
 **Note:** `h5::stride`, `h5::block` and scatter - gather operations don't work when `h5::high_throughput` is set, due to performance reasons.
 
@@ -123,11 +123,14 @@ dataset ::= (const h5::fd_t& fd |
 
 
 
-HDF5 datasets can take on various shapes and sizes in memory and on disk. A **dataspace** is a descriptor to specify the current size of the object, and if and by how much it can be extended:
+HDF5 datasets can take on various shapes and sizes in memory and on disk. A **dataspace** is a descriptor to specify the current size of the object, and if and by how much it can be extended. `null` dataspace implies **scalar** or **rank 0**. 
+
+*`[..]`* marks optional, `null` is empty set.
 ```cpp
-dataspace ::= const h5::sp_t& dataspace 
-	| const h5::current_dims& current_dim [, const h5::max_dims& max_dims ] 
-	[,const h5::current_dims& current_dim] , const h5::max_dims& max_dims;
+dataspace ::= null
+    |  const h5::sp_t& dataspace 
+	|  const h5::current_dims& current_dim [, const h5::max_dims& max_dims ] 
+	| [const h5::current_dims& current_dim, ] const h5::max_dims& max_dims;
 ```
 
 `T` denotes the type-related template parameter of an object. In the underlying implementation, the element type is deduced at compile time, and represents a flexible, abstract approach. The objects may be categorized broadly into ones with continuous memory blocks, such as matrices, vectors, C style POD structures, etc. and complex types such as C++ classes. The latter objects are not yet fully supported. More [detailed explanation in this section.](#types).
@@ -190,7 +193,13 @@ h5::ds_t ds = h5::create<short>(fd,"dataset/path/object.name"
 ds["attribute-name"] = std::vector<int>(10);
 ...
 ```
+**Behaviour/Caviats**
 
+- non-chunked fixed size dataset less than `~64K` defaults to `compact_layout` *The exact size is `64K - 140 = 65396`, this may be controlled with: H5CPP_COMPACT_PAYLOAD_MAX_SIZE*
+- if no `current_size{..}` present, and `max_size{..,H5S_UNLIMITED,..}` the `current_size` defaults to `0` where `H5S_UNLIMITED` otherwise the value, imitating Matlab(tm) behaviour.
+- `chunk{..}` being set implies chunked layout
+- unlimited datasets: when no `chunk{..}` size specified then `h5::chunk{..}` == `current_dims{..}`
+- `max_dims{..}` || `current_dims{..}` && no chunk set implies contiguous layout
 #### READ
 There are two kind of operators:
 
@@ -618,7 +627,7 @@ GROUP "/" {
 Parallel Filesystems 
 
 # Type System
-At the heart of H5CPP lies the type mapping mechanism to HDF5 NATIVE types. All type requests are redirected to this segment in one way or another. That includes supported vectors, matrices, cubes, C like structs, etc. While HDF5 internally supports type translations among various binary representation, H5CPP deals only with native types. This is not a violation of the HDF5 use-anywhere policy, only type conversion is delegated to hosts with different binary representations. Since the most common processors are Intel and AMD, with this approach conversion is unnescessary most of the time. In summary, H5CPP uses NAIVE types exclusively.
+At the heart of H5CPP lies the type mapping mechanism to HDF5 NATIVE types. All type requests are redirected to this segment in one way or another. That includes supported vectors, matrices, cubes, C like structs, etc. While HDF5 internally supports type translations among various binary representation, H5CPP deals only with native types. This is not a violation of the HDF5 use-anywhere policy, only type conversion is delegated to hosts with different binary representations. Since the most common processors are Intel and AMD, with this approach conversion is unnescessary most of the time. In summary, H5CPP uses NATIVE types exclusively.
 
 ```yacc
 integral 		:= [ unsigned | signed ] [int_8 | int_16 | int_32 | int_64 | float | double ] 
@@ -633,24 +642,23 @@ scalar 			:= integral | pod_struct | string
 
 Here is the relevant part responsible for type mapping:
 ```cpp
-#define H5CPP_REGISTER_TYPE_( C_TYPE, H5_TYPE )                                           \
-namespace h5 { namespace impl { namespace detail { 	                                      \
-	template <> struct hid_t<C_TYPE,H5Tclose,true,true,hdf5::type> : public dt_p<C_TYPE> {\
-		using parent = dt_p<C_TYPE>;                                                      \
-		using parent::hid_t;                                                              \
-		using hidtype = C_TYPE;                                                           \
-		hid_t() : parent( H5Tcopy( H5_TYPE ) ) { 										  \
-			hid_t id = static_cast<hid_t>( *this );                                       \
-			if constexpr ( std::is_pointer<C_TYPE>::value )                               \
-					H5Tset_size (id,H5T_VARIABLE), H5Tset_cset(id, H5T_CSET_UTF8);        \
-		}                                                                                 \
-	};                                                                                    \
-}}}                                                                                       \
-namespace h5 {                                                                            \
-	template <> struct name<C_TYPE> {                                                     \
-		static constexpr char const * value = #C_TYPE;                                    \
-	};                                                                                    \
-}                                                                                         \
+#define H5CPP_REGISTER_NAME_( C_TYPE )                      \
+namespace h5 {                                              \
+    template <> struct name<C_TYPE> {                       \
+        static constexpr char const * value = #C_TYPE;      \
+    };                                                      \
+}                                                           \
+
+#define H5CPP_REGISTER_TYPE_( C_TYPE, H5_TYPE )             \
+namespace h5 {                                              \
+    template <> dt_t<C_TYPE> create() {                     \
+        dt_t<C_TYPE> tid{ H5Tcopy( H5_TYPE )};              \
+            if constexpr ( std::is_pointer<C_TYPE>::value ) \
+                    H5Tset_size (tid,H5T_VARIABLE);         \
+        return tid;                                         \
+    };                                                      \
+}                                                           \
+H5CPP_REGISTER_NAME_( C_TYPE );                             \
 ```
 Arithmetic types are associated with their NATIVE HDF5 equivalent:
 ```cpp
@@ -666,18 +674,40 @@ H5CPP_REGISTER_TYPE_(long double,H5T_NATIVE_LDOUBLE)
 
 H5CPP_REGISTER_TYPE_(char*, H5T_C_S1)
 ```
-Record/POD struct types are registered through this macro:
+
+POD struct types are mapped to HDF5 Compound datatypes by specializing `h5::dt_t<T> create()` template:
 ```cpp
-#define H5CPP_REGISTER_STRUCT( POD_STRUCT ) \
-	H5CPP_REGISTER_TYPE_( POD_STRUCT, h5::register_struct<POD_STRUCT>() )
+#ifndef H5CPP_GUARD_WizjK
+#define H5CPP_GUARD_WizjK
+template<> h5::dt_t<h5::test::pod_t> inline h5::create<h5::test::pod_t>(){
+
+    h5::dt_t<h5::test::pod_t> ct_00{H5Tcreate(H5T_COMPOUND, sizeof (h5::test::pod_t))};
+    H5Tinsert(ct_00, "a",	HOFFSET(::h5::test::pod_t,a),H5T_NATIVE_INT);
+    H5Tinsert(ct_00, "b",	HOFFSET(::h5::test::pod_t,b),H5T_NATIVE_FLOAT);
+    H5Tinsert(ct_00, "c",	HOFFSET(::h5::test::pod_t,c),H5T_NATIVE_DOUBLE);
+    return ct_00;
+};
+#endif
 ```
-**FYI:** there are no other public/unregistered macros other than `H5CPP_REGISTER_STRUCT`
+
+## Extending Type System
+Good systems are easy to tailor to ones needs, H5CPP address this with its flexible type system.
+
+- FIXME: complete... 
+
+```
+
+template<> h5::dt_t<your_type>
+inline h5::create<your_type>(){
+...
+}
+```
 
 ### Resource Handles and CAPI Interop
-By default the `hid_t` type is automatically converted to / from H5CPP `h5::hid_t<T>` templated identifiers. All HDF5 CAPI identifiers are wrapped via the `h5::impl::hid_t<T>` internal template, maintaining binary compatibility, with the exception of `h5::pt_t` packet table handle. 
+By default the `hid_t` type is automatically converted to / from H5CPP `h5::hid_t<T>` templated identifiers. All HDF5 CAPI identifiers are wrapped via the `h5::impl::hid_t<T>` internal template, maintaining binary compatibility, with the exception of `h5::pt_t` packet table handle.
 Here are the properties of descriptors,`h5::ds_t` and `h5::open` are used only for the demonstration purposes.
 
-* `h5::ds_t ds;` [default constructor][500], is initialized with `H5I_UNINIT`
+* `h5::ds_t ds;` [default constructor][500], is initialized with `H5I_UNINIT` with the exception of `h5::dt<T>` type which is initialized with the copied type id of the HDF5 systemt by invoking `H5Tcopy( H5T_NATIVE_*** )`
 * `h5::ds_t ds(h5::ds_t arg);` [copy constructor][501], will increment underlying `hid_t` descriptor with `H5Iinc_ref`, both `arg` and `ds` remain valid within scope
 * `h5::ds_t ds(std::move(arg));` [move constructor][502] moves handle to `ds` then invalidates `arg`
 * `h5::ds_t res = ds`  [copy assignment operator][503] increments underlying resource, `ds` remains valid.

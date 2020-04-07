@@ -9,9 +9,11 @@
 namespace ns = h5::test;
 template <typename T> struct H5D : public TestWithOpenHDF5<T> {};
 typedef ::testing::Types<
-//char, int, long
+//char, unsigned char*
 unsigned char, unsigned short, unsigned int, unsigned long long int,
-		char, short, int, long long int, float, double, h5::test::pod_t
+		char, short, int, long long int, float, double, h5::test::pod_t,
+unsigned char*, unsigned short*, unsigned int*, unsigned long long int*,
+		char*, short*, int*, long long int*, float*, double*, h5::test::pod_t*
 > element_t;
 TYPED_TEST_SUITE(H5D, element_t, ns::element_names_t);
 
@@ -19,6 +21,17 @@ H5D_layout_t get_layout(const h5::ds_t& ds ){
     h5::dcpl_t dcpl{H5Dget_create_plist(ds)};
     return H5Pget_layout(dcpl);
 }
+
+TYPED_TEST(H5D,create_scalar_compact) {
+    // with unlimited dimension you can't have compact size
+    h5::ds_t ds = h5::create<TypeParam>(this->fd, this->name);
+    h5::sp_t sp{H5Dget_space(ds)};
+
+    int rank = H5Sget_simple_extent_ndims( sp );
+    ASSERT_EQ(H5D_COMPACT, get_layout(ds));
+    ASSERT_EQ(rank,0);
+}
+
 TYPED_TEST(H5D,create_maxdims_unlimited) {
     // with unlimited dimension you can't have compact size
     h5::ds_t ds = h5::create<TypeParam>(this->fd, this->name, h5::max_dims{10,H5S_UNLIMITED});

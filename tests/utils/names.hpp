@@ -14,12 +14,6 @@
 #include <unordered_map>
 #include <stack>
 #include <queue>
-namespace h5 {
-	template <> struct name<::h5::test::pod_t>{
-		static constexpr char const * value = "pod_t";
-	};
-}
-
 namespace h5::test {
 	template <> struct name<::h5::test::pod_t>{
 		static constexpr char const * value = "pod_t";

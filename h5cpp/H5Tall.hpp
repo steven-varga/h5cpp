@@ -40,19 +40,29 @@ namespace h5 { namespace impl { namespace detail {
  * IF the data is not in a continuous memory region then it must be copied! 
  */
 
-#define H5CPP_REGISTER_NAME_( C_TYPE )                  \
+#define H5CPP_REGISTER_NAME( C_TYPE )                  \
 template <> struct h5::name<C_TYPE> {                   \
     static constexpr char const * value = #C_TYPE;      \
 };                                                      \
 
-#define H5CPP_REGISTER_TYPE_( C_TYPE, H5_TYPE )         \
+#define H5CPP_REGISTER_TYPE( C_TYPE, H5_TYPE )         \
 template <> h5::dt_t<C_TYPE> h5::create() {             \
     h5::dt_t<C_TYPE> tid{ H5Tcopy( H5_TYPE )};          \
         if constexpr ( std::is_pointer<C_TYPE>::value ) \
-                H5Tset_size (tid,H5T_VARIABLE);         \
+            H5Tset_size (tid,H5T_VARIABLE);             \
     return tid;                                         \
 };                                                      \
-H5CPP_REGISTER_NAME_( C_TYPE );                         \
+H5CPP_REGISTER_NAME( C_TYPE );                         \
+
+#define H5CPP_REGISTER_VL_TYPE( C_TYPE, H5_TYPE )      \
+template <> h5::dt_t<C_TYPE> h5::create() {             \
+    h5::dt_t<C_TYPE> tid{                               \
+       H5Tvlen_create( H5Tcopy( H5_TYPE ))};            \
+    return tid;                                         \
+};                                                      \
+H5CPP_REGISTER_NAME( C_TYPE );                         \
+
+
 
 #define H5CPP_REGISTER_HALF_FLOAT( C_TYPE )             \
 template <> h5::dt_t<C_TYPE> create() {                 \
@@ -63,31 +73,31 @@ template <> h5::dt_t<C_TYPE> create() {                 \
     H5Tset_size(tid,2);                                 \
     return tid;                                         \
 };                                                      \
-H5CPP_REGISTER_NAME_( C_TYPE );                         \
+H5CPP_REGISTER_NAME( C_TYPE );                         \
 
-H5CPP_REGISTER_NAME_( std::string );
+H5CPP_REGISTER_NAME( std::string );
 /* registering integral data-types for NATIVE ones, which means all data is stored in the same way 
  * in file and memory: TODO: allow different types for file storage
  * */
-    H5CPP_REGISTER_TYPE_(bool,H5T_NATIVE_HBOOL)
-    H5CPP_REGISTER_TYPE_(bool*,H5T_NATIVE_HBOOL)
+    H5CPP_REGISTER_TYPE(bool,H5T_NATIVE_HBOOL)
+    H5CPP_REGISTER_TYPE(bool*,H5T_NATIVE_HBOOL)
 
-    H5CPP_REGISTER_TYPE_(unsigned char, H5T_NATIVE_UCHAR)           H5CPP_REGISTER_TYPE_(char, H5T_NATIVE_CHAR)
-    H5CPP_REGISTER_TYPE_(unsigned short, H5T_NATIVE_USHORT)         H5CPP_REGISTER_TYPE_(short, H5T_NATIVE_SHORT)
-    H5CPP_REGISTER_TYPE_(unsigned int, H5T_NATIVE_UINT)             H5CPP_REGISTER_TYPE_(int, H5T_NATIVE_INT)
-    H5CPP_REGISTER_TYPE_(unsigned long int, H5T_NATIVE_ULONG)       H5CPP_REGISTER_TYPE_(long int, H5T_NATIVE_LONG)
-    H5CPP_REGISTER_TYPE_(unsigned long long int, H5T_NATIVE_ULLONG) H5CPP_REGISTER_TYPE_(long long int, H5T_NATIVE_LLONG)
-    H5CPP_REGISTER_TYPE_(float, H5T_NATIVE_FLOAT)                   H5CPP_REGISTER_TYPE_(double, H5T_NATIVE_DOUBLE)
-    H5CPP_REGISTER_TYPE_(long double,H5T_NATIVE_LDOUBLE)
+    H5CPP_REGISTER_TYPE(unsigned char, H5T_NATIVE_UCHAR)           H5CPP_REGISTER_TYPE(char, H5T_NATIVE_CHAR)
+    H5CPP_REGISTER_TYPE(unsigned short, H5T_NATIVE_USHORT)         H5CPP_REGISTER_TYPE(short, H5T_NATIVE_SHORT)
+    H5CPP_REGISTER_TYPE(unsigned int, H5T_NATIVE_UINT)             H5CPP_REGISTER_TYPE(int, H5T_NATIVE_INT)
+    H5CPP_REGISTER_TYPE(unsigned long int, H5T_NATIVE_ULONG)       H5CPP_REGISTER_TYPE(long int, H5T_NATIVE_LONG)
+    H5CPP_REGISTER_TYPE(unsigned long long int, H5T_NATIVE_ULLONG) H5CPP_REGISTER_TYPE(long long int, H5T_NATIVE_LLONG)
+    H5CPP_REGISTER_TYPE(float, H5T_NATIVE_FLOAT)                   H5CPP_REGISTER_TYPE(double, H5T_NATIVE_DOUBLE)
+    H5CPP_REGISTER_TYPE(long double,H5T_NATIVE_LDOUBLE)
 
-    H5CPP_REGISTER_TYPE_(unsigned char*, H5T_C_S1)                  H5CPP_REGISTER_TYPE_(char*, H5T_C_S1)
+    H5CPP_REGISTER_TYPE(unsigned char*, H5T_C_S1)                  H5CPP_REGISTER_TYPE(char*, H5T_C_S1)
 
-    H5CPP_REGISTER_TYPE_(unsigned short*, H5T_NATIVE_USHORT)         H5CPP_REGISTER_TYPE_(short*, H5T_NATIVE_SHORT)
-    H5CPP_REGISTER_TYPE_(unsigned int*, H5T_NATIVE_UINT)             H5CPP_REGISTER_TYPE_(int*, H5T_NATIVE_INT)
-    H5CPP_REGISTER_TYPE_(unsigned long int*, H5T_NATIVE_ULONG)       H5CPP_REGISTER_TYPE_(long int*, H5T_NATIVE_LONG)
-    H5CPP_REGISTER_TYPE_(unsigned long long int*, H5T_NATIVE_ULLONG) H5CPP_REGISTER_TYPE_(long long int*, H5T_NATIVE_LLONG)
-    H5CPP_REGISTER_TYPE_(float*, H5T_NATIVE_FLOAT)                   H5CPP_REGISTER_TYPE_(double*, H5T_NATIVE_DOUBLE)
-    H5CPP_REGISTER_TYPE_(long double*,H5T_NATIVE_LDOUBLE)
+    H5CPP_REGISTER_VL_TYPE(unsigned short*, H5T_NATIVE_USHORT)         H5CPP_REGISTER_VL_TYPE(short*, H5T_NATIVE_SHORT)
+    H5CPP_REGISTER_VL_TYPE(unsigned int*, H5T_NATIVE_UINT)             H5CPP_REGISTER_VL_TYPE(int*, H5T_NATIVE_INT)
+    H5CPP_REGISTER_VL_TYPE(unsigned long int*, H5T_NATIVE_ULONG)       H5CPP_REGISTER_VL_TYPE(long int*, H5T_NATIVE_LONG)
+    H5CPP_REGISTER_VL_TYPE(unsigned long long int*, H5T_NATIVE_ULLONG) H5CPP_REGISTER_VL_TYPE(long long int*, H5T_NATIVE_LLONG)
+    H5CPP_REGISTER_VL_TYPE(float*, H5T_NATIVE_FLOAT)                   H5CPP_REGISTER_VL_TYPE(double*, H5T_NATIVE_DOUBLE)
+    H5CPP_REGISTER_VL_TYPE(long double*,H5T_NATIVE_LDOUBLE)
 
 // half float support: 
 // TODO: factor out in a separate file
@@ -99,7 +109,7 @@ H5CPP_REGISTER_NAME_( std::string );
     H5CPP_REGISTER_HALF_FLOAT(OPENEXR_NAMESPACE::half)
 }
 #endif
-#define H5CPP_REGISTER_STRUCT( POD_STRUCT ) H5CPP_REGISTER_TYPE_( POD_STRUCT, h5::register_struct<POD_STRUCT>() )
+#define H5CPP_REGISTER_STRUCT( POD_STRUCT ) 
 
 namespace h5 {
     template <> struct name<char**> { static constexpr char const * value = "char**"; };

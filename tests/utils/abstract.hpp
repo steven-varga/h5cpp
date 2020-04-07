@@ -15,7 +15,7 @@ namespace h5::test{
 #include "names.hpp"
 #include "listener.hpp"
 
-template <typename T> 
+template <typename T>
 class TestWithOpenHDF5
 	: public ::testing::Test {
 public:
@@ -38,6 +38,8 @@ public:
 	std::string dir;
 	h5::fd_t fd; //< file descriptor
 };
+
+
 
 herr_t gtest_hdf5_error_handler (long int a, void *unused) {
 	hid_t es = H5Eget_current_stack();

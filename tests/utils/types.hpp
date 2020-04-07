@@ -91,6 +91,5 @@ namespace h5::test {
 	}
 }
 
-/*the type descriptor for pods*/
-#include "pod_t.hpp"
+
 #endif

@@ -54,6 +54,8 @@ namespace h5 {
         hsize_t total_space = sizeof(T);
 
         if constexpr( tmax_dims::present ){
+            // check if `current_dims` present as well, if not, copy `max_dims` into `current_dims`
+            // such ranks marked as `H5S_UNLIMITED` will have `current_dims` marked as `0` 
             size_t rank = max_dims.size();
             if constexpr( !tcurrent_dims::present ) {
                 // set current dimensions to given one or zero if H5S_UNLIMITED mimics matlab(tm) behavior while allowing extendable matrices
@@ -71,14 +73,16 @@ namespace h5 {
                     total_space *= max_dims[i];
                 }
             }
-        } else {
-            // compiler error if no `current_dims` and `max_dims` present
-            static_assert( tcurrent_dims::present,"current or max dimensions must be present in order to create a dataset!" );
-            // we're here, great: at least having `current_dims` set, `current_dims` can't have H5S_UNLIMITED 
-            // and is consider both dimensions implicitly equal
-            is_equal_dims = true;
-            for(hsize_t i=0; i<current_dims.rank; i++) total_space *= current_dims[i];
-        }
+            // at this point we have valid `current_dims` and `max_dims` to describe file space
+            space_id = std::move( h5::create_simple( current_dims, max_dims ) );
+        } else if (tcurrent_dims::present) {
+            // only `current_dims` are present, dataset will have same `max_dims` and is not extendable
+            for(hsize_t i=0; i<current_dims.rank; i++)
+                total_space *= current_dims[i];
+            space_id = std::move( h5::create_simple( current_dims ) );
+        } else  // no dimensions are provided, we are dealing with a scalar
+            space_id = std::move(h5::sp_t{H5Screate(H5S_SCALAR)});
+
         //LAYOUT: by default it is contiguous
         is_extendable = is_unlimited || !is_equal_dims;
         if constexpr ( tdcpl::present ) is_filtering_on = H5Pget_nfilters(dcpl) > 0;
@@ -93,9 +97,6 @@ namespace h5 {
             h5::set_chunk(default_dcpl, chunk );
         }
 
-        // use move semantics to set space
-        space_id =  tmax_dims::present ?
-            std::move( h5::create_simple( current_dims, max_dims ) ) :  std::move( h5::create_simple( current_dims ) );
         using element_t = typename impl::decay<T>::type;
         h5::dt_t<element_t> type = create<element_t>();
         return h5::createds(loc, dataset_path, type, space_id, lcpl, dcpl, dapl);
