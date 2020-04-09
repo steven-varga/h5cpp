@@ -1,17 +1,11 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
-
 #ifndef  H5CPP_STD_COUT
 #define  H5CPP_STD_COUT
 
-
-
-
-inline
-std::ostream& operator<< (std::ostream& os, const h5::dxpl_t& dxpl) {
+inline std::ostream& operator<< (std::ostream& os, const h5::dxpl_t& dxpl) {
 	os <<"handle: " << static_cast<hid_t>( dxpl );
 #ifdef H5_HAVE_PARALLEL
 	H5D_mpio_actual_io_mode_t io_mode;

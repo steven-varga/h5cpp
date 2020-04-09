@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+ * Author: Varga, Steven <steven@vargaconsulting.ca>
+ */
 #include <armadillo>
 #include <h5cpp/all>
 #include <cstddef>

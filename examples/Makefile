@@ -1,10 +1,7 @@
-#  _____________________________________________________________________________
-#  Copyright (c) <2018> <copyright Steven Varga, Toronto, On>
-#  Contact: Steven Varga
-#           steven@vargaconsulting.ca
-#           2018 Toronto, On Canada
-#  _____________________________________________________________________________
-#
+#  _________________________________________________________
+#  Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+#  Author: Varga, Steven <steven@vargaconsulting.ca>
+#  _________________________________________________________
 
 DIRS = attributes basics before-after compound csv datasets datatypes half-float/christian-rau linalg \
 	multi-tu optimized packet-table raw_memory stl string transform utf

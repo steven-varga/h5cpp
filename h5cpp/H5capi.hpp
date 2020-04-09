@@ -1,13 +1,9 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
-
 #ifndef  H5CPP_CAPI_HPP
 #define  H5CPP_CAPI_HPP
-
-
 
 /* rules:
  * h5::id_t{ hid_t } or direct initialization  doesn't increment reference count

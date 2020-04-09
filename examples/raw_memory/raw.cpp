@@ -1,4 +1,7 @@
-
+/*
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+ * Author: Varga, Steven <steven@vargaconsulting.ca>
+ */
 #include <h5cpp/all>
 #include <cstddef>
 #define values 0,1,2,3,4,5,6,7,8,9

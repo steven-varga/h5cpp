@@ -1,7 +1,7 @@
-<!---
- Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
- Author: Varga, Steven <steven@vargaconsulting.ca>
---->
+<!--- _________________________________________________________
+  Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+  Author: Varga, Steven <steven@vargaconsulting.ca>
+  _________________________________________________________ --->
 
 Easy to use  [HDF5][hdf5] C++ templates for Serial and Paralell HDF5  
 ----------------------------------------------------------------------

@@ -1,9 +1,7 @@
-#  _____________________________________________________________________________
-#  Copyright (c) <2018> <copyright Steven Varga, Toronto, On>
-#  Contact: Steven Varga
-#           steven@vargaconsulting.ca
-#           2018 Toronto, On Canada
-#  _____________________________________________________________________________
+#  _________________________________________________________
+#  Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+#  Author: Varga, Steven <steven@vargaconsulting.ca>
+#  _________________________________________________________
 
 CXXFLAGS =  -std=c++17  -I/usr/local/include -I/usr/include/eigen3 
 LIBS =  -lhdf5 -lhdf5_hl  -lz -ldl -lm -lblas -llapack
