@@ -1,11 +1,9 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-
 #ifndef H5CPP_TALL_HPP
 #define H5CPP_TALL_HPP
-
 
 namespace h5 {
     template<class T> hid_t register_struct(){ return H5I_UNINIT; }

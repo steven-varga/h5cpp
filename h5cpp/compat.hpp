@@ -1,10 +1,7 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
-
-
 #ifndef  H5CPP_COMPAT_HPP
 #define  H5CPP_COMPAT_HPP
 //CREDITS: https://en.cppreference.com/w/cpp/utility/functional/invoke 

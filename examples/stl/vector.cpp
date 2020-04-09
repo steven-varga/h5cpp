@@ -1,6 +1,8 @@
-/* Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+/*
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
+
 
 /** @example vector.cpp
  * A description of the example file, causes the example file to show up in 

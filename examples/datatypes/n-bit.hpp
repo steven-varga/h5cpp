@@ -1,4 +1,5 @@
-/* Copyright (c) 2020 vargaconsulting, Toronto,ON Canada
+/*
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 

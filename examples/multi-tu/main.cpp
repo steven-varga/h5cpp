@@ -1,8 +1,7 @@
-/* Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+/*
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-
-
 #include <cstdint>
 // this TU only needs to know of h5::fd_t 
 // no `sandwitching` between <h5cpp/all> and <h5cpp/io> needed

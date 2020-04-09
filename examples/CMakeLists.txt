@@ -1,11 +1,7 @@
-#  _____________________________________________________________________________
-#  Copyright (c) <2019> <copyright Steven Varga, Toronto, On>
-#  Contact: Steven Varga
-#           steven@vargaconsulting.ca
-#           2019 Toronto, On Canada
-#  _____________________________________________________________________________
-
-
+#  _________________________________________________________
+#  Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+#  Author: Varga, Steven <steven@vargaconsulting.ca>
+#  _________________________________________________________
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 ## match hdf5 versioning x.x.x.h5cpp-version
@@ -98,7 +94,6 @@ include_directories(BEFORE ${CMAKE_SOURCE_DIR})
 if( H5CPP_COMPILER_FOUND )
 	add_custom_target(h5cpp-compiler-generated ALL
 		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/attributes/attributes.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/attributes/generated.h
-		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/before-after/compound.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/before-after/generated.h
 		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/compound/struct.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/compound/generated.h
 		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-01.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-01.h
 		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-02.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-02.h
@@ -221,17 +216,6 @@ add_dependencies(examples examples-attributes)
 add_executable(examples-basics EXCLUDE_FROM_ALL "basics/basics.cpp")
 target_link_libraries(examples-basics ${LIBS} )
 add_dependencies(examples examples-basics)
-
-
-## before-after: before ###
-add_executable(examples-before EXCLUDE_FROM_ALL "before-after/compound.c")
-target_link_libraries(examples-before ${LIBS} )
-add_dependencies(examples examples-before)
-
-## before-after: after ###
-add_executable(examples-after EXCLUDE_FROM_ALL "before-after/compound.cpp")
-target_link_libraries(examples-after ${LIBS} )
-add_dependencies(examples examples-after)
 
 ## compound ###
 add_executable(examples-compound EXCLUDE_FROM_ALL "compound/struct.cpp")

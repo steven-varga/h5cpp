@@ -1,7 +1,6 @@
-/* Authors:
- * 		Gerd Heber 
- * 		steven varga
- * 	2019, feb, 19
+/*
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+ * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
 #include <armadillo>

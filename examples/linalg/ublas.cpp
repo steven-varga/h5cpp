@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+ * Author: Varga, Steven <steven@vargaconsulting.ca>
+ */
 #include <iostream>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/vector.hpp>

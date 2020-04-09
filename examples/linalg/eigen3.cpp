@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+ * Author: Varga, Steven <steven@vargaconsulting.ca>
+ */
 #include <iostream>
 #include <Eigen/Dense> // must include Eigen before <h5cpp/core>
 #include <h5cpp/all>
