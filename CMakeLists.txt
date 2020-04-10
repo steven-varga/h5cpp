@@ -85,7 +85,6 @@ install(TARGETS h5cpp EXPORT h5cpp-targets)
 
 install(DIRECTORY examples/attributes     DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/basics         DESTINATION "${INSTALL_DIR_EXAMPLES}")
-install(DIRECTORY examples/before-after   DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/compound       DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/csv       	  DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/datasets    	  DESTINATION "${INSTALL_DIR_EXAMPLES}")
