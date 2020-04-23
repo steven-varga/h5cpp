@@ -18,7 +18,8 @@ LIBS += $(foreach name,$(linalg), $(shell /usr/bin/pkg-config --silence-errors -
 .PHONY: test-with-compilers
 
 ## list test cases here, be certain to begin them with `H`
-apps = H5Tall H5Dcreate H5Fcreate H5Fopen H5Iall H5cmake H5cmake
+apps = H5Dwrite
+# H5Dcreate H5Tall H5Fcreate H5Fopen H5Iall H5cmake
 #H5E H5Tmeta 
 all: $(apps)
 
@@ -38,7 +39,8 @@ clean_data:
 test: $(apps)
 
 clean:
-	@$(RM) *.o *.h5 $(apps) pix/*
+	@find . -type f -executable -delete
+	@$(RM) *.o *.h5 $(apps) pix/* 
 
 .PHONY: test
 

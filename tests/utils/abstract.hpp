@@ -18,8 +18,8 @@ namespace h5::test{
 template <typename T>
 class TestWithOpenHDF5
 	: public ::testing::Test {
-public:
-	void SetUp() {
+protected:
+	void SetUp() override {
         h5::mute();
 		dir = ::testing::UnitTest::GetInstance()->current_test_info()->name();
 		type = h5::name<T>::value;
@@ -30,7 +30,7 @@ public:
             this->fd = h5::create("test.h5", H5F_ACC_TRUNC);
         }
 	}
-	void TearDown() {
+	void TearDown() override {
         h5::unmute();
 	}
 	std::string type;

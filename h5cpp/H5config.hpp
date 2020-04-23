@@ -20,23 +20,29 @@
 // compact dataset is 64K - book_keeping ~= 65396
 // see: https://forum.hdfgroup.org/t/what-is-the-maximum-payload-size-stored-in-compact-layout/6888?u=steven
 #ifndef H5CPP_COMPACT_PAYLOAD_MAX_SIZE
-    #define H5CPP_COMPACT_PAYLOAD_MAX_SIZE 65396 //< maximum payload stored in compact sotrage
+    //< maximum payload stored in compact storage
+    #define H5CPP_COMPACT_PAYLOAD_MAX_SIZE 65396 
 #endif
 #ifndef H5CPP_MAX_FILTER
-    #define H5CPP_MAX_FILTER 16 //< maximum number of filters in a chain
+    //< maximum number of filters in a chain
+    #define H5CPP_MAX_FILTER 16 
 #endif
 #ifndef H5CPP_MAX_FILTER_PARAM
-    #define H5CPP_MAX_FILTER_PARAM 16 //< maximum number of filters in a chain
+    //< maximum number of filters in a chain
+    #define H5CPP_MAX_FILTER_PARAM 16 
 #endif
 #ifndef H5CPP_MEM_ALIGNMENT
-    #define H5CPP_MEM_ALIGNMENT 64 //< maximum number of filters in a chain
+    //< maximum number of filters in a chain
+    #define H5CPP_MEM_ALIGNMENT 64 
 #endif
 
-#ifndef H5CPP_NO_COMPRESSION 
-    #define H5CPP_NO_COMPRESSION 0 //< maximum dimensions of stored arrays
+#ifndef H5CPP_NO_COMPRESSION
+    //< maximum dimensions of stored arrays
+    #define H5CPP_NO_COMPRESSION 0 
 #endif
-#ifndef H5CPP_DEFAULT_COMPRESSION 
-    #define H5CPP_DEFAULT_COMPRESSION 9 //< maximum dimensions of stored arrays
+#ifndef H5CPP_DEFAULT_COMPRESSION
+    //< maximum dimensions of stored arrays
+    #define H5CPP_DEFAULT_COMPRESSION 9 
 #endif
 #ifndef H5CPP_RANK_VEC 
     #define H5CPP_RANK_VEC 1

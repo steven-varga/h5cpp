@@ -28,7 +28,8 @@ namespace h5 {
         using tlcpl         = typename arg::tpos<const h5::lcpl_t&,const args_t&...>;
         using tdcpl         = typename arg::tpos<const h5::dcpl_t&,const args_t&...>;
         using tdapl         = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
-
+        using ttype         = typename arg::tpos<const h5::dt_t<T>&,const args_t&...>;
+        
         //TODO: make copy of default dcpl
         h5::dcpl_t default_dcpl{ H5Pcreate(H5P_DATASET_CREATE) };
         // get references to property lists or system default values 
@@ -50,7 +51,6 @@ namespace h5 {
         // accounting
         bool is_equal_dims = true, is_unlimited = false,
             is_extendable = true, is_filtering_on = false;
-        constexpr int max_compact_payload = 65520;
         hsize_t total_space = sizeof(T);
 
         if constexpr( tmax_dims::present ){
@@ -88,7 +88,7 @@ namespace h5 {
         if constexpr ( tdcpl::present ) is_filtering_on = H5Pget_nfilters(dcpl) > 0;
 
         // at this point we have all the information to decide if compact dataset
-        if( !is_filtering_on && !is_extendable && total_space < max_compact_payload )
+        if( !is_filtering_on && !is_extendable && total_space < H5CPP_COMPACT_PAYLOAD_MAX_SIZE )
             set_compact_layout(default_dcpl);
         if( !tdcpl::present && ( is_unlimited || (tcurrent_dims::present && tmax_dims::present)) ) {
             chunk_t chunk{0}; chunk.rank = current_dims.rank;
@@ -96,9 +96,13 @@ namespace h5 {
                 chunk[i] = current_dims[i] ? current_dims[i] : 1;
             h5::set_chunk(default_dcpl, chunk );
         }
-
+        // if type is specified use it, otherwise execute callback: h5::create
         using element_t = typename impl::decay<T>::type;
-        h5::dt_t<element_t> type = create<element_t>();
+        h5::dt_t<T> type; ;
+        if constexpr( ttype::present )
+            type = arg::get(dt_t<T>(), args...);
+        else
+            type = create<T>();
         return h5::createds(loc, dataset_path, type, space_id, lcpl, dcpl, dapl);
 
     } catch( const std::runtime_error& err ) {

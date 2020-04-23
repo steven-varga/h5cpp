@@ -55,7 +55,8 @@ namespace h5::impl {
     /* std::array<...,R> size<T>(){} template has to compute rank R at compile 
      * time, these templates, and their respective specializations aid to accomplish that*/
     template<class T, class... Ts> struct rank : public std::integral_constant<int,0> {}; // definition
-    template <class T, size_t N> struct rank<T[N]> : public std::rank<T[N]> {}; // arrays
+    template <class T, size_t N> struct rank<T[N]> : public std::integral_constant<int,1>{}; // arrays
+    template <size_t N> struct rank<char[N]> : public std::integral_constant<int,0>{}; // character literals
     template<class T, int N, class... Ts> using is_rank = std::integral_constant<bool, rank<T, Ts...>::value == N >;
     // helpers for is_rank<T>, don't need specialization, instead define 'rank'
     template<class T, class... Ts> using is_scalar = is_rank<T,0,Ts...>; // numerical | pod 
@@ -79,19 +80,47 @@ namespace h5::impl {
 
     template <class T> struct decay<const T>{ using type = T; };
     template <class T> struct decay<const T*>{ using type = T*; };
-    template <class T, signed N> struct decay<const T[N]>{ using type = T*; };
-    template <class T, signed N> struct decay<T[N]>{ using tyoe = T*; };
+       
 
-
-// DEFAULT CASE
+    
+    // DEFAULT CASE
     template <class T> struct rank<T*>: public std::integral_constant<size_t,1>{};
-    template <class T, class... Ts> T* data(const T& ref ){ return &ref; };
+    template <class T, class... Ts>
+        typename std::enable_if<!std::is_array<T>::value, T*>::type data(const T& ref ){ return &ref; };
     template <class T, class... Ts> std::array<size_t, 0> size(const T& ref ){ return {}; };
     template <class T, class... Ts> struct get {
         static inline T ctor( std::array<size_t,0> dims ){
             return T(); }};
+    // ARRAYS
+    template <class T, size_t N> struct decay<T[N]>{ // support for array types
+        using type = typename std::remove_all_extents<T>::type; };
+    template <class T, int N> struct rank<T[N]> : public std::rank<T[N]>{};
 
-//STD::STRING
+    template <class T,int N0> const T* data( const T(&ref)[N0]){ return &ref[0];};
+    template <class T,int N1,int N0> const T* data( const T(&ref)[N1][N0]){ return &ref[0][0];};
+    template <class T,int N2,int N1,int N0> const T* data( const T(&ref)[N2][N1][N0]){ return &ref[0][0][0];};
+    template <class T,int N3,int N2,int N1,int N0> const T* data( const T(&ref)[N3][N2][N1][N0]){ return &ref[0][0][0][0];};
+    template <class T,int N4,int N3,int N2,int N1,int N0> const T* data( const T(&ref)[N4][N3][N2][N1][N0]){ return &ref[0][0][0][0][0];};
+    template <class T,int N5,int N4,int N3,int N2,int N1,int N0> const T* data( const T(&ref)[N5][N4][N3][N2][N1][N0]){ return &ref[0][0][0][0][0][0];};
+    template <class T,int N6,int N5,int N4,int N3,int N2,int N1,int N0> const T* data( const T(&ref)[N6][N5][N4][N3][N2][N1][N0]){ return &ref[0][0][0][0][0][0][0];};
+
+    template <class T,int N0>  T* data(T(&ref)[N0]){ return &ref[0];};
+    template <class T,int N1,int N0>T* data(T(&ref)[N1][N0]){ return &ref[0][0];};
+    template <class T,int N2,int N1,int N0>T* data(T(&ref)[N2][N1][N0]){ return &ref[0][0][0];};
+    template <class T,int N3,int N2,int N1,int N0>T* data(T(&ref)[N3][N2][N1][N0]){ return &ref[0][0][0][0];};
+    template <class T,int N4,int N3,int N2,int N1,int N0>T* data(T(&ref)[N4][N3][N2][N1][N0]){ return &ref[0][0][0][0][0];};
+    template <class T,int N5,int N4,int N3,int N2,int N1,int N0>T* data(T(&ref)[N5][N4][N3][N2][N1][N0]){ return &ref[0][0][0][0][0][0];};
+    template <class T,int N6,int N5,int N4,int N3,int N2,int N1,int N0>T* data(T(&ref)[N6][N5][N4][N3][N2][N1][N0]){ return &ref[0][0][0][0][0][0][0];};
+
+
+    template <class T, int N> std::array<size_t, std::rank<T[N]>::value>
+        size(const T* ref ){ return  h5::meta::get_extent<T[N]>(); };
+   // template <class T, int N> struct get {
+   //     static inline T[N] ctor( std::array<size_t,0> dims ){
+   //         return T[N](); }};
+
+
+    //STD::STRING
     template<> struct rank<std::string>: public std::integral_constant<size_t,0>{};
     h5cpp_decay(std::basic_string)
     template <class T, class... Ts> T* data(const std::basic_string<T, Ts...>& ref ){
@@ -142,7 +171,7 @@ namespace h5::impl {
     const constexpr std::tuple<const char*, const char*, const char*> 
         csc_names = {"indices", "indptr","data"};
 // HID_T
-    template <class T> struct decay<h5::dt_t<T>>{ using type = T; };
+//    template <class T> struct decay<h5::dt_t<T>>{ using type = T; };
 }
 namespace h5::impl::linalg {
     /*types accepted by BLAS/LAPACK*/
@@ -155,7 +184,7 @@ namespace h5::impl {
     template <> struct has_attribute<h5::gr_t> : std::true_type {};
     template <> struct has_attribute<h5::ds_t> : std::true_type {};
     template <> struct has_attribute<h5::ob_t> : std::true_type {};
-    template <class T> struct has_attribute<h5::dt_t<T>> : std::true_type {};
+//    template <class T> struct has_attribute<h5::dt_t<T>> : std::true_type {};
 
     template <class T, class... Ts> struct is_location : std::false_type {};
     template <> struct is_location<h5::gr_t> : std::true_type {};

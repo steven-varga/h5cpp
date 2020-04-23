@@ -38,10 +38,10 @@
 	#include "H5Sall.hpp"
 	
 	#include "H5Iall.hpp"
-	#include "H5Tall.hpp"
-
 	#include "H5meta.hpp"
 	#include "H5Tmeta.hpp"
+	#include "H5Tall.hpp"
+
 
 	#include "H5Meigen.hpp"
 	#include "H5Marma.hpp"

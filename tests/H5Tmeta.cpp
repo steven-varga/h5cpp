@@ -84,7 +84,6 @@ TEST(Eigen3, element_type) {
 		});
 }
 
-
 /*----------- BEGIN TEST RUNNER ---------------*/
 H5CPP_BASIC_RUNNER( int argc, char**  argv );
 /*----------------- END -----------------------*/

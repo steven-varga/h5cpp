@@ -20,13 +20,13 @@
 #include <random>
 
 
-namespace h5 { namespace utils {
+namespace h5::utils {
 
-    template <typename T> inline T get_test_data(){
+    template <typename T> inline T get_test_data(size_t m, size_t n){
         return T();
     }
 
-    template <typename T> inline  std::vector<T> get_test_data( size_t n ){
+    template <typename T> inline  std::vector<T> get_test_data( size_t n, size_t m ){
         std::random_device rd;
         std::default_random_engine rng(rd());
         std::uniform_int_distribution<> dist(0,n);
@@ -38,14 +38,14 @@ namespace h5 { namespace utils {
                             });
         return data;
     }
-    template <> inline std::string get_test_data(){
+    template <> inline std::string get_test_data(size_t min, size_t max){
 
         static const char alphabet[] = "abcdefghijklmnopqrstuvwxyz"
                                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         std::random_device rd;
         std::default_random_engine rng(rd());
         std::uniform_int_distribution<> dist(0,sizeof(alphabet)/sizeof(*alphabet)-2);
-        std::uniform_int_distribution<> string_length(5,30);
+        std::uniform_int_distribution<> string_length(min,max);
 
         std::string str;
         size_t N = string_length(rng);
@@ -56,7 +56,25 @@ namespace h5 { namespace utils {
          return str;
     }
 
-    template <> inline std::vector<std::string> get_test_data( size_t n ){
+    template <typename T> inline 
+    typename std::enable_if<!std::is_pointer<T>::value,
+    std::unique_ptr<T>>::type get_test_data( size_t n, size_t m) {
+        // T is not a pointer
+        std::cout << "not pointer";
+        std::unique_ptr<T> data (new T[n]);
+        return data;
+    }
+    template <typename T> inline 
+    typename std::enable_if<std::is_pointer<T>::value,
+    std::unique_ptr<T>>::type get_test_data( size_t n, size_t m) {
+        // T is a pointer
+        std::cout << " pointer ";
+        std::unique_ptr<T> data (new T[n]);
+        return data;
+    }
+
+
+    template <> inline std::vector<std::string> get_test_data( size_t n, size_t m ){
 
         std::vector<std::string> data;
         data.reserve(n);
@@ -79,7 +97,7 @@ namespace h5 { namespace utils {
                   });
         return data;
     }
-}}
+}
 
 
 // IMPLEMENTATION DETAIL

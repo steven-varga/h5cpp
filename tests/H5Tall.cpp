@@ -19,7 +19,7 @@ template <> struct h5::name<payload_t> {
 
 namespace ns = h5::test;
 template <typename T> struct H5T :  public TestWithOpenHDF5<T>  {};
-typedef ::testing::Types<payload_t, h5::test::pod_t, int*, float*, double> element_t;
+typedef ::testing::Types<payload_t, h5::test::pod_t, int, float, double, float[7][3][5]> element_t;
 TYPED_TEST_SUITE(H5T, element_t, ns::element_names_t);
 
 TYPED_TEST(H5T, create) {

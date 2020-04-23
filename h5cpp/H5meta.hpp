@@ -296,8 +296,92 @@ namespace h5::impl {
        : public cat<C<Ts1..., Ts2...>, Ts3...>{ };
 }
 
+// extent: see H5Tall
+namespace h5::meta::impl {
+    template <std::size_t...> struct extents{ };
+
+    template <class T, std::size_t N, std::size_t... next>
+    struct extents_ : public extents_<T, N-1, std::extent<T,N-1>::value, next...>{ };
+
+    template <class T, std::size_t... next> struct extents_<T, 0, next... >{
+        using type = extents<next...>;
+    };
+
+    template <class T, std::size_t N=std::rank<T>::value>
+    using get_extents = typename extents_<T, N>::type;
+
+    template<typename T, std::size_t N=std::rank<T>::size, std::size_t... I> constexpr auto get_extent( extents<I...> ) {
+        return std::array<hsize_t, N>{ { I...} };
+    }
+}
+namespace h5::meta {
+    template<typename T, std::size_t N=std::rank<T>::value>
+    constexpr auto get_extent() {
+        return impl::get_extent<hsize_t, N>( impl::get_extents<T>{} );
+    }
+}
+
+namespace h5::meta::impl {
+    #define h5cpp_array__ 'a','r','r','a','y'
+    #define h5cpp_char__ 'c','h','a','r'
+    #define h5cpp_int__  'i','n','t'
+    #define h5cpp_short__ 's','h','o','r','t'
+    #define h5cpp_long__ 'l','o','n','g'
+    #define h5cpp_longlong__ h5cpp_long__,' ',h5cpp_long__
+    #define h5cpp_float__ 'f','l','o','a','t'
+    #define h5cpp_double__ 'd','o','u','b','l','e'
+    #define h5cpp_longdouble__ h5cpp_long__,' ',h5cpp_double__
+    template<class T, size_t... N> struct name {
+        constexpr static const char value[] =  {h5cpp_array__,'[', N..., ']', '\0'};
+    };
+
+    #define h5cpp_unsigned_name__( type__, name__ ) \
+        template<size_t... N> struct name <unsigned type__,N...> { \
+            constexpr static const char value[] =  {'u','n','s','i','g','n','e','d',' ',name__,'[',  N..., ']',0}; \
+        };\
+
+    #define h5cpp_signed_name__( type__, name__ ) \
+        template<size_t... N> struct name <type__,N...> { \
+            constexpr static const char value[] =  {name__, '[', N..., ']',0}; \
+        };\
+
+    #define h5cpp_name(type__) h5cpp_signed_name__(type__, h5cpp_##type__##__)  h5cpp_unsigned_name__(type__, h5cpp_##type__##__)
+    #define h5cpp_fname(type__) h5cpp_signed_name__(type__, h5cpp_##type__##__)
+    #define h5cpp_fname2(type1__, type2__) h5cpp_signed_name__(type1__ type2__, h5cpp_##type1__##type2__##__)
+    #define h5cpp_name2(type1__, type2__) \
+        h5cpp_signed_name__(type1__ type2__, h5cpp_##type1__##type2__##__)   \
+        h5cpp_unsigned_name__(type1__ type2__, h5cpp_##type1__##type2__##__) \
+
+    h5cpp_name(char) h5cpp_name(int) h5cpp_name(short) h5cpp_name(long) 
+    h5cpp_name2(long, long)
+    h5cpp_fname(float) h5cpp_fname(double)
+    h5cpp_fname2(long, double)
 
 
+    template <class T, char... digits> using text = impl::name<typename std::remove_all_extents<T>::type, digits...>;
+
+    template <int rank, class T, int... digits> struct parse;
+    template <int rank, class T, int rem, int... digits> struct parse_extent;
+
+    // recursive case, popping each extent one by one
+    template <int rank, class T, int... digits> struct parse
+        : parse_extent<rank-1, T, std::extent<T,rank-1>::value, digits...>{};
+    // terminal case with rank zero
+    template <class T, int... digits> struct parse <0, T, digits...> 
+        : text<T, digits...> {};
+    // converting extent number to sequence of digits
+    template <int rank, class T, int rem, int... digits> struct parse_extent
+        : parse_extent<rank, T, rem/10, (rem % 10) + '0', digits...> {};
+    template <int rank, class T,  int... digits> struct parse_extent <rank, T, 0, digits...>
+        : parse<rank, T, ',',digits...> {}; // separate dimensions with comma: ','
+    template <class T,  int... digits> struct parse_extent <0, T, 0, digits...>
+        : parse<0, T, digits...> {};        // terminal case has no commas:
+#undef h5cpp_short__
+}
+namespace h5::meta {
+template<class T> struct extent_to_string :
+    h5::meta::impl::parse<std::rank<T>::value, T>{};
+}
 
 /*
 namespace h5::impl::tuple {
@@ -312,5 +396,4 @@ namespace h5::impl::tuple {
     }
 }
 */
-
 #endif

@@ -9,11 +9,11 @@
 namespace ns = h5::test;
 template <typename T> struct H5D : public TestWithOpenHDF5<T> {};
 typedef ::testing::Types<
-//char, unsigned char*
-unsigned char, unsigned short, unsigned int, unsigned long long int,
-		char, short, int, long long int, float, double, h5::test::pod_t,
-unsigned char*, unsigned short*, unsigned int*, unsigned long long int*,
-		char*, short*, int*, long long int*, float*, double*, h5::test::pod_t*
+        unsigned char, unsigned short, unsigned int, unsigned long long int,
+		std::byte, char, short, int, long long int, float, double, h5::test::pod_t,
+        std::byte[7], char[10], short[11], int[12], long int[20], long long[21], float[22], double[23], long double [10],
+        unsigned char[10], unsigned short[11], unsigned int[12], unsigned long[20], unsigned long long[21],
+        std::byte[3][4], float[5][6], short[2][3], long long [3][4][5], h5::test::pod_t[2][3][4][5]
 > element_t;
 TYPED_TEST_SUITE(H5D, element_t, ns::element_names_t);
 
@@ -94,10 +94,6 @@ TYPED_TEST(H5D, create_with_group_id) {
     h5::ds_t ds = h5::create<TypeParam>(gr, this->name,
         h5::current_dims{1000}, h5::max_dims{10000}, h5::chunk{100} );
 }
-
-
-
-
 /*----------- BEGIN TEST RUNNER ---------------*/
 H5CPP_BASIC_RUNNER( int argc, char**  argv );
 /*----------------- END -----------------------*/

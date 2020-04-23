@@ -7,13 +7,22 @@
 #define H5CPP_TALL_HPP
 
 namespace h5 {
+    // variable length data struct
+    template <class T> struct vlen_t {
+        operator hvl_t() const {
+            return *this;
+        }
+        size_t len;
+        T* ptr;
+    };
     template <class T> using dt_t = h5::impl::detail::hid_t<T,H5Tclose,true,true,h5::impl::detail::hdf5::type>;
     template<class T> hid_t copy( const h5::dt_t<T>& dt ){
         hid_t id = static_cast<hid_t>(dt);
         H5Iinc_ref( id );
         return id;
     }
-    template<class T> dt_t<T> create(){ return dt_t<T>(H5I_UNINIT); }
+    template<class T> dt_t<T> copy();
+    template<class T> dt_t<T> create();
 }
 
 /* template specialization from hid_t< .. > type which provides syntactic sugar in the form
@@ -29,6 +38,19 @@ namespace h5 { namespace impl { namespace detail {
         using hidtype = T;
         hid_t( std::initializer_list<::hid_t> fd ) : parent( fd ){}
         hid_t() : hid_t<T,H5Tclose,true,true,hdf5::any>( H5I_UNINIT ){}
+
+        template <class K, int N>
+        operator hid_t<K[N],H5Tclose,true,true,hdf5::type>() const {
+            if( H5Iis_valid( this->handle ) )
+				H5Iinc_ref( this->handle );
+            return hid_t<K[N],H5Tclose,true,true,hdf5::type>{this->handle};
+        }
+        template <class K>
+        operator hid_t<K,H5Tclose,true,true,hdf5::type>() const {
+            if( H5Iis_valid( this->handle ) )
+				H5Iinc_ref( this->handle );
+            return hid_t<K,H5Tclose,true,true,hdf5::type>{this->handle};
+        }
     };
     template <class T> using dt_t = hid_t<T,H5Tclose,true,true,hdf5::type>;
 }}}
@@ -40,29 +62,17 @@ namespace h5 { namespace impl { namespace detail {
  * IF the data is not in a continuous memory region then it must be copied! 
  */
 
-#define H5CPP_REGISTER_NAME( C_TYPE )                  \
+#define H5CPP_REGISTER_NAME( C_TYPE )                   \
 template <> struct h5::name<C_TYPE> {                   \
     static constexpr char const * value = #C_TYPE;      \
 };                                                      \
 
-#define H5CPP_REGISTER_TYPE( C_TYPE, H5_TYPE )         \
-template <> h5::dt_t<C_TYPE> h5::create() {             \
+#define H5CPP_REGISTER_TYPE( C_TYPE, H5_TYPE )          \
+template <> h5::dt_t<C_TYPE> h5::copy() {               \
     h5::dt_t<C_TYPE> tid{ H5Tcopy( H5_TYPE )};          \
-        if constexpr ( std::is_pointer<C_TYPE>::value ) \
-            H5Tset_size (tid,H5T_VARIABLE);             \
     return tid;                                         \
 };                                                      \
-H5CPP_REGISTER_NAME( C_TYPE );                         \
-
-#define H5CPP_REGISTER_VL_TYPE( C_TYPE, H5_TYPE )      \
-template <> h5::dt_t<C_TYPE> h5::create() {             \
-    h5::dt_t<C_TYPE> tid{                               \
-       H5Tvlen_create( H5Tcopy( H5_TYPE ))};            \
-    return tid;                                         \
-};                                                      \
-H5CPP_REGISTER_NAME( C_TYPE );                         \
-
-
+H5CPP_REGISTER_NAME( C_TYPE  );                         \
 
 #define H5CPP_REGISTER_HALF_FLOAT( C_TYPE )             \
 template <> h5::dt_t<C_TYPE> create() {                 \
@@ -73,14 +83,13 @@ template <> h5::dt_t<C_TYPE> create() {                 \
     H5Tset_size(tid,2);                                 \
     return tid;                                         \
 };                                                      \
-H5CPP_REGISTER_NAME( C_TYPE );                         \
+H5CPP_REGISTER_NAME( C_TYPE );                          \
 
-H5CPP_REGISTER_NAME( std::string );
+//H5CPP_REGISTER_NAME( std::string );
 /* registering integral data-types for NATIVE ones, which means all data is stored in the same way 
  * in file and memory: TODO: allow different types for file storage
  * */
-    H5CPP_REGISTER_TYPE(bool,H5T_NATIVE_HBOOL)
-    H5CPP_REGISTER_TYPE(bool*,H5T_NATIVE_HBOOL)
+    H5CPP_REGISTER_TYPE(bool,H5T_NATIVE_HBOOL)                     H5CPP_REGISTER_TYPE(std::byte, H5T_NATIVE_UCHAR) 
 
     H5CPP_REGISTER_TYPE(unsigned char, H5T_NATIVE_UCHAR)           H5CPP_REGISTER_TYPE(char, H5T_NATIVE_CHAR)
     H5CPP_REGISTER_TYPE(unsigned short, H5T_NATIVE_USHORT)         H5CPP_REGISTER_TYPE(short, H5T_NATIVE_SHORT)
@@ -90,15 +99,44 @@ H5CPP_REGISTER_NAME( std::string );
     H5CPP_REGISTER_TYPE(float, H5T_NATIVE_FLOAT)                   H5CPP_REGISTER_TYPE(double, H5T_NATIVE_DOUBLE)
     H5CPP_REGISTER_TYPE(long double,H5T_NATIVE_LDOUBLE)
 
-    H5CPP_REGISTER_TYPE(unsigned char*, H5T_C_S1)                  H5CPP_REGISTER_TYPE(char*, H5T_C_S1)
+    template <> h5::dt_t<std::string> h5::create() {
+        h5::dt_t<std::string> tid{H5Tcopy( H5T_C_S1 )};
+        H5Tset_size(tid,H5T_VARIABLE);
+        H5Tset_cset(tid, H5T_CSET_UTF8);
+        return tid;
+    };
+    H5CPP_REGISTER_NAME( std::string );
 
-    H5CPP_REGISTER_VL_TYPE(unsigned short*, H5T_NATIVE_USHORT)         H5CPP_REGISTER_VL_TYPE(short*, H5T_NATIVE_SHORT)
-    H5CPP_REGISTER_VL_TYPE(unsigned int*, H5T_NATIVE_UINT)             H5CPP_REGISTER_VL_TYPE(int*, H5T_NATIVE_INT)
-    H5CPP_REGISTER_VL_TYPE(unsigned long int*, H5T_NATIVE_ULONG)       H5CPP_REGISTER_VL_TYPE(long int*, H5T_NATIVE_LONG)
-    H5CPP_REGISTER_VL_TYPE(unsigned long long int*, H5T_NATIVE_ULLONG) H5CPP_REGISTER_VL_TYPE(long long int*, H5T_NATIVE_LLONG)
-    H5CPP_REGISTER_VL_TYPE(float*, H5T_NATIVE_FLOAT)                   H5CPP_REGISTER_VL_TYPE(double*, H5T_NATIVE_DOUBLE)
-    H5CPP_REGISTER_VL_TYPE(long double*,H5T_NATIVE_LDOUBLE)
+    // template specialiazation 
+    template<class T> h5::dt_t<T> h5::create() {
+        using ptr_t = typename impl::decay<T>::type;
+        using element_t = typename std::remove_pointer<ptr_t>::type;
+        h5::dt_t<T> tid;
+        if constexpr( std::is_array<T>::value ){ // T[]
+            if constexpr(std::is_same<char,ptr_t>::value ){ // char[] is mapped to fixed size string
+                tid = h5::dt_t<char>{H5Tcopy(H5T_C_S1)};
+                constexpr size_t rank = std::rank<T>::value;
+                constexpr std::array<hsize_t,rank> size = h5::meta::get_extent<T>();
+                H5Tset_cset(tid, H5T_CSET_UTF8);
+                H5Tset_size (tid, size[rank-1]);
+                if constexpr( rank > 1 )
+                    tid = h5::dt_t<T>{ H5Tarray_create(tid, rank-1, size.data())};
+            } else { // T[] but not char-s are mapped to array types
+                h5::dt_t<T> id = h5::create<element_t>();
+                constexpr size_t rank = std::rank<T>::value;
+                constexpr std::array<hsize_t,rank> size = h5::meta::get_extent<T>();
+                tid = h5::dt_t<T>{ H5Tarray_create(id,rank,size.data()) };
+            }
+        } else  // elementary types<float,double, char, short, int ... > are handled below
+            tid = h5::copy<T>();
+        return tid;
+    }
 
+namespace h5 {
+    template <class T, int N> struct name<T[N]> {
+        static constexpr const char* value = meta::extent_to_string<T[N]>::value;
+    };
+}
 // half float support: 
 // TODO: factor out in a separate file
 #ifdef HALF_HALF_HPP

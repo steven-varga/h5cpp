@@ -7,8 +7,6 @@
 
 #ifndef  H5CPP_COMPAT_HPP
 #define  H5CPP_COMPAT_HPP
-//CREDITS: https://en.cppreference.com/w/cpp/utility/functional/invoke 
-
 namespace h5::compat { // C++11 shim to lower from c++17
     template <std::size_t ...> struct index_sequence{ };
 
@@ -33,12 +31,9 @@ namespace h5::compat { // C++11 shim to lower from c++17
         return apply_impl(std::forward<F>(f), std::forward<Tuple>(t),
             compat::make_index_sequence<std::tuple_size<TP>::value>{});
     }
-
 }
 
 namespace h5::impl::compat {
-// N4436 and https://en.cppreference.com/w/cpp/experimental/is_detected 
-
     struct nonesuch {
         nonesuch( ) = delete;
         ~nonesuch( ) = delete;

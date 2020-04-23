@@ -12,6 +12,7 @@ template<> h5::dt_t<h5::test::pod_t> inline h5::create<h5::test::pod_t>(){
     H5Tinsert(ct_00, "c",	HOFFSET(::h5::test::pod_t,c),H5T_NATIVE_DOUBLE);
     return ct_00;
 };
+
 template<> h5::dt_t<h5::test::pod_t*> inline h5::create<h5::test::pod_t*>(){
     return h5::dt_t<h5::test::pod_t*>{ H5Tvlen_create(
             h5::create<h5::test::pod_t>())};
