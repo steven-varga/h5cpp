@@ -121,7 +121,10 @@ int main(){
 		// vector of strings, NOTE: charaters or initializer lists are not yet supported
 		std::cout << "att_04 : "; auto att_04 = h5::aread<std::vector<std::string>>(ds,"att_04");
 		std::cout<< att_04 <<"\n";
-		// POD type rank 0
+		// std::string 
+	    std::cout << "att_07 : "; std::string att_07 = h5::aread<std::string>(ds,"att_07");
+		std::cout << att_07  <<"\n";
+        // POD type rank 0
 		std::cout << "att_08 : "; sn::example::Record att_08 = h5::aread<sn::example::Record>(ds,"att_08");
 		std::cout<< att_08.idx <<"\n";
 		// POD type rank 1

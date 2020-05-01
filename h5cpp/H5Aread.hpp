@@ -30,7 +30,7 @@ namespace h5 {
 
 	//POD ELEMENT TYPES: Rank 0 and rank > 0
 	template <class T, class D=typename impl::decay<T>::type, class... args_t> inline
-	typename std::enable_if< !std::is_arithmetic<D>::value && std::is_pod<D>::value,
+	typename std::enable_if< !std::is_arithmetic<D>::value && std::is_pod<D>::value && !std::is_same<T,std::string>::value,
 	T>::type aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
 		h5::at_t attr = h5::open(ds, name, h5::default_acpl);
 		hid_t id;
@@ -44,7 +44,7 @@ namespace h5 {
 		h5::dt_t<element_t> type;
 		if( !rank ){ // FIXME: write impl::get<pod_type>(...)
 			T object;
-			H5CPP_CHECK_NZ( H5Aread( static_cast<hid_t>(attr), static_cast<hid_t>(type), &object ),
+                H5CPP_CHECK_NZ( H5Aread( static_cast<hid_t>(attr), static_cast<hid_t>(type), &object ),
 				   h5::error::io::attribute::read, "couldn't read dataset ...");
 			return object;
 		}else{
@@ -58,7 +58,7 @@ namespace h5 {
 
 	// STD::STRING
 	template <class T, class D=typename impl::decay<T>::type, class... args_t> inline
-	typename std::enable_if<std::is_same<D,std::string>::value, //TODO: add char**
+	typename std::enable_if<std::is_same<D,std::string>::value || std::is_same<T,std::string>::value, //TODO: add char**
 	T>::type aread( const h5::ds_t& ds, const std::string& name, const h5::acpl_t& acpl = h5::default_acpl ){
 		h5::at_t attr = h5::open(ds, name, h5::default_acpl);
 		hid_t id;
@@ -70,13 +70,17 @@ namespace h5 {
 		using element_t = typename impl::decay<T>::type;
 		h5::dt_t<char*> type;
 		T object = impl::get<T>::ctor( current_dims );
-		size_t nelem = impl::nelements(current_dims);
+        size_t nelem = impl::nelements(current_dims);
 		char** ptr = static_cast<char**>( malloc ( nelem * sizeof (char *)));
 		H5CPP_CHECK_NZ( H5Aread( static_cast<hid_t>(attr), static_cast<hid_t>(type), ptr ),
 			   h5::error::io::attribute::read, "couldn't read dataset ...");
-		for( size_t i=0; i<nelem; i++)
-			if( ptr[i] != NULL ) object[i] = std::string( ptr[i] );
-        free(ptr);
+        if constexpr ( std::is_same<std::string,T>::value ){
+            object = std::string(*ptr), free(ptr);
+        } else {
+            for( size_t i=0; i<nelem; i++)
+			    if( ptr[i] != NULL ) object[i] = std::string( ptr[i] );
+            free(ptr);
+        }
 		return object;
 	}
 
