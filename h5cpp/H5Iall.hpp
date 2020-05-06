@@ -78,9 +78,20 @@ namespace h5 { namespace impl { namespace detail {
 				H5Iinc_ref( handle );
 		}
 		hid_t& operator =( const hid_t& ref) {
+            if (this == &ref) return *this;
+            if( H5Iis_valid( handle ) )
+                capi_close( handle );
 			handle = ref.handle;
 			if( H5Iis_valid( handle ) )
 				H5Iinc_ref( handle );
+			return *this;
+		}
+        hid_t& operator =( hid_t&& ref) {
+            if (this == &ref) return *this;
+            if( H5Iis_valid( handle ) )
+                capi_close( handle );
+			handle = ref.handle;
+            ref.handle = H5I_UNINIT;
 			return *this;
 		}
 		/* move ctor must invalidate old handle */

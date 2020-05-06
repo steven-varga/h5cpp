@@ -18,6 +18,36 @@ namespace h5{ namespace impl {
 	struct pipeline_t {
 		pipeline_t(){};
 		~pipeline_t(){};
+		pipeline_t& operator=( pipeline_t&& rhs ) {
+            if (this == &rhs) return *this;
+
+            this->chunk0 = rhs.chunk0; rhs.chunk0 = nullptr;
+            this->chunk1 = rhs.chunk1; rhs.chunk1 = nullptr;
+            this->tail = rhs.tail; rhs.tail = 0;
+            this->rank = rhs.rank; rhs.rank = 0;
+
+            this->ptr0 = std::move(rhs.ptr0);
+            this->ptr1 = std::move(rhs.ptr1);
+            memcpy(filter, rhs.filter,  sizeof(filter));
+
+            memcpy(cd_values, rhs.cd_values,  sizeof(cd_values));
+            memcpy(cd_size, rhs.cd_size,  sizeof(cd_size));
+            memcpy(flags, rhs.flags, sizeof(flags));
+            n = rhs.n; block_size = rhs.block_size; element_size = rhs.element_size;
+            memcpy(C, rhs.C, sizeof(C));
+            memcpy(B, rhs.B, sizeof(B));
+            memcpy(D, rhs.D, sizeof(D));
+            memcpy(N, rhs.N, sizeof(N));
+            memcpy(Rx, rhs.Rx, sizeof(Rx));
+            memcpy(Ry, rhs.Ry, sizeof(Ry));
+
+            this->dcpl = std::move(rhs.dcpl);
+            this->dxpl = std::move(rhs.dxpl);
+            this->ds = std::move(rhs.ds);
+
+            return *this;
+        }
+
 		void set_cache( const h5::dcpl_t& dcpl, size_t element_size );
 		void write(const h5::ds_t& ds, const h5::offset_t& start, const h5::stride_t& stride, const h5::block_t& block, const h5::count_t& count,
 				const h5::dxpl_t& dxpl, const void* ptr);
@@ -53,6 +83,7 @@ namespace h5{ namespace impl {
 		h5::dxpl_t dxpl;
 		h5::ds_t ds;
 	};
+
 
 	struct basic_pipeline_t : public pipeline_t<basic_pipeline_t>{
 		void write_chunk_impl( const hsize_t* offset, size_t nbytes, const void* ptr );
@@ -235,5 +266,11 @@ template< class Derived>
 inline void h5::impl::pipeline_t<Derived>::pop(){
 	tail--;
 }
-
+template<class T>
+inline std::ostream& operator<<(std::ostream &os, const h5::impl::pipeline_t<T>& p) {
+    os << std::dec;
+	os <<"pipeline:\n"
+		 "------------------------------------------\n";
+    os << "n: " << p.n;
+}
 #endif

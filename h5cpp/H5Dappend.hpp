@@ -23,7 +23,31 @@ namespace h5 {
 		~pt_t();
 
 		pt_t& operator=( h5::pt_t&& pt ){
-			init(pt.ds);
+            // prevent self assign 
+            if (this == &pt) return *this;
+            if(H5Iis_valid(this->ds)){ // flush and close dataset
+                flush();
+                free(this->fill_value);
+            }
+
+            this->ds = std::move(pt.ds);
+            this->dxpl = std::move(pt.dxpl);
+            this->pipeline = std::move(pt.pipeline);
+
+            this->block_size = pt.block_size;
+            this->element_size = pt.element_size;
+            this->N = pt.N; this->n = pt.n; this->rank = pt.rank;
+            this->ptr = pt.ptr;  this->fill_value = pt.fill_value;
+
+            pt.ptr = nullptr; pt.fill_value = nullptr;
+            pt.N=0; pt.n=0; pt.rank=0;
+		    for(int i=0; i<rank; i++){
+			    this->offset[i] = pt.offset[i];
+                this->current_dims[i] = pt.current_dims[i];
+                this->chunk_dims[i] = pt.chunk_dims[i];
+                this->count[i] = pt.count[i];
+            }
+            // since pt.rank = 0, we can skip 
 			return pt;
 		}
 		friend std::ostream& ::operator<<(std::ostream &os, const h5::pt_t& pt);
@@ -119,7 +143,6 @@ template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value 
 void>::type h5::pt_t::append( const T& ref ) try {
 //SCALAR: store inbound data directly in pipeline cache
 	static_cast<T*>( ptr )[n++] = ref;
-
 	if( n != N ) return;
 
 	n = 0;
@@ -184,7 +207,7 @@ void h5::pt_t::flush(){
 	size_t r=1; for(int i=1; i<rank; i++) r*=chunk_dims[i];
 	*current_dims += (n % r) ? n / r + 1 : n / r;
 	h5::set_extent(ds, current_dims);
-	pipeline.write_chunk( offset, block_size, ptr );
+    pipeline.write_chunk( offset, block_size, ptr );
 }
 
 namespace h5 {
@@ -208,21 +231,25 @@ namespace h5 {
 }
 
 inline std::ostream& operator<<(std::ostream &os, const h5::pt_t& pt) {
-
+    os << std::dec;
+	os <<"packet table:\n"
+		 "------------------------------------------\n";
+    if( !H5Iis_valid(pt.ds)) {
+        os << "ds: H5I_UNINIT" <<std::endl;
+        return os;
+    }
 	std::vector<size_t> current_dims(pt.current_dims, pt.current_dims + pt.rank);
 	std::vector<size_t> chunk_dims(pt.chunk_dims, pt.chunk_dims + pt.rank);
 	std::vector<size_t> count(pt.count, pt.count + pt.rank);
 	std::vector<size_t> offset(pt.offset, pt.offset + pt.rank);
 
-	os <<"packet table:\n"
-		 "------------------------------------------\n";
 	os << "rank: " << pt.rank << " N:" << pt.N <<" n:" << pt.n << "\n";
 	os << "element size: " << pt.element_size << " block size: " << pt.block_size << "\n";
 	os << "current dims: " << current_dims << std::endl;
 	os << "chunk dims: " << current_dims << std::endl;
 	os << "offset : " <<  offset <<  " count : " << count << std::endl;
-	os <<"ds: "<< static_cast<hid_t>( pt.ds ) <<" dxpl: "<< static_cast<hid_t>( pt.dxpl ) << std::endl;
-	os <<"fill value: " << std::hex << pt.fill_value << " buffer: " << pt.ptr;
+	os << "ds: "<< static_cast<hid_t>( pt.ds ) <<" dxpl: "<< static_cast<hid_t>( pt.dxpl ) << std::endl;
+	os << "fill value: " << std::hex << pt.fill_value << " buffer: " << pt.ptr;
 	os << "\n\n";
 
 	return os;
