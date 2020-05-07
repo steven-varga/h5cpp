@@ -53,10 +53,10 @@ namespace h5 {
 		friend std::ostream& ::operator<<(std::ostream &os, const h5::pt_t& pt);
 		template<class T>
 		friend void append( h5::pt_t& ds, const T& ref);
-		void flush();
 
 		private:
 		void init(const h5::ds_t& ds_);
+		void flush();
 
 		template<class T> inline typename std::enable_if<h5::impl::is_scalar<T>::value,
 		void>::type append( const T* ptr );
@@ -224,7 +224,8 @@ namespace h5 {
 	}
 
 	inline void flush( h5::pt_t& pt) try {
-		pt.flush( );
+        #pragma message("not implemented: do not call pt_t::flush() ...")
+		// for now
 	} catch ( const std::runtime_error& e){
 		throw h5::error::io::dataset::close( e.what() );
 	}
@@ -246,12 +247,12 @@ inline std::ostream& operator<<(std::ostream &os, const h5::pt_t& pt) {
 	os << "rank: " << pt.rank << " N:" << pt.N <<" n:" << pt.n << "\n";
 	os << "element size: " << pt.element_size << " block size: " << pt.block_size << "\n";
 	os << "current dims: " << current_dims << std::endl;
-	os << "chunk dims: " << current_dims << std::endl;
+	os << "chunk dims: " << chunk_dims << std::endl;
 	os << "offset : " <<  offset <<  " count : " << count << std::endl;
 	os << "ds: "<< static_cast<hid_t>( pt.ds ) <<" dxpl: "<< static_cast<hid_t>( pt.dxpl ) << std::endl;
 	os << "fill value: " << std::hex << pt.fill_value << " buffer: " << pt.ptr;
 	os << "\n\n";
-
+    os << std::dec;
 	return os;
 }
 #endif
