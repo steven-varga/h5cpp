@@ -90,6 +90,4 @@ namespace h5::test {
 		return data;
 	}
 }
-
-
 #endif

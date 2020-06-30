@@ -8,6 +8,17 @@
 #ifndef  H5CPP_ACREATE_HPP
 #define  H5CPP_ACREATE_HPP
 
+//FIXME: move h5::impl::is_valid_attr to meta
+namespace h5::impl {
+		/*this template defines what HDF5 object types may have attributes */
+		template <class H, class T=void> using is_valid_attr =
+			std::integral_constant<bool, std::is_same<H, ::hid_t>::value ||
+				std::is_same<H, h5::gr_t>::value || std::is_same<H, h5::ds_t>::value ||
+				std::is_same<H, h5::ob_t>::value || std::is_same<H, h5::dt_t<T>>::value>;
+		/*template <class H, class T=void> using is_valid_attr =
+			std::integral_constant<bool,
+				std::is_same<H, h5::ds_t>::value>;*/
+}
 namespace h5::impl::attr {
     /*Define what qualifies as valid location for an attribute*/
     template <class HID_T, class T = typename impl::decay<HID_T>::type>

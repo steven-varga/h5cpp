@@ -7,7 +7,7 @@
 #
 apps = arma eigen3 blaze itpp ublas dlib
 
-CXXFLAGS = -Wno-deprecated  -Wall
+CXXFLAGS = -std=c++17 -Wno-deprecated  -Wall
 LIBS =  -lhdf5 -lz -ldl -lm
 INCLUDES=/usr/include/eigen3
 
@@ -22,16 +22,16 @@ test: $(apps)
 all: $(apps)
 
 arma: arma.cpp
-	$(CXX) $^ $(LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $^ $(LIBS) -o $@
 
 blaze: blaze.cpp
-	$(CXX) $^ $(LIBS) -o $@
+	$(CXX) $(CXXFLAGS) $^ $(LIBS) -o $@
 
 itpp: itpp.cpp
 	$(CXX) $^ $(LIBS) -litpp -o $@
 
 eigen3: eigen3.cpp
-	$(CXX)  -I/usr/include/eigen3 $^ $(LIBS)  -o $@
+	$(CXX) $(CXXFLAGS) -I/usr/include/eigen3 $^ $(LIBS)  -o $@
 
 ublas: ublas.cpp
 	$(CXX) $^ $(LIBS)  -o $@

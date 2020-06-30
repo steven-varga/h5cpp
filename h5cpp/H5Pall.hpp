@@ -84,7 +84,7 @@ namespace h5 { namespace impl {
         using type = phid_t;
         using base_t = prop_t<phid_t,init,capi,capi_call>;
 
-        tprop_t( T value ) : base_t( std::make_tuple( h5::copy<T>( h5::dt_t<T>() ), &this->value) ), value(value) {
+        tprop_t( T value ) : base_t( std::make_tuple( h5::copy<T>( h5::create<T>() ), &this->value) ), value(value) {
         }
         ~tprop_t(){ // don't forget that the first argument is a HDF5 type info, that needs closing
             if( H5Iis_valid( std::get<0>(this->args) ) )
@@ -315,6 +315,23 @@ const static h5::alloc_time alloc_time_late{H5D_ALLOC_TIME_LATE};
 const static h5::chunk_opts dont_filter_partial_chunks{H5D_CHUNK_DONT_FILTER_PARTIAL_CHUNKS};
 // DATA ACCESS PROPERTY LISTS: see H5Pdapl.hpp
 
+void * h5cpp_string_alloc_t(size_t size, void *alloc_info){
+    std::cout << "{alloc: " << size << " " <<* (int*) (alloc_info) << "}";
+    return malloc(size);
+}
+void h5cpp_string_free(void *mem, void *free_info){
+    std::cout <<"{free: " << mem <<"}";
+    free(mem);
+}
+
+
+
+herr_t h5cpp_set_memory_manager(hid_t id, size_t salloc_size){
+    std::cout <<"< id:" << id << " size:" << salloc_size <<">";
+    std::cout << H5Pset_vlen_mem_manager(id, &h5cpp_string_alloc_t, &salloc_size, &h5cpp_string_free, nullptr);
+    return 0;
+}
+
 
 // DATA TRANSFER PROPERTY LISTS
 #if H5_VERSION_GE(1,10,0)
@@ -327,6 +344,7 @@ using data_transform           = impl::dxpl_call< impl::dxpl_args<hid_t,const ch
 using hyper_vector_size        = impl::dxpl_call< impl::dxpl_args<hid_t,size_t>,H5Pset_hyper_vector_size>;
 using btree_ratios             = impl::dxpl_call< impl::dxpl_args<hid_t,double,double,double>,H5Pset_btree_ratios>;
 using vlen_mem_manager         = impl::dxpl_call< impl::dxpl_args<hid_t,H5MM_allocate_t, void *, H5MM_free_t, void *>,H5Pset_vlen_mem_manager>;
+using pooling_manager          = impl::dxpl_call< impl::dxpl_args<hid_t,size_t>,h5cpp_set_memory_manager>;
 
 // OBJECT CREATION PROPERTY LISTS
 using ocreate_intermediate_group = impl::ocrl_call< impl::ocrl_args<hid_t,unsigned>,H5Pset_create_intermediate_group>;

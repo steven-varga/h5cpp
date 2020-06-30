@@ -42,10 +42,14 @@ namespace h5 { namespace impl {
 
     template<class T,int R,int C, int O> struct is_linalg<::Eigen::Array<T,R,C,O>> : std::true_type {};
     template<class T,int R,int C, int O> struct is_linalg<::Eigen::Matrix<T,R,C,O>> : std::true_type {};
+    
+    template<class T,int R,int C, int O> struct is_contiguous<::Eigen::Array<T,R,C,O>> : std::true_type {};
+    template<class T,int R,int C, int O> struct is_contiguous<::Eigen::Matrix<T,R,C,O>> : std::true_type {};
 
-
+    
     // TODO: remove const_cast
     // get read access to datastaore
+    // eigen3 supports this native
     template<class T,int R,int C,int O, int MR=R,int MC=C>
     T* data(const ::Eigen::Matrix<T,R,C,O,MR,MC>& ref ){
             return const_cast<T*>( ref.data() );
@@ -81,15 +85,15 @@ namespace h5 { namespace impl {
         struct rank<Eigen::Array<T, 1,1, Major>> : public std::integral_constant<int,0> {};
 
     template <class T,int N, int Major> // row vector
-        struct rank<Eigen::Matrix<T, 1,N, Major>> : public std::integral_constant<int,1> {};
+        struct rank<Eigen::Matrix<T, 1,N, Major>> : public std::integral_constant<int,2> {};
     template <class T,int M, int Major> // col vector
-        struct rank<Eigen::Matrix<T, M,1, Major>> : public std::integral_constant<int,1> {};
+        struct rank<Eigen::Matrix<T, M,1, Major>> : public std::integral_constant<int,2> {};
     template <class T,int M, int N, int Major> // matrices
         struct rank<Eigen::Matrix<T, M, N, Major>> : public std::integral_constant<int,2> {};
     template <class T,int N, int Major> // row vector
-        struct rank<Eigen::Array<T, 1,N, Major>> : public std::integral_constant<int,1> {};
+        struct rank<Eigen::Array<T, 1,N, Major>> : public std::integral_constant<int,2> {};
     template <class T,int M, int Major> // col vector
-        struct rank<Eigen::Array<T, M,1, Major>> : public std::integral_constant<int,1> {};
+        struct rank<Eigen::Array<T, M,1, Major>> : public std::integral_constant<int,2> {};
     template <class T,int M, int N, int Major> // matrices
         struct rank<Eigen::Array<T, M, N, Major>> : public std::integral_constant<int,2> {};
 

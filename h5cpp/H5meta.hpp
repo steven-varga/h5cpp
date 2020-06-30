@@ -8,7 +8,6 @@
 
 namespace h5::meta::compat {
 // N4436 and https://en.cppreference.com/w/cpp/experimental/is_detected 
-
     struct nonesuch {
         nonesuch( ) = delete;
         //~nonesuch( ) = delete;
@@ -54,9 +53,6 @@ namespace h5::meta::compat {
     using is_detected_convertible = std::is_convertible<detected_t<Op, Args...>, To>;
     template <class To, template<class...> class Op, class... Args>
     constexpr bool is_detected_convertible_v = is_detected_convertible<To, Op, Args...>::value;
-
-
-
 }
 namespace h5::meta::detail { // feature detection
     using compat::is_detected;
@@ -77,6 +73,29 @@ namespace h5::meta::detail { // feature detection
         typename std::enable_if<!has_value_type<T>::value>::type > {
         constexpr static bool value = std::is_convertible<T, TagOrClass>::value;
     };
+}
+
+namespace h5::meta {
+    template <typename T> using value_type_f = typename T::value_type;
+    template <typename T> using data_f = decltype(std::declval<T>().data());
+    template <typename T> using size_f = decltype(std::declval<T>().size());
+    template <typename T> using begin_f = decltype(std::declval<T>().begin());
+    template <typename T> using end_f = decltype(std::declval<T>().end());
+    template <typename T> using cbegin_f = decltype(std::declval<T>().cbegin());
+    template <typename T> using cend_f = decltype(std::declval<T>().cend());
+
+    template <typename T> using value = compat::detected_or<T, value_type_f, T>;
+    template <typename T> using has_value_type = compat::is_detected<value_type_f, T>;
+    template <typename T> using has_data = compat::is_detected<data_f, T>;
+    template <typename T> using has_direct_access = compat::is_detected<data_f, T>;
+    template <typename T> using has_size = compat::is_detected<size_f, T>;
+    template <typename T> using has_begin = compat::is_detected<begin_f, T>;
+    template <typename T> using has_end = compat::is_detected<end_f, T>;
+    template <typename T> using has_cbegin = compat::is_detected<cbegin_f, T>;
+    template <typename T> using has_cend = compat::is_detected<cend_f, T>;
+
+    template <typename T> using has_iterator = std::integral_constant<bool, has_begin<T>::value && has_end<T>::value >;
+    template <typename T> using has_const_iterator = std::integral_constant<bool, has_cbegin<T>::value && has_cend<T>::value >;
 }
 
 /*---------------------------------------------------------------------*/

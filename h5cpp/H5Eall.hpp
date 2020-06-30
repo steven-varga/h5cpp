@@ -26,8 +26,8 @@ namespace h5 {
      * @endcode
      */
     inline void mute( ){
-        H5Eget_auto2(H5E_DEFAULT, &error_stack_callback, &error_stack_client_data);
-        H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+        //H5Eget_auto2(H5E_DEFAULT, &error_stack_callback, &error_stack_client_data);
+        //H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
     }
     /**  @ingroup file-io
      * @brief restores previously saved error handler with h5::mute [Read on Error Handling/Exceptions](@ref link_error_handler)
@@ -39,7 +39,7 @@ namespace h5 {
      * @endcode
      */
     inline void unmute( ){
-        H5Eset_auto2(H5E_DEFAULT, error_stack_callback, error_stack_client_data);
+        //H5Eset_auto2(H5E_DEFAULT, error_stack_callback, error_stack_client_data);
     }
 }
 

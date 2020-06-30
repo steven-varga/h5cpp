@@ -64,6 +64,11 @@ std::ostream& operator<<(std::ostream &os, const h5::sp_t& sp) {
     //herr_t H5Sget_select_bounds(hid_t space_id, hsize_t *start, hsize_t *end )
     // hssize_t H5Sget_select_npoints( hid_t space_id )
     hid_t id = static_cast<hid_t>( sp );
+    os << "id: " << id << std::endl;
+    if( id == 0  ){
+        os <<"select all";
+        return os;
+    }
     #if H5_VERSION_GE(1,10,0)
 
     #endif
@@ -120,10 +125,10 @@ inline std::ostream& operator<<(std::ostream &os, const h5::dt_t<T>& dt) {
     os << "data type: " << h5::name<T>::value << " ";
     os << ( std::is_pointer<T>::value ? "pointer" : "value" );
     os << ( H5Iis_valid( id ) > 0 ? " valid" : " invalid");
-
+    os << " ";
     size_t spos, epos, esize, mpos, msize;
     switch( H5Tget_class( id ) ){
-        case H5T_INTEGER: ; break;
+        case H5T_INTEGER: ; os << "INT"; break;
         case H5T_FLOAT:
             H5Tget_fields( id, &spos, &epos, &esize, &mpos, &msize );
 
@@ -135,14 +140,14 @@ inline std::ostream& operator<<(std::ostream &os, const h5::dt_t<T>& dt) {
                 << "\n\tspos:" << spos << " epos:" << epos << " esize:" << esize << " mpos:" << mpos <<" msize:" << msize
                 <<"\n";
              break;
-        case H5T_STRING: ; break;
-        case H5T_BITFIELD: ; break;
-        case H5T_OPAQUE: ; break;
-        case H5T_COMPOUND: ; break;
-        case H5T_REFERENCE: ; break;
-        case H5T_ENUM: ; break;
-        case H5T_VLEN: ; break;
-        case H5T_ARRAY: ;break;
+        case H5T_STRING: os<<"STRING: " << (H5Tis_variable_str(id) ? "VLEN" : "FIXED"); break;
+        case H5T_BITFIELD: os<<"BITFIELD"; break;
+        case H5T_OPAQUE: os<<"OPAQUE"; break;
+        case H5T_COMPOUND: os<<"COMPOUND"; break;
+        case H5T_REFERENCE: os<<"REFERENCE"; break;
+        case H5T_ENUM: os<<"ENUM"; break;
+        case H5T_VLEN: os<<"VLEN"; break;
+        case H5T_ARRAY: os<<"ARRAY"; break;
 		default: break;
     }
     return os;

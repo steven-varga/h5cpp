@@ -2,6 +2,39 @@
 <img src="../icons/cpp_type_system.png" alt="some text" style="zoom:60%;" />
 
 
+## strings
+- `std::array<std::string,N> array = {"1","2","...","N"}`
+- `std::vector<std::string> vector = {"1","2","...","N"}`
+
+| operator                                         | data space  | data type                        | dimension |
+|--------------------------------------------------|:------------|:---------------------------------|-----------|
+|`h5::write(fd, "path", {"1","2","...","N"})`     | array       | `H5T_ARRAY { [N] H5T_C_S1 VL }`  | N         |
+|`h5::write(fd, "path", array)`                   | array       | `H5T_ARRAY { [N] H5T_C_S1 VL }`  | N         |
+|`h5::write(fd, "path", vector)`                  | hypercube   | `H5T_C_S1 VL`                    | N         |
+|`h5::write(fd, "path", vector, h5::current_dims{M}, h5::max_dims{N}, h5::offset{K})`| hypercube | `H5T_C_S1 VL` | N |
+ 
+
+
+
+
+### fixed length
+
+- `h5::create<char[5][10]>(fd, name,{"A","B","C","...","Z"})`
+- `std::string("std::string"))` scalar VL H5T_STRING
+- `"std::string"` scalar  H5T_STRING
+- `{"A","B","C","..."}` ARRAY of VL H5T_STRING
+- `std::array<std::string, 3>({"A","B","..."})` ARRAY of VL H5T_STRING
+- `std::vector<std::string, 3>({"A","B","..."})` ARRAY of VL H5T_STRING
+
+```
+const char var[][10] = {"A","B","C","...","Z"};
+auto ds = h5::create<char[5][10]>(this->fd, this->name);
+h5::write(ds, var);
+```
+
+### variable length
+- 
+
 # Type Traits for internal use  
 withing `h5::impl` namspace the following traits are defined:
 

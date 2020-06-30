@@ -142,7 +142,7 @@ namespace h5 {
 				H5Sselect_all(static_cast<hid_t>(sp)), std::runtime_error,	 h5::error::msg::select_memspace );
 	}
 	template<class T>
-	inline void select_hyperslab(const h5::sp_t& sp, const T& offset, const h5::count_t& count ){
+	inline void select_hyperslab(h5::sp_t& sp, const T& offset, const h5::count_t& count ){
 		hsize_t cnt[] =  {1,1,1,1,1,1,1,1};
 		H5CPP_CHECK_NZ(
 				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, NULL, cnt, *count),

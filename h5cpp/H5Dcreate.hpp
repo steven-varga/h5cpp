@@ -29,12 +29,12 @@ namespace h5 {
         using tdcpl         = typename arg::tpos<const h5::dcpl_t&,const args_t&...>;
         using tdapl         = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
         using ttype         = typename arg::tpos<const h5::dt_t<T>&,const args_t&...>;
-        
+
         //TODO: make copy of default dcpl
         h5::dcpl_t default_dcpl{ H5Pcreate(H5P_DATASET_CREATE) };
         // get references to property lists or system default values 
         const h5::lcpl_t& lcpl = arg::get(h5::default_lcpl, args...);
-        const h5::dcpl_t& dcpl = arg::get(default_dcpl, args...);
+        h5::dcpl_t dcpl = arg::get(default_dcpl, args...);
         const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
 
         H5CPP_CHECK_PROP( lcpl, h5::error::property_list::misc, "invalid list control property" );
@@ -51,7 +51,7 @@ namespace h5 {
         // accounting
         bool is_equal_dims = true, is_unlimited = false,
             is_extendable = true, is_filtering_on = false;
-        hsize_t total_space = sizeof(T);
+        hsize_t total_space = sizeof(typename impl::decay<T>::type);
 
         if constexpr( tmax_dims::present ){
             // check if `current_dims` present as well, if not, copy `max_dims` into `current_dims`

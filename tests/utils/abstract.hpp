@@ -7,9 +7,9 @@ namespace h5::test{
 		static constexpr char const * value = "T";
 	};
 }
+#include "../../h5cpp/core"
 
 #include "../linalg/all"
-#include "../../h5cpp/core"
 #include "types.hpp"
 #include "pod_t.hpp"
 #include "names.hpp"
@@ -37,6 +37,14 @@ protected:
 	std::string name;
 	std::string dir;
 	h5::fd_t fd; //< file descriptor
+};
+
+
+template <typename T>
+class TypedTest : public ::testing::Test {
+protected:
+	void SetUp() override {}
+	void TearDown() override {}
 };
 
 

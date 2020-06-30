@@ -4,7 +4,8 @@
 
 # Modify this list to add H5CPP aware libraries, 
 linalg = eigen3 armadillo blaze blitz itpp ublas dlib
-compilers = clang++ icpc g++-7 g++-8 g++-9 clang++-6.0 clang++-7 clang++-8 clang++-9 clang++-10 pgc++
+compilers = clang++ icpc g++-7 g++-8 g++-9 clang++-6.0 clang++-7 clang++-8 clang++-9 clang++-10 
+#pgc++
 to_upper = $(shell echo '$1' | tr '[:lower:]' '[:upper:]')
 
 CXXFLAGS += -Werror -I../ -std=c++17
@@ -19,12 +20,17 @@ LIBS += $(foreach name,$(linalg), $(shell /usr/bin/pkg-config --silence-errors -
 
 ## list test cases here, be certain to begin them with `H`
 apps = H5Dwrite
-# H5Dcreate H5Tall H5Fcreate H5Fopen H5Iall H5cmake
+# H5Dread
+# H5Meigen H5Marma H5Dwrite H5Sall H5Tmeta H5Dcreate H5Tall H5Fcreate H5Fopen H5Iall H5cmake
 #H5E H5Tmeta 
 all: $(apps)
 
-plots: H5Tmeta
-	echo 'compile it with g++-9'
+plots: H5plot-integral.cpp
+	$(MAKE) -f Makefile plots-job CXX=g++-9
+
+plots-job: H5plot-integral
+	#H5plot-typemap H5plots
+
 # compile object files 
 %.o : $(SRC_DIR)/%.cpp 
 	@$(CXX) -o $@ $(CXXFLAGS) -c $^

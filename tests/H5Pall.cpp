@@ -2,25 +2,11 @@
  * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-#define GOOGLE_STRIP_LOG 1
 
-#include <gtest/gtest.h>
-#include <armadillo>
-#include <h5cpp/all>
+#include "utils/abstract.hpp"
 
-#include "event_listener.hpp"
-#include "abstract.h"
-
-template <typename T> class IntegralTest : public AbstractTest<T>{};
-typedef ::testing::Types<H5CPP_TEST_PRIMITIVE_TYPES> PrimitiveTypes;
-TYPED_TEST_CASE(IntegralTest, PrimitiveTypes);
-
-
-TYPED_TEST(IntegralTest,create_current_dims) { // checks out!!!
+TEST(H5P, dcpl){
+    h5::dcpl_t dcpl = h5::chunk{2,3} | h5::gzip(3) | h5::fill_value<int>(3);
 }
 
-
-/*----------- BEGIN TEST RUNNER ---------------*/
-H5CPP_TEST_RUNNER( int argc, char**  argv );
-/*----------------- END -----------------------*/
-
+H5CPP_BASIC_RUNNER( int argc, char**  argv );

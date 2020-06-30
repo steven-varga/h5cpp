@@ -8,6 +8,7 @@
 #define  H5CPP_ARMA_HPP
 
 #if defined(ARMA_INCLUDES) || defined(H5CPP_USE_ARMADILLO)
+
 namespace h5::arma {
     template<class T> using rowvec = ::arma::Row<T>;
     template<class T> using colvec = ::arma::Col<T>;
@@ -19,7 +20,6 @@ namespace h5::arma {
     using element_t = std::tuple<short,int,long, unsigned short, unsigned int, unsigned long, float,double,std::complex<float>,std::complex<double>>;
     template<class T> struct is_valid : // doesn't have to be fast, only used for testing
         std::integral_constant<bool, h5::meta::tpos<T,element_t>::present> {};
-
 
     template <class T> using types =
        std::tuple<short,int,long, unsigned short, unsigned int, unsigned long, float,double,std::complex<float>,std::complex<double>>;
@@ -60,6 +60,12 @@ namespace h5::impl {
     template <class T> struct is_linalg<h5::arma::colmat<T>> : std::true_type {};
     template <class T> struct is_linalg<h5::arma::cube<T>> : std::true_type {};
     template <class T> struct is_linalg<h5::arma::sparse<T>> : std::true_type {};
+
+    template <class T> struct is_contiguous<h5::arma::rowvec<T>> : std::true_type {};
+    template <class T> struct is_contiguous<h5::arma::colvec<T>> : std::true_type {};
+    template <class T> struct is_contiguous<h5::arma::colmat<T>> : std::true_type {};
+    template <class T> struct is_contiguous<h5::arma::cube<T>> : std::true_type {};
+    template <class T> struct is_contiguous<h5::arma::sparse<T>> : std::false_type {};
 }
 
 /*
@@ -75,19 +81,16 @@ namespace h5::exp::linalg {
 namespace h5 { namespace impl {
     // 1.) object -> H5T_xxx
 
-    // get read access to data store
-    template <class Object, class T = typename impl::decay<Object>::type> inline
-    typename std::enable_if< h5::arma::is_supported<Object>::value,
-    const T*>::type data( const Object& ref ){
-            return ref.memptr();
-    }
+    template <class T> inline const T* data( const h5::arma::rowvec<T>& ref ){ return ref.memptr(); }
+    template <class T> inline const T* data( const h5::arma::colvec<T>& ref ){ return ref.memptr(); }
+    template <class T> inline const T* data( const h5::arma::colmat<T>& ref ){ return ref.memptr(); }
+    template <class T> inline const T* data( const h5::arma::cube<T>& ref ){ return ref.memptr(); }
 
-    // read write access
-    template <class Object, class T = typename impl::decay<Object>::type> inline
-    typename std::enable_if< h5::arma::is_supported<Object>::value,
-    T*>::type data( Object& ref ){
-            return ref.memptr();
-    }
+    template <class T> inline T* data( h5::arma::rowvec<T>& ref ){ return ref.memptr(); }
+    template <class T> inline T* data( h5::arma::colvec<T>& ref ){ return ref.memptr(); }
+    template <class T> inline T* data( h5::arma::colmat<T>& ref ){ return ref.memptr(); }
+    template <class T> inline T* data( h5::arma::cube<T>& ref ){ return ref.memptr(); }
+
 
     // determine rank and dimensions
     template <class T> inline std::array<size_t,1> size( const h5::arma::rowvec<T>& ref ){ return {ref.n_elem};}

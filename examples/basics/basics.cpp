@@ -1,15 +1,6 @@
 #include <h5cpp/all>
 #include <cstddef>
-/*
 
-basics.cpp:15:74: error: no matching function for call to 
-‘h5::impl::prop_t<
-	h5::impl::detail::hid_t<h5::impl::fapl_t, H5Pclose, true, true, true, false>, 
-	h5::impl::default_fapl, 
-	h5::impl::capi_t<long int, H5F_libver_t, H5F_libver_t>, 
-	H5Pset_libver_bounds>
-	::prop_t(H5F_libver_t, H5F_libver_t)’
-*/
 
 int main(){
 	// data type mapped from C/C++ type system to HDF5 through class templates

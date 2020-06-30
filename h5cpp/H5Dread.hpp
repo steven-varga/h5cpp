@@ -32,7 +32,6 @@ namespace h5 {
         using tcount   = typename arg::tpos<const h5::count_t&,const args_t&...>;
         using tblock   = typename arg::tpos<const h5::block_t&,const args_t&...>;
         static_assert( tcount::present, "h5::count_t{ ... } must be specified" );
-        static_assert( utils::is_supported<T>, "error: " H5CPP_supported_elementary_types );
 
         auto tuple = std::forward_as_tuple(args...);
         const h5::count_t& count = std::get<tcount::value>( tuple );
@@ -58,19 +57,16 @@ namespace h5 {
 
         if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
         using element_t = typename impl::decay<T>::type;
-        h5::dt_t<element_t> mem_type;
+        h5::dt_t<element_t> mem_type = h5::create<element_t>();
         hid_t dapl = h5::get_access_plist( ds );
         if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
             h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
             H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGPUT, &filters);
             filters->read(ds, offset, stride, block, count, dxpl, ptr);
         }else{
-            h5::sp_t mem_space = h5::create_simple( size );
-            h5::select_all( mem_space );
             h5::select_hyperslab( file_space, offset, stride, count, block);
-
             H5CPP_CHECK_NZ( H5Dread(
-                    static_cast<hid_t>( ds ), static_cast<hid_t>(mem_type), static_cast<hid_t>(mem_space),
+                    static_cast<hid_t>( ds ), static_cast<hid_t>(mem_type), H5S_ALL,
                     static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr ), h5::error::io::dataset::read, h5::error::msg::read_dataset);
         }
     } catch ( const std::runtime_error& err ){
@@ -363,7 +359,7 @@ namespace h5 {
     }
 
     template<class T, class... args_t>
-    typename std::enable_if<impl::is_multi<T>::value,
+    typename std::enable_if<!impl::is_contiguous<T>::value,
     T>::type read( const h5::gr_t& gr, args_t&&... args ){
 
         using tuple_t = typename impl::member<T>::type; // tuple varies with objects

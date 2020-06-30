@@ -116,3 +116,43 @@ namespace h5::test {
 		static constexpr char const * value = "Eigen::Array<T,Dynamic,N,RowMajor>";
 	};
 }
+
+namespace h5::test::eigen {
+    template<class T> using sparse_t = std::tuple<>;
+    template<class T> using all_t = typename h5::test::eigen_t<T>;
+    template<class T> using dense_t = typename h5::test::eigen_t<T>;
+
+	template <class T, int N=4, int M> auto get_data(){
+        return std::make_tuple(
+		    Eigen::Matrix<T, Eigen::Dynamic,1, Eigen::ColMajor>(M,1),
+		    Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>(1,M),
+		    Eigen::Matrix<T, Eigen::Dynamic, N, Eigen::ColMajor>(M,N),
+		    Eigen::Matrix<T, N,Eigen::Dynamic, Eigen::RowMajor>(N,M),
+
+            Eigen::Array<T, Eigen::Dynamic,1, Eigen::ColMajor>(M,1),
+            Eigen::Array<T, 1, Eigen::Dynamic, Eigen::RowMajor>(1,M),
+            Eigen::Array<T, Eigen::Dynamic, N, Eigen::ColMajor>(M,N),
+            Eigen::Array<T, N, Eigen::Dynamic, Eigen::RowMajor>(N,M),
+
+            Eigen::Matrix<T, N, 1, Eigen::ColMajor>(N,1),
+            Eigen::Matrix<T, 1, N, Eigen::RowMajor>(1,N),
+            Eigen::Matrix<T, N, N, Eigen::ColMajor>(N,N),
+            Eigen::Matrix<T, N, N, Eigen::RowMajor>(N,N),
+
+            Eigen::Array<T, N, 1, Eigen::ColMajor>(N,1),
+            Eigen::Array<T, 1, N, Eigen::RowMajor>(1,N),
+            Eigen::Array<T, N, N, Eigen::ColMajor>(N,N),
+            Eigen::Array<T, N, N, Eigen::RowMajor>(N,N),
+
+            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>(M,M),
+            Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>(M,M),
+            Eigen::Matrix<T, N, Eigen::Dynamic, Eigen::ColMajor>(N,M),
+            Eigen::Matrix<T, Eigen::Dynamic, N, Eigen::RowMajor>(M,N),
+
+            Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>(M,M),
+            Eigen::Array<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>(M,M),
+            Eigen::Array<T, N, Eigen::Dynamic, Eigen::ColMajor>(N,M),
+            Eigen::Array<T, Eigen::Dynamic, N, Eigen::RowMajor>(M,N) );
+    }
+
+}

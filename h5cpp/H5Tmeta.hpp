@@ -8,6 +8,8 @@
 #define  H5CPP_META123_HPP
 
 #include <type_traits>
+#include <string>
+#include <string_view>
 #include <array>
 #include <vector>
 #include <deque>
@@ -26,37 +28,29 @@
 
 // stl detection with templates, this probably should stay until concepts become mainstream
 namespace h5::impl {
-    template <class T, class... Ts> struct is_container : std::false_type {};
-    template <class T, class... Ts> struct is_container <std::vector<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::deque<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::list<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::forward_list<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::set<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::multiset<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::map<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::multimap<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::unordered_set<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::unordered_map<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::unordered_multiset<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_container <std::unordered_multimap<T,Ts...>> : std::true_type{};
-    template <class T, size_t N> struct is_container <std::array<T,N>> : std::true_type{};
+ 
+    template <class T, class... Ts> struct is_array : public std::is_array<T>{};
+    template <class T, size_t N> struct is_array <std::array<T,N>> : std::true_type{};
 
-    template <class T, class... Ts> struct is_adaptor : std::false_type {};
-    template <class T, class... Ts> struct is_adaptor <std::stack<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_adaptor <std::queue<T,Ts...>> : std::true_type{};
-    template <class T, class... Ts> struct is_adaptor <std::priority_queue<T,Ts...>> : std::true_type{};
-
-    template<class T, class... Ts> using is_stl = /* will use concepts once become available */
-        std::disjunction<is_container<T,Ts...>,is_adaptor<T,Ts...>>;
+    template<class T> using is_stl = /* will use concepts once become available */
+        std::disjunction<meta::has_iterator<T>, meta::has_data<T>,meta::has_size<T>,meta::has_value_type<T>>;
 
     template <class... Args> using enable_or = std::enable_if<std::disjunction_v<Args...>>;
     template <class... Args> using enable_and = std::enable_if<std::conjunction_v<Args...>>;
-    template <class T, class... Ts> struct decay { using type = T; };
+    template <class T, class... Ts> struct decay {
+        using type = typename meta::value<T>::type; };
+    template <class T, size_t N> struct decay<T[N]>{ // support for array types
+        using type = typename std::remove_all_extents<T>::type; };
+
     /* std::array<...,R> size<T>(){} template has to compute rank R at compile 
      * time, these templates, and their respective specializations aid to accomplish that*/
-    template<class T, class... Ts> struct rank : public std::integral_constant<int,0> {}; // definition
-    template <class T, size_t N> struct rank<T[N]> : public std::integral_constant<int,1>{}; // arrays
+    template<class T, class... Ts> struct rank : public std::integral_constant<int,
+        meta::has_size<T>::value> {}; // definition
+    template<class U> struct rank<U[]>  : public std::integral_constant<std::size_t, rank<U>::value + 1>{};
+    template<class U, std::size_t N> struct rank<U[N]> : public std::integral_constant<std::size_t, rank<U>::value + 1>{};
+    template<class U, std::size_t N> struct rank<U*[N]> : public std::integral_constant<std::size_t, rank<U*>::value>{};
     template <size_t N> struct rank<char[N]> : public std::integral_constant<int,0>{}; // character literals
+
     template<class T, int N, class... Ts> using is_rank = std::integral_constant<bool, rank<T, Ts...>::value == N >;
     // helpers for is_rank<T>, don't need specialization, instead define 'rank'
     template<class T, class... Ts> using is_scalar = is_rank<T,0,Ts...>; // numerical | pod 
@@ -69,32 +63,37 @@ namespace h5::impl {
         std::is_same<T,std::string>::value || std::is_same<D, std::string>::value>;
     /* Objects may reside in continuous memory region such as vectors, matrices, POD structures can be saved/loaded in a single transfer,
      * the rest needs to be handled on a member variable bases*/
-    template <class T> struct is_contigious : std::false_type {};
+    template <class T, class... Ts> struct is_contiguous : std::integral_constant<bool, std::is_pod<T>::value> {};
+    template <class T, class... Ts> struct is_contiguous <std::basic_string<T,Ts...>> : std::true_type {};
+    template <class T, class... Ts> struct is_contiguous <std::basic_string_view<T,Ts...>> : std::true_type {};
+    template <size_t N> struct is_contiguous <const char*[N]> : std::false_type {};
+
+    template <class T> struct is_contiguous <std::complex<T>> : std::true_type{};
+    template <class T, class... Ts> struct is_contiguous <std::vector<T,Ts...>> :
+        std::integral_constant<bool, std::is_pod<T>::value>{};
+    template <class T, size_t N> struct is_contiguous <std::array<T,N>> :
+        std::integral_constant<bool, std::is_pod<T>::value>{};
+
     template <class T, class... Ts> struct is_linalg : std::false_type {};
     template <class C, class T, class... Cs> struct is_valid : std::false_type {};
 
-#define h5cpp_decay( OBJECT )\
-    template <class T, class... Ts> struct decay<OBJECT<const T*, Ts...>>{ using type = const T*; }; \
-    template <class T, class... Ts> struct decay<OBJECT<T*, Ts...>>{       using type = T*; };       \
-    template <class T, class... Ts> struct decay<OBJECT<T, Ts...>>{        using type = T; };        \
-
-    template <class T> struct decay<const T>{ using type = T; };
-    template <class T> struct decay<const T*>{ using type = T*; };
-       
-
-    
     // DEFAULT CASE
     template <class T> struct rank<T*>: public std::integral_constant<size_t,1>{};
     template <class T, class... Ts>
-        typename std::enable_if<!std::is_array<T>::value, T*>::type data(const T& ref ){ return &ref; };
-    template <class T, class... Ts> std::array<size_t, 0> size(const T& ref ){ return {}; };
+        typename std::enable_if<!std::is_array<T>::value, const T*>::type data(const T& ref ){ return &ref; };
+    template <class T, class... Ts> 
+        typename std::enable_if<meta::has_size<T>::value, std::array<size_t,1>
+        >::type size(const T& ref){
+        return {ref.size()};
+    };
+    template <class T, size_t N>
+        std::array<size_t,1> size(const T(&ref)[N]){ return {N};};
     template <class T, class... Ts> struct get {
         static inline T ctor( std::array<size_t,0> dims ){
             return T(); }};
     // ARRAYS
-    template <class T, size_t N> struct decay<T[N]>{ // support for array types
-        using type = typename std::remove_all_extents<T>::type; };
-    template <class T, int N> struct rank<T[N]> : public std::rank<T[N]>{};
+
+    //already defined line 58: template <class T, int N> struct rank<T[N]> : public std::rank<T[N]>{};
 
     template <class T,int N0> const T* data( const T(&ref)[N0]){ return &ref[0];};
     template <class T,int N1,int N0> const T* data( const T(&ref)[N1][N0]){ return &ref[0][0];};
@@ -112,7 +111,6 @@ namespace h5::impl {
     template <class T,int N5,int N4,int N3,int N2,int N1,int N0>T* data(T(&ref)[N5][N4][N3][N2][N1][N0]){ return &ref[0][0][0][0][0][0];};
     template <class T,int N6,int N5,int N4,int N3,int N2,int N1,int N0>T* data(T(&ref)[N6][N5][N4][N3][N2][N1][N0]){ return &ref[0][0][0][0][0][0][0];};
 
-
     template <class T, int N> std::array<size_t, std::rank<T[N]>::value>
         size(const T* ref ){ return  h5::meta::get_extent<T[N]>(); };
    // template <class T, int N> struct get {
@@ -122,30 +120,26 @@ namespace h5::impl {
 
     //STD::STRING
     template<> struct rank<std::string>: public std::integral_constant<size_t,0>{};
-    h5cpp_decay(std::basic_string)
-    template <class T, class... Ts> T* data(const std::basic_string<T, Ts...>& ref ){
-        return ref.data(); }
+   // template <class T, class... Ts> T const* data(const std::basic_string<T, Ts...>& ref ){
+   //     return ref.data();
+   // }
     template <class T, class... Ts> std::array<size_t,1> size( const std::basic_string<T, Ts...>& ref ){ return{ref.size()}; }
     template <class T, class... Ts> struct get<std::basic_string<T,Ts...>> {
         static inline std::basic_string<T,Ts...> ctor( std::array<size_t,1> dims ){
             return std::basic_string<T,Ts...>(); }};
 
 // STD::INITIALIZER_LIST<T>
-    //h5cpp_decay(std::initializer_list)
-    template<class T> inline typename std::enable_if< impl::is_scalar<T>::value,
-        const T*>::type data( const std::initializer_list<T>& ref ){ return ref.begin(); }
-    inline const char* const* data( const std::initializer_list<const char*>& ref ){ return ref.begin(); }
+    template<int N0> struct rank<std::initializer_list<char[N0]>>: public std::integral_constant<size_t,1>{};
+    template<int N0, int N1> struct rank<std::initializer_list<char[N0][N1]>>: public std::integral_constant<size_t,2>{};
+    template<class T> struct rank<std::initializer_list<T>>: public std::integral_constant<size_t,1>{};
 
 // STD::VECTOR<T>
     template<class T> struct rank<std::vector<T>>: public std::integral_constant<size_t,1>{};
-    h5cpp_decay(std::vector)
+    
+    template <class T, class... Ts>
+    std::array<size_t,1> size( const std::vector<T, Ts...>& ref ){ return{ref.size()}; }
 
 // STD::ARRAY<T>
-    // h5cpp_decay macro won't work on this one, write templates manually  
-    template <class T, size_t N> struct decay<std::array<const T*,N>>{ typedef const T* type; };
-    template <class T, size_t N> struct decay<std::array<T*,N>>{ typedef T* type; };
-    template <class T, size_t N> struct decay<std::array<T,N>>{ typedef T type; };
-
     // 3.) read access
     template <class T, size_t N> inline const T* data( const std::array<T,N>& ref ){ return ref.data(); }
     template <class T, size_t N> inline T* data( std::array<T,N>& ref ){ return ref.data(); }
@@ -153,13 +147,10 @@ namespace h5::impl {
     template <class T, size_t N> inline typename std::array<size_t,1> size( const std::array<T,N>& ref ){ return {N}; }
     template <class T, size_t N> struct rank<std::array<T,N>> : public std::integral_constant<int,1> {};
 // END STD::ARRAY
-    h5cpp_decay(std::forward_list)
-    h5cpp_decay(std::list)
 
     template <class T> void get_fields( T& sp ){}
     template <class T> void get_field_names( T& sp ){}
     template <class T> void get_field_attributes( T& sp ){}
-
 
 // NON_CONTIGUOUS 
     template <class T> struct member {
@@ -192,4 +183,5 @@ namespace h5::impl {
 
     //template <class T> struct 
 }
+
 #endif
