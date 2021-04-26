@@ -26,7 +26,7 @@ namespace h5 {
             // prevent self assign 
             if (this == &pt) return *this;
             if(H5Iis_valid(this->ds)){ // flush and close dataset
-                flush();
+                this->flush();
                 free(this->fill_value);
             }
 
@@ -99,7 +99,7 @@ h5::pt_t::~pt_t(){
 	/*default ctor has an invalid state -- skip flushing cache */
 	if( !h5::is_valid( ds ) )
 		return;
-	flush();
+	this->flush();
 	free(this->fill_value);
 }
 
@@ -224,7 +224,7 @@ namespace h5 {
 	}
 
 	inline void flush( h5::pt_t& pt) try {
-        #pragma message("not implemented: do not call pt_t::flush() ...")
+        //TODO: find better mechanism for deprecating code: #pragma message("not implemented: do not call pt_t::flush() ...")
 		// for now
 	} catch ( const std::runtime_error& e){
 		throw h5::error::io::dataset::close( e.what() );

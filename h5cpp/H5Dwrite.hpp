@@ -48,9 +48,9 @@ namespace h5 {
 		hsize_t size = 1;for(int i=0;i<rank;i++) size *= count[i] * block[i];
 		hid_t dapl = h5::get_access_plist( ds );
 
-		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
+		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGHPUT) ){
 			h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
-			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGPUT, &filters);
+			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
 			filters->write(ds, offset, stride, block, count, dxpl, ptr);
 		}else{
 			h5::sp_t mem_space = h5::create_simple( size );

@@ -60,9 +60,9 @@ namespace h5 {
 		using element_t = typename impl::decay<T>::type;
 		h5::dt_t<element_t> mem_type;
 		hid_t dapl = h5::get_access_plist( ds );
-		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
+		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGHPUT) ){
 			h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
-			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGPUT, &filters);
+			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
 			filters->read(ds, offset, stride, block, count, dxpl, ptr);
 		}else{
 			h5::sp_t mem_space = h5::create_simple( size );

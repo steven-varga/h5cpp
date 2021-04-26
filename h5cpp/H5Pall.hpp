@@ -166,7 +166,7 @@ const static h5::file_space_page_strategy strategy_aggr{H5F_FSPACE_STRATEGY_AGGR
 const static h5::file_space_page_strategy strategy_none{H5F_FSPACE_STRATEGY_NONE};
 */
 	#ifdef H5_HAVE_PARALLEL
-		const static h5::file_space_page_strategy strategy_page{H5F_FSPACE_STRATEGY_PAGE};
+		// const static h5::file_space_page_strategy strategy_page{H5F_FSPACE_STRATEGY_PAGE};
 	#endif
 #endif
 

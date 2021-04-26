@@ -37,10 +37,10 @@ namespace h5{
 			case H5D_COMPACT: break;
 			case H5D_CONTIGUOUS: break;
 			case H5D_CHUNKED:
-				if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGPUT) ){
+				if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGHPUT) ){
 					// grab pointer to uninitialized pipeline
 					h5::impl::pipeline_t<impl::basic_pipeline_t>* ptr;
-					H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGPUT, &ptr);
+					H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &ptr);
 					hid_t type_id = H5Dget_type( static_cast<::hid_t>(ds) );
 					size_t element_size = H5Tget_size( type_id );
 					ptr->set_cache(dcpl, element_size);
