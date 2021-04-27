@@ -41,7 +41,7 @@ namespace h5 {
 
             pt.ptr = nullptr; pt.fill_value = nullptr;
             pt.N=0; pt.n=0; pt.rank=0;
-		    for(int i=0; i<rank; i++){
+                    for(unsigned i=0; i<rank; i++){
 			    this->offset[i] = pt.offset[i];
                 this->current_dims[i] = pt.current_dims[i];
                 this->chunk_dims[i] = pt.chunk_dims[i];
@@ -81,7 +81,7 @@ namespace h5 {
 /* initialized to invalid state
  * */
 inline h5::pt_t::pt_t() :
-	dxpl{H5Pcreate(H5P_DATASET_XFER)},ds{H5I_UNINIT},n{0},fill_value{NULL}{
+        ds{H5I_UNINIT},dxpl{H5Pcreate(H5P_DATASET_XFER)},n{0},fill_value{NULL}{
 		for( int i=0; i<H5CPP_MAX_RANK; i++ )
 			count[i] = 1, offset[i] = 0;
 	}
@@ -122,7 +122,7 @@ void h5::pt_t::init( const h5::ds_t& handle ){
 		this->N = pipeline.n;
 		pipeline.ds = ds; pipeline.dxpl = dxpl;
 		h5::get_chunk_dims( dcpl, chunk_dims );
-		for(int i=1; i<rank; i++)
+                for(unsigned i=1; i<rank; i++)
 			current_dims[i] = chunk_dims[i];
 	} catch ( ... ){
 		throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("CTOR: unable to create handle from dataset..."));
@@ -204,7 +204,7 @@ void h5::pt_t::flush(){
 			static_cast<char*>( ptr )[(n + i) * element_size + j] = static_cast<char*>( fill_value )[ j ];
 	*offset = *current_dims;
 	*current_dims += *current_dims % *chunk_dims;
-	size_t r=1; for(int i=1; i<rank; i++) r*=chunk_dims[i];
+        size_t r=1; for(unsigned i=1; i<rank; i++) r*=chunk_dims[i];
 	*current_dims += (n % r) ? n / r + 1 : n / r;
 	h5::set_extent(ds, current_dims);
     pipeline.write_chunk( offset, block_size, ptr );

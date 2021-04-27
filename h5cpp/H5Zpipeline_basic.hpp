@@ -20,7 +20,7 @@ inline void h5::impl::basic_pipeline_t::write_chunk_impl( const hsize_t* offset,
 			if( !length )
 				mask = 1 << 0;
 		default: // more than one filter
-			for(int j=1; j<tail; j++){ // invariant: out == buffer holding final result
+                        for(hsize_t j=1; j<tail; j++){ // invariant: out == buffer holding final result
 				tmp = in, in = out, out = tmp;
 				length = filter[j](out,in,length, flags[j], cd_size[j], cd_values[j]);
 				if( !length )
@@ -52,7 +52,7 @@ inline void h5::impl::basic_pipeline_t::read_chunk_impl( const hsize_t* offset, 
 			throw std::runtime_error("filters not implemented yet...");
 			if( tail % 2 ){
 				H5Dread_chunk(ds, dxpl, offset, &filter_mask, chunk0);
-				for(int j=tail; j>0; j--){ // invariant: out == buffer holding final result
+                                for(hsize_t j=tail; j>0; j--){ // invariant: out == buffer holding final result
 					tmp = in, in = out, out = tmp;
 					length = filter[j](out,in,length, flags[j], cd_size[j], cd_values[j]);
 				}

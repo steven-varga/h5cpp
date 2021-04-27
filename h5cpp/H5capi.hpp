@@ -199,6 +199,7 @@ namespace h5 {
 				}
 				break;
 			case H5D_VIRTUAL: break;
+                        default: {/* silence warning of unhandled enumeration values */}
 		}
 		ds_.dapl = static_cast<::hid_t>( dapl );
 		return ds_;
@@ -228,4 +229,3 @@ namespace h5 {
 	}
 }
 #endif
-

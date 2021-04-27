@@ -100,9 +100,9 @@ namespace h5 { namespace impl { namespace detail {
 			ref.handle = H5I_UNINIT;
 		}
 		~hid_t(){
-			::herr_t err = 0;
+                        /* ::herr_t err = 0; */
 			if( H5Iis_valid( handle ) )
-				err = capi_close( handle );
+                          /* err = */ capi_close( handle );
 		}
 		protected:
 		::hid_t handle;

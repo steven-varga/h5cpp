@@ -27,10 +27,10 @@ namespace h5 {
 	template<class T, class... args_t>
 	typename std::enable_if<!std::is_same<T,char**>::value,
 	void>::type read( const h5::ds_t& ds, T* ptr, args_t&&... args ) try {
-		using toffset  = typename arg::tpos<const h5::offset_t&,const args_t&...>;
-		using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
+                //using toffset  = typename arg::tpos<const h5::offset_t&,const args_t&...>;
+                //using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
 		using tcount   = typename arg::tpos<const h5::count_t&,const args_t&...>;
-		using tblock   = typename arg::tpos<const h5::block_t&,const args_t&...>;
+                //using tblock   = typename arg::tpos<const h5::block_t&,const args_t&...>;
 		static_assert( tcount::present, "h5::count_t{ ... } must be specified" );
 		static_assert( utils::is_supported<T>, "error: " H5CPP_supported_elementary_types );
 
@@ -239,10 +239,10 @@ namespace h5 {
 	// update the content by we're good to go, since stride and offset can be processed in the 
 	// update step
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
-		using toffset  = typename arg::tpos<const h5::offset_t&,const args_t&...>;
-		using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
-		using tblock   = typename arg::tpos<const h5::block_t&,const args_t&...>;
-		using element_type    = typename impl::decay<T>::type;
+                //using toffset  = typename arg::tpos<const h5::offset_t&,const args_t&...>;
+                //using tstride  = typename arg::tpos<const h5::stride_t&,const args_t&...>;
+                //using tblock   = typename arg::tpos<const h5::block_t&,const args_t&...>;
+                //using element_type    = typename impl::decay<T>::type;
 
 		h5::count_t size;
 		const h5::count_t& count = arg::get(size, args...);
@@ -270,7 +270,7 @@ namespace h5 {
 	   	int rank = h5::get_simple_extent_ndims( file_space );
 
 		if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
-		using element_t = typename impl::decay<T>::type;
+                //using element_t = typename impl::decay<T>::type;
 		h5::dt_t<char*> mem_type;
 		hid_t dapl = h5::get_access_plist( ds );
 

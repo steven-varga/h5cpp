@@ -22,9 +22,9 @@ namespace h5 {
 		// compile time check of property lists: 
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
 		using tmax_dims 	= typename arg::tpos<const h5::max_dims_t&,const args_t&...>;
-		using tlcpl 		= typename arg::tpos<const h5::lcpl_t&,const args_t&...>;
+                //using tlcpl           = typename arg::tpos<const h5::lcpl_t&,const args_t&...>;
 		using tdcpl 		= typename arg::tpos<const h5::dcpl_t&,const args_t&...>;
-		using tdapl 		= typename arg::tpos<const h5::dapl_t&,const args_t&...>;
+                //using tdapl           = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
 
 		//TODO: make copy of default dcpl
 		h5::dcpl_t default_dcpl{ H5Pcreate(H5P_DATASET_CREATE) };
@@ -82,4 +82,3 @@ namespace h5 {
 	}
 }
 #endif
-

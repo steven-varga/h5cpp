@@ -47,6 +47,7 @@ namespace h5{
 				}
 				break;
 			case H5D_VIRTUAL: break;
+                        default: {/* silence warning of unhandled enumeration values */}
 		}
 
 		h5::ds_t ds_{ds};
@@ -57,4 +58,3 @@ namespace h5{
 }
 
 #endif
-

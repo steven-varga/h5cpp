@@ -47,7 +47,7 @@ namespace h5 { namespace impl { namespace filter {
 	}
 	inline size_t gzip( void* dst, const void* src, size_t size, unsigned flags, size_t n, const unsigned params[]){
 		size_t nbytes = size;
-		int ret = compress2( (unsigned char*)dst, &nbytes, (const unsigned char*)src, size, params[0]);
+                /*int ret = */compress2( (unsigned char*)dst, &nbytes, (const unsigned char*)src, size, params[0]);
 		return nbytes;
 	}
 	inline size_t szip( void* dst, const void* src, size_t size, unsigned flags, size_t n, const unsigned params[]){

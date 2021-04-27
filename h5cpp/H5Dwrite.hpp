@@ -73,7 +73,7 @@ namespace h5 {
 	h5::ds_t>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ) try {
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double | std::string
 		using element_t = typename impl::decay<T>::type;
-		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
+                //using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		h5::count_t default_count;
 
 		default_count = impl::size( ref );
@@ -107,8 +107,8 @@ namespace h5 {
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
-		using tblock  = typename arg::tpos<const h5::block_t&,const args_t&...>;
-		using tdapl   = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
+                //using tblock  = typename arg::tpos<const h5::block_t&,const args_t&...>;
+                //using tdapl   = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
 
 		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
@@ -152,12 +152,12 @@ namespace h5 {
  	*/ 
 	template <class T, class... args_t>
 	h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
-		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
+                //using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
 		using tblock = typename arg::tpos<const h5::block_t&,const args_t&...>;
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
-		using tdapl   = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
+                //using tdapl   = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
 
 		int rank = impl::rank<T>::value;
 

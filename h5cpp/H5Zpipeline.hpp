@@ -115,7 +115,7 @@ inline void h5::impl::pipeline_t<Derived>::write(
 				const h5::dxpl_t& dxpl, const void* ptr){
 
 	h5::offset_t offset_; h5::count_t count_;
-	for(int i=0; i<rank; i++)
+        for(hsize_t i=0; i<rank; i++)
 		offset_[i] = offset[i], count_[i] = count[i] * block[i];
 	this->dxpl = dxpl; this->ds = ds;
 	split_to_chunk_write(filter_direction_t::forward, offset_.begin(), count_.begin(), ptr );
@@ -127,7 +127,7 @@ inline void h5::impl::pipeline_t<Derived>::read(
 				const h5::dxpl_t& dxpl, void* ptr){
 
 	h5::offset_t offset_; h5::count_t count_;
-	for(int i=0; i<rank; i++)
+        for(hsize_t i=0; i<rank; i++)
 		offset_[i] = offset[i], count_[i] = count[i] * block[i];
 	this->dxpl = dxpl; this->ds = ds;
 	split_to_chunk_read(filter_direction_t::reverse, offset_.begin(), count_.begin(), ptr );
@@ -143,13 +143,13 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 			throw std::runtime_error("data-space is rank 0, is data space a scalar? ");
 
 	//fix B block/chunk size for the lifespan of pipeline
-	for(int i=0; i<rank; i++ )
+        for(hsize_t i=0; i<rank; i++ )
 	   	n *= block[i], B[i] = block[rank-i-1];
 
 	block_size = n*element_size;
 	unsigned filter_config;
 	unsigned N = H5Pget_nfilters( dcpl );
-	H5Z_filter_t filter_id;
+        //H5Z_filter_t filter_id;
 	for(unsigned i=0; i<N; i++){
 		cd_size[i] = H5CPP_MAX_FILTER_PARAM;
 		push(
@@ -165,7 +165,7 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 
 #define h5cpp_outer( idx ) for( j##idx =0; j##idx < n##idx; j##idx += b##idx)
 #define h5cpp_inner( idx ) for( i##idx = j##idx; i##idx < std::min(j##idx+b##idx,n##idx); i##idx++)
-#define h5cpp_def( idx ) hsize_t i##idx=0, j##idx = 0, s##idx=0, n##idx=N[idx], b##idx=B[idx], rx##idx=Rx[idx],  ry##idx=Ry[idx];
+#define h5cpp_def( idx ) hsize_t i##idx [[maybe_unused]] =0, j##idx = 0, s##idx [[maybe_unused]] =0, n##idx=N[idx], b##idx=B[idx], rx##idx [[maybe_unused]] =Rx[idx], ry##idx [[maybe_unused]] =Ry[idx];
 
 template< class Derived>
 inline void h5::impl::pipeline_t<Derived>::split_to_chunk_read(
@@ -247,7 +247,7 @@ inline void h5::impl::pipeline_t<Derived>::split_to_chunk_write(
 		// the coordinates are in j indices
 		D[0] = j0, D[1]=j1, D[2]=j2, D[3]=j3, D[4]=j4, D[5]=j5, D[6]=j6;
 		//coordinates are reversed in D, invert them:
-		for(int k=0;k<rank; k++ ) C[k] = D[rank-k-1] + chunk_offset[k];
+                for(hsize_t k=0;k<rank; k++ ) C[k] = D[rank-k-1] + chunk_offset[k];
 
 		// execute filters in direction
 		write_chunk( this->C, this->block_size, this->chunk0 );
