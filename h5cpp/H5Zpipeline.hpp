@@ -272,5 +272,6 @@ inline std::ostream& operator<<(std::ostream &os, const h5::impl::pipeline_t<T>&
 	os <<"pipeline:\n"
 		 "------------------------------------------\n";
     os << "n: " << p.n;
+    return os;
 }
 #endif
