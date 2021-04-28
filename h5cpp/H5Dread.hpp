@@ -1,11 +1,34 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-
 #ifndef  H5CPP_DREAD_HPP
 #define  H5CPP_DREAD_HPP
-#include "H5Dopen.hpp" // be sure this precedes error handling macro-s !!!
+
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "H5Eall.hpp"
+#include "H5Iall.hpp"
+#include "H5meta.hpp"
+#include "H5Sall.hpp"
+#include "H5Tall.hpp"
+#include "H5Tmeta.hpp"
+#include "H5Pall.hpp"
+#include "H5Zpipeline.hpp"
+#include "H5Zpipeline_basic.hpp"
+#include "H5Pdapl.hpp"
+#include "H5capi.hpp"
+#include "H5Fopen.hpp"
+#include "H5Dopen.hpp"
+#include "H5Aread.hpp"
+#include <tuple>
+#include <type_traits>
+#include <string>
+#include <stdexcept>
+#include <utility>
+#include <string.h>
+#include <stdlib.h>
+
 
 namespace h5 {
 /***************************  REFERENCE *****************************/

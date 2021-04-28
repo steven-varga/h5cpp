@@ -1,10 +1,24 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-
 #ifndef  H5CPP_AWRITE_HPP
 #define  H5CPP_AWRITE_HPP
+
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "H5Eall.hpp"
+#include "H5Iall.hpp"
+#include "H5Sall.hpp"
+#include "H5Tall.hpp"
+#include "H5Tmeta.hpp"
+#include "H5Pall.hpp"
+#include "H5Aopen.hpp"
+#include "H5Acreate.hpp"
+#include <type_traits>
+#include <string>
+#include <stdexcept>
+
 namespace h5 {
 
     template <class T>
@@ -18,7 +32,6 @@ namespace h5 {
     }
     // const char* ( strings are converted to 
     inline void awrite( const h5::at_t& attr, const char* ptr ){
-        std::cout <<" <const char*: " << std::string(ptr) << " >\n";
         h5::dt_t<char*> type;
         const char** data = &ptr;
         H5CPP_CHECK_NZ( H5Awrite( static_cast<hid_t>(attr), static_cast<hid_t>( type ), data ),
@@ -70,7 +83,6 @@ namespace h5 {
     inline typename std::enable_if<std::is_same<T,std::string>::value && impl::attr::is_location<HID_T>::value,
     h5::at_t>::type awrite( const HID_T& parent, const std::string& name,
         const std::initializer_list<T> ref, const h5::acpl_t& acpl = h5::default_acpl ) try {
-        std::cout <<" <const initializar_list<std::string>&:\n";
 
         h5::current_dims_t current_dims = impl::size( ref );
         using element_t = typename impl::decay<std::initializer_list<T>>::type;

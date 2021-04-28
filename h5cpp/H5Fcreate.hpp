@@ -1,10 +1,17 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
 #ifndef  H5CPP_FCREATE_HPP
 #define H5CPP_FCREATE_HPP
+
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "H5Eall.hpp"
+#include "H5Iall.hpp"
+#include "H5Pall.hpp"
+#include <string>
 /**  
  * @namespace h5
  * @brief public namespace

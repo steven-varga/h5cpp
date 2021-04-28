@@ -1,12 +1,13 @@
 
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
 #ifndef  H5CPP_META123_HPP 
 #define  H5CPP_META123_HPP
 
+#include "H5Iall.hpp"
+#include "H5meta.hpp"
 #include <type_traits>
 #include <string>
 #include <string_view>
@@ -22,6 +23,8 @@
 #include <stack>
 #include <queue>
 #include <any>
+#include <tuple>
+#include <complex>
 
 //FIXME: move it elsewhere
 #define H5CPP_supported_elementary_types "supported elementary types ::= pod_struct | float | double |  [signed](int8 | int16 | int32 | int64)"
@@ -60,7 +63,16 @@ namespace h5::impl {
 
     template <class T, class D=typename impl::decay<T>::type>
     using is_string = typename std::integral_constant<bool,
-        std::is_same<T,std::string>::value || std::is_same<D, std::string>::value>;
+        std::is_same<T,std::basic_string<char>>::value || std::is_same<D, std::basic_string<char>>::value || 
+        std::is_same<T,std::basic_string<wchar_t>>::value || std::is_same<D, std::basic_string<wchar_t>>::value || 
+        std::is_same<T,std::basic_string<char16_t>>::value || std::is_same<D, std::basic_string<char16_t>>::value || 
+        std::is_same<T,std::basic_string<char32_t>>::value || std::is_same<D, std::basic_string<char32_t>>::value ||
+        std::is_same<T,std::basic_string_view<char>>::value || std::is_same<D, std::basic_string<char>>::value || 
+        std::is_same<T,std::basic_string_view<wchar_t>>::value || std::is_same<D, std::basic_string_view<wchar_t>>::value || 
+        std::is_same<T,std::basic_string_view<char16_t>>::value || std::is_same<D, std::basic_string_view<char16_t>>::value || 
+        std::is_same<T,std::basic_string_view<char32_t>>::value || std::is_same<D, std::basic_string_view<char32_t>>::value>;
+
+
     /* Objects may reside in continuous memory region such as vectors, matrices, POD structures can be saved/loaded in a single transfer,
      * the rest needs to be handled on a member variable bases*/
     template <class T, class... Ts> struct is_contiguous : std::integral_constant<bool, std::is_pod<T>::value> {};
@@ -119,7 +131,15 @@ namespace h5::impl {
 
 
     //STD::STRING
-    template<> struct rank<std::string>: public std::integral_constant<size_t,0>{};
+    template<> struct rank<std::basic_string<char>>: public std::integral_constant<size_t,0>{};
+    template<> struct rank<std::basic_string<wchar_t>>: public std::integral_constant<size_t,0>{};
+    template<> struct rank<std::basic_string<char16_t>>: public std::integral_constant<size_t,0>{};
+    template<> struct rank<std::basic_string<char32_t>>: public std::integral_constant<size_t,0>{};
+    template<> struct rank<std::basic_string_view<char>>: public std::integral_constant<size_t,0>{};
+    template<> struct rank<std::basic_string_view<wchar_t>>: public std::integral_constant<size_t,0>{};
+    template<> struct rank<std::basic_string_view<char16_t>>: public std::integral_constant<size_t,0>{};
+    template<> struct rank<std::basic_string_view<char32_t>>: public std::integral_constant<size_t,0>{};
+  
    // template <class T, class... Ts> T const* data(const std::basic_string<T, Ts...>& ref ){
    //     return ref.data();
    // }
@@ -170,7 +190,7 @@ namespace h5::impl::linalg {
 }
 
 namespace h5::impl {
-    /* what handles may have attributes:  h5::acreate, h5::aread, h5::awrite*/
+    // what handles may have attributes:  h5::acreate, h5::aread, h5::awrite
     template <class T, class... Ts> struct has_attribute : std::false_type {};
     template <> struct has_attribute<h5::gr_t> : std::true_type {};
     template <> struct has_attribute<h5::ds_t> : std::true_type {};

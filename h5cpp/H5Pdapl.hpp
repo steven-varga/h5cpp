@@ -1,11 +1,16 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
-
 #ifndef  H5CPP_PDAPL_HPP
 #define  H5CPP_PDAPL_HPP
+
+#include <hdf5.h>
+#include "H5Iall.hpp"
+#include "H5Pall.hpp"
+#include "H5Zpipeline.hpp"
+#include "H5Zpipeline_basic.hpp"
+
 
 #define H5CPP_DAPL_HIGH_THROUGPUT "h5cpp_dapl_highthroughput"
 

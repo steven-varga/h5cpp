@@ -1,13 +1,14 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
-
-
 #ifndef  H5CPP_IALL_HPP
 #define  H5CPP_IALL_HPP
 
+#include "H5config.hpp"
+#include <hdf5.h>
+#include <vector>
+#include <initializer_list>
 
 #ifdef H5CPP_CONVERSION_IMPLICIT
 	#define H5CPP__EXPLICIT
@@ -15,7 +16,7 @@
 	#define H5CPP__EXPLICIT explicit
 #endif
 
-namespace h5 { namespace impl {
+namespace h5::impl {
 	using capi_close_t = ::herr_t(*)(::hid_t);
 	using defprop_t = ::hid_t(*)();
 
@@ -29,9 +30,9 @@ namespace h5 { namespace impl {
 	};
 	//forward declarations
 	struct at_t;
-}}
+}
 
-namespace h5 { namespace impl { namespace detail {
+namespace h5::impl::detail {
 	/* this mechanism is to alter the behaviour of h5::hid_t through 
 	 * template specialization. The base class is ::any which provides
 	 * conversion policy and resource cleanup
@@ -93,7 +94,7 @@ namespace h5 { namespace impl { namespace detail {
 		}
 		~hid_t(){
 			::herr_t err = 0;
-            err +=0; // shuts up pgi compilers
+            err +=0; // shuts up pgi compilers, rest of the compilers are fine
 			if( H5Iis_valid( handle ) )
 				err = capi_close( handle );
 		}
@@ -172,15 +173,15 @@ namespace h5 { namespace impl { namespace detail {
 		std::string name;
 	};
 
-}}}
+}
 
-namespace h5 { namespace impl {
+namespace h5::impl {
 	// redefine ::hid_t<..,from_capi,to_capi,...> to disable conversion, default setting: hid_t::<.., true,true,..>
 	template <class T, capi_close_t capi_call> using aid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::attribute>;
 	template <class T, capi_close_t capi_call> using hid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::any>;
 	template <class T, capi_close_t capi_call> using pid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::property>;
 	template <class T, capi_close_t capi_call> using did_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::dataset>;
-}}
+}
 
 /*hide gory details, and stamp out descriptors */
 namespace h5 {

@@ -1,15 +1,28 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
 
 #ifndef  H5CPP_CAPI_HPP
 #define  H5CPP_CAPI_HPP
+
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "H5Eall.hpp"
+#include "H5Iall.hpp"
+#include "H5Sall.hpp"
+#include "H5Tmeta.hpp"
+#include "H5Tall.hpp"
+#include "H5Pdapl.hpp"
+
+#include <type_traits>
+#include <memory>
+#include <stdexcept>
+
 /* rules:
  * h5::id_t{ hid_t } or direct initialization  doesn't increment reference count
  */
-namespace h5 { namespace impl {
+namespace h5::impl {
 	struct free {
 		template <typename T>
 		void operator()(T *p) const {
@@ -20,7 +33,7 @@ namespace h5 { namespace impl {
 
 	template <typename T>
 		using unique_ptr = std::unique_ptr<T,h5::impl::free>;
-}}
+}
 
 
 namespace h5 {
@@ -145,7 +158,7 @@ namespace h5 {
 	inline void select_hyperslab(h5::sp_t& sp, const T& offset, const h5::count_t& count ){
 		hsize_t cnt[] =  {1,1,1,1,1,1,1,1};
 		H5CPP_CHECK_NZ(
-				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, NULL, cnt, *count),
+				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, nullptr, cnt, *count),
 			   std::runtime_error,	h5::error::msg::select_hyperslab);
 	}
 	inline void select_hyperslab(const h5::sp_t& sp, const h5::offset_t& offset, const h5::stride_t& stride,

@@ -1,13 +1,19 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018-2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
-
 #ifndef  H5CPP_SALL_HPP
 #define  H5CPP_SALL_HPP
 
-namespace h5{ namespace impl {
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "H5Iall.hpp"
+#include "H5meta.hpp"
+#include <initializer_list>
+#include <array>
+
+
+namespace h5::impl {
     struct max_dims_t{}; struct current_dims_t{};
     struct dims_t{}; struct chunk_t{};  struct offset_t{}; struct stride_t{};  struct count_t{}; struct block_t{};
 
@@ -85,7 +91,7 @@ namespace h5{ namespace impl {
         for( int i=0; i<arr.rank; i++) size *= arr[i];
         return size;
     }
-}}
+}
 
 /*PUBLIC CALLS*/
 namespace h5 {
@@ -120,7 +126,7 @@ namespace h5 {
             return h5::sp_t{H5S_ALL};
         else {
             auto tuple = std::forward_as_tuple(args...);
-            h5::offset_t  default_offset{0,0,0,0,0,0,0};
+            h5::offset_t  default_offset{0,0,0,0,0,0,0}; //TODO: make it upto 32 dims? 
 		    const h5::offset_t& offset = arg::get( default_offset, args...);
 		    h5::stride_t  default_stride{1,1,1,1,1,1,1};
 		    const h5::stride_t& stride = arg::get( default_stride, args...);

@@ -1,13 +1,23 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
-
 #ifndef  H5CPP_PALL_HPP
 #define  H5CPP_PALL_HPP
 
-namespace h5 { namespace impl {
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "compat.hpp"
+#include "H5Eall.hpp"
+#include "H5Iall.hpp"
+#include "H5Tall.hpp"
+#include <tuple>
+#include <iterator>
+#include <algorithm>
+#include <type_traits>
+
+
+namespace h5::impl {
     /* proxy object that gets converted to property_id with restriction that 
      * only same class properties may be daisy chained */
     template <class Derived, class phid_t>
@@ -146,7 +156,7 @@ namespace h5 { namespace impl {
     // only data control property list set_value has this pattern, lets allow to define CAPI argument lists 
     // the same way as with others
     //template <class capi, typename capi::fn_t capi_call, class T> using dcpl_tcall = tprop_t<h5::dcpl_t,default_dcpl, capi, capi_call, T>;
-}}
+}
 
 namespace h5::impl {
     template <bool version, class capi, typename capi::fn_t capi_call  > 
@@ -297,10 +307,10 @@ const static flag::nbit nbit;
 
 
 const static h5::layout compact{H5D_COMPACT};
-const static h5::layout contigous{H5D_CONTIGUOUS};
+const static h5::layout contiguous{H5D_CONTIGUOUS};
 const static h5::layout chunked{H5D_CHUNKED};
 const static h5::layout layout_compact{H5D_COMPACT};
-const static h5::layout layout_contigous{H5D_CONTIGUOUS};
+const static h5::layout layout_contiguous{H5D_CONTIGUOUS};
 const static h5::layout layout_chunked{H5D_CHUNKED};
 
 const static h5::layout layout_virtual{H5D_VIRTUAL};

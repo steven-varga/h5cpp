@@ -1,15 +1,12 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
-
 #ifndef  H5CPP_IO_H
 #define H5CPP_IO_H
-
-
 	// attributes precede regular operations so one can attach 
-	// them to datasets created
+	// them to datasets 
 	#include "H5Acreate.hpp"
 	#include "H5Aopen.hpp"
 	#include "H5Awrite.hpp"

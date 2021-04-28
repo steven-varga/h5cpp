@@ -1,17 +1,24 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
-
 #ifndef  H5CPP_PIPELINE_HPP
 #define  H5CPP_PIPELINE_HPP
+
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "H5Eall.hpp"  /* all methods throwing exceptions must be included after */
+#include "H5Iall.hpp"
+#include "H5Sall.hpp"
+#include "H5Zall.hpp"
+#include <memory>
+#include <string.h>
 
 namespace h5 {
     int get_chunk_dims( const h5::dcpl_t& dcpl,  h5::chunk_t& chunk_dims );
 }
 
-namespace h5{ namespace impl {
+namespace h5::impl {
     enum struct filter_direction_t {
         forward = 0, reverse = 1
     };
@@ -78,7 +85,7 @@ namespace h5{ namespace impl {
         void read_chunk_impl( const hsize_t* offset, size_t nbytes, void* ptr ){
         }
     };
-}}
+}
 
 template< class Derived>
 inline void h5::impl::pipeline_t<Derived>::write(
@@ -105,7 +112,7 @@ inline void h5::impl::pipeline_t<Derived>::read(
 }
 
 template< class Derived>
-inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, size_t element_size ) {
+inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, size_t element_size ){
     n = 1, tail = 0; this->element_size = element_size;
 
     // grab chunk dimensions, which is a block we're breaking data into

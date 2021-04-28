@@ -1,12 +1,34 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
- 
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
+ * Author: Varga, Steven <steven@vargaconsulting.ca> 
  */
-
 #ifndef  H5CPP_DAPPEND_HPP
 #define H5CPP_DAPPEND_HPP
+
+#include <hdf5.h>
 #include <zlib.h>
+#include "H5config.hpp"
+#include "H5Eall.hpp"
+#include "H5Iall.hpp"
+#include "H5meta.hpp"
+#include "H5Sall.hpp"
+#include "H5Tall.hpp"
+#include "H5Tmeta.hpp"
+#include "H5Pall.hpp"
+#include "H5Zpipeline.hpp"
+#include "H5Zpipeline_basic.hpp"
+#include "H5Pdapl.hpp"
+#include "H5capi.hpp"
+#include "H5cout.hpp"
+#include <tuple>
+#include <type_traits>
+#include <string>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+#include <ostream>
+
+
 
 namespace h5 {
     struct pt_t;

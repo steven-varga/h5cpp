@@ -1,10 +1,20 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
 #ifndef  H5CPP_GOPEN_HPP
 #define  H5CPP_GOPEN_HPP
+
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "compat.hpp"
+#include "H5Eall.hpp"
+#include "H5Iall.hpp"
+#include "H5Pall.hpp"
+
+#include <type_traits>
+#include <string>
+
 namespace h5 {
 
     template<class L>

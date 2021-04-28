@@ -1,12 +1,13 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
-
 #ifndef  H5CPP_PIPELINE_BASIC_HPP
 #define  H5CPP_PIPELINE_BASIC_HPP
 
+#include <hdf5.h>
+#include "H5Zpipeline.hpp"
+#include <stdexcept>
 
 inline void h5::impl::basic_pipeline_t::write_chunk_impl( const hsize_t* offset, size_t nbytes, const void* data ){
 

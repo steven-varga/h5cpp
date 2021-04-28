@@ -1,11 +1,13 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018-2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
-
- */
-
+*/
 #ifndef H5CPP_CONFIG_H
 #define H5CPP_CONFIG_H
+
+#include <string> 
+#include <hdf5.h>
+
 
 // to activate must include: #include "rest_vol_public.h"
 // see: https://bitbucket.hdfgroup.org/users/jhenderson/repos/rest-vol/browse
@@ -104,7 +106,7 @@
 
 
 
-
+// TODO: remove these... ? 
 #ifdef _GLIBCXX_ARRAY
     #define H5CPP_STL_ARRAY
 #endif

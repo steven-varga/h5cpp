@@ -1,17 +1,20 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
-
  */
 
 #ifndef  H5CPP_ZALL_HPP
 #define  H5CPP_ZALL_HPP
 
+#include <hdf5.h>
+#include "H5Iall.hpp"
+#include <string.h>
 #include <iomanip>
 #include <zlib.h>
 #include <math.h>
 
-namespace h5 { namespace impl { namespace filter {
+
+namespace h5::impl::filter {
     // TODO: figure something out to map c++ filters to C calls? 
     template<class Derived>
     struct filter_t {
@@ -99,5 +102,5 @@ namespace h5 { namespace impl { namespace filter {
     }
 
 
-}}}
+}
 #endif

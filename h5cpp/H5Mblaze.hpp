@@ -1,10 +1,18 @@
 
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 #ifndef  H5CPP_BLAZE_HPP 
 #define  H5CPP_BLAZE_HPP
+
+#include <hdf5.h>
+#include "H5Tmeta.hpp"
+#include <tuple>
+#include <type_traits>
+#include <array>
+
+
 
 #if defined(_BLAZE_MATH_MODULE_H_) || defined(H5CPP_USE_BLAZE)
 namespace h5 {  namespace blaze {

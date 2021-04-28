@@ -1,10 +1,20 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-
 #ifndef H5CPP_TALL_HPP
 #define H5CPP_TALL_HPP
+
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "H5meta.hpp"
+#include "H5Iall.hpp"
+#include "H5Tmeta.hpp"
+#include <initializer_list>
+#include <string>
+#include <tuple>
+#include <array>
+#include <type_traits>
 
 namespace h5 {
     // variable length data struct
@@ -28,7 +38,7 @@ namespace h5 {
 /* template specialization from hid_t< .. > type which provides syntactic sugar in the form
  * h5::dt_t<int> dt; 
  * */
-namespace h5 { namespace impl { namespace detail {
+namespace h5::impl::detail {
     template<class T> // parent type, data_type is inherited from, see H5Iall.hpp top section for details 
     using dt_p = hid_t<T,H5Tclose,true,true,hdf5::any>;
     /*type id*/
@@ -53,7 +63,7 @@ namespace h5 { namespace impl { namespace detail {
         }
     };
     template <class T> using dt_t = hid_t<T,H5Tclose,true,true,hdf5::type>;
-}}}
+}
 
 /* template specialization is for the preceding class, and should be used only for HDF5 ELEMENT types
  * which are in C/C++ the integral types of: char,short,int,long, ... and C POD types. 
@@ -118,7 +128,12 @@ H5CPP_REGISTER_NAME( C_TYPE );                          \
     H5CPP_REGISTER_TYPE(float, H5T_NATIVE_FLOAT)                   H5CPP_REGISTER_TYPE(double, H5T_NATIVE_DOUBLE)
     H5CPP_REGISTER_TYPE(long double,H5T_NATIVE_LDOUBLE)
 
-    H5CPP_REGISTER_VL_STRING(std::string)     H5CPP_REGISTER_VL_STRING(char**)
+    H5CPP_REGISTER_VL_STRING(std::basic_string<char>)      H5CPP_REGISTER_VL_STRING(std::basic_string<wchar_t>)
+    H5CPP_REGISTER_VL_STRING(std::basic_string<char16_t>)  H5CPP_REGISTER_VL_STRING(std::basic_string<char32_t>)
+    H5CPP_REGISTER_VL_STRING(std::basic_string_view<char>)      H5CPP_REGISTER_VL_STRING(std::basic_string_view<wchar_t>)
+    H5CPP_REGISTER_VL_STRING(std::basic_string_view<char16_t>)  H5CPP_REGISTER_VL_STRING(std::basic_string_view<char32_t>)
+
+    H5CPP_REGISTER_VL_STRING(char**) 
     H5CPP_REGISTER_VL_STRING(const char**)     H5CPP_REGISTER_VL_STRING(const char* const*)
 
 namespace h5::stl {
@@ -194,6 +209,7 @@ namespace h5 {
 #define H5CPP_REGISTER_STRUCT( POD_STRUCT )
 
 namespace h5 {
+
     template <> struct name<char const*> { static constexpr char const * value = "char const*"; };
     //template <> struct name<char**> { static constexpr char const * value = "char**"; };
     template <> struct name<short**> { static constexpr char const * value = "short**"; };

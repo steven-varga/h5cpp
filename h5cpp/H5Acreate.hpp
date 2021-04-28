@@ -1,26 +1,39 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018-2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
-
 
 #ifndef  H5CPP_ACREATE_HPP
 #define  H5CPP_ACREATE_HPP
 
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "H5Eall.hpp"
+#include "H5Iall.hpp"
+#include "H5Sall.hpp"
+#include "H5Tall.hpp"
+#include "H5Tmeta.hpp"
+#include "H5capi.hpp"
+#include <type_traits>
+#include <string>
+#include <stdexcept>
+
+
 //FIXME: move h5::impl::is_valid_attr to meta
+
 namespace h5::impl {
-		/*this template defines what HDF5 object types may have attributes */
+		// this template defines what HDF5 object types may have attributes
 		template <class H, class T=void> using is_valid_attr =
 			std::integral_constant<bool, std::is_same<H, ::hid_t>::value ||
 				std::is_same<H, h5::gr_t>::value || std::is_same<H, h5::ds_t>::value ||
 				std::is_same<H, h5::ob_t>::value || std::is_same<H, h5::dt_t<T>>::value>;
-		/*template <class H, class T=void> using is_valid_attr =
-			std::integral_constant<bool,
-				std::is_same<H, h5::ds_t>::value>;*/
+		//template <class H, class T=void> using is_valid_attr =
+		//	std::integral_constant<bool,
+		//		std::is_same<H, h5::ds_t>::value>;
 }
+
 namespace h5::impl::attr {
-    /*Define what qualifies as valid location for an attribute*/
+    //Define what qualifies as valid location for an attribute
     template <class HID_T, class T = typename impl::decay<HID_T>::type>
     using is_location = typename std::integral_constant<bool,
         std::is_same<HID_T, ::hid_t>::value || //FIXME: removing this results error, it shouldn't!!!

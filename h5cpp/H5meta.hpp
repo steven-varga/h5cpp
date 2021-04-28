@@ -1,59 +1,17 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018-2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  *
  */
 #ifndef  H5CPP_META_HPP 
 #define  H5CPP_META_HPP
 
-namespace h5::meta::compat {
-// N4436 and https://en.cppreference.com/w/cpp/experimental/is_detected 
-    struct nonesuch {
-        nonesuch( ) = delete;
-        //~nonesuch( ) = delete;
-        nonesuch( nonesuch const& ) = delete;
-        void operator = ( nonesuch const& ) = delete;
-    };
+#include "compat.hpp"
+#include <type_traits>
+#include <utility>
+#include <tuple>
+#include <array>
 
-    template< class... > using void_t = void;
-    namespace detail {
-        template <class Default, class AlwaysVoid,
-                  template<class...> class Op, class... Args>
-        struct detector {
-          using value_t = std::false_type;
-          using type = Default;
-        };
-
-        template <class Default, template<class...> class Op, class... Args>
-        struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
-          using value_t = std::true_type;
-          using type = Op<Args...>;
-        };
-    } // namespace detail
-
-    template <template<class...> class Op, class... Args>
-    using is_detected = typename detail::detector<nonesuch, void, Op, Args...>::value_t;
-
-    template <template<class...> class Op, class... Args>
-    using detected_t = typename detail::detector<nonesuch, void, Op, Args...>::type;
-
-    template <class Default, template<class...> class Op, class... Args>
-    using detected_or = detail::detector<Default, void, Op, Args...>;
-
-    // helper templates
-    template< template<class...> class Op, class... Args >
-    constexpr bool is_detected_v = is_detected<Op, Args...>::value;
-    template< class Default, template<class...> class Op, class... Args >
-    using detected_or_t = typename detected_or<Default, Op, Args...>::type;
-    template <class Expected, template<class...> class Op, class... Args>
-    using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
-    template <class Expected, template<class...> class Op, class... Args>
-    constexpr bool is_detected_exact_v = is_detected_exact<Expected, Op, Args...>::value;
-    template <class To, template<class...> class Op, class... Args>
-    using is_detected_convertible = std::is_convertible<detected_t<Op, Args...>, To>;
-    template <class To, template<class...> class Op, class... Args>
-    constexpr bool is_detected_convertible_v = is_detected_convertible<To, Op, Args...>::value;
-}
 namespace h5::meta::detail { // feature detection
     using compat::is_detected;
     template<class T> using value_t = typename T::value_type;
@@ -98,14 +56,14 @@ namespace h5::meta {
     template <typename T> using has_const_iterator = std::integral_constant<bool, has_cbegin<T>::value && has_cend<T>::value >;
 }
 
-/*---------------------------------------------------------------------*/
-namespace test::arg {
+// ---------------------------------------------------------------------
+/*
+namespace h5::test::arg {
     template <class T>
     struct optional : public std::optional<T> {
         using std::optional<T>::optional;
     };
-}
-namespace test::arg {
+
     namespace impl = h5::meta::detail;
     // declaration
     template<class S, class... T > struct tpos;
@@ -140,8 +98,8 @@ namespace test::arg {
     template<class S, class... args_t > struct tpos
         : detail::tuple_pos<const S&, -1, 0, false, void, std::tuple<args_t...>>{ };
 
-    /* un-tagged case
-     */
+    // un-tagged case
+    
     template <class T,  class... args_t,
              class idx_t = tpos<typename T::value_type, args_t...>>
     typename std::enable_if<impl::has_value_type<T>::value, arg::optional<T>
@@ -152,8 +110,6 @@ namespace test::arg {
         else
             return std::nullopt;
     }
-    /*
-     **/
     template <class T,  class... args_t, class idx_t = tpos<T, args_t...>>
     constexpr typename std::enable_if<!impl::has_value_type<T>::value,
     typename idx_t::type>::type get( args_t... args ){
@@ -164,8 +120,6 @@ namespace test::arg {
             return false;
     }
 
-    /*
-     **/
     template <class T, class... args_t, class idx_t = tpos<T, args_t...>>
     typename std::enable_if<!impl::has_value_type<T>::value,
     typename idx_t::type>::type required( const char msg[3], args_t... args ) {
@@ -185,6 +139,7 @@ namespace test::arg {
         return std::get<idx>( tuple );
     }
 }
+*/
 
 
 /*---------------------------------------------------------------------*/
@@ -244,7 +199,7 @@ namespace h5::meta {
         : detail::tuple_pos<S, -1,0,false, void, std::tuple<Ts...>>{ };
 }
 
-namespace h5{ namespace arg {
+namespace h5::arg {
     // declaration
     template<class S, class... T > struct tpos;
     namespace detail {
@@ -294,13 +249,13 @@ namespace h5{ namespace arg {
         auto tuple = std::forward_as_tuple(args...);
         return std::get<idx>( tuple );
     }
-}}
+}
 
-namespace h5 { namespace impl {
+namespace h5::impl {
     //<public domain code> borrowed from c++ library reference: to lower c+14 to c++11
     template<bool B, class T, class F> struct conditional { typedef T type; };
     template<class T, class F> struct conditional<false, T, F> { typedef F type; };
-}}
+}
 
 
 
@@ -340,6 +295,8 @@ namespace h5::meta {
     }
 }
 
+
+// get type names at compile time
 namespace h5::meta::impl {
     #define h5cpp_array__ 'a','r','r','a','y'
     #define h5cpp_char__ 'c','h','a','r'

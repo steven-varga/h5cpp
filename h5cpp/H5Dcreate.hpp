@@ -1,10 +1,25 @@
 /*
- * Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ * Copyright (c) 2018 - 2021 vargaconsulting, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
- *
  */
+
 #ifndef  H5CPP_DCREATE_HPP 
 #define  H5CPP_DCREATE_HPP
+
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "H5Eall.hpp"
+#include "H5Iall.hpp"
+#include "H5meta.hpp"
+#include "H5Sall.hpp"
+#include "H5Tall.hpp"
+#include "H5Tmeta.hpp"
+#include "H5capi.hpp"
+#include "H5Fopen.hpp"
+#include <type_traits>
+#include <string>
+#include <stdexcept>
+#include <utility>
 #include <limits>
 
 //TODO: if constexpr(..){} >= c++17

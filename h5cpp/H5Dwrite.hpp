@@ -2,16 +2,37 @@
  * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-
 #ifndef  H5CPP_DWRITE_HPP
 #define H5CPP_DWRITE_HPP
+
+#include <hdf5.h>
+#include "H5config.hpp"
+#include "H5Eall.hpp"
+#include "H5Iall.hpp"
+#include "H5meta.hpp"
+#include "H5Sall.hpp"
+#include "H5Tall.hpp"
+#include "H5Tmeta.hpp"
+#include "H5Pall.hpp"
+#include "H5Zpipeline.hpp"
+#include "H5Zpipeline_basic.hpp"
+#include "H5Pdapl.hpp"
+#include "H5capi.hpp"
+#include "H5Fopen.hpp"
+#include "H5Dopen.hpp"
+#include <tuple>
+#include <type_traits>
+#include <string>
+#include <stdexcept>
+#include <utility>
+#include <string.h>
+
 
 // defines an runtime_exception thrown to track template matching
 // for various types;  see tests/H5Dwrite 
 #ifndef H5CPP_WRITE_DISPATCH_TEST_
     #define H5CPP_WRITE_DISPATCH_TEST_(type, msg)
 #endif
-#include <string.h>
 
 namespace h5::impl {
     template <class T, class... args_t>
