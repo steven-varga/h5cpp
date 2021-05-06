@@ -3,7 +3,7 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
-#ifndef  H5CPP_DWRITE_HPP
+#ifndef H5CPP_DWRITE_HPP
 #define H5CPP_DWRITE_HPP
 
 namespace h5 {
@@ -26,7 +26,6 @@ namespace h5 {
  	*/ 
 	template <class T, class... args_t>
 	h5::ds_t write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ) try {
-
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );

@@ -3,12 +3,13 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
-#ifndef  H5CPP_DAPPEND_HPP
+#ifndef H5CPP_DAPPEND_HPP
 #define H5CPP_DAPPEND_HPP
 #include <zlib.h>
 
 namespace h5 {
 	struct pt_t;
+	//void flush(const pt_t&);
 }
 std::ostream& operator<<(std::ostream& os, const h5::pt_t& pt);
 
@@ -53,7 +54,7 @@ namespace h5 {
 		friend std::ostream& ::operator<<(std::ostream &os, const h5::pt_t& pt);
 		template<class T>
 		friend void append( h5::pt_t& ds, const T& ref);
-
+		friend void flush(h5::pt_t&);
 		private:
 		void init(const h5::ds_t& ds_);
 		void flush();
@@ -67,6 +68,7 @@ namespace h5 {
 
 		impl::pipeline_t<impl::basic_pipeline_t> pipeline;
 		h5::ds_t ds;
+		h5::dt_t<void> dt;
 		h5::dxpl_t dxpl;
 		hsize_t offset[H5CPP_MAX_RANK],
 			current_dims[H5CPP_MAX_RANK],
@@ -107,7 +109,7 @@ inline
 void h5::pt_t::init( const h5::ds_t& handle ){
 	try {
 		ds = handle; // copy handle inc ref, behaves as unique_ptr
-
+		dt = h5::dt_t<void>{H5Dget_type(static_cast<hid_t>(handle))};
 		h5::sp_t file_space = h5::get_space( handle );
 		rank = h5::get_simple_extent_dims( file_space, current_dims, nullptr );
 
@@ -138,6 +140,28 @@ void>::type h5::pt_t::append( const T* ptr ) try {
 } catch( const std::runtime_error& err ){
 	throw h5::error::io::dataset::append( err.what() );
 }
+template <>
+void h5::pt_t::append( const std::string& ref ) {
+	static_cast<const char**>( ptr )[n++] = ref.data();
+	if( n != N ) return;
+
+	*offset = *current_dims;
+	*current_dims += *chunk_dims;
+	h5::set_extent(ds, current_dims);
+
+	hsize_t block = 1, count = n;
+	h5::sp_t mem_space{H5Screate_simple(rank, &count, nullptr )};
+	h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
+	h5::select_all( mem_space );
+	H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, NULL, &block, &count);
+	
+	H5Dwrite( static_cast<hid_t>( ds ), 
+		dt, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
+	n = 0;
+}
+/*
+*/
+
 
 template<class T> inline typename std::enable_if< h5::impl::is_scalar<T>::value && !std::is_pointer<T>::value,
 void>::type h5::pt_t::append( const T& ref ) try {
@@ -198,16 +222,28 @@ void>::type h5::pt_t::append( const T& ref ) try {
 inline
 void h5::pt_t::flush(){
 	if( n == 0 ) return;
-	// the remainder of last chunk must be set to fill_value; arbitrary type size supported
-	for(hsize_t i=0; i<(N-n); i++)
-		for(size_t j=0; j < element_size; j++)
-			static_cast<char*>( ptr )[(n + i) * element_size + j] = static_cast<char*>( fill_value )[ j ];
 	*offset = *current_dims;
 	*current_dims += *current_dims % *chunk_dims;
 	size_t r=1; for(int i=1; i<rank; i++) r*=chunk_dims[i];
 	*current_dims += (n % r) ? n / r + 1 : n / r;
 	h5::set_extent(ds, current_dims);
-    pipeline.write_chunk( offset, block_size, ptr );
+
+	if( H5Tis_variable_str(this->dt)) {
+		hsize_t block = 1, count = n;
+	 	h5::sp_t mem_space{H5Screate_simple(rank, &count, nullptr )};
+		h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
+		h5::select_all( mem_space );
+		H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, NULL, &block, &count);
+
+		H5Dwrite( static_cast<hid_t>( ds ), 
+			dt, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
+	} else { 
+		// the remainder of last chunk must be set to fill_value; arbitrary type size supported
+		for(hsize_t i=0; i<(N-n); i++)
+			for(size_t j=0; j < element_size; j++)
+				static_cast<char*>( ptr )[(n + i) * element_size + j] = static_cast<char*>( fill_value )[ j ];
+    	pipeline.write_chunk( offset, block_size, ptr );
+	}
 }
 
 namespace h5 {
@@ -223,7 +259,8 @@ namespace h5 {
 		pt.append( ref );
 	}
 
-	inline void flush( h5::pt_t& pt) try {
+	inline void flush(h5::pt_t& pt) try {
+		pt.flush();
         //TODO: find better mechanism for deprecating code: #pragma message("not implemented: do not call pt_t::flush() ...")
 		// for now
 	} catch ( const std::runtime_error& e){
