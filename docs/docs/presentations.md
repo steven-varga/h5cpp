@@ -1,3 +1,16 @@
+
+### [Call The Doctor: string performance measurements, 2021 May 11](http://string-performance.h5cpp.org/)
+In Gerd Heber's Call The Doctor event, examined variable and fixed length string write performance of H5CPP and HDF5 CAPI 
+
+### [MeetingC++ Online Tool Fair 2021, Apr 20](http://meetingcpp-toolfair.h5cpp.org/)
+In a trade show style online platform H5CPP presented from three overlapping angles. Special thanks to Melissa Kaan for facilitating the event and Gerd Heber for his guest appearance.   
+
+### [C++TO 2020, Jun 30](http://cppto.h5cpp.org/)
+Co-presenting with Gerd Heber: H5CPP and current state of reflection in C++
+
+### [Lightning Talk C++TO 2020](http://lightning-talk.h5cpp.org/)
+H5CPP in a nutshell
+
 ### [ISC'19 BOF](http://isc19.h5cpp.org)
 Successful integration with Message Passing Interface and Parallel HDF5 extended the H5CPP template library with 
 parallel file system capability. With H5CLUSTER AWS EC2 reference platform we demonstrated both 
