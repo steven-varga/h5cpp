@@ -66,6 +66,7 @@ namespace h5 {                                                                  
 	H5CPP_REGISTER_TYPE_(long double,H5T_NATIVE_LDOUBLE)
 
 	H5CPP_REGISTER_TYPE_(char*, H5T_C_S1)
+	H5CPP_REGISTER_TYPE_(const char*, H5T_C_S1)
 
 // half float support: 
 // TODO: factor out in a separate file

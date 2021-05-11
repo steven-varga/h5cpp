@@ -20,6 +20,17 @@ namespace h5 {
 				H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
 							h5::error::io::dataset::write, h5::error::msg::write_dataset);
 	}
+	// template for std::vector<const char*>::data()
+	template <>
+	void write<const char**>( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, 
+		const char** const *ptr  ){
+		H5CPP_CHECK_PROP( dxpl, h5::error::io::dataset::write, "invalid data transfer property" );
+		h5::dt_t<const char*> type;
+		H5CPP_CHECK_NZ(
+				H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), *ptr),
+							h5::error::io::dataset::write, h5::error::msg::write_dataset);
+	}
+
  	/** \func_write_hdr
  	*  TODO: write doxy for here  
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
@@ -74,12 +85,14 @@ namespace h5 {
 		using element_t = typename impl::decay<T>::type;
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		h5::count_t default_count;
-
 		default_count = impl::size( ref );
 		const h5::count_t& count = arg::get(default_count, args...);
 
-		// std::string is variable length
-		if constexpr( std::is_same<std::string,element_t>::value ){
+		if constexpr(std::is_same<char**, element_t>::value){
+			static_assert( tcount::present,"h5::count_t{ ... } must be provided for char** types" );
+			h5::write(ds, ref, count, args...);
+		} else if constexpr( std::is_same<std::string,element_t>::value ){
+			// std::string is variable length
 			std::vector<char*> ptr;
 			try {
 				for( const auto& reference:ref)

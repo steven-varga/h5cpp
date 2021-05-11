@@ -26,7 +26,7 @@ namespace h5 { namespace utils {
 
 namespace h5 { namespace utils {
 
-	template <typename T> inline  std::vector<T> get_test_data( size_t n ){
+	template <typename T> inline  std::vector<T> get_test_data( size_t n, size_t min=0, size_t max=0){
 		std::random_device rd;
 		std::default_random_engine rng(rd());
 		std::uniform_int_distribution<> dist(0,n);
@@ -39,7 +39,7 @@ namespace h5 { namespace utils {
 		return data;
 	}
 // TODO: bang this so total memory alloc is same as 'n'
-	template <> inline std::vector<std::string> get_test_data( size_t n ){
+	template <> inline std::vector<std::string> get_test_data( size_t n, size_t min, size_t max){
 
 		std::vector<std::string> data;
 		data.reserve(n);
@@ -49,7 +49,7 @@ namespace h5 { namespace utils {
 		std::random_device rd;
 		std::default_random_engine rng(rd());
 		std::uniform_int_distribution<> dist(0,sizeof(alphabet)/sizeof(*alphabet)-2);
-		std::uniform_int_distribution<> string_length(5,30);
+		std::uniform_int_distribution<> string_length(min, max);
 
 		std::generate_n(std::back_inserter(data), data.capacity(),   [&] {
 				std::string str;

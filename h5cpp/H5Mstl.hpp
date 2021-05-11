@@ -60,6 +60,8 @@ namespace h5 { namespace impl {
 	// 4.) write access
 	template <class T> inline typename std::enable_if<std::is_integral<T>::value,
 	T*>::type data( T& ref ){ return &ref; }
+	template <class T> inline typename std::enable_if<std::is_integral<T>::value,
+		const T*>::type data( const T& ref ){ return &ref; }
 	// 5.) obtain dimensions of extents
 	template <class T> inline constexpr typename std::enable_if< impl::is_scalar<T>::value,
 		std::array<size_t,0>>::type size( T value ){ return{}; }

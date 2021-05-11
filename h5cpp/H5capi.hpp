@@ -150,7 +150,7 @@ namespace h5 {
 	inline void select_hyperslab(const h5::sp_t& sp, const h5::offset_t& offset, const h5::stride_t& stride,
 		   const h5::count_t& count, const h5::block_t& block ){
 		H5CPP_CHECK_NZ(
-				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, *stride, *count, *block),
+				H5Sselect_hyperslab( static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, *stride, *block, *count),
 			   std::runtime_error,	h5::error::msg::select_hyperslab);
 	}
 	inline void set_extent(const h5::ds_t& ds, const h5::current_dims_t& dims ){
