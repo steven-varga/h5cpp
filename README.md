@@ -7,7 +7,7 @@ Easy to use  [HDF5][hdf5] C++ templates for Serial and Paralell HDF5
 ----------------------------------------------------------------------
 **News:**
 **optional custom dataype** is added to `h5::create` to allow custom dataypes passed along the other arguments. 
-```
+```cpp
 hsize_t dataset_size = 1'000'000;
 
 using custom_t = char[42];
