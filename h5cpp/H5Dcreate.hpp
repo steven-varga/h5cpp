@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+ * Copyright (c) 2018-2021 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 #ifndef  H5CPP_DCREATE_HPP 
@@ -25,6 +25,7 @@ namespace h5 {
 		using tlcpl 		= typename arg::tpos<const h5::lcpl_t&,const args_t&...>;
 		using tdcpl 		= typename arg::tpos<const h5::dcpl_t&,const args_t&...>;
 		using tdapl 		= typename arg::tpos<const h5::dapl_t&,const args_t&...>;
+		using tdt_t 		= typename arg::tpos<const h5::dt_t<T>&,const args_t&...>;
 
 		//TODO: make copy of default dcpl
 		h5::dcpl_t default_dcpl{ H5Pcreate(H5P_DATASET_CREATE) };
@@ -67,9 +68,16 @@ namespace h5 {
 		space_id =  tmax_dims::present ?
 			std::move( h5::create_simple( current_dims, max_dims ) ) :  std::move( h5::create_simple( current_dims ) );
 		using element_t = typename impl::decay<T>::type;
+		// create a base HDF5 type from decayed template T type, then over write this 
+		// if custom dt_t<T> type is present in the passed `args...`
 		h5::dt_t<element_t> type;
+		// since the underlying type is binary compatible with `hid_t` we are circumventing 
+		// H5CPP compile time enforced type system; as impl::decay<T> ?!= T !!!
+		if constexpr (tdt_t::present)
+			type = static_cast<hid_t>(
+				std::get<tdt_t::value>( std::forward_as_tuple( args...))); 
+		// we have the correct type, either the decayed one, or the custom	
 		return h5::createds(fd, dataset_path, type, space_id, lcpl, dcpl, dapl);
-
 	} catch( const std::runtime_error& err ) {
 			throw h5::error::io::dataset::create( err.what() );
 	}
