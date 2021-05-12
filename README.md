@@ -12,7 +12,7 @@ hsize_t dataset_size = 1'000'000;
 
 using custom_t = char[42];
 h5::dt_t<custom_t> hdf5_data_type{H5Tcreate(H5T_STRING, sizeof(custom_t))};
-H5Tset_cset(dt, H5T_CSET_UTF8); // you can always call HDF5 CAPI functions on any H5CPP resource 
+H5Tset_cset(hdf5_data_type, H5T_CSET_UTF8); // you can always call HDF5 CAPI functions on any H5CPP resource 
 
 // `custom_t` is passed as template parameter, 
 h5::ds_t ds = h5::create<custom_t>(fd, "my/dataset", h5::chunk{4096}, h5::current_dims{dataset_size},
