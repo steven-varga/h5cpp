@@ -75,11 +75,11 @@ template <typename T> h5::ds_t create( file, const std::string& dataset_path, da
 dataset ::= (const h5::fd_t& fd | const std::string& file_path, const std::string& dataset_path ) | const h5::ds_t& ds;
 
 template <typename T> T read( dataset
-							[, const h5::offset_t& offset]  [, const h5::stride_t& stride] [, const h5::count_t& count]
-							[, const h5::dxpl_t& dxpl ] ) const;
+    [, const h5::offset_t& offset]  [, const h5::stride_t& stride] [, const h5::count_t& count]
+    [, const h5::dxpl_t& dxpl ] ) const;
 template <typename T> h5::err_t read( dataset, T& ref 
-							[, const h5::offset_t& offset]  [, const h5::stride_t& stride] [, const h5::count_t& count]
-							[, const h5::dxpl_t& dxpl ] ) [noexcept] const;						 
+    [, const h5::offset_t& offset]  [, const h5::stride_t& stride] [, const h5::count_t& count]
+    [, const h5::dxpl_t& dxpl ] ) [noexcept] const;						 
 ```
 
 **write dataset into a specified location**
@@ -87,9 +87,9 @@ template <typename T> h5::err_t read( dataset, T& ref
 dataset ::= (const h5::fd_t& fd | const std::string& file_path, const std::string& dataset_path ) | const h5::ds_t& ds;
 
 template <typename T> h5::err_t write( dataset, const T* ptr
-			[,const hsize_t* offset] [,const hsize_t* stride] ,const hsize_t* count [, const h5::dxpl_t dxpl ]  ) noexcept;
+    [,const hsize_t* offset] [,const hsize_t* stride] ,const hsize_t* count [, const h5::dxpl_t dxpl ]  ) noexcept;
 template <typename T> h5::err_t write( dataset,  const T& ref
-			[,const h5::offset_t& offset] [,const h5::stride_t& stride]  [,const& h5::dxcpl_t& dxpl] ) [noexept];
+    [,const h5::offset_t& offset] [,const h5::stride_t& stride]  [,const& h5::dxcpl_t& dxpl] ) [noexept];
 ```
 
 **append to extendable C++/C struct dataset**
@@ -143,7 +143,7 @@ auto fd = h5::open("some_file.h5", H5F_ACC_RDWR);
 try {
 	/* will drop extents of unit dimension returns a 2D object */
 	auto M = h5::read<arma::mat>(fd,"path/to/object", 
-			h5::offset{3,4,1}, h5::count{10,1,5}, h5::stride{3,1,1} ,h5::block{2,1,1} );
+        h5::offset{3,4,1}, h5::count{10,1,5}, h5::stride{3,1,1} ,h5::block{2,1,1} );
 } catch (const std::runtime_error& ex ){
 	...
 }
@@ -182,7 +182,7 @@ while( having_a_good_day ){
 		recieve_data_from_udp_stream( qu )
 		h5::append(pt, qu);
 	} catch ( ... ){
-	  if( cant_fix_connection() )
+        if( cant_fix_connection() )
 	  		having_a_good_day = false; 
 	}
 }
