@@ -1,9 +1,8 @@
-/*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
+/* Copyright (c) 2018 vargaconsulting, Toronto,ON Canada
+ *     Author: Varga, Steven <steven@vargaconsulting.ca>
  */
-#ifndef H5CPP_GUARD_IErKw
-#define H5CPP_GUARD_IErKw
+#ifndef H5CPP_GUARD_tERYg
+#define H5CPP_GUARD_tERYg
 
 namespace h5{
     //template specialization of sn::example::Record to create HDF5 COMPOUND type

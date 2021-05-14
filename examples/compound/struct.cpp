@@ -19,7 +19,6 @@
 int main(){
 	//RAII will close resource, noo need H5Fclose( any_longer ); 
 	h5::fd_t fd = h5::create("example.h5",H5F_ACC_TRUNC);
-	
 	{// LINARG:=[armaidllo|eigen3|blaze|blitz|it++|dlib|ublas] supported
 		arma::imat M(NROWS,NCOLS);              // define a linalg object
 		h5::write(fd, "/linalg/armadillo",M);   // save it somewhere, partial and full read|write and append supported
@@ -39,9 +38,11 @@ int main(){
 		h5::write(fd, "orm/partial/vector custom_dims", vec,
 				h5::current_dims{100}, h5::max_dims{H5S_UNLIMITED}, h5::gzip{9} | h5::chunk{20} );
 		// you don't need to remember order, compiler will do it for you without runtime penalty:
-		h5::write(fd, "orm/partial/vector custom_dims different_order", vec,
-			 h5::chunk{20} | h5::gzip{9}, 
-			 h5::block{2}, h5::max_dims{H5S_UNLIMITED}, h5::stride{2}, h5::current_dims{100}, h5::offset{3} );
+		/* FIXME: block selection is not right
+		 h5::write(fd, "orm/partial/vector custom_dims different_order", vec,
+			h5::chunk{20} | h5::gzip{9} | h5::fill_value<int>(-1), 
+			h5::max_dims{H5S_UNLIMITED}, h5::stride{3}, h5::block{4}, h5::current_dims{100}, h5::offset{2});
+		*/
 	}
 	{ // read entire dataset back
 		using T = std::vector<sn::example::Record>;

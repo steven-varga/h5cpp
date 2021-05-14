@@ -51,9 +51,9 @@ int main(){
 		h5::write(fd, "orm/partial/vector custom_dims", vec,
 				h5::current_dims{100}, h5::max_dims{H5S_UNLIMITED}, h5::gzip{9} | h5::chunk{20} );
 		// you don't need to remember order, compiler will do it for you without runtime penalty:
-		h5::write(fd, "orm/partial/vector custom_dims different_order", vec,
-			 h5::chunk{20} | h5::gzip{9}, 
-			 h5::block{2}, h5::max_dims{H5S_UNLIMITED}, h5::stride{2}, h5::current_dims{100}, h5::offset{3} );
+		//FIXME: h5::write(fd, "orm/partial/vector custom_dims different_order", vec,
+		//	 h5::chunk{20} | h5::gzip{9}, 
+		//	 h5::block{2}, h5::max_dims{H5S_UNLIMITED}, h5::stride{2}, h5::current_dims{100}, h5::offset{3} );
 	}
 	{ // read entire dataset back
 		using T = std::vector<sn::example::Record>;

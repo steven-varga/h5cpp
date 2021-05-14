@@ -71,7 +71,7 @@ int main(int argc, char** argv) {
 		auto ds = h5::open(fd, "/dataset");
 
 		// make a copy of dxpl, so we can query if collective IO was successful
-		h5::dxpl_t dxpl = 5::collective;
+		h5::dxpl_t dxpl = h5::collective;
 
 		// ACTUAL WRITE MEASUREMENT
 		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();

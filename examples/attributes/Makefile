@@ -4,7 +4,7 @@
 #  _____________________________________________________________________________
 
 apps = attributes
-CXXFLAGS =  -std=c++17  
+CXXFLAGS =  -std=c++17 
 LIBS =  -lhdf5  -lz -ldl -lm
 INCLUDES = -I/usr/local/include -I/usr/include
 
