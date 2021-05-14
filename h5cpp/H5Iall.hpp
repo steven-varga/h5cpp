@@ -100,9 +100,8 @@ namespace h5 { namespace impl { namespace detail {
 			ref.handle = H5I_UNINIT;
 		}
 		~hid_t(){
-			::herr_t err = 0;
 			if( H5Iis_valid( handle ) )
-				err = capi_close( handle );
+				capi_close( handle );
 		}
 		protected:
 		::hid_t handle;
@@ -169,7 +168,7 @@ namespace h5 { namespace impl { namespace detail {
 		};
 
 		template <class V> at_t operator=( V arg  );
-		template <class V> at_t operator=( const std::initializer_list<V> args  ){};
+		template <class V> at_t operator=( const std::initializer_list<V> args  ){return at_t{H5I_UNINIT}; };
 
 		::hid_t ds;
 		std::string name;

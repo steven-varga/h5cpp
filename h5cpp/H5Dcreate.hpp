@@ -17,14 +17,12 @@ namespace h5 {
 	* \par_file_path \par_dataset_path \par_current_dims \par_max_dims 
 	* \par_lcpl \par_dcpl \par_dapl  \tpar_T \returns_ds
  	*/ 
-	template<class T, class... args_t>
+	template<class T, class... args_t> inline
 	h5::ds_t create( const h5::fd_t& fd, const std::string& dataset_path, args_t&&... args ) try {
 		// compile time check of property lists: 
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
 		using tmax_dims 	= typename arg::tpos<const h5::max_dims_t&,const args_t&...>;
-		using tlcpl 		= typename arg::tpos<const h5::lcpl_t&,const args_t&...>;
 		using tdcpl 		= typename arg::tpos<const h5::dcpl_t&,const args_t&...>;
-		using tdapl 		= typename arg::tpos<const h5::dapl_t&,const args_t&...>;
 		using tdt_t 		= typename arg::tpos<const h5::dt_t<T>&,const args_t&...>;
 
 		//TODO: make copy of default dcpl

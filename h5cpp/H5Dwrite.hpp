@@ -12,23 +12,23 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T>
-	void write( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, const T* ptr  ){
+	inline void write( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, const T* ptr  ){
 		H5CPP_CHECK_PROP( dxpl, h5::error::io::dataset::write, "invalid data transfer property" );
 		using element_t = typename h5::impl::decay<T>::type;
 		h5::dt_t<element_t> type;
 		H5CPP_CHECK_NZ(
-				H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
-							h5::error::io::dataset::write, h5::error::msg::write_dataset);
+			H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
+				h5::error::io::dataset::write, h5::error::msg::write_dataset);
 	}
 	// template for std::vector<const char*>::data()
 	template <>
-	void write<const char**>( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, 
+	inline void write<const char**>( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, 
 		const char** const *ptr  ){
 		H5CPP_CHECK_PROP( dxpl, h5::error::io::dataset::write, "invalid data transfer property" );
 		h5::dt_t<const char*> type;
 		H5CPP_CHECK_NZ(
-				H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), *ptr),
-							h5::error::io::dataset::write, h5::error::msg::write_dataset);
+			H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), *ptr),
+				h5::error::io::dataset::write, h5::error::msg::write_dataset);
 	}
 
  	/** \func_write_hdr
@@ -36,7 +36,7 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	h5::ds_t write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ) try {
+	inline h5::ds_t write( const h5::ds_t& ds, const T* ptr,  args_t&&... args  ) try {
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
@@ -54,15 +54,15 @@ namespace h5 {
 		const h5::stride_t& stride = arg::get( default_stride, args...);
 		h5::block_t  default_block{1,1,1,1,1,1,1};
 		const h5::block_t& block = arg::get( default_block, args...);
-
-		hsize_t size = 1;for(int i=0;i<rank;i++) size *= count[i] * block[i];
+		// we are intersted in the total number of blocks transferred along each dimensions 
+		hsize_t size = 1; for(hsize_t i=0; i<rank; i++) size *= count[i];
 		hid_t dapl = h5::get_access_plist( ds );
 
 		if( H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGHPUT) ){
 			h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
 			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
 			filters->write(ds, offset, stride, block, count, dxpl, ptr);
-		}else{
+		} else {
 			h5::sp_t mem_space = h5::create_simple( size );
 			h5::select_all( mem_space );
 			h5::select_hyperslab( file_space, offset, stride, count, block);
@@ -79,7 +79,7 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	typename std::enable_if<!std::is_same<T,char**>::value,
+	inline typename std::enable_if<!std::is_same<T,char**>::value,
 	h5::ds_t>::type write( const h5::ds_t& ds, const T& ref,   args_t&&... args  ) try {
 		// element types: pod | [signed|unsigned](int8 | int16 | int32 | int64) | float | double | std::string
 		using element_t = typename impl::decay<T>::type;
@@ -95,7 +95,7 @@ namespace h5 {
 			// std::string is variable length
 			std::vector<char*> ptr;
 			try {
-				for( const auto& reference:ref)
+				for( const auto& reference:ref) // gather operation
             		ptr.push_back( strdup( reference.data()) );
 			} catch( ... ){
 				throw h5::error::io::dataset::write( h5::error::msg::mem_alloc );
@@ -114,13 +114,11 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T* ptr,  args_t&&... args  ){
+	inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T* ptr,  args_t&&... args  ){
 
 		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
-		using tblock  = typename arg::tpos<const h5::block_t&,const args_t&...>;
-		using tdapl   = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
 
 		static_assert( tcount::present,"h5::count_t{ ... } must be provided to describe T* memory region" );
@@ -163,13 +161,11 @@ namespace h5 {
 	*  \par_file_path \par_dataset_path \par_ref \par_offset \par_count \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class T, class... args_t>
-	h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
-		using tcount  = typename arg::tpos<const h5::count_t&,const args_t&...>;
+	inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
 		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
 		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
 		using tblock = typename arg::tpos<const h5::block_t&,const args_t&...>;
 		using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
-		using tdapl   = typename arg::tpos<const h5::dapl_t&,const args_t&...>;
 
 		int rank = impl::rank<T>::value;
 
@@ -189,7 +185,7 @@ namespace h5 {
 					for(int i=0; i < rank; i++)
 						def_current_dims[i] *= (stride[i] - block[i] + 1);
 				} else
-					for(int i=0; i < rank; i++)
+					for(hsize_t i=0; i < rank; i++)
 						def_current_dims[i] *= stride[i];
 			}
 			if constexpr( toffset::present ){
@@ -216,7 +212,7 @@ namespace h5 {
 	*  \par_offset \par_stride \par_count \par_block  \par_dxpl \tpar_T \returns_herr 
  	*/ 
 	template <class... args_t>
-	h5::ds_t write( const std::string& file_path, const std::string& dataset_path, args_t&&... args  ){
+	inline h5::ds_t write( const std::string& file_path, const std::string& dataset_path, args_t&&... args  ){
 		//TODO: check if exists create if doesn't
 		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR, h5::default_fapl );
 		return h5::write( fd, dataset_path, args...);

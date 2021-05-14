@@ -20,7 +20,7 @@ inline void h5::impl::basic_pipeline_t::write_chunk_impl( const hsize_t* offset,
 			if( !length )
 				mask = 1 << 0;
 		default: // more than one filter
-			for(int j=1; j<tail; j++){ // invariant: out == buffer holding final result
+			for(hsize_t j=1; j<tail; j++){ // invariant: out == buffer holding final result
 				tmp = in, in = out, out = tmp;
 				length = filter[j](out,in,length, flags[j], cd_size[j], cd_values[j]);
 				if( !length )

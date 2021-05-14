@@ -34,6 +34,8 @@ namespace h5{
 		hid_t dcpl = H5Dget_create_plist( ds );
 
 		switch( H5Pget_layout(dcpl) ){
+			case H5D_LAYOUT_ERROR: break;
+			case H5D_NLAYOUTS: break;  
 			case H5D_COMPACT: break;
 			case H5D_CONTIGUOUS: break;
 			case H5D_CHUNKED:

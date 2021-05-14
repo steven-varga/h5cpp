@@ -42,7 +42,8 @@ namespace h5 {
 		using element_t = typename impl::decay<T>::type;
 		h5::at_t attr = ( H5Aexists(static_cast<hid_t>(parent), name.c_str() ) > 0 ) ?
 			h5::open(parent, name, h5::default_acpl) : h5::create<element_t>(parent, name, current_dims);
-		h5::awrite(attr, impl::data(ref) );
+		auto const* data = impl::data(ref);
+		h5::awrite(attr, data);
 		return attr;
 	}
 

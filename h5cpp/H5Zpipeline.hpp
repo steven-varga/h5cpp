@@ -143,13 +143,12 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 			throw std::runtime_error("data-space is rank 0, is data space a scalar? ");
 
 	//fix B block/chunk size for the lifespan of pipeline
-	for(int i=0; i<rank; i++ )
+	for(hsize_t i=0; i<rank; i++ )
 	   	n *= block[i], B[i] = block[rank-i-1];
 
 	block_size = n*element_size;
 	unsigned filter_config;
 	unsigned N = H5Pget_nfilters( dcpl );
-	H5Z_filter_t filter_id;
 	for(unsigned i=0; i<N; i++){
 		cd_size[i] = H5CPP_MAX_FILTER_PARAM;
 		push(
@@ -272,5 +271,6 @@ inline std::ostream& operator<<(std::ostream &os, const h5::impl::pipeline_t<T>&
 	os <<"pipeline:\n"
 		 "------------------------------------------\n";
     os << "n: " << p.n;
+	return os;
 }
 #endif

@@ -20,10 +20,6 @@ namespace h5 {
 	inline typename std::enable_if<h5::impl::is_valid_attr<HID_T>::value,
 	h5::at_t>::type create( const HID_T& parent, const std::string& path, args_t&&... args ){
 		try {
-			// compile time check of property lists: 
-			using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&,const args_t&...>;
-			using tacpl 		= typename arg::tpos<const h5::acpl_t&,const args_t&...>;
-
 			h5::acpl_t default_acpl{ H5Pcreate(H5P_ATTRIBUTE_CREATE) };
 			const h5::acpl_t& acpl = arg::get(default_acpl, args...);
 

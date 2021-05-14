@@ -128,7 +128,7 @@ namespace h5 {
 	template <class T> using dt_t = h5::impl::detail::hid_t<T,H5Tclose,true,true,h5::impl::detail::hdf5::type>;
 
 	template<class T>
-	hid_t copy( const h5::dt_t<T>& dt ){
+	inline hid_t copy( const h5::dt_t<T>& dt ){
 		hid_t id = static_cast<hid_t>(dt);
 		H5Iinc_ref( id );
 		return id;
