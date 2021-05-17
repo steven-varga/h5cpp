@@ -70,15 +70,24 @@ std::ostream& operator<<(std::ostream &os, const h5::sp_t& sp) {
  	H5Sget_select_bounds(id, *start, *end);
 	start.rank = end.rank = rank;
 	hsize_t nblocks =  H5Sget_select_hyper_nblocks( id );
+	hssize_t nelements = H5Sget_select_elem_npoints( id );
 	hsize_t ncoordinates = 2*rank*nblocks;
+
+	// if slection valid
+	std::string is_valid;
+	htri_t is_valid_ = H5Sselect_valid(id);
+	if(is_valid_ > 0 ) is_valid = "within extent";
+	if(is_valid_ == 0 ) is_valid = "not in extent";
+	if(is_valid_ < 0 ) is_valid = "error occured";
 
     os << "[rank]\t" << rank << "\t[total elements]\t" << total_elements << std::endl;
    	os << "[dimensions]\tcurrent: " << current_dims << "\tmaximum: " << max_dims << std::endl;
 	os << "[selection]\tstart: " << start << "\tend:" << end << std::endl;
-
+	os << "[selection]\t" << is_valid <<std::endl;
 	h5::impl::unique_ptr<hsize_t> buffer{
 			static_cast<hsize_t*>( std::calloc( ncoordinates, sizeof(hsize_t))) };
 	if( H5Sget_select_hyper_blocklist(id, 0, nblocks, buffer.get() ) >= 0   ){
+		os << "[selected element count]\t" << nelements << std::endl; 
 		os << "[selected block count]\t" << nblocks <<std::endl;
 		os << "[selected blocks]\t";
 		for( hsize_t i=0; i<nblocks; i++){

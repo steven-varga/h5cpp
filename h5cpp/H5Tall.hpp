@@ -91,6 +91,7 @@ namespace h5 {
 		static constexpr char const * value = "half-float";
 	};
 }
+template<> struct h5::meta::is_contiguous<std::vector<half_float::half>> : std::true_type {};
 #endif
 // Open XDR doesn-t define namespace or 
 #ifdef WITH_OPENEXR_HALF 
@@ -114,6 +115,8 @@ namespace h5 {
 		static constexpr char const * value = "openexr half-float";
 	};
 }
+template<> struct h5::meta::is_contiguous<std::vector<OPENEXR_NAMESPACE::half>> : std::true_type {};
+
 #endif
 #define H5CPP_REGISTER_STRUCT( POD_STRUCT ) H5CPP_REGISTER_TYPE_( POD_STRUCT, h5::register_struct<POD_STRUCT>() )
 

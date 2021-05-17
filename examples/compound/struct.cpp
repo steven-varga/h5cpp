@@ -19,6 +19,7 @@
 int main(){
 	//RAII will close resource, noo need H5Fclose( any_longer ); 
 	h5::fd_t fd = h5::create("example.h5",H5F_ACC_TRUNC);
+	
 	{// LINARG:=[armaidllo|eigen3|blaze|blitz|it++|dlib|ublas] supported
 		arma::imat M(NROWS,NCOLS);              // define a linalg object
 		h5::write(fd, "/linalg/armadillo",M);   // save it somewhere, partial and full read|write and append supported
@@ -31,19 +32,23 @@ int main(){
 		// should we have some plausable value: 1024 instead?
 		h5::create<sn::typecheck::Record>(fd, "/orm/typecheck",	h5::max_dims{H5S_UNLIMITED} );
 	}
+	
 	{ // creates + writes entire object tree
 		std::vector<sn::example::Record> vec = h5::utils::get_test_data<sn::example::Record>(20);
 		h5::write(fd, "orm/partial/vector one_shot", vec );
 		// dimensions and other properties specified additional argument 
 		h5::write(fd, "orm/partial/vector custom_dims", vec,
-				h5::current_dims{100}, h5::max_dims{H5S_UNLIMITED}, h5::gzip{9} | h5::chunk{20} );
+			h5::max_dims{H5S_UNLIMITED}, h5::gzip{9} | h5::chunk{20} );
 		// you don't need to remember order, compiler will do it for you without runtime penalty:
-		/* FIXME: block selection is not right
 		 h5::write(fd, "orm/partial/vector custom_dims different_order", vec,
-			h5::chunk{20} | h5::gzip{9} | h5::fill_value<int>(-1), 
-			h5::max_dims{H5S_UNLIMITED}, h5::stride{3}, h5::block{4}, h5::current_dims{100}, h5::offset{2});
-		*/
+			h5::chunk{20} | h5::gzip{9}, 
+			h5::max_dims{H5S_UNLIMITED}, 
+			// how much to move from current location to next, stide[i] >= block[i] must hold
+			// gap = block[i] - stride[i]
+			h5::stride{6}, h5::block{4}, 
+			h5::current_dims{100}, h5::offset{2});
 	}
+	
 	{ // read entire dataset back
 		using T = std::vector<sn::example::Record>;
 		auto data = h5::read<T>(fd,"/orm/partial/vector one_shot");

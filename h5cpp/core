@@ -34,10 +34,12 @@
 	#include "compat.hpp"  /* */
 	#include "H5Eall.hpp"  /* all methods throwing exceptions must be included after */
 	#include "H5misc.hpp"
-	#include "H5Sall.hpp"
 	
 	#include "H5meta.hpp"
+	#include "H5Tmeta.hpp"
 	#include "H5Mstl.hpp"
+	
+	#include "H5Sall.hpp"
 	#include "H5Marma.hpp"
 	#include "H5Mdlib.hpp"
 	#include "H5Meigen.hpp"

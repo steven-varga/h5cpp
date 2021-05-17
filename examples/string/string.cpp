@@ -13,6 +13,7 @@ int main(){
 	h5::fd_t fd = h5::create("example.h5",H5F_ACC_TRUNC);
 	{
 		std::vector<std::string> vec = h5::utils::get_test_data<std::string>(20);
+		std::vector<int> vec2(10, 1); // h5::utils::get_test_data<std::string>(20);
 		h5::write(fd, "/strings.txt", vec);
 	}
 	{
@@ -21,10 +22,11 @@ int main(){
 		for( auto i : vec )
 			std::cout << i <<"\n";
 	}
+	
 	{
 		std::cout << "\npartial IO start = 3, stride/every=2, count=5 :\n";
 		std::cout << "will read in 5 strings, every second starting from third position:\n";
-		auto vec = h5::read<std::vector<std::string>>(fd, "strings.txt", h5::offset{2},h5::count{5}, h5::stride{2});
+		auto vec = h5::read<std::vector<std::string>>(fd, "strings.txt", h5::offset{2}, h5::count{5}, h5::stride{2});
 		for( auto i : vec )
 			std::cout << i <<"\n";
 	}

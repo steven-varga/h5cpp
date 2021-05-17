@@ -3,7 +3,7 @@
 #  Author: Varga, Steven <steven@vargaconsulting.ca>
 #  _________________________________________________________
 
-DIRS = attributes basics compound csv datasets datatypes half-float/christian-rau linalg \
+DIRS = attributes basics compound csv  datatypes half-float/christian-rau  \
 	multi-tu optimized packet-table raw_memory stl string transform utf
 #to yank: groups kita mpi sparse 
 #basics compound packet-table  raw_memory linalg transform multi-tu stl utf

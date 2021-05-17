@@ -35,7 +35,7 @@ int main(){
 
 	// SUGGESTED: Notice that `count` is not specified, but created on 
 	// that stack along `offset`. These operations have minimal impact if any. 
-	for( hsize_t i=0; i < 1; i ++){
+	for( hsize_t i=0; i < 4; i ++){
 		h5::read( ds,  M, h5::offset{0,0} );
 		M[0,0] = i; 	// your science thing, using 80% of in-core available memory
 		// this is where you swap out 
@@ -54,7 +54,7 @@ int main(){
 	h5::count  count{10,1};  // describe the memory region of `M` matrix
 
 	// ready for optimized loop:
-	for( hsize_t i=0; i < 1; i ++){
+	for( hsize_t i=10; i < 15; i ++){
 		offset[1] = i; 	// set new coordinates
 		M[1,0] = i; 	// do your science thing
 		h5::write( ds,  M, offset, count );

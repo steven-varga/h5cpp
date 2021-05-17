@@ -21,6 +21,14 @@ namespace h5{ namespace impl {
 		template<class A> array( const std::array<A,1> l ) : rank(1), data{l[0]} {}
 		template<class A> array( const std::array<A,2> l ) : rank(2), data{l[0],l[1]} {}
 		template<class A> array( const std::array<A,3> l ) : rank(3), data{l[0],l[1],l[2]} {}
+
+		/** @brief computes the total space 
+		 */	
+		explicit operator const hsize_t () const {
+			hsize_t size = 1; 
+			for(hsize_t i=0; i<rank; i++) size *= data[i];
+			return size;
+		}
 		// automatic conversion to std::array means to collapse tail dimensions
 		template<class A>
 		operator const std::array<A,0> () const {
@@ -48,13 +56,19 @@ namespace h5{ namespace impl {
 		array() : rank(0){};
 		array( array&& arg ) = default;
 		array( array& arg ) = default;
+		array(const array& arg) = default;
 		array& operator=( array&& arg ) = default;
 		array& operator=( array& arg ) = default;
 		template<class C>
 		explicit operator array<C>(){
 			array<C> arr;
 			arr.rank = rank;
-			for( int i=0; i<rank; i++) arr[i] = data[i];
+			hsize_t i=0;
+			for(; i<rank; i++) arr[i] = data[i];
+			// the shape/dimension may be different, be certain the 
+			// remaining is initilized to ones
+			for(; i<N; i++) arr[i] = 1;
+
 			return arr;
 		}
 
@@ -70,6 +84,7 @@ namespace h5{ namespace impl {
 		int rank;
 		hsize_t data[N];
 	};
+
 	template <class T> inline
 	size_t nelements( const h5::impl::array<T>& arr ){
 		size_t size = 1;
@@ -77,6 +92,7 @@ namespace h5{ namespace impl {
 		return size;
 	}
 }}
+
 
 /*PUBLIC CALLS*/
 namespace h5 {
@@ -96,5 +112,64 @@ namespace h5 {
 	using dims   = dims_t;
 	using current_dims   = current_dims_t;
 	using max_dims       = max_dims_t;
+
+	//*< usage: `const h5::stride_t& stride = h5::impl::arg::get( h5::default_stride, args...);` */
+	const static h5::count_t   default_count{1,1,1,1,1,1,1};  /**< used as block in hyperblock selection as default value */
+	const static h5::offset_t  default_offset{0,0,0,0,0,0,0}; /**< used as offset in hyperblock selection as default value */
+	const static h5::stride_t  default_stride{1,1,1,1,1,1,1}; /**< used as stride in hyperblock selection as default value */
+	const static h5::block_t   default_block{1,1,1,1,1,1,1};  /**< used as block in hyperblock selection as default value */
+}
+namespace h5::impl {
+	/** \ingroup internal
+	 * @brief computes `h5::current_dims_t` considering the context 
+	 * Current and maximum dimension of an HDF5 object is how much space is available for immediate or further use within a dataset.
+	 * This routing computes the size along each dimesnion of `current_dims` and it considers the object size given by `count`, its 
+	 * coordinates within the filespace `h5::offset`, how it is spaced `h5::stride` and the `h5::block` size.
+	 * @param count rank and size of the object along each dimension
+	 * @tparam T C++ type of dataset being written into HDF5 container
+	 *
+	 * <br/>The following arguments are context sensitive, may be passed in arbitrary order and with the exception
+	 * of `T object` being saved, the arguments are optional. The arguments are set to sensible values, and in most cases
+	 * will provide good performance by default, with that in mind, it is an easy high level fine tuning mechanism to 
+	 * get the best experience witout trading readability. 
+	 *
+	 * @param h5::stride_t skip this many blocks along given dimension
+	 * @param h5::block_t only used when `stride` is specified 
+	 * @param h5::offset_t writes `T object` starting from this coordinates, considers this shift into `h5::current_dims` when applicable
+	 */ 
+	template <class... args_t> inline 
+	h5::current_dims_t get_current_dims(const h5::count_t& count,  args_t&&... args ){
+		// premise: h5::current_dims{} is not present
+		using toffset = typename arg::tpos<const h5::offset_t&,const args_t&...>;
+		using tstride = typename arg::tpos<const h5::stride_t&,const args_t&...>;
+		using tblock = typename arg::tpos<const h5::block_t&,const args_t&...>;
+
+		h5::current_dims_t current_dims;
+		hsize_t rank = current_dims.rank = count.rank;
+
+		for(hsize_t i =0; i < rank; i++ )
+			current_dims[i] = count[i];
+		// TODO: following syntax looks better
+		//auto current_dims = static_cast<h5::current_dims_t>(count);
+
+		if constexpr( tstride::present ){ // when stride is not specified block == count
+			const h5::stride_t& stride =  std::get<tstride::value>( std::forward_as_tuple( args...) );
+			if constexpr( tblock::present ){ // tricky, we have block as well
+				const h5::block_t& block =  std::get<tblock::value>( std::forward_as_tuple( args...) );
+				for(hsize_t i=0; i < rank; i++)
+					current_dims[i] *= (stride[i] - block[i] + 1);
+			} else // block is not present, we are stretching `current_dims` with `stride`
+				for(hsize_t i=0; i < rank; i++)
+					current_dims[i] *= stride[i];
+		}
+		// we increment dimension with the specified offset, if any
+		if constexpr( toffset::present ){
+			const h5::offset_t& offset =  std::get<toffset::value>( std::forward_as_tuple( args...) );
+			for(hsize_t i=0; i < rank; i++)
+				current_dims[i]+=offset[i];
+		}
+		return current_dims;
 	}
+}
+
 #endif

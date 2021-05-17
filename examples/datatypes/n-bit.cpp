@@ -57,7 +57,7 @@ int main(){
 
 		h5::ds_t ds = h5::create<bs::n_bit>(fd, "eigen", // chunk must be used with nbit
 			   h5::current_dims{12,8}, h5::max_dims{12,H5S_UNLIMITED}, h5::chunk{3,4} | h5::nbit);
-		h5::write(ds, M, h5::chunk{3,4} | h5::nbit);
+		h5::write<bs::n_bit>(ds, h5::impl::data(M), h5::count{12,8});
 
 		ei::Matrix<bs::n_bit> data(12,8);
 	  	h5::read(fd, "eigen", data, h5::offset{0,0});
@@ -81,6 +81,5 @@ int main(){
 		for( int i=0; i<V.size(); i++ )
 			std::cout << abs(V[i].value - data[i].value) <<" ";
 	}
-
 }
 

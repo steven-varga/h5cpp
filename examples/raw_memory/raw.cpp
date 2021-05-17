@@ -35,10 +35,10 @@ int main(){
 		// expandable dataset with compression and chunksize explicitly set
         h5::create<std::string>(fd,"/types/string with chunk and compression", h5::max_dims{H5S_UNLIMITED}, h5::chunk{10} | h5::gzip{9} );
 	}
-
     {   // create + write from 1D memory location into a 2D file space 
-		h5::write<double>(fd,"dataset",ad, h5::count{1,10});
+		h5::write<double>(fd,"dataset", ad, h5::count{1,10});
     }
+
     {   // read back to memory location: 2D file space -> 1D mem space from specified offset
 		h5::read<double>(fd,"dataset", ptr, h5::count{1,8}, h5::offset{0,2} );
 

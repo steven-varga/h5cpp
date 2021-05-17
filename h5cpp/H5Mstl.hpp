@@ -18,7 +18,7 @@ namespace h5 { namespace impl {
 
 	template <class T> struct decay<const T>{ typedef T type; };
 	template <class T> struct decay<const T*>{ typedef T* type; };
-	template <class T> struct decay<std::basic_string<T>>{ typedef T* type; };
+	template <class T> struct decay<std::basic_string<T>>{ typedef const T* type; };
 	template <class T, signed N> struct decay<const T[N]>{ typedef T* type; };
 	template <class T, signed N> struct decay<T[N]>{ typedef T* type; };
 

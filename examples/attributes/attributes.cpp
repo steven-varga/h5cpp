@@ -22,7 +22,7 @@ int main(){
 	sn::example::Record& record = vector[3];
 	// set to use the latest file format version to able to use large size attributes
 	h5::fd_t fd = h5::create("001.h5", H5F_ACC_TRUNC, h5::default_fcpl,
-						h5::libver_bounds({H5F_LIBVER_V18, H5F_LIBVER_V18}) );
+		h5::libver_bounds({H5F_LIBVER_V18, H5F_LIBVER_V18}) );
 	h5::ds_t ds = h5::write(fd,"directory/dataset", M);
 	{
 		/*

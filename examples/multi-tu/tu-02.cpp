@@ -26,11 +26,11 @@ void test_03( const h5::fd_t& fd ){ // creates + writes entire object tree
 	h5::write(fd, "orm/partial/vector one_shot", vec );
 	// dimensions and other properties specified additional argument 
 	h5::write(fd, "orm/partial/vector custom_dims", vec,
-		h5::current_dims{100}, h5::max_dims{H5S_UNLIMITED}, h5::gzip{9} | h5::chunk{20} );
+		h5::max_dims{H5S_UNLIMITED}, h5::gzip{9} | h5::chunk{20} );
 	// you don't need to remember order, compiler will do it for you without runtime penalty:
 	h5::write(fd, "orm/partial/vector custom_dims different_order", vec,
 		h5::chunk{20} | h5::gzip{9}, 
-		h5::max_dims{H5S_UNLIMITED},  h5::current_dims{100}, h5::offset{3} );
+		h5::max_dims{H5S_UNLIMITED}, h5::offset{3} );
 }
 
 void test_04( const h5::fd_t& fd ){ // read entire dataset back
