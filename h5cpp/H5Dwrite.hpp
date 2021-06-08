@@ -117,7 +117,7 @@ namespace h5 {
 			} else // SELECT_ALL this is the fastest approach, mem_space and file_space must match
 				err = H5Sselect_all(file_space);
 			// throw an exception if eny error
-			H5CPP_CHECK_NZ(err, std::runtime_error,	h5::error::msg::select_hyperslab);
+			H5CPP_CHECK_NZ(err, h5::error::io::dataset::write, h5::error::msg::select_hyperslab);
 			h5::write(ds, mem_space, file_space, dxpl, ptr);
 		}
 		return ds;

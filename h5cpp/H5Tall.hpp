@@ -7,12 +7,15 @@
 
 namespace h5 {
     template<class T> hid_t register_struct(){ return H5I_UNINIT; }
+	struct reference_t {
+        hdset_reg_ref_t value; //< region or object ref storage
+    };
 }
 
 /* template specialization from hid_t< .. > type which provides syntactic sugar in the form
  * h5::dt_t<int> dt; 
  * */
-namespace h5 { namespace impl { namespace detail {
+namespace h5::impl::detail {
 	template<class T> // parent type, data_type is inherited from, see H5Iall.hpp top section for details 
 	using dt_p = hid_t<T,H5Tclose,true,true,hdf5::any>;
 	/*type id*/
@@ -24,7 +27,16 @@ namespace h5 { namespace impl { namespace detail {
 		hid_t() : parent( H5I_UNINIT){}
 	};
 	template <class T> using dt_t = hid_t<T,H5Tclose,true,true,hdf5::type>;
-}}}
+	//
+	template <> struct hid_t<h5::reference_t, H5Tclose,true,true, hdf5::type> : public dt_p<h5::reference_t> {
+		using parent = dt_p<h5::reference_t>;
+		using dt_p<h5::reference_t>::hid_t;
+		using hidtype = h5::reference_t;
+
+		hid_t() : parent( H5Tcopy(H5T_STD_REF_DSETREG) ) {
+		}
+	};
+}
 
 /* template specialization is for the preceding class, and should be used only for HDF5 ELEMENT types
  * which are in C/C++ the integral types of: char,short,int,long, ... and C POD types. 

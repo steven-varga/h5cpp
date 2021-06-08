@@ -11,6 +11,7 @@
 	
 	#include "H5Dcreate.hpp"
 	#include "H5Dopen.hpp"
+	#include "H5Rall.hpp"
 	#include "H5Dwrite.hpp"
 	#include "H5Dread.hpp"
 	#include "H5Dappend.hpp"
@@ -19,6 +20,5 @@
 	#include "H5Aopen.hpp"
 	#include "H5Awrite.hpp"
 	#include "H5Aread.hpp"
-
 #endif	
 
