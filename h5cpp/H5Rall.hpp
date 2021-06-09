@@ -99,6 +99,7 @@ namespace h5::exp {
     template <class T, class... args_t>
 	inline h5::ds_t write( const h5::ds_t& ds, h5::reference_t& reference, 
                 const T* ptr,  args_t&&... args  ) try {
+                    
         h5::dt_t<T> mem_type;
 
 		const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...); 
@@ -119,6 +120,38 @@ namespace h5::exp {
 		H5CPP_CHECK_NZ(
 			H5Dwrite(ds_, mem_type, mem_space, file_space, dxpl, ptr),
 				h5::error::io::dataset::write, h5::error::msg::write_dataset);
+		return ds;
+	} catch ( const std::exception& err ){
+		throw h5::error::io::dataset::write( err.what() );
+	}
+	
+    template <class T, class... args_t>
+	inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path,  h5::reference_t& reference, 
+                const T* ptr,  args_t&&... args  ) try {
+        
+        using tcount  = typename arg::tpos<const h5::count_t&, const args_t&...>;
+		//static_assert( tcount::present, "h5::count_t{ ... } must be provided to describe T* memory region" );
+		h5::ds_t ds; // initialized to H5I_UNINIT
+		
+		h5::mute(); // find out if we have to create the dataset 
+			bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
+		h5::unmute(); // <- make sure not to mute error handling longer than needed
+		if (is_dataset_present) {
+			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+			ds = h5::open(fd, dataset_path, dapl);
+		} else {
+			// dataset doesn't exist, or some error happened, since h5::create doesn't know of the 
+			// memory space size as `T& ref` never passed along we have to compute the `h5::current_dims_t{}` upfront
+			using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&, const args_t&...>;
+			if constexpr (tcurrent_dims::present) // user knows what he is doing, specified h5::current_dims{} explicitly
+				ds = h5::create<h5::reference_t>(fd, dataset_path, args...);
+			else {
+				h5::current_dims_t current_dims{1};  // count must be present, we checked
+				ds = h5::create<h5::reference_t>(fd, dataset_path, current_dims, args...);          // and use it to create dataset
+			}
+		}
+        h5::exp::write(ds, reference, ptr, args...);
+
 		return ds;
 	} catch ( const std::exception& err ){
 		throw h5::error::io::dataset::write( err.what() );
