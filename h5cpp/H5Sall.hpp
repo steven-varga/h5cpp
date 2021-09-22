@@ -56,7 +56,9 @@ namespace h5{ namespace impl {
 		array() : rank(0){};
 		array( array&& arg ) = default;
 		array( array& arg ) = default;
+#if !defined(_WIN32) && !defined(_WIN64)
 		array(const array& arg) = default;
+#endif
 		array& operator=( array&& arg ) = default;
 		array& operator=( array& arg ) = default;
 		template<class C>
