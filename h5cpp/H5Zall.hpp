@@ -46,7 +46,11 @@ namespace h5 { namespace impl { namespace filter {
 		return size;
 	}
 	inline size_t gzip( void* dst, const void* src, size_t size, unsigned flags, size_t n, const unsigned params[]){
+#if defined(_WIN32) || defined(_WIN64)
+		uLongf nbytes = (uLongf)size;
+#else
 		size_t nbytes = size;
+#endif
 		compress2( (unsigned char*)dst, &nbytes, (const unsigned char*)src, size, params[0]);
 		return nbytes;
 	}
