@@ -1,67 +1,115 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://steven-varga.ca/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/architecture-core/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/architecture-core/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/architecture-integration/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/architecture-integration/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/architecture-io/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/architecture-io/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/architecture-parallelism/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/architecture-parallelism/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/architecture-types/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/architecture-types/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/architecture/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/architecture/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/compiler/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/compiler/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/design/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/cpp-standard-compliance-report/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/examples/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/design/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/stl/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/examples/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/examples/attributes/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/filtering-pipeline-rework-report/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/examples/container/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/s3/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/examples/datasets/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/stl/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/examples/groups/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/thirdparty/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
     <url>
-         <loc>https://steven-varga.ca/examples/sparse-matrix/</loc>
-         <lastmod>2026-05-08</lastmod>
+         <loc>https://vargalabs.github.io/h5cpp/workflow/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/examples/attributes/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/examples/container/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/examples/datasets/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/examples/groups/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/examples/sparse-matrix/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/skills/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/skills/includes/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/skills/io-append/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/skills/io-create/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/skills/io-read/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/skills/io-write/</loc>
+         <lastmod>2026-05-25</lastmod>
+    </url>
+    <url>
+         <loc>https://vargalabs.github.io/h5cpp/skills/properties/</loc>
+         <lastmod>2026-05-25</lastmod>
     </url>
 </urlset>

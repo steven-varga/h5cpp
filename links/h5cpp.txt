@@ -1,0 +1,68 @@
+##
+## H5CPP custom Doxygen aliases
+## Included from doxy/Doxyfile via @INCLUDE
+##
+## Internal page anchors: use {#link_name} in a page, reference with [text](@ref link_name)
+##
+
+############ CROSS-REFERENCE
+ALIASES += sa_h5cpp="@sa h5::open h5::read h5::write h5::fd_t h5::ds_t h5::err_t"
+ALIASES += sa_exception="@exception std::runtime_error if the dataset or file is not found"
+ALIASES += sa_conversion="see [explicit/implicit conversion](@ref link_conversion) for H5CPP"
+
+############ FILE / DATASET PARAMETERS
+ALIASES += par_file_path="@param file_path path to the HDF5 container within the OS file system"
+ALIASES += par_dataset_path="@param dataset_path location of the dataset within the HDF5 container (absolute or relative POSIX-style path)"
+ALIASES += par_fcrt_flags="@param flags file create flags: `H5F_ACC_TRUNC` | `H5F_ACC_EXCL` | `H5F_ACC_DEBUG`"
+ALIASES += par_fopn_flags="@param flags file open flags: `H5F_ACC_RDWR` | `H5F_ACC_RDONLY`"
+
+ALIASES += par_fd="@param fd valid open `h5::fd_t` file descriptor"
+ALIASES += par_ds="@param ds valid open `h5::ds_t` dataset descriptor"
+ALIASES += par_sp="@param sp valid `h5::sp_t` dataspace descriptor"
+
+############ PROPERTY LIST PARAMETERS
+ALIASES += par_fcpl="@param fcpl [file creation property list](@ref link_fcpl_l) — controls file meta-data layout"
+ALIASES += par_fapl="@param fapl [file access property list](@ref link_fapl_l) — controls file driver and parallel I/O settings"
+ALIASES += par_dapl="@param dapl [dataset access property list](@ref link_dapl_l)"
+ALIASES += par_dcpl="@param dcpl [dataset creation property list](@ref link_dcpl_l)"
+ALIASES += par_dxpl="@param dxpl [data transfer property list](@ref link_dxpl_l)"
+ALIASES += par_lcpl="@param lcpl [link creation property list](@ref link_lcpl_l)"
+
+############ I/O SHAPE PARAMETERS
+ALIASES += par_ref="@param ref reference to a linear algebra object (armadillo, eigen, blitz, blaze, dlib, ublas) or `std::vector<T>`"
+ALIASES += par_ptr="@param ptr pointer to a memory region large enough to receive all requested elements"
+ALIASES += par_offset="@param offset coordinates of the first element selected in file space; one value per dataset dimension (e.g. `h5::offset{0,0,0}` for rank-3)"
+ALIASES += par_stride="@param stride step between selected elements in each dimension; defaults to `{1,1,...}` (every element)"
+ALIASES += par_count="@param count number of blocks selected in each dimension; combined with `block` gives the total selection shape"
+ALIASES += par_block="@param block size of each selected block in each dimension; defaults to `{1,1,...}` (single elements)"
+ALIASES += par_max_dims="@param max_dims maximum dataset extent; use `H5S_UNLIMITED` to mark an extendable dimension"
+ALIASES += par_current_dims="@param current_dims initial (current) dataset extent"
+ALIASES += par_chunk_dims="@param chunk chunk shape for chunked storage; required for compression and streaming; each chunk is the unit of I/O"
+ALIASES += par_deflate="@param deflate gzip compression level 0–9; 0 disables compression"
+
+############ TEMPLATE PARAMETERS
+ALIASES += tpar_T="@tparam T element type — one of the [supported elementary types](@ref link_base_template_types): integral, float, double, or a registered compound type"
+ALIASES += tpar_obj="@tparam T linear algebra object type (armadillo, eigen, blitz, blaze, dlib, ublas)"
+ALIASES += tpar_FD="@tparam fd_t accepts `hid_t` or `h5::fd_t` to support both CAPI and H5CPP call sites"
+ALIASES += tpar_DS="@tparam ds_t accepts `hid_t` or `h5::ds_t` to support both CAPI and H5CPP call sites"
+ALIASES += tpar_AP="@tparam fcpl_t property list type: `h5::fcpl_t` | `hid_t` | `H5P_DEFAULT` \sa_conversion"
+ALIASES += tpar_CP="@tparam fapl_t access property list type: `h5::fapl_t` | `hid_t` | `H5P_DEFAULT` \sa_conversion"
+
+############ RETURN VALUES
+ALIASES += returns_fd="@return open `h5::fd_t` file descriptor; throws `h5::error` on failure"
+ALIASES += returns_ds="@return open `h5::ds_t` dataset descriptor; throws `h5::error` on failure"
+# returns_err: used on void overloads that report errors by throwing, not by return value
+ALIASES += returns_err="@return void — errors are reported by throwing `h5::error` derived exceptions"
+ALIASES += returns_void="@return void — errors are reported by throwing `h5::error` derived exceptions"
+ALIASES += returns_object="@return fully constructed object of type `T` populated with dataset data; throws `h5::error` on failure"
+ALIASES += returns_string_vec="@return `std::vector<std::string>` populated with dataset contents"
+
+############ FUNCTION GROUP HEADERS
+ALIASES += func_create_hdr="\ingroup io-create"
+ALIASES += func_create_links="\sa_h5cpp \sa_hdf5 \sa_stl \sa_linalg"
+
+ALIASES += func_write_hdr="\ingroup io-write"
+ALIASES += func_write_desc="Write an object into an HDF5 dataset. The dataset must exist or be created first with `h5::create`."
+
+ALIASES += func_read_hdr="\ingroup io-read"
+ALIASES += func_read_desc="Read data from an HDF5 dataset into memory. Optional offset/stride/count/block arguments select a hyperslab; omitting them reads the entire dataset."

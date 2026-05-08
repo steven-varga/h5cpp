@@ -1,0 +1,1296 @@
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5">
+      
+      
+        <meta name="author" content="Steven Varga">
+      
+      
+        <link rel="canonical" href="https://vargalabs.github.io/h5cpp/filtering-pipeline-rework-report/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>H5CPP Filtering Pipeline Rework Report - VargaLABS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../styles/asciinema-player.css">
+    
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+      <link rel="stylesheet" href="../styles/custom.css">
+    
+      <link rel="stylesheet" href="../styles/mobile.css">
+    
+      <link rel="stylesheet" href="../styles/socials.css">
+    
+      <link rel="stylesheet" href="../styles/background.css">
+    
+      <link rel="stylesheet" href="../styles/blog.css">
+    
+      <link rel="stylesheet" href="../styles/asciinema.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+    
+    
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="VargaLABS" />
+    <meta property="og:title" content="VargaLABS" />
+    <meta property="og:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
+    <meta property="og:url" content="https://vargalabs.github.io/h5cpp/filtering-pipeline-rework-report/" />
+    <meta property="og:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="" />
+    <meta name="twitter:title" content="VargaLABS" />
+    <meta name="twitter:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
+    <meta name="twitter:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
+
+    <!-- SEO -->
+    <link rel="canonical" href="https://vargalabs.github.io/h5cpp/filtering-pipeline-rework-report/" />
+    <meta name="description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
+    <script type="application/ld+json">
+    {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "VargaLABS",
+    "description": "H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5",
+    "url": "https://vargalabs.github.io/h5cpp/filtering-pipeline-rework-report/",
+    "datePublished": "2010-01-01",
+    "author": {
+        "@type": "Person",
+        "name": "Steven Varga"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "VargaLABS",
+        "logo": {
+        "@type": "ImageObject",
+        "url": "https://vargalabs.github.io/h5cpp//assets/logo.png"
+        }
+    },
+    "image": "https://vargalabs.github.io/h5cpp//assets/social/og-default.png"
+    }
+    </script>    
+
+<link rel="alternate" type="application/rss+xml" title="VargaLABS RSS Feed" href="../rss.xml" />
+<link rel="alternate" type="application/feed+json" title="VargaLABS JSON Feed" href="../feed.json" />
+
+
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="solarized" data-md-color-primary="orange" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#h5cpp-filtering-pipeline-rework-report" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://steven-varga.ca/" title="VargaLABS" class="md-header__button md-logo" aria-label="VargaLABS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis"> H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5 </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              H5CPP Filtering Pipeline Rework Report
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    <div class="md-social-inline">
+      
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://wa.me/16475611829" target="_blank" rel="noopener" title="wa.me" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23-1.48 0-2.93-.39-4.19-1.15l-.3-.17-3.12.82.83-3.04-.2-.32a8.2 8.2 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.87.86-.87 2.07 0 1.22.89 2.39 1 2.56.14.17 1.76 2.67 4.25 3.73.59.27 1.05.42 1.41.53.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27-.25-.14-1.47-.74-1.69-.82-.23-.08-.37-.12-.56.12-.16.25-.64.81-.78.97-.15.17-.29.19-.53.07-.26-.13-1.06-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.12-.24-.01-.39.11-.5.11-.11.27-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.11-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43-.14 0-.3-.01-.47-.01"/></svg>
+        </a>
+      
+        
+        
+        
+        
+        <a href="mailto:steven@vargaconsulting.ca" target="_blank" rel="noopener" title="" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 5.5H9c-1.1 0-2 .9-2 2v9a2 2 0 0 0 2 2h13c1.11 0 2-.89 2-2v-9a2 2 0 0 0-2-2m0 3.67-6.5 3.33L9 9.17V7.5l6.5 3.31L22 7.5zM5 16.5c0 .17.03.33.05.5H1c-.552 0-1-.45-1-1s.448-1 1-1h4zM3 7h2.05c-.02.17-.05.33-.05.5V9H3c-.55 0-1-.45-1-1s.45-1 1-1m-2 5c0-.55.45-1 1-1h3v2H2c-.55 0-1-.45-1-1"/></svg>
+        </a>
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://x.com/vargaconsulting" target="_blank" rel="noopener" title="x.com" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.2 4.2 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.52 8.52 0 0 1-5.33 1.84q-.51 0-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23"/></svg>
+        </a>
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://www.linkedin.com/in/steven-varga-04224a19/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93zM6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37z"/></svg>
+        </a>
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://github.com/vargaconsulting" target="_blank" rel="noopener" title="github.com" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+        </a>
+      
+
+      
+      <span class="md-header__button md-icon" style="pointer-events: none; opacity: 0.4;">|</span>  
+    </div>
+  
+
+  
+  
+    
+    
+    
+
+    <input class="md-option"
+           data-md-color-media=""
+           data-md-color-scheme="solarized"
+           data-md-color-primary="orange"
+           data-md-color-accent="indigo"
+            aria-label="Switch to dark mode"
+           
+           type="radio" name="__palette" id="__palette_0">
+
+    
+      <label class="md-header__button md-icon"
+             title="Switch to dark mode"
+             for="__palette_1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon-icon lucide-moon"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+
+    <input class="md-option"
+           data-md-color-media=""
+           data-md-color-scheme="slate"
+           data-md-color-primary="orange"
+           data-md-color-accent="indigo"
+            aria-label="Switch to light mode"
+           
+           type="radio" name="__palette" id="__palette_1">
+
+    
+      <label class="md-header__button md-icon"
+             title="Switch to light mode"
+             for="__palette_0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-icon lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+<!-- -->
+
+<!-- -->
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://steven-varga.ca/" title="VargaLABS" class="md-nav__button md-logo" aria-label="VargaLABS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    VargaLABS
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compiler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compiler Tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HDF5 Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    I/O Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Type System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linalg & STL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel I/O
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#scope" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scope
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#current-correctness-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Correctness Gaps
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#iex2h5-vendored-h5cpp-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        iex2h5 Vendored H5CPP Review
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proposed-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposed Architecture
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-phases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Implementation Phases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Implementation Phases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-correct-serial-engine" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 1: Correct serial engine
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-threaded-chunk-scheduler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 2: Threaded chunk scheduler
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-simd-and-advanced-codecs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Phase 3: SIMD and advanced codecs
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-platform-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Platform Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommendation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#status-phase-i-250-fapl-worker-pool" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status — Phase I (#250, FAPL worker pool)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#status-phase-ii-pr-a-252-async-descriptors-executor-scaffold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status — Phase II PR-A (#252, async descriptors + executor scaffold)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Status — Phase II PR-A (#252, async descriptors + executor scaffold)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#user-visible-surface-pr-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User-visible surface (PR-A)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mechanism-pr-a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mechanism (PR-A)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#out-of-scope-for-pr-a-lands-in-pr-b" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Out of scope for PR-A (lands in PR-B)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="h5cpp-filtering-pipeline-rework-report">H5CPP Filtering Pipeline Rework Report</h1>
+<h2 id="scope">Scope</h2>
+<p>This report captures the current state of the H5CPP filtering pipeline and proposes a C++17-compatible path toward a SIMD- and multithreaded chunk filtering engine. The target platforms are Linux, macOS, and Windows. The design should keep the current C++17 surface stable while leaving room for later C++23 cleanup and eventual C++26 reflection integration.</p>
+<h2 id="current-architecture">Current Architecture</h2>
+<p>H5CPP already has the right architectural interception point for high-throughput filtering:</p>
+<ol>
+<li>Users express storage layout and filters through the existing property-list syntax, for example <code>h5::chunk{1024} | h5::shuffle | h5::gzip{6}</code>.</li>
+<li>Dataset creation property lists keep standard HDF5-compatible filter metadata.</li>
+<li><code>h5::high_throughput</code> is intended to install a custom dataset access property-list entry.</li>
+<li><code>h5::write</code> and <code>h5::read</code> detect that DAPL entry and route transfers through <code>pipeline_t</code>.</li>
+<li><code>pipeline_t</code> tiles user memory into chunk-sized blocks and calls <code>H5Dwrite_chunk</code> / <code>H5Dread_chunk</code>.</li>
+</ol>
+<p>That model is sound: keep HDF5 compatibility at the file boundary, but own the CPU-side transform chain inside H5CPP.</p>
+<h2 id="current-correctness-gaps">Current Correctness Gaps</h2>
+<p>The current implementation is an experimental skeleton rather than a production replacement for HDF5's filter chain.</p>
+<table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Current State</th>
+<th>Required State</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Activation</td>
+<td><code>h5::high_throughput</code> does not install its DAPL property on the current HDF5 1.10.9 baseline</td>
+<td>Reliable cross-version activation or explicit unsupported-version diagnostics</td>
+</tr>
+<tr>
+<td>Deflate/gzip</td>
+<td>Compress-only callback</td>
+<td>Encode and decode with correct zlib buffer sizing</td>
+</tr>
+<tr>
+<td>Shuffle</td>
+<td>Placeholder copy</td>
+<td>Element-size-aware shuffle and unshuffle</td>
+</tr>
+<tr>
+<td>Fletcher32</td>
+<td>Placeholder copy</td>
+<td>Checksum generation and verification</td>
+</tr>
+<tr>
+<td>N-bit / scale-offset</td>
+<td>Placeholder copy</td>
+<td>Correct implementation or explicit unsupported-filter error</td>
+</tr>
+<tr>
+<td>Multi-filter read</td>
+<td>Throws for more than one filter</td>
+<td>Reverse-order decode through the complete filter plan</td>
+</tr>
+<tr>
+<td>Buffer sizing</td>
+<td>Uses chunk-sized scratch buffers</td>
+<td>Encoded buffers must allow compression expansion</td>
+</tr>
+<tr>
+<td>Filter mask</td>
+<td>Partial handling</td>
+<td>Preserve HDF5 chunk filter-mask semantics</td>
+</tr>
+<tr>
+<td>Threading</td>
+<td><code>threaded_pipeline_t</code> is a placeholder</td>
+<td>Worker-local state and bounded chunk scheduling (delivered in #250 as FAPL-scoped <code>pool_pipeline_t</code>)</td>
+</tr>
+<tr>
+<td>Portability</td>
+<td>Linux path is the only recently verified path</td>
+<td>Linux, macOS, and Windows allocation/build behavior</td>
+</tr>
+</tbody>
+</table>
+<p>Focused baseline probes confirmed two important failures (both now resolved):</p>
+<ol>
+<li><del><code>h5::high_throughput</code> does not currently activate the DAPL property with HDF5 1.10.9.</del>
+   <strong>Fixed in #242</strong> — copy callback added to DAPL property; <code>H5D_CHUNKED</code> gating prevents
+   segfault on non-chunked datasets. Activation verified on HDF5 1.10.7 through 1.12.2.</li>
+<li><del>The gzip callback can encode data, but it cannot decode using the reverse filter path.</del>
+   <strong>Fixed</strong> — <code>deflate()</code> now branches on <code>H5Z_FLAG_REVERSE</code> to call the decode path.
+   shuffle, fletcher32, szip, and zstd callbacks also support reverse (decode) direction.</li>
+</ol>
+<h2 id="iex2h5-vendored-h5cpp-review">iex2h5 Vendored H5CPP Review</h2>
+<p>The vendored copy at <code>/home/steven/projects/iex2h5/thirdparty/h5cpp/v1.10.8/include/h5cpp/</code> was reviewed from the filtering pipeline angle. Its filter callbacks and chunk read/write logic are effectively the same experimental pipeline: gzip remains encode-only, shuffle/Fletcher32/N-bit/scale-offset remain placeholder copies, multi-filter read still throws, and <code>h5::high_throughput</code> remains gated to older HDF5 versions.</p>
+<p>The useful difference is in scratch-buffer ownership: the vendored copy introduced a named aligned-allocation helper instead of open-coding <code>aligned_alloc</code> at the call site. That idea is worth keeping, but the vendored implementation is Linux-oriented and does not round allocation sizes or handle Windows. The #160 branch borrows the helper pattern and hardens it for C++17 portability:</p>
+<ul>
+<li>central <code>make_aligned(alignment, size)</code> helper,</li>
+<li>size rounded up to the requested alignment,</li>
+<li><code>posix_memalign</code> on Linux/macOS,</li>
+<li><code>_aligned_malloc</code> / <code>_aligned_free</code> on Windows,</li>
+<li>RAII deleter matched to the allocation API.</li>
+</ul>
+<h2 id="proposed-architecture">Proposed Architecture</h2>
+<p>Replace the thin filter function-pointer model with a first-class filter plan:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>DCPL metadata
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  -&gt; filter_plan
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  -&gt; chunk_iterator
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  -&gt; execution_policy
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  -&gt; chunk_io_backend
+</span></code></pre></div>
+<p>Responsibilities:</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>filter_plan</code></td>
+<td>Decode DCPL filters into validated encode/decode operations</td>
+</tr>
+<tr>
+<td><code>chunk_iterator</code></td>
+<td>Walk chunk coordinates, handle edges, and map memory to chunks</td>
+</tr>
+<tr>
+<td><code>execution_policy</code></td>
+<td>Select serial, threaded, and later SIMD-aware execution</td>
+</tr>
+<tr>
+<td><code>chunk_io_backend</code></td>
+<td>Use HDF5 chunk APIs now; keep room for native storage later</td>
+</tr>
+</tbody>
+</table>
+<p>Each filter operation should carry:</p>
+<ul>
+<li>HDF5 filter id</li>
+<li>flags and client data values</li>
+<li>element size where required</li>
+<li><code>max_encoded_size(input_size)</code></li>
+<li><code>encode(src, dst)</code></li>
+<li><code>decode(src, dst)</code></li>
+<li>clear error behavior for unsupported filters</li>
+</ul>
+<p>This avoids guessing filter direction from a single callback and gives the scheduler enough information to size scratch buffers safely.</p>
+<h2 id="implementation-phases">Implementation Phases</h2>
+<h3 id="phase-1-correct-serial-engine">Phase 1: Correct serial engine</h3>
+<p>Deliver a boring, testable serial implementation before adding SIMD or threads.</p>
+<p>Initial #160 progress:</p>
+<ul>
+<li>Deflate/gzip callbacks now encode and decode zlib-compatible streams.</li>
+<li>libdeflate is used when configured/present; zlib remains the fallback because HDF5 already requires it.</li>
+<li>CMake exposes <code>H5CPP_USE_LIBDEFLATE</code>, <code>H5CPP_REQUIRE_LIBDEFLATE</code>, and <code>H5CPP_INSTALL_LIBDEFLATE</code>.</li>
+<li>The test thirdparty layer has a libdeflate interface target for doctest coverage.</li>
+<li>Pipeline scratch allocation now reserves deflate-bound capacity rather than raw chunk bytes.</li>
+</ul>
+<p>Required work:</p>
+<ol>
+<li>Restore reliable <code>h5::high_throughput</code> activation or emit a clear unsupported-version error.</li>
+<li>Implement deflate/gzip encode and decode using <code>compressBound</code>, <code>compress2</code>, and inflate/uncompress. <strong>Status: initial callback-level implementation complete, with libdeflate fast path and zlib fallback.</strong></li>
+<li>Implement byte shuffle and unshuffle using the dataset element size.</li>
+<li>Implement Fletcher32 generation and verification.</li>
+<li>Make N-bit and scale-offset explicit: either implement them correctly or reject them loudly.</li>
+<li>Implement reverse-order read for multi-filter chains.</li>
+<li>Allocate scratch buffers by maximum encoded size, not raw chunk size.</li>
+<li>Preserve and test filter-mask behavior.</li>
+</ol>
+<p>Acceptance tests should prove:</p>
+<ul>
+<li>H5CPP pipeline write can be read through normal HDF5/H5CPP read.</li>
+<li>Normal HDF5 filtered write can be read through the H5CPP pipeline.</li>
+<li><code>shuffle | gzip</code> round-trips.</li>
+<li><code>shuffle | gzip | fletcher32</code> round-trips and detects corruption where feasible.</li>
+<li>Unsupported filters fail with useful diagnostics instead of silently copying.</li>
+</ul>
+<h3 id="phase-2-threaded-chunk-scheduler">Phase 2: Threaded chunk scheduler</h3>
+<p>Once serial correctness is proven, add a bounded chunk scheduler:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>source memory
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  -&gt; chunk gather/tile
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  -&gt; prefilters
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>  -&gt; compressor
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>  -&gt; checksum
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>  -&gt; H5Dwrite_chunk
+</span></code></pre></div>
+<p>Read path:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>H5Dread_chunk
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>  -&gt; checksum verify
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>  -&gt; decompressor
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>  -&gt; reverse prefilters
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  -&gt; scatter to user memory
+</span></code></pre></div>
+<p>Design rules:</p>
+<ul>
+<li>No shared mutable scratch buffers across workers.</li>
+<li>Each worker owns aligned scratch memory.</li>
+<li>HDF5 calls should be isolated behind the backend so thread-safety policy is explicit.</li>
+<li>The scheduler should be bounded to prevent memory blowups on large datasets.</li>
+<li>Serial and threaded paths must share the same <code>filter_plan</code>.</li>
+</ul>
+<h3 id="phase-3-simd-and-advanced-codecs">Phase 3: SIMD and advanced codecs</h3>
+<p>After correctness and scheduler boundaries are stable, add optimized filters:</p>
+<ul>
+<li>SIMD shuffle/unshuffle</li>
+<li>bitshuffle</li>
+<li>delta and XOR filters for numeric/time-series data</li>
+<li>zstd and lz4 backends</li>
+<li>blosc-style composed filter bundles</li>
+<li>optional adaptive codec selection by sampled chunk entropy</li>
+</ul>
+<p>These should remain optional and feature-detected. The baseline must stay C++17 and portable.</p>
+<h2 id="cross-platform-considerations">Cross-Platform Considerations</h2>
+<p>The pipeline should hide platform allocation differences behind one internal aligned-buffer helper:</p>
+<ul>
+<li>Linux/macOS: use a safe aligned allocation path that rounds size as required.</li>
+<li>Windows: use <code>_aligned_malloc</code> / <code>_aligned_free</code>.</li>
+<li>Never require raw chunk bytes to already be a multiple of alignment.</li>
+</ul>
+<p>Threading should initially use C++17 standard library primitives. Avoid platform-specific thread pools until benchmarks prove the need.</p>
+<h2 id="recommendation">Recommendation</h2>
+<p>Start with correctness, not SIMD. The highest-value first milestone is a serial <code>filter_plan</code> that can round-trip standard HDF5 filters and reject unsupported filters explicitly. Once that foundation is correct, SIMD and multithreading become execution-policy improvements rather than a risky rewrite.</p>
+<p>The strategic direction is to make H5CPP's filtering chain a modern CPU execution engine while preserving HDF5-compatible metadata and file interoperability.</p>
+<h2 id="status-phase-i-250-fapl-worker-pool">Status — Phase I (#250, FAPL worker pool)</h2>
+<p>Phase I of the threading workplan is delivered on PR #251.  The design and trade-offs are summarised in <code>tasks/h5cpp-fapl-multithreading-workplan.md</code>; the user-visible surface is one line in the file's FAPL:</p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">h5</span><span class="o">::</span><span class="n">fd_t</span><span class="w"> </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">create</span><span class="p">(</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="s">&quot;data.h5&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">H5F_ACC_TRUNC</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">    </span><span class="n">h5</span><span class="o">::</span><span class="n">default_fcpl</span><span class="p">,</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">    </span><span class="n">h5</span><span class="o">::</span><span class="n">threads</span><span class="p">{</span><span class="n">N</span><span class="p">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">backpressure</span><span class="p">{</span><span class="n">M</span><span class="p">});</span><span class="w">       </span><span class="c1">// M default = 8 × N</span>
+</span></code></pre></div>
+<p>When <code>h5::threads{N}</code> is installed, the FAPL allocates a <code>worker_pool_t</code> and parks a <code>shared_ptr&lt;&gt;</code> to it inside an <code>H5Pinsert2</code> slot.  Every dataset created/opened on that file inherits the pool via <code>H5Fget_access_plist</code>.  When a dataset's DAPL has <code>h5::high_throughput</code>, <code>h5::write</code> and <code>h5::read</code> construct a local <code>pool_pipeline_t</code> that submits per-chunk compression closures to the pool and drains in submission order; <code>H5Dwrite_chunk</code> still runs on the calling thread.  <code>pt_t</code> resolves the same pool in <code>init()</code> and uses <code>pool_pipeline_t</code> as a variant alternative.</p>
+<p>Back-pressure is bounded by <code>h5::backpressure{M}</code>: the producer blocks on the front future once the in-flight deque hits <code>M</code>.  Default is 8 × worker count.</p>
+<p>The legacy per-pt_t <code>h5::filter::threads{N}</code> constructor from #241 is removed in this cycle (see [Phase 1.4 commit message]).  Two parallel threading paths in the pipeline invite contention bugs and confuse the surface; the FAPL pool fully subsumes it.</p>
+<p>Phase II (compile-time C-API blocking on <code>h5::async::fd_t</code>, full async mode) is tracked separately.</p>
+<h2 id="status-phase-ii-pr-a-252-async-descriptors-executor-scaffold">Status — Phase II PR-A (#252, async descriptors + executor scaffold)</h2>
+<p>Phase II is delivered in two PRs.  PR-A (this work) lands the descriptor types, FAPL executor property, and executor thread; PR-B will wire the concept-constrained <code>h5::write</code> / <code>h5::read</code> / <code>h5::create(fd, "ds", …)</code> overloads that branch on <code>is_async_v&lt;FD&gt;</code>.</p>
+<h3 id="user-visible-surface-pr-a">User-visible surface (PR-A)</h3>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1">// Namespace shape: nested h5::async::*, parallel to the classic h5::*.</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="k">namespace</span><span class="w"> </span><span class="nn">h5</span><span class="o">::</span><span class="nn">async</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">fd_t</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">impl</span><span class="o">::</span><span class="n">async_hid_t</span><span class="o">&lt;</span><span class="n">impl</span><span class="o">::</span><span class="n">fd_t</span><span class="p">,</span><span class="w">  </span><span class="n">H5Fclose</span><span class="o">&gt;</span><span class="p">;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">ds_t</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">impl</span><span class="o">::</span><span class="n">async_did_t</span><span class="o">&lt;</span><span class="n">impl</span><span class="o">::</span><span class="n">ds_t</span><span class="p">,</span><span class="w">  </span><span class="n">H5Dclose</span><span class="o">&gt;</span><span class="p">;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">gr_t</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">impl</span><span class="o">::</span><span class="n">async_aid_t</span><span class="o">&lt;</span><span class="n">impl</span><span class="o">::</span><span class="n">gr_t</span><span class="p">,</span><span class="w">  </span><span class="n">H5Gclose</span><span class="o">&gt;</span><span class="p">;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="k">using</span><span class="w"> </span><span class="n">at_t</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">impl</span><span class="o">::</span><span class="n">async_aid_t</span><span class="o">&lt;</span><span class="n">impl</span><span class="o">::</span><span class="n">at_t</span><span class="p">,</span><span class="w">  </span><span class="n">H5Aclose</span><span class="o">&gt;</span><span class="p">;</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="n">fd_t</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">flags</span><span class="p">,</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">                </span><span class="k">const</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fcpl_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">fcpl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">default_fcpl</span><span class="p">,</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">                </span><span class="k">const</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fapl_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">fapl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">default_fapl</span><span class="p">);</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">    </span><span class="n">fd_t</span><span class="w"> </span><span class="nf">open</span><span class="w">  </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">path</span><span class="p">,</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="n">flags</span><span class="p">,</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">                </span><span class="k">const</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fapl_t</span><span class="o">&amp;</span><span class="w"> </span><span class="n">fapl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">default_fapl</span><span class="p">);</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="p">}</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="c1">// Mode is declared exactly once — at h5::async::create / open.</span>
+</span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a><span class="c1">// Every downstream operation deduces async-ness from the FD type via</span>
+</span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a><span class="c1">// TAD (Phase II PR-B).</span>
+</span></code></pre></div>
+<p><code>h5::async::fd_t</code> has <code>operator ::hid_t() = delete</code>, so a stray <code>H5Gcreate2(async_fd, …)</code> is a clean compile error ("use of deleted function") rather than a silent thread-safety hazard.</p>
+<h3 id="mechanism-pr-a">Mechanism (PR-A)</h3>
+<ul>
+<li><code>h5cpp/H5executor.hpp</code> — single worker thread per async fd, <code>std::packaged_task</code> in a <code>shared_ptr</code> wrapped in <code>std::function&lt;void()&gt;</code>, <code>submit_and_wait&lt;Fn&gt;(Fn&amp;&amp;)</code> blocking the caller via the future.  Exceptions propagate back through <code>future::get</code>; same-thread re-entry runs the callable inline.</li>
+<li><code>h5cpp/H5Pfapl_async.hpp</code> — FAPL executor slot using the same <code>H5Pinsert2</code> + shared-ptr pattern as Phase I.  Kept as a defensive utility; the primary code path does not depend on it.</li>
+<li><code>h5cpp/H5async.hpp</code> — the two factories.  Each constructs an <code>executor_t</code>, then calls <code>H5Fcreate</code> / <code>H5Fopen</code>, then returns <code>h5::async::fd_t{raw_hid, exec}</code>.</li>
+</ul>
+<p>The executor lives <strong>directly on the wrapper</strong> (a <code>std::shared_ptr&lt;executor_t&gt; exec</code> field on the <code>false,false</code> <code>hid_t</code> specialization), not retrieved from the file's FAPL via <code>H5Fget_access_plist</code>.  HDF5 1.10.9 reconstructs the retrieved FAPL from standard properties only — <code>H5Pinsert2</code>-installed properties do not survive the round-trip.  (This also affects Phase I's pool resolution path; tracked as a follow-up.)</p>
+<h3 id="out-of-scope-for-pr-a-lands-in-pr-b">Out of scope for PR-A (lands in PR-B)</h3>
+<ul>
+<li>Concept-constrained overloads of <code>h5::write</code>, <code>h5::read</code>, <code>h5::append</code>, <code>h5::flush</code>, <code>h5::create(fd, "ds", …)</code>.</li>
+<li>Mode-transitive factory pattern (async fd → async ds → async at).</li>
+<li><code>h5::pt_t</code> as a class template <code>template &lt;class DS = h5::ds_t&gt;</code> deduced via CTAD.</li>
+<li>Performance benchmarks vs. HDF5 <code>--enable-threadsafe</code>.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright custom-footer">
+        <div class="custom-footer-left">
+          Blockchain, cryptographic protocols, HPC, or trading systems in C++, Rust, Julia, Python, R and CUDA
+        </div>
+        <div class="custom-footer-right">
+          © 2017–2025 VargaLABS, Toronto, ON, Canada 🇨🇦
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["search.suggest", "content.code.copy", "content.tooltips", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.tailwindcss.com"></script>
+      
+        <script src="../javascripts/tw-config.js"></script>
+      
+        <script src="../javascripts/asciinema-player.min.js"></script>
+      
+        <script src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
+      
+        <script src="https://unpkg.com/@popperjs/core@2"></script>
+      
+        <script src="https://unpkg.com/tippy.js@6"></script>
+      
+    
+  </body>
+</html>

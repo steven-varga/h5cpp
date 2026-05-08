@@ -13,9 +13,13 @@
         <meta name="author" content="Steven Varga">
       
       
-        <link rel="canonical" href="https://steven-varga.ca/architecture-integration/">
+        <link rel="canonical" href="https://vargalabs.github.io/h5cpp/architecture-integration/">
       
       
+        <link rel="prev" href="../architecture-types/">
+      
+      
+        <link rel="next" href="../architecture-parallelism/">
       
       
         
@@ -26,7 +30,7 @@
     
     
       
-        <title>Type System - VargaLABS</title>
+        <title>Linalg & STL - VargaLABS</title>
       
     
     
@@ -81,17 +85,17 @@
     <meta property="og:site_name" content="VargaLABS" />
     <meta property="og:title" content="VargaLABS" />
     <meta property="og:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
-    <meta property="og:url" content="https://steven-varga.ca/architecture-integration/" />
-    <meta property="og:image" content="https://steven-varga.ca//assets/social/og-default.png" />
+    <meta property="og:url" content="https://vargalabs.github.io/h5cpp/architecture-integration/" />
+    <meta property="og:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="" />
     <meta name="twitter:title" content="VargaLABS" />
     <meta name="twitter:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
-    <meta name="twitter:image" content="https://steven-varga.ca//assets/social/og-default.png" />
+    <meta name="twitter:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
 
     <!-- SEO -->
-    <link rel="canonical" href="https://steven-varga.ca/architecture-integration/" />
+    <link rel="canonical" href="https://vargalabs.github.io/h5cpp/architecture-integration/" />
     <meta name="description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
     <script type="application/ld+json">
     {
@@ -99,7 +103,7 @@
     "@type": "BlogPosting",
     "headline": "VargaLABS",
     "description": "H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5",
-    "url": "https://steven-varga.ca/architecture-integration/",
+    "url": "https://vargalabs.github.io/h5cpp/architecture-integration/",
     "datePublished": "2010-01-01",
     "author": {
         "@type": "Person",
@@ -110,10 +114,10 @@
         "name": "VargaLABS",
         "logo": {
         "@type": "ImageObject",
-        "url": "https://steven-varga.ca//assets/logo.png"
+        "url": "https://vargalabs.github.io/h5cpp//assets/logo.png"
         }
     },
-    "image": "https://steven-varga.ca//assets/social/og-default.png"
+    "image": "https://vargalabs.github.io/h5cpp//assets/social/og-default.png"
     }
     </script>    
 
@@ -141,7 +145,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#type-system" class="md-skip">
+        <a href="#linear-algebra" class="md-skip">
           Skip to content
         </a>
       
@@ -175,7 +179,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Type System
+              Linalg & STL
             
           </span>
         </div>
@@ -372,15 +376,62 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../design/" class="md-nav__link">
+      <a href="../stl/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Design
+    Supported Types
   
 
     
@@ -392,23 +443,89 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compiler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compiler Tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
     
       
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -429,7 +546,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -447,6 +564,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../architecture-core/" class="md-nav__link">
         
   
@@ -454,7 +599,7 @@
   <span class="md-ellipsis">
     
   
-    HDF5 concepts
+    HDF5 Concepts
   
 
     
@@ -496,28 +641,21 @@
 
               
             
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
+              
+                
   
   
   
   
     <li class="md-nav__item">
-      <a href="../examples/" class="md-nav__link">
+      <a href="../architecture-types/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Examples
+    Type System
   
 
     
@@ -526,6 +664,252 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linalg & STL
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linalg & STL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#linear-algebra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linear Algebra
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Linear Algebra">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#storage-layout-row-and-column-major-ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storage Layout: Row- and Column-Major Ordering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sparse-matrices-and-vectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sparse Matrices and Vectors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-stl-and-classes-implementing-the-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The STL and classes implementing the interface
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The STL and classes implementing the interface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stdstrings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        std::strings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-strings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C Strings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raw-pointers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw Pointers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compound-datatypes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compound Datatypes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Compound Datatypes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pod-structrecords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POD Struct/Records
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C++ Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#high-throughput-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        High Throughput Pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel I/O
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -549,8 +933,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -559,10 +941,138 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#resource-handles-and-capi-interop" class="md-nav__link">
+  <a href="#linear-algebra" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resource Handles and CAPI Interop
+        Linear Algebra
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Linear Algebra">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#storage-layout-row-and-column-major-ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Storage Layout: Row- and Column-Major Ordering
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sparse-matrices-and-vectors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sparse Matrices and Vectors
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-stl-and-classes-implementing-the-interface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The STL and classes implementing the interface
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The STL and classes implementing the interface">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#stdstrings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        std::strings
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-strings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C Strings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#raw-pointers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raw Pointers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compound-datatypes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compound Datatypes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Compound Datatypes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pod-structrecords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        POD Struct/Records
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C++ Classes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#high-throughput-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        High Throughput Pipeline
       
     </span>
   </a>
@@ -588,312 +1098,274 @@
 
 
 
-<h1 id="type-system">Type System</h1>
-<p>At the heart of H5CPP lies the type mapping mechanism to HDF5 NATIVE types. All type requests are redirected to this segment in one way or another. That includes supported vectors, matrices, cubes, C like structs, etc. While HDF5 internally supports type translations among various binary representation, H5CPP deals only with native types. This is not a violation of the HDF5 use-anywhere policy, only type conversion is delegated to hosts with different binary representations. Since the most common processors are Intel and AMD, with this approach conversion is unnescessary most of the time. In summary, H5CPP uses NAIVE types exclusively.</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>integral        := [ unsigned | signed ] [int_8 | int_16 | int_32 | int_64 | float | double ] 
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>vectors         :=  *integral
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>rugged_arrays   := **integral
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>string          := **char
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>linalg          := armadillo | eigen | ... 
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>scalar          := integral | pod_struct | string
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a># not handled yet: long double, complex, specialty types
-</span></code></pre></div>
-<p>Here is the relevant part responsible for type mapping:
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="cp">#define H5CPP_REGISTER_TYPE_( C_TYPE, H5_TYPE )                                           \</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="cp">namespace h5 { namespace impl { namespace detail {                                        \</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="cp">    template &lt;&gt; struct hid_t&lt;C_TYPE,H5Tclose,true,true,hdf5::type&gt; : public dt_p&lt;C_TYPE&gt; {\</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="cp">        using parent = dt_p&lt;C_TYPE&gt;;                                                      \</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="cp">        using parent::hid_t;                                                              \</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="cp">        using hidtype = C_TYPE;                                                           \</span>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="cp">        hid_t() : parent( H5Tcopy( H5_TYPE ) ) {                                          \</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="cp">            hid_t id = static_cast&lt;hid_t&gt;( *this );                                       \</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="cp">            if constexpr ( std::is_pointer&lt;C_TYPE&gt;::value )                               \</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="cp">                    H5Tset_size (id,H5T_VARIABLE), H5Tset_cset(id, H5T_CSET_UTF8);        \</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="cp">        }                                                                                 \</span>
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="cp">    };                                                                                    \</span>
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="cp">}}}                                                                                       \</span>
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="cp">namespace h5 {                                                                            \</span>
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="cp">    template &lt;&gt; struct name&lt;C_TYPE&gt; {                                                     \</span>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="cp">        static constexpr char const * value = #C_TYPE;                                    \</span>
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="cp">    };                                                                                    \</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="cp">}                                                                                         \</span>
-</span></code></pre></div>
-Arithmetic types are associated with their NATIVE HDF5 equivalent:
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">bool</span><span class="p">,</span><span class="n">H5T_NATIVE_HBOOL</span><span class="p">)</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_UCHAR</span><span class="p">)</span><span class="w">           </span><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">char</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_CHAR</span><span class="p">)</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">short</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_USHORT</span><span class="p">)</span><span class="w">         </span><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">short</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_SHORT</span><span class="p">)</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_UINT</span><span class="p">)</span><span class="w">             </span><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_INT</span><span class="p">)</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_ULONG</span><span class="p">)</span><span class="w">       </span><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_LONG</span><span class="p">)</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_ULLONG</span><span class="p">)</span><span class="w"> </span><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_LLONG</span><span class="p">)</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">float</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_FLOAT</span><span class="p">)</span><span class="w">                   </span><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">double</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_NATIVE_DOUBLE</span><span class="p">)</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="kt">double</span><span class="p">,</span><span class="n">H5T_NATIVE_LDOUBLE</span><span class="p">)</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>
-</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="n">H5CPP_REGISTER_TYPE_</span><span class="p">(</span><span class="kt">char</span><span class="o">*</span><span class="p">,</span><span class="w"> </span><span class="n">H5T_C_S1</span><span class="p">)</span>
-</span></code></pre></div>
-Record/POD struct types are registered through this macro:
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="cp">#define H5CPP_REGISTER_STRUCT( POD_STRUCT ) \</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="cp">    H5CPP_REGISTER_TYPE_( POD_STRUCT, h5::register_struct&lt;POD_STRUCT&gt;() )</span>
-</span></code></pre></div>
-<strong>FYI:</strong> there are no other public/unregistered macros other than <code>H5CPP_REGISTER_STRUCT</code></p>
-<h3 id="resource-handles-and-capi-interop">Resource Handles and CAPI Interop</h3>
-<p>By default the <code>hid_t</code> type is automatically converted to / from H5CPP <code>h5::hid_t&lt;T&gt;</code> templated identifiers. All HDF5 CAPI identifiers are wrapped via the <code>h5::impl::hid_t&lt;T&gt;</code> internal template, maintaining binary compatibility, with the exception of <code>h5::pt_t</code> packet table handle.</p>
-<p>Here are some properties of descriptors,<code>h5::ds_t</code> and <code>h5::open</code> are used only for the demonstration, replace them with arbitrary descriptors.</p>
-<ul>
-<li><code>h5::ds_t ds</code> default CTOR, is initialized with <code>H5I_UNINIT</code></li>
-<li><code>h5::ds_t res = h5::open(...)</code> RVO  with RAII maneged resource <code>H5Iinc_ref</code> not called, best way to initialize</li>
-<li><code>h5::ds_t res = std::move(h5::ds_t(...))</code> move assignment with RAII enabled for each handles, <code>H5Iinc_ref</code> called once</li>
-<li><code>h5::ds_t res = h5::ds_t(...)</code> copy assignment with RAII enabled for each handles, <code>H5Iinc_ref</code> called twice, considered inexpensive</li>
-<li><code>h5::ds_t res(hid_t)</code> creates resource with RAII, increments reference counts of <code>hid_t</code> with <code>H5Iinc_ref</code> </li>
-<li><code>h5::ds_t res{hid_t}</code> create resource without RAII, for managed CAPI handles, try not using it, a full copy of a handle is cheap</li>
-</ul>
-<p>The Packet Table interface has an additional conversion CTOR defined from <code>h5::ds_t</code> to <code>h5::pt_t</code> and is the preffered way to obtain a handle:</p>
-<ul>
-<li><code>h5::pt_t pt = h5::open(fd, 'path/to/dataset', ...)</code> obtains a <code>h5::ds_t</code> resource, converts it to <code>h5::pt_t</code> type then assigns it to names variable, this process will result in 2 increments to underlying CAPI handle or 2 calls to <code>H5Iinc_ref</code>. </li>
-<li><code>h5::pt_t pt = h5::ds_t(...)</code> this pattern is used when creating packet table from existing and opened <code>h5::ds_t</code>, resources are copied (not stolen), in other words <code>h5::ds_t</code> remains valid after the operation, all state changes will be reflected.</li>
-</ul>
-<p>During the lifespan of H5CPP handles all of the underlying HDF5 desciptors are <strong>properly initialized, reference count maintained and closed.</strong></p>
-<p>Resources may be grouped into <code>handles</code> and <code>property_lists</code>-s. 
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>T := [ handles | property_list ]
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>handles   := [ fd_t | ds_t | att_t | err_t | grp_t | id_t | obj_t ]
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>property_lists := [ file | dataset | attrib | group | link | string | type | object ]
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>#            create       access       transfer     copy 
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>file    := [ h5::fcpl_t | h5::fapl_t                            ] 
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>dataset := [ h5::dcpl_t | h5::dapl_t | h5::dxpl_t               ]
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>attrib  := [ h5::acpl_t                                         ] 
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>group   := [ h5::gcpl_t | h5::gapl_t                            ]
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>link    := [ h5::lcpl_t | h5::lapl_t                            ]
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>string  := [              h5::scpl_t                            ] 
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>type    := [              h5::tapl_t                            ]
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a>object  := [ h5::ocpl_t                           | h5::ocpyl_t ]
+<h3 id="linear-algebra"><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 2h4v2H4v16h2v2H2zm18 2h-2V2h4v20h-4v-2h2zM9 5h1v5h1v1H8v-1h1V6l-1 .5v-1zm6 8h1v5h1v1h-3v-1h1v-4l-1 .5v-1zm-6 0c1.1 0 2 1.34 2 3s-.9 3-2 3-2-1.34-2-3 .9-3 2-3m0 1c-.55 0-1 .9-1 2s.45 2 1 2 1-.9 1-2-.45-2-1-2m6-9c1.1 0 2 1.34 2 3s-.9 3-2 3-2-1.34-2-3 .9-3 2-3m0 1c-.55 0-1 .9-1 2s.45 2 1 2 1-.9 1-2-.45-2-1-2"/></svg></span> Linear Algebra</h3>
+<p>H5CPP simplifies persistence for numerical objects by providing the full set of <a href="../#create">create</a>, <a href="../#read">read</a>, <a href="../#write">write</a>, and <a href="../#append">append</a> operations for fixed-size and variable-length N-dimensional arrays. The library is header-only and supports <a href="https://en.wikipedia.org/wiki/C_(programming_language)#Pointers">raw pointers</a>, <a href="http://arma.sourceforge.net/">Armadillo</a>, <a href="http://www.boost.org/doc/libs/1_66_0/libs/numeric/ublas/doc/index.html">uBLAS</a>, <a href="http://eigen.tuxfamily.org/index.php?title=Main_Page#Documentation">Eigen3</a>, <a href="https://sourceforge.net/projects/blitz/">Blitz++</a>, <a href="https://sourceforge.net/projects/itpp/">IT++</a>, <a href="http://dlib.net/linear_algebra.html">dlib</a>, and <a href="https://bitbucket.org/blaze-lib/blaze">Blaze</a>. It operates directly on the underlying memory of supported objects, avoids unnecessary temporary allocations, and relies on copy elision where applicable when returning values.
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="n">h5</span><span class="o">::</span><span class="n">ds_t</span><span class="w"> </span><span class="n">ds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">open</span><span class="p">(</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">)</span><span class="w">       </span><span class="c1">// open dataset</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">arma</span><span class="o">::</span><span class="n">mat</span><span class="w"> </span><span class="n">M</span><span class="p">(</span><span class="n">n_rows</span><span class="p">,</span><span class="n">n_cols</span><span class="p">);</span><span class="w">         </span><span class="c1">// create placeholder, data-space is reserved on the heap</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">h5</span><span class="o">::</span><span class="n">count_t</span><span class="w">  </span><span class="n">count</span><span class="p">{</span><span class="n">n_rows</span><span class="p">,</span><span class="n">n_cols</span><span class="p">};</span><span class="w">  </span><span class="c1">// describe the memory region you are reading into</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">h5</span><span class="o">::</span><span class="n">offset_t</span><span class="w"> </span><span class="n">offset</span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">};</span><span class="w">           </span><span class="c1">// position we reasing data from</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1">// high performance loop with minimal memory operations</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="k">for</span><span class="p">(</span><span class="w"> </span><span class="k">auto</span><span class="w"> </span><span class="n">i</span><span class="o">:</span><span class="w"> </span><span class="n">column_indices</span><span class="w"> </span><span class="p">)</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="n">h5</span><span class="o">::</span><span class="n">read</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">offset</span><span class="p">);</span><span class="w"> </span><span class="c1">// count, offset and other properties may be speciefied in any order</span>
 </span></code></pre></div></p>
-<h1 id="property-lists">Property Lists</h1>
-<p>The functions, macros, and subroutines listed here are used to manipulate property list objects in various ways, including to reset property values. With the use of property lists, HDF5 functions have been implemented and can be used in applications with fewer parameters than would be required without property lists, this mechanism is similar to [POSIX fcntl][700]. Properties are grouped into classes, and each class member may be daisy chained to obtain a property list.</p>
-<p>Here is an example of how to obtain a data creation property list with chunk, fill value, shuffling, nbit, fletcher32 filters and gzip compression set:
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">h5</span><span class="o">::</span><span class="n">dcpl_t</span><span class="w"> </span><span class="n">dcpl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">chunk</span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">}</span><span class="w"> </span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fill_value</span><span class="o">&lt;</span><span class="kt">short</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fletcher32</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">shuffle</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">nbit</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">gzip</span><span class="p">{</span><span class="mi">9</span><span class="p">};</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">auto</span><span class="w"> </span><span class="n">ds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;container.h5&quot;</span><span class="p">,</span><span class="s">&quot;/my/dataset.dat&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">create_path</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">utf8</span><span class="p">,</span><span class="w"> </span><span class="n">dcpl</span><span class="p">,</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">default_dapl</span><span class="p">);</span>
-</span></code></pre></div>
-Properties may be passed in arbitrary order, by reference, or directly by daisy chaining them. The following property list descriptors are available:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>#            create       access       transfer     copy 
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>file    := [ h5::fcpl_t | h5::fapl_t                            ] 
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>dataset := [ h5::dcpl_t | h5::dapl_t | h5::dxpl_t               ]
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>attrib  := [ h5::acpl_t                                         ] 
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>group   := [ h5::gcpl_t | h5::gapl_t                            ]
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>link    := [ h5::lcpl_t | h5::lapl_t                            ]
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>string  := [              h5::scpl_t                            ] 
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>type    := [              h5::tapl_t                            ]
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>object  := [ h5::ocpl_t                           | h5::ocpyl_t ]
+<p>List of objects supported in EBNF:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>T := ([unsigned] ( int8_t | int16_t | int32_t | int64_t )) | ( float | double  )
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>S := T | c/c++ struct | std::string
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>ref := std::vector&lt;S&gt; 
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    | arma::Row&lt;T&gt; | arma::Col&lt;T&gt; | arma::Mat&lt;T&gt; | arma::Cube&lt;T&gt; 
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    | Eigen::Matrix&lt;T,Dynamic,Dynamic&gt; | Eigen::Matrix&lt;T,Dynamic,1&gt; | Eigen::Matrix&lt;T,1,Dynamic&gt;
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    | Eigen::Array&lt;T,Dynamic,Dynamic&gt;  | Eigen::Array&lt;T,Dynamic,1&gt;  | Eigen::Array&lt;T,1,Dynamic&gt;
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    | blaze::DynamicVector&lt;T,rowVector&gt; |  blaze::DynamicVector&lt;T,colVector&gt;
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    | blaze::DynamicVector&lt;T,blaze::rowVector&gt; |  blaze::DynamicVector&lt;T,blaze::colVector&gt;
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    | blaze::DynamicMatrix&lt;T,blaze::rowMajor&gt;  |  blaze::DynamicMatrix&lt;T,blaze::colMajor&gt;
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    | itpp::Mat&lt;T&gt; | itpp::Vec&lt;T&gt;
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    | blitz::Array&lt;T,1&gt; | blitz::Array&lt;T,2&gt; | blitz::Array&lt;T,3&gt;
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    | dlib::Matrix&lt;T&gt;   | dlib::Vector&lt;T,1&gt; 
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    | ublas::matrix&lt;T&gt;  | ublas::vector&lt;T&gt;
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>ptr     := T* 
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>accept  := ref | ptr 
 </span></code></pre></div></p>
-<h4 id="default-properties">Default Properties:</h4>
-<p>Set to a non-default value (different from HDF5 CAPI):</p>
-<ul>
-<li><code>h5::default_lcpl =  h5::utf8 | h5::create_intermediate_group;</code></li>
-</ul>
-<p>Reset to default (same as HDF5 CAPI):</p>
-<ul>
-<li><code>h5::default_acpl</code>, <code>h5::default_dcpl</code>, <code>h5::default_dxpl</code>, <code>h5::default_fapl</code>,  <code>h5::default_fcpl</code></li>
-</ul>
-<h2 id="file-operations">File Operations</h2>
-<h4 id="file-creation-property-list1001">[File Creation Property List][1001]</h4>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// you may pass CAPI property list descriptors whose properties are daisy chained with the &#39;|&#39; operator </span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="k">auto</span><span class="w"> </span><span class="n">fd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="s">&quot;002.h5&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">H5F_ACC_TRUNC</span><span class="p">,</span><span class="w"> </span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="n">h5</span><span class="o">::</span><span class="n">file_space_page_size</span><span class="p">{</span><span class="mi">4096</span><span class="p">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">userblock</span><span class="p">{</span><span class="mi">512</span><span class="p">},</span><span class="w">  </span><span class="c1">// file creation properties</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">    </span><span class="n">h5</span><span class="o">::</span><span class="n">fclose_degree_weak</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fapl_core</span><span class="p">{</span><span class="mi">2048</span><span class="p">,</span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="p">);</span><span class="w">     </span><span class="c1">// file access properties</span>
+<p>The following table summarizes how the supported linear algebra backends expose contiguous storage, report element counts, and map logical dimensions to physical layout. H5CPP uses these conventions to infer shape and perform direct I/O without intermediate copies.</p>
+<table>
+<thead>
+<tr>
+<th>backend</th>
+<th>data accessor</th>
+<th>element count</th>
+<th>vector layout</th>
+<th>matrix layout (row-major)</th>
+<th>matrix layout (column-major)</th>
+<th>cube / tensor layout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Eigen</strong></td>
+<td><code>.data()</code></td>
+<td><code>size()</code></td>
+<td><code>rows():1, cols():0</code></td>
+<td><code>rows():0, cols():1</code></td>
+<td><code>cols():0, rows():1</code></td>
+<td>n/a</td>
+</tr>
+<tr>
+<td><strong>Armadillo</strong></td>
+<td><code>.memptr()</code></td>
+<td><code>n_elem</code></td>
+<td>n/a</td>
+<td>n/a</td>
+<td><code>n_rows:0, n_cols:1</code></td>
+<td><code>n_slices:2, n_rows:0, n_cols:1</code></td>
+</tr>
+<tr>
+<td><strong>Blaze</strong></td>
+<td><code>.data()</code></td>
+<td>n/a</td>
+<td><code>columns():1, rows():0</code></td>
+<td><code>columns():1, rows():0</code></td>
+<td><code>rows():0, columns():1</code></td>
+<td>n/a</td>
+</tr>
+<tr>
+<td><strong>Blitz++</strong></td>
+<td><code>.data()</code></td>
+<td><code>size()</code></td>
+<td><code>cols:1, rows:0</code></td>
+<td><code>cols:1, rows:0</code></td>
+<td>n/a</td>
+<td><code>slices:2, cols:1, rows:0</code></td>
+</tr>
+<tr>
+<td><strong>IT++</strong></td>
+<td><code>._data()</code></td>
+<td><code>length()</code></td>
+<td><code>cols():1, rows():0</code></td>
+<td><code>cols():1, rows():0</code></td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td><strong>uBLAS</strong></td>
+<td><code>.data().begin()</code></td>
+<td>n/a</td>
+<td>n/a</td>
+<td><code>size2():1, size1():0</code></td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+<tr>
+<td><strong>dlib</strong></td>
+<td><code>&amp;ref(0,0)</code></td>
+<td><code>size()</code></td>
+<td>n/a</td>
+<td><code>nc():1, nr():0</code></td>
+<td>n/a</td>
+<td>n/a</td>
+</tr>
+</tbody>
+</table>
+<h4 id="storage-layout-row-and-column-major-ordering"><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 5v13h17V5zm10 2v9h-3V7zM6 7h3v9H6zm13 9h-3V7h3z"/></svg></span> Storage Layout: <a href="https://en.wikipedia.org/wiki/Row-_and_column-major_order">Row- and Column-Major Ordering</a></h4>
+<p>H5CPP preserves direct, zero-copy I/O for supported dense matrix types, while maintaining correct platform-independent storage semantics across the supported linear algebra backends. In practice, this means H5CPP respects the native memory layout of the source object instead of silently rearranging data behind the user’s back. Traditionally, dense linear algebra libraries have favored column-major layout, following the Fortran and BLAS/LAPACK convention. More recent systems often support row-major layout as well, either as a default or as a selectable storage policy. At present, H5CPP does not automatically transpose between row-major and column-major matrix layouts during I/O. For example, a column-major object such as <code>arma::mat</code> is stored according to its native memory order, and no implicit conversion to row-major layout is performed. In principle, such conversion could be implemented either through an explicit transpose step in the transfer path or through metadata that marks the object as logically transposed, similar in spirit to BLAS transpose flags. However, neither approach is directly supported by the HDF5 C API in a standard, interoperable way. For now, explicit user-controlled transpose remains the portable solution, and is supported by most linear algebra libraries.</p>
+<h4 id="sparse-matrices-and-vectors"><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 2h2v18h18v2H2zm7 8a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3m4-8a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3m5 10a3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 3-3"/></svg></span> Sparse Matrices and Vectors</h4>
+<p>For sparse objects, H5CPP follows established storage conventions from numerical computing wherever practical. The supported layouts are aligned with the familiar Netlib taxonomy:</p>
+<table>
+<thead>
+<tr>
+<th>Description</th>
+<th><code>h5::dapl_t</code> selector</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="http://www.netlib.org/utk/people/JackDongarra/etemplates/node373.html">Compressed Sparse Row</a></td>
+<td><code>h5::sparse::csr</code></td>
+</tr>
+<tr>
+<td><a href="http://www.netlib.org/utk/people/JackDongarra/etemplates/node374.html">Compressed Sparse Column</a></td>
+<td><code>h5::sparse::csc</code></td>
+</tr>
+<tr>
+<td><a href="http://www.netlib.org/utk/people/JackDongarra/etemplates/node375.html">Block Compressed Row Storage</a></td>
+<td><code>h5::sparse::bcrs</code></td>
+</tr>
+<tr>
+<td><a href="http://www.netlib.org/utk/people/JackDongarra/etemplates/node376.html">Compressed Diagonal Storage</a></td>
+<td><code>h5::sparse::cds</code></td>
+</tr>
+<tr>
+<td><a href="http://www.netlib.org/utk/people/JackDongarra/etemplates/node377.html">Jagged Diagonal Storage</a></td>
+<td><code>h5::sparse::jds</code></td>
+</tr>
+<tr>
+<td><a href="http://www.netlib.org/utk/people/JackDongarra/etemplates/node378.html">Skyline Storage</a></td>
+<td><code>h5::sparse::ss</code></td>
+</tr>
+</tbody>
+</table>
+<p>At present, H5CPP provides support for Compressed Sparse Row (<a href="https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_row_(CSR,_CRS_or_Yale_format)">CSR</a>) and Compressed Sparse Column (<a href="https://en.wikipedia.org/wiki/Sparse_matrix#Compressed_sparse_column_(CSC_or_CCS)">CSC</a>). A sparse object may be represented physically either as a collection of datasets grouped under an <code>h5::gr_t</code> node—for example, with separate datasets for indices, offsets, and values—or as a single compound datatype used as a structured placeholder for the sparse representation. More specialized formats, such as block-diagonal, tridiagonal, or triangular storage, are not currently implemented. Whenever possible, H5CPP follows BLAS/LAPACK-style storage conventions so that sparse datasets remain familiar to users coming from established numerical libraries.</p>
+<h3 id="the-stl-and-classes-implementing-the-interface"><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m10.5 15.97.41 2.44c-.26.14-.68.27-1.24.39-.57.13-1.24.2-2.01.2-2.21-.04-3.87-.7-4.98-1.96Q1 15.135 1 12.21c.05-2.31.72-4.08 2-5.32C4.32 5.64 5.96 5 7.94 5c.75 0 1.4.07 1.94.19s.94.25 1.2.4l-.58 2.49-1.06-.34c-.4-.1-.86-.15-1.39-.15-1.16-.01-2.12.36-2.87 1.1-.76.73-1.15 1.85-1.18 3.34 0 1.36.37 2.42 1.08 3.2.71.77 1.71 1.17 2.99 1.18l1.33-.12c.43-.08.79-.19 1.1-.32M11 11h2V9h2v2h2v2h-2v2h-2v-2h-2zm7 0h2V9h2v2h2v2h-2v2h-2v-2h-2z"/></svg></span> The STL and classes implementing the interface</h3>
+<p>While it is possible to detect specific STL container instead a broader approach is considered: any class that provides STL like interfaces
+are identified with the detection idoim outlined in paper <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4436.pdf">WG21 N4421</a>. </p>
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">T</span><span class="p">,</span><span class="w"> </span><span class="k">class</span><span class="p">...</span><span class="w"> </span><span class="n">Args</span><span class="o">&gt;</span><span class="w"> </span><span class="k">using</span><span class="w"> </span><span class="n">is_container</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">disjunction</span><span class="o">&lt;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">        </span><span class="n">is_detected</span><span class="o">&lt;</span><span class="n">has_container_t</span><span class="p">,</span><span class="w"> </span><span class="n">T</span><span class="o">&gt;</span><span class="p">,</span><span class="w">     </span><span class="c1">// is an adaptor?</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">conjunction</span><span class="o">&lt;</span><span class="w">                        </span><span class="c1">// or have these properties:</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">        </span><span class="n">is_detected</span><span class="o">&lt;</span><span class="n">has_difference_t</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">        </span><span class="n">is_detected</span><span class="o">&lt;</span><span class="n">has_begin_t</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">is_detected</span><span class="o">&lt;</span><span class="n">has_const_begin_t</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span><span class="p">,</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">        </span><span class="n">is_detected</span><span class="o">&lt;</span><span class="n">has_end_t</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">is_detected</span><span class="o">&lt;</span><span class="n">has_const_end_t</span><span class="p">,</span><span class="n">T</span><span class="o">&gt;&gt;</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="o">&gt;</span><span class="p">;</span>
 </span></code></pre></div>
+<p>From a storage perspective, there are three notable categories:</p>
 <ul>
-<li>[<code>h5::userblock{hsize_t}</code>][1001] Sets the user block size of a file creation property list</li>
-<li>[<code>h5::sizes{size_t,size_t}</code>][1002] Sets the byte size of the offsets and lengths used to address objects in an HDF5 file.</li>
-<li>[<code>h5::sym_k{unsigned,unsigned}</code>][1003] Sets the size of parameters used to control the symbol table nodes.</li>
-<li>[<code>h5::istore_k{unsigned}</code>][1004] Sets the size of the parameter used to control the B-trees for indexing chunked datasets.</li>
-<li>[<code>h5::file_space_page_size{hsize_t}</code>][1005] Sets the file space page size for a file creation property list.</li>
-<li>[<code>h5::file_space_page_strategy{H5F_fspace_strategy_t strategy, hbool_t persist, hsize_t threshold}</code>][1010] Sets the file space handling strategy and persisting free-space values for a file creation property list. <br/></li>
-<li>[<code>h5::shared_mesg_nindexes{unsigned}</code>][1007] Sets number of shared object header message indexes.</li>
-<li>[<code>h5::shared_mesg_index{unsigned,unsigned,unsigned}</code>][1008] Configures the specified shared object header message index.</li>
-<li>[<code>h5::shared_mesg_phase_change{unsigned,unsigned}</code>][1009] Sets shared object header message storage phase change thresholds.</li>
+<li>
+<p><code>std::vector&lt;T&gt;</code>, <code>std::array&lt;T,N&gt;</code> have <code>.data()</code> accessors and H5CPP can directly load/save data from the objects. For efficient partial data transfer the data transfer size must match the element size of the objects.</p>
+</li>
+<li>
+<p><code>std::list&lt;T&gt;</code>, <code>std::forward_list&lt;T&gt;</code>, <code>std::deque&lt;T&gt;</code>, <code>std::set&lt;T&gt;</code>, <code>std::multiset&lt;T&gt;</code>,<code>std::unordered_set&lt;T&gt;</code>,<code>std::map&lt;K,V&gt;</code>,<code>std::multimap&lt;K,V&gt;</code>, <code>std::unordered_multimap&lt;K,V&gt;</code>
+don't have direct access to the underlying memory store and the provided iterators are used for data transfer between memory and disk. The IO transaction is broken into chunk-sized blocks and loaded into STL objects. This method has a maximum memory requirement of <code>element_size * ( container_size + chunk_size )</code></p>
+</li>
+<li>
+<p><code>std::stack</code>,<code>std::queue</code>,<code>std::priority_queue</code> are adaptors; the underlying data-structure determines how data transfers take place.</p>
+</li>
 </ul>
-<h4 id="file-access-property-list1020">[File Access Property List][1020]</h4>
-<p><strong>Example:</strong>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">h5</span><span class="o">::</span><span class="n">fapl_t</span><span class="w"> </span><span class="n">fapl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fclose_degree_weak</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fapl_core</span><span class="p">{</span><span class="mi">2048</span><span class="p">,</span><span class="mi">1</span><span class="p">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">core_write_tracking</span><span class="p">{</span><span class="nb">false</span><span class="p">,</span><span class="mi">1</span><span class="p">}</span><span class="w"> </span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">      </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fapl_family</span><span class="p">{</span><span class="n">H5F_FAMILY_DEFAULT</span><span class="p">,</span><span class="mi">0</span><span class="p">};</span>
+<p>In addition to the following mapping is considered:</p>
+<ul>
+<li><code>vector | array</code>  of <code>vector | array</code> of ... -&gt; <code>HDF5 ragged/fractal array</code></li>
+</ul>
+<h4 id="stdstrings"><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m10 7-2 4h3v6H5v-6l2-4zm8 0-2 4h3v6h-6v-6l2-4z"/></svg></span> std::strings</h4>
+<p>HDF5 supports variable- and fixed-length strings. The former is of interest, as the most common way for storing strings in a file: consecutive characters with a separator. The current storage layout is a heap data structure making it less suitable for massive Terabyte-scale storage. In addition, the <code>std::string</code> s have to be copied during <a href="../#read">read</a> operations. Both filtering, such as <code>h5::gzip{0-9}</code>, and encoding, such as <code>h5::utf8</code>, are supported.
+<img src="../assets/c-strings-inmemory.png" alt="string"
+   class="float-right w-2/5 border-2 border-solid border-red rounded-lg shadow-lg ml-4 transition-transform duration-500 hover:scale-110 bg-transparent"/></p>
+<h4 id="c-strings">C Strings</h4>
+<p>are actually one-dimensional array of characters terminated by a null character <code>\0</code>. Thus a null-terminated string contains the characters that comprise the string followed by a null. Am array of <code>char*</code> pointers is to describe a collection of c strings, the memory locations are not required to be
+contiguous. The beginning of the array is a <code>char**</code> type.</p>
+<p><code>h5::write&lt;char**&gt;(fd, char** ptr, h5::current_dims{n_elems}, ...);</code></p>
+<p><strong>not supported</strong>: <code>wchar_t _wchar char16_t _wchar16 char32_t _wchar32</code></p>
+<h3 id="raw-pointers">Raw Pointers</h3>
+<p>Currently only memory blocks are supported in consecutive/adjacent location of elementary or POD types. This method comes in handy when an object type is not supported. You need to find a way to grab a pointer to its internal datastore and the size, and then pass this as an argument. For <a href="../#read">read</a> operations, make sure there is enough memory reserved; for <a href="../#write">write</a> operations, you must specify the data transfer size with <code>h5::count</code>.</p>
+<p><strong>Example:</strong> Let's load data from an HDF5 dataset to a memory location
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="n">my_object</span><span class="w"> </span><span class="nf">obj</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">h5</span><span class="o">::</span><span class="n">read</span><span class="p">(</span><span class="s">&quot;file.h5&quot;</span><span class="p">,</span><span class="s">&quot;dataset.dat&quot;</span><span class="p">,</span><span class="n">obj</span><span class="p">.</span><span class="n">ptr</span><span class="p">(),</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">count</span><span class="p">{</span><span class="mi">10</span><span class="p">,</span><span class="mi">10</span><span class="p">},</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">offset</span><span class="p">{</span><span class="mi">100</span><span class="p">,</span><span class="mi">0</span><span class="p">});</span>
+</span></code></pre></div></p>
+<h3 id="compound-datatypes">Compound Datatypes</h3>
+<h4 id="pod-structrecords">POD Struct/Records</h4>
+<p>Arbitrarily deep and complex Plain Old Structured (POD) are supported either by the <a href="../compiler/">h5cpp compiler</a> or by manually writing the necessary shim code. The following example was generated with the <code>h5cpp</code> compiler. Note that in the first step you have to specialize <code>template&lt;class Type&gt; hid_t inline register_struct&lt;Type&gt;();</code> to the type you want to use it with and return an HDF5 CAPI <code>hid_t</code> type identifier. This <code>hid_t</code> object references a memory location inside the HDF5 system, and will be automatically released with <code>H5Tclose</code> when used with H5CPP templates. The final step is to register this new type with H5CPP type system : <code>H5CPP_REGISTER_STRUCT(Type);</code>.</p>
+<p><div class="language-cpp highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">namespace</span><span class="w"> </span><span class="nn">sn</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="k">struct</span><span class="w"> </span><span class="nc">PODstruct</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">        </span><span class="p">...</span><span class="w"> </span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">        </span><span class="kt">bool</span><span class="w"> </span><span class="n">_bool</span><span class="p">;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="p">};</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="p">}</span>
+</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="k">namespace</span><span class="w"> </span><span class="nn">h5</span><span class="p">{</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="k">template</span><span class="o">&lt;&gt;</span><span class="w"> </span><span class="n">hid_t</span><span class="w"> </span><span class="kr">inline</span><span class="w"> </span><span class="n">register_struct</span><span class="o">&lt;</span><span class="n">sn</span><span class="o">::</span><span class="n">PODstruct</span><span class="o">&gt;</span><span class="p">(){</span>
+</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">        </span><span class="n">hid_t</span><span class="w"> </span><span class="n">ct_00</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">H5Tcreate</span><span class="p">(</span><span class="n">H5T_COMPOUND</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="w"> </span><span class="p">(</span><span class="n">sn</span><span class="o">::</span><span class="n">PODstruct</span><span class="p">));</span>
+</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">        </span><span class="p">...</span>
+</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">        </span><span class="n">H5Tinsert</span><span class="p">(</span><span class="n">ct_00</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_bool&quot;</span><span class="p">,</span><span class="w">   </span><span class="n">HOFFSET</span><span class="p">(</span><span class="n">sn</span><span class="o">::</span><span class="n">PODstruct</span><span class="p">,</span><span class="n">_bool</span><span class="p">),</span><span class="n">H5T_NATIVE_HBOOL</span><span class="p">);</span>
+</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">ct_00</span><span class="p">;</span>
+</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">    </span><span class="p">};</span>
+</span><span id="__span-4-14"><a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="p">}</span>
+</span><span id="__span-4-15"><a id="__codelineno-4-15" name="__codelineno-4-15" href="#__codelineno-4-15"></a><span class="n">H5CPP_REGISTER_STRUCT</span><span class="p">(</span><span class="n">sn</span><span class="o">::</span><span class="n">PODstruct</span><span class="p">);</span>
 </span></code></pre></div>
-* [<code>h5::driver{hid_t new_driver_id, const void *new_driver_info}</code>][1055] Sets a file driver.<br/>
-* [<code>h5::fclose_degree{H5F_close_degree_t}</code>][1022] Sets the file close degree.<br/>
-  <strong>Flags:</strong> <code>h5::fclose_degree_weak</code>, <code>h5::fclose_degree_semi</code>, <code>h5::fclose_degree_strong</code>, <code>h5::fclose_degree_default</code>
-* [<code>h5::fapl_core{size_t increment, hbool_t backing_store}</code>][1023] Modifies the file access property list to use the H5FD_CORE driver.
-* [<code>h5::core_write_tracking{hbool_t is_enabled, size_t page_size}</code>][1024] Sets write tracking information for core driver, H5FD_CORE. 
-* [<code>h5::fapl_direct{size_t alignment, size_t block_size, size_t cbuf_size}</code>][1025] Sets up use of the direct I/O driver.
-* [<code>h5::fapl_family{hsize_t memb_size, hid_t memb_fapl_id}</code>][1026] Sets the file access property list to use the family driver.
-* [<code>h5::family_offset{hsize_t offset}</code>][1027] Sets offset property for low-level access to a file in a family of files.
-* [<code>h5::fapl_log{const char *logfile, unsigned long long flags, size_t buf_size}</code>][1028] Sets up the logging virtual file driver (H5FD_LOG) for use.
-* [<code>h5::fapl_mpiio{MPI_Comm comm, MPI_Info info}</code>][1029] Stores MPI IO communicator information to the file access property list.
-* [<code>h5::multi{const H5FD_mem_t *memb_map, const hid_t *memb_fapl, const char * const *memb_name, const haddr_t *memb_addr, hbool_t relax}</code>][1030] Sets up use of the multi-file driver.
-* [<code>h5::multi_type{H5FD_mem_t}</code>][1031] Specifies type of data to be accessed via the MULTI driver, enabling more direct access. <br>
-<strong>Flags:</strong> <code>h5::multi_type_super</code>, <code>h5::multi_type_btree</code>, <code>h5::multi_type_draw</code>, <code>h5::multi_type_gheap</code>, <code>h5::multi_type_lheap</code>, <code>h5::multi_type_ohdr</code>
-* [<code>h5::fapl_split{const char *meta_ext, hid_t meta_plist_id, const char *raw_ext, hid_t raw_plist_id}</code>][1032] Emulates the old split file driver.
-* [<code>h5::sec2</code>][1033] (flag) Sets the sec2 driver.
-* [<code>h5::stdio</code>][1034] (flag) Sets the standard I/O driver.
-* [<code>h5::windows</code>][1035] (flag) Sets the Windows I/O driver.
-* [<code>h5::file_image{void*,size_t}</code>][1036] Sets an initial file image in a memory buffer.
-* [<code>h5::file_image_callback{H5_file_image_callbacks_t *callbacks_ptr}</code>][1037] Sets the callbacks for working with file images.
-* [<code>h5::meta_block_size{hsize_t}</code>][1038] Sets the minimum metadata block size.
-* [<code>h5::page_buffer_size{size_t,unsigned,unsigned}</code>][1039] Sets the maximum size for the page buffer and the minimum percentage for metadata and raw data pages.
-* [<code>h5::sieve_buf_size{size_t}</code>][1040] Sets the maximum size of the data sieve buffer.
-* [<code>h5::alignment{hsize_t, hsize_t}</code>][1041] Sets alignment properties of a file access property list.
-* [<code>h5::cache{int,size_t,size_t,double}</code>][1042] Sets the raw data chunk cache parameters.
-* [<code>h5::elink_file_cache_size{unsigned}</code>][1043] Sets the number of files that can be held open in an external link open file cache.
-* [<code>h5::evict_on_close{hbool_t}</code>][1044] Controls the library's behavior of evicting metadata associated with a closed object
-* [<code>h5::metadata_read_attempts{unsigned}</code>][1045] Sets the number of read attempts in a file access property list.
-* [<code>h5::mdc_config{H5AC_cache_config_t*}</code>][1046] Set the initial metadata cache configuration in the indicated File Access Property List to the supplied value.
-* [<code>h5::mdc_image_config{H5AC_cache_image_config_t * config_ptr}</code>][1047] Sets the metadata cache image option for a file access property list.
-* [<code>h5::mdc_log_options{const char*,hbool_t}</code>][1048] Sets metadata cache logging options.
-* [<code>h5::all_coll_metadata_ops{hbool_t}</code>][1049] Sets metadata I/O mode for read operations to collective or independent (default).
-* [<code>h5::coll_metadata_write{hbool_t}</code>][1050] Sets metadata write mode to collective or independent (default).
-* [<code>h5::gc_references{unsigned}</code>][1050] H5Pset_gc_references sets the flag for garbage collecting references for the file.
-* [<code>h5::small_data_block_size{hsize_t}</code>][1052] Sets the size of a contiguous block reserved for small data.
-* [<code>h5::libver_bounds {H5F_libver_t,H5F_libver_t}</code>][1053] Sets bounds on library versions, and indirectly format versions, to be used when creating objects.
-* [<code>h5::object_flush_cb{H5F_flush_cb_t,void*}</code>][1054] Sets a callback function to invoke when an object flush occurs in the file.
-* <strong><code>h5::fapl_rest_vol</code></strong> or to request KITA/RestVOL services both flags are interchangeable you only need to specify one of them follow [instructions:][701] to setup RestVOL, once the required modules are included
-* <strong><code>h5::kita</code></strong> same as above</p>
-<h2 id="group-operations">Group Operations</h2>
-<h4 id="group-creation-property-list1100">[Group Creation Property List][1100]</h4>
+The internal typesystem for POD/Record types supports:</p>
 <ul>
-<li>[<code>h5::local_heap_size_hint{size_t}</code>][1101] Specifies the anticipated maximum size of a local heap.</li>
-<li>[<code>h5::link_creation_order{unsigned}</code>][1102] Sets creation order tracking and indexing for links in a group.</li>
-<li>[<code>h5::est_link_info{unsigned, unsigned}</code>][1103] Sets estimated number of links and length of link names in a group.</li>
-<li>[<code>h5::link_phase_change{unsigned, unsigned}</code>][1104] Sets the parameters for conversion between compact and dense groups. </li>
+<li><code>std::is_integral</code> and <code>std::is_floating_point</code></li>
+<li><code>std::is_array</code> plain old array type, but not <code>std::array</code> or <code>std::vector</code> </li>
+<li>arrays of the the above, with arbitrary nesting</li>
+<li>POD structs of the above with arbitrary nesting</li>
 </ul>
-<h4 id="group-access-property-list1200">[Group Access Property List][1200]</h4>
-<ul>
-<li>[<code>local_heap_size_hint{hbool_t is_collective}</code>][1201] Sets metadata I/O mode for read operations to collective or independent (default).</li>
-</ul>
-<h2 id="link-operations">Link Operations</h2>
-<h4 id="link-creation-property-list1300">[Link Creation Property List][1300]</h4>
-<ul>
-<li>[<code>h5::char_encoding{H5T_cset_t}</code>][1301] Sets the character encoding used to encode link and attribute names. <br/>
-<strong>Flags:</strong> <code>h5::utf8</code>, <code>h5::ascii</code></li>
-<li>[<code>h5::create_intermediate_group{unsigned}</code>][1302] Specifies in property list whether to create missing intermediate groups. <br/>
-<strong>Flags</strong> <code>h5::create_path</code>, <code>h5::dont_create_path</code></li>
-</ul>
-<h4 id="link-access-property-list1400">[Link Access Property List][1400]</h4>
-<ul>
-<li>[<code>h5::nlinks{size_t}</code>][1401] Sets maximum number of soft or user-defined link traversals.</li>
-<li>[<code>h5::elink_cb{H5L_elink_traverse_t, void*}</code>][1402] Sets metadata I/O mode for read operations to collective or independent (default).</li>
-<li>[<code>h5::elink_fapl{hid_t}</code>][1403] Sets a file access property list for use in accessing a file pointed to by an external link.</li>
-<li>[<code>h5::elink_acc_flags{unsigned}</code>][1403] Sets the external link traversal file access flag in a link access property list.<br/>
-  <strong>Flags:</strong>    <code>h5::acc_rdwr</code>, <code>h5::acc_rdonly</code>, <code>h5::acc_default</code></li>
-</ul>
-<h2 id="dataset-operations">Dataset Operations</h2>
-<h4 id="dataset-creation-property-list1500">[Dataset Creation Property List][1500]</h4>
-<p>Filtering properties require <code>h5::chunk{..}</code> set to sensible values. Not having set <code>h5::chunk{..}</code> set is equal with requesting <code>h5::layout_contigous</code> a dataset layout without chunks, filtering and sub-setting capabilities. This layout is useful for single shot read/write operations, and is the prefered method to save small linear algebra objects.
-<strong>Example:</strong>
-<div class="language-cpp highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">h5</span><span class="o">::</span><span class="n">dcpl_t</span><span class="w"> </span><span class="n">dcpl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">chunk</span><span class="p">{</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">5</span><span class="p">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">deflate</span><span class="p">{</span><span class="mi">4</span><span class="p">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">compact</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">dont_filter_partial_chunks</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">    </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fill_value</span><span class="o">&lt;</span><span class="n">my_struct</span><span class="o">&gt;</span><span class="p">{</span><span class="n">STR</span><span class="p">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fill_time_never</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">alloc_time_early</span><span class="w"> </span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">    </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fletcher32</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">shuffle</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">nbit</span><span class="p">;</span>
+<h4 id="c-classes">C++ Classes</h4>
+<p>Work in progress. Requires modification to compiler as well as coordinated effort how to store complex objects such that other platforms capable of reading them.</p>
+<h1 id="high-throughput-pipeline">High Throughput Pipeline</h1>
+<p>HDF5 comes with a complex mechanism for type conversion, filtering, scatter/gather-funtions,etc. But what if you need to engineer a system to bare metal without frills? The <code>h5::high_throughput</code> data access property replaces the standard data processing mechanism with a BLAS level 3 blocking, a CPU cache-aware filter chain and delegates all calls to the <code>H5Dwrite_chunk</code> and <code>H5Dread_chunk</code> optimized calls.</p>
+<p><strong>Example:</strong> Let's save an <code>arma::mat M(16,32)</code> into an HDF5 data set using direct chunk write! First we pass the <code>h5::high_throughput</code> data access property when opening/creating data set and make certain to choose chunked layout 
+by setting <code>h5::chunk{...}</code>. Optional standard filters and fill values may be set, however, the data set element type <strong>must match</strong>
+the element type of <code>M</code>. No type conversion will be taking place!
+<div class="language-cpp highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">h5</span><span class="o">::</span><span class="n">ds_t</span><span class="w"> </span><span class="n">ds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">create</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="s">&quot;bare metal IO&quot;</span><span class="p">,</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">    </span><span class="n">h5</span><span class="o">::</span><span class="n">current_dims</span><span class="p">{</span><span class="mi">43</span><span class="p">,</span><span class="mi">57</span><span class="p">},</span><span class="w">     </span><span class="c1">// doesn&#39;t have to be multiple of chunks</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="n">h5</span><span class="o">::</span><span class="n">high_throughput</span><span class="p">,</span><span class="w">         </span><span class="c1">// request IO pipeline</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">    </span><span class="n">h5</span><span class="o">::</span><span class="n">chunk</span><span class="p">{</span><span class="mi">4</span><span class="p">,</span><span class="mi">8</span><span class="p">}</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">fill_value</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span><span class="p">{</span><span class="mi">3</span><span class="p">}</span><span class="w"> </span><span class="o">|</span><span class="w">  </span><span class="n">h5</span><span class="o">::</span><span class="n">gzip</span><span class="p">{</span><span class="mi">9</span><span class="p">}</span><span class="w"> </span><span class="p">);</span>
 </span></code></pre></div>
-* [<code>h5::layout{H5D_layout_t layout}</code>][1501] Sets the type of storage used to store the raw data for a dataset. <br/>
-<strong>Flags:</strong> <code>h5::compact</code>, <code>h5::contigous</code>, <code>h5::chunked</code>, <code>h5::virtual</code>
-* [<code>h5::chunk{...}</code>][1502] control chunk size, takes in initializer list with rank matching the dataset dimensions, sets <code>h5::chunked</code> layout
-* [<code>h5::chunk_opts{unsigned}</code>][1503] Sets the edge chunk option in a dataset creation property list.<br/>
-<strong>Flags:</strong> <code>h5::dont_filter_partial_chunks</code>
-* [<code>h5::deflate{0-9}</code>][1504] | <code>h5::gzip{0-9}</code> set deflate compression ratio
-* [<code>h5::fill_value&lt;T&gt;{T* ptr}</code>][1505] sets fill value
-* [<code>h5::fill_time{H5D_fill_time_t fill_time}</code>][1506] Sets the time when fill values are written to a dataset.<br/>
-<strong>Flags:</strong> <code>h5::fill_time_ifset</code>, <code>h5::fill_time_alloc</code>, <code>h5::fill_time_never</code>
-* [<code>h5::alloc_time{H5D_alloc_time_t alloc_time}</code>][1507] Sets the timing for storage space allocation.<br/>
-<strong>Flags:</strong> <code>h5::alloc_time_default</code>, <code>h5::alloc_time_early</code>, <code>h5::alloc_time_incr</code>, <code>h5::alloc_time_late</code>
-* [<code>h5::fletcher32</code>][1509] Sets up use of the Fletcher32 checksum filter.
-* [<code>h5::nbit</code>][1510] Sets up the use of the N-Bit filter.
-* [<code>h5::shuffle</code>][1512] Sets up use of the shuffle filter.</p>
-<h4 id="dataset-access-property-list1600">[Dataset Access Property List][1600]</h4>
-<p>In addition to CAPI properties the follwoing properties are added to provide finer control dataset layouts, and filter chains.</p>
+You <strong>must align all IO calls to chunk boundaries:</strong> <code>h5::offset % h5::chunk == 0</code>. However, the dataset may have non-aligned size: <code>h5::count % h5::chunk != 0 -&gt; OK</code>. Optionally, define the amount of data transferred with <code>h5::count{..}</code>. When <code>h5::count{...}</code> is not specified, the dimensions will be computed from the object. <strong>Notice</strong> <code>h5::offset{4,16}</code> is set to a chunk boundary.</p>
+<p>The bahviour of saving data near edges matches the behaviour of standard CAPI IO calls. The chunk within an edge boundary having the correct content, and the outside being undefined.
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>h5::write( ds,  M, h5::count{4,8}, h5::offset{4,16} );
+</span></code></pre></div>
+<strong>Pros:</strong></p>
 <ul>
-<li>
-<p>Mutually exclusive Sparse Matrix Properties to alternate between formats</p>
-</li>
-<li>
-<p><strong><code>h5::csc</code></strong> compressed sparse column format</p>
-</li>
-<li><strong><code>h5::csr</code></strong> compressed sparse row format</li>
-<li>
-<p><strong><code>h5::coo</code></strong> coordinates list</p>
-</li>
-<li>
-<p><strong><code>h5::multi{["field 0", .., "field n"]}</code></strong> objects are persisted in multiple datasets with optional field name definition. When specified the system will break up compound classes into basic components and writes each of them into a directory/folder specified with <code>dataset_name</code> argument.</p>
-</li>
-<li>
-<p><strong><code>h5::high_throughput</code></strong> Sets high throughput H5CPP custom filter chain. HDF5 library comes with a complex, feature rich environment to index data-sets by strides, blocks, or even by individual coordinates within chunk boundaries - less fortunate the performance impact on throughput.  Setting this flag will replace the built in filter chain with a simpler one (without complex indexing features), then delegates IO calls to the recently introduced [HDF5 Optimized API][400] calls.<br/></p>
-</li>
+<li>Fast IO with direct chunk write/read</li>
+<li>CPU cache aware filter chain</li>
+<li>Option for threaded + pipelined filter chain</li>
+<li>minimal code length, fast implementation</li>
 </ul>
-<p>The implementation is based on BLAS level 3 blocking algorithm, supports data access only at chunk boundaries, edges are handled as expected. For maximum throughput place edges at chunk boundaries.
-  <strong>Note:</strong> This feature and indexing within a chunk boundary such as <code>h5::stride</code> is mutually exclusive.</p>
+<p><strong>Cons:</strong></p>
 <ul>
-<li>[<code>h5::chunk_cache{size_t rdcc_nslots, size_t rdcc_nbytes, double rdcc_w0}</code>][1601] Sets the raw data chunk cache parameters.</li>
-<li>[<code>all_coll_metadata_ops{hbool_t is_collective}</code>][1602] Sets metadata I/O mode for read operations to collective or independent (default).</li>
-<li>[<code>h5::efile_prefix{const char*}</code>][1603] Sets the external dataset storage file prefix in the dataset access property list.</li>
-<li>[<em><code>h5::append_flush</code></em>][not-implemented] N/A, H5CPP comes with custom high performance packet table implementation</li>
-<li>[<code>h5::virtual_view{H5D_vds_view_t}</code>][1604] Sets the view of the virtual dataset (VDS) to include or exclude missing mapped elements.</li>
-<li>[<code>h5::virtual_printf_gap{hsize_t}</code>][1605] Sets the maximum number of missing source files and/or datasets with the printf-style names when getting the extent of an unlimited virtual dataset.</li>
+<li><code>h5::offset{..}</code> must be aligned with chunk boundaries</li>
+<li><code>h5::stride</code>, <code>h5::block</code> and other sub setting methods such as scatter - gather will not work</li>
+<li>disk and memory type must match - no type conversion</li>
 </ul>
-<h4 id="dataset-transfer-property-list1700">[Dataset Transfer Property List][1700]</h4>
-<ul>
-<li>[<code>h5::buffer{size_t, void*, void*}</code>][1701] Sets type conversion and background buffers.</li>
-<li>[<code>h5::edc_check{H5Z_EDC_t}</code>][1702] Sets whether to enable error-detection when reading a dataset.</li>
-<li>[<code>h5::filter_callback{H5Z_filter_func_t func, void *op_data}</code>][1703] Sets user-defined filter callback function.</li>
-<li>[<code>h5::data_transform{const char *expression}</code>][1704] Sets a data transform expression.</li>
-<li>[<code>h5::type_conv_cb{H5T_conv_except_func_t func, void *op_data}</code>][1705] Sets user-defined datatype conversion callback function.</li>
-<li>[<code>h5::hyper_vector_size{size_t vector_size}</code>][1706] Sets number of I/O vectors to be read/written in hyperslab I/O.</li>
-<li>[<code>h5::btree_ratios{double left, double middle, double right}</code>][1707] Sets B-tree split ratios for a dataset transfer property list.</li>
-<li>[<code>h5::vlen_mem_manager{H5MM_allocate_t alloc, void *alloc_info, H5MM_free_t free, void *free_info}</code>][1708]</li>
-<li>[<code>h5::dxpl_mpiio{H5FD_mpio_xfer_t xfer_mode}</code>][1709] Sets data transfer mode <br/>
-<strong>Flags:</strong> <code>h5::collective</code>, <code>h5::independent</code></li>
-<li>[<code>h5::dxpl_mpiio_chunk_opt{H5FD_mpio_chunk_opt_t opt_mode}</code>][1710] Sets a flag specifying linked-chunk I/O or multi-chunk I/O.<br/>
-<strong>Flags:</strong> <code>h5::chunk_one_io</code>, <code>h5::chunk_multi_io</code></li>
-<li>[<code>h5::dxpl_mpiio_chunk_opt_num{unsigned num_chunk_per_proc}</code>][1711] Sets a numeric threshold for linked-chunk I/O.</li>
-<li>[<code>h5::dxpl_mpiio_chunk_opt_ratio{unsigned percent_proc_per_chunk}</code>][1712] Sets a ratio threshold for collective I/O.</li>
-<li>[<code>h5::dxpl_mpiio_collective_opt{H5FD_mpio_collective_opt_t opt_mode}</code>][1713] Sets a flag governing the use of independent versus collective I/O.<br/>
-<strong>Flags:</strong> <code>h5::collective_io</code>, <code>h5::individual_io</code></li>
-</ul>
-<h2 id="misc-operations">Misc Operations</h2>
-<h4 id="object-creation-property-list1800">[Object Creation Property List][1800]</h4>
-<ul>
-<li>[<code>h5::ocreate_intermediate_group{unsigned}</code>][1801] Sets tracking and indexing of attribute creation order.</li>
-<li>[<code>h5::obj_track_times{hbool_t}</code>][1802] Sets the recording of times associated with an object.</li>
-<li>[<code>h5::attr_phase_change{unsigned, unsigned}</code>][1803] Sets attribute storage phase change thresholds.</li>
-<li>[<code>h5::attr_creation_order{unsigned}</code>][1804] Sets tracking and indexing of attribute creation order. <br/>
-<strong>Flags:</strong> <code>h5::crt_order_tracked</code>, <code>h5::crt_order_indexed</code></li>
-</ul>
-<h4 id="object-copy-property-list1900">[Object Copy Property List][1900]</h4>
-<ul>
-<li>[<code>h5::copy_object{unsigned}</code>][1901] Sets properties to be used when an object is copied. <br/>
-<strong>Flags:</strong> <code>h5::shallow_hierarchy</code>, <code>h5::expand_soft_link</code>, <code>h5::expand_ext_link</code>, <code>h5::expand_reference</code>, <code>h5::copy_without_attr</code>,
-<code>h5::merge_commited_dtype</code></li>
-</ul>
-<h2 id="mpi-parallel-operations">MPI / Parallel Operations</h2>
-<ul>
-<li>[<code>h5::fapl_mpiio{MPI_Comm comm, MPI_Info info}</code>][1029] Stores MPI IO communicator information to the file access property list.</li>
-<li>[<code>h5::all_coll_metadata_ops{hbool_t}</code>][1049] Sets metadata I/O mode for read operations to collective or independent (default).</li>
-<li>[<code>h5::coll_metadata_write{hbool_t}</code>][1050] Sets metadata write mode to collective or independent (default).</li>
-<li>[<code>h5::gc_references{unsigned}</code>][1051] H5Pset_gc_references sets the flag for garbage collecting references for the file.</li>
-<li>[<code>h5::small_data_block_size{hsize_t}</code>][1052] Sets the size of a contiguous block reserved for small data.</li>
-<li>[<code>h5::object_flush_cb{H5F_flush_cb_t,void*}</code>][1054] Sets a callback function to invoke when an object flush occurs in the file.</li>
-<li>[<code>h5::fapl_coll_metadata_ops{hbool_t}</code>] </li>
-<li>[<code>h5::gapl_coll_metadata_ops{hbool_t}</code>] </li>
-<li>[<code>h5::dapl_coll_metadata_ops{hbool_t}</code>] </li>
-<li>[<code>h5::tapl_coll_metadata_ops{hbool_t}</code>] </li>
-<li>[<code>h5::lapl_coll_metadata_ops{hbool_t}</code>] </li>
-<li>[<code>h5::aapl_coll_metadata_ops{hbool_t}</code>] </li>
-<li>[<code>h5::dxpl_mpiio{H5FD_mpio_xfer_t xfer_mode}</code>][1709] Sets data transfer mode <br/>
-<strong>Flags:</strong> <code>h5::collective</code>, <code>h5::independent</code></li>
-<li>[<code>h5::dxpl_mpiio_chunk_opt{H5FD_mpio_chunk_opt_t opt_mode}</code>][1710] Sets a flag specifying linked-chunk I/O or multi-chunk I/O.<br/>
-<strong>Flags:</strong> <code>h5::chunk_one_io</code>, <code>h5::chunk_multi_io</code></li>
-<li>[<code>h5::dxpl_mpiio_chunk_opt_num{unsigned num_chunk_per_proc}</code>][1711] Sets a numeric threshold for linked-chunk I/O.</li>
-<li>[<code>h5::dxpl_mpiio_chunk_opt_ratio{unsigned percent_proc_per_chunk}</code>][1712] Sets a ratio threshold for collective I/O.</li>
-<li>[<code>h5::dxpl_mpiio_collective_opt{H5FD_mpio_collective_opt_t opt_mode}</code>][1713] Sets a flag governing the use of independent versus collective I/O.<br/>
-<strong>Flags:</strong> <code>h5::collective_io</code>, <code>h5::individual_io</code></li>
-</ul>
+<p>The data set indeed is compressed, and readable from other systems:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>HDF5 &quot;arma.h5&quot; {
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>GROUP &quot;/&quot; {
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>   DATASET &quot;bare metal IO&quot; {
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>      DATATYPE  H5T_IEEE_F64LE
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>      DATASPACE  SIMPLE { ( 40, 40 ) / ( 40, H5S_UNLIMITED ) }
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>      STORAGE_LAYOUT {
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>         CHUNKED ( 4, 8 )
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>         SIZE 79 (162.025:1 COMPRESSION)
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>      }
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>      FILTERS {
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>         COMPRESSION DEFLATE { LEVEL 9 }
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>      }
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>      FILLVALUE {
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>         FILL_TIME H5D_FILL_TIME_IFSET
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>         VALUE  3
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>      }
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>      ALLOCATION_TIME {
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>         H5D_ALLOC_TIME_INCR
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>      }
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>   }
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>}
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>}
+</span></code></pre></div></p>
 
 
 

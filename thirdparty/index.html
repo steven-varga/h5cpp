@@ -1,0 +1,1350 @@
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5">
+      
+      
+        <meta name="author" content="Steven Varga">
+      
+      
+        <link rel="canonical" href="https://vargalabs.github.io/h5cpp/thirdparty/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Vendored Third-Party Linear Algebra Dependencies - VargaLABS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../styles/asciinema-player.css">
+    
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+      <link rel="stylesheet" href="../styles/custom.css">
+    
+      <link rel="stylesheet" href="../styles/mobile.css">
+    
+      <link rel="stylesheet" href="../styles/socials.css">
+    
+      <link rel="stylesheet" href="../styles/background.css">
+    
+      <link rel="stylesheet" href="../styles/blog.css">
+    
+      <link rel="stylesheet" href="../styles/asciinema.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+    
+    
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="VargaLABS" />
+    <meta property="og:title" content="VargaLABS" />
+    <meta property="og:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
+    <meta property="og:url" content="https://vargalabs.github.io/h5cpp/thirdparty/" />
+    <meta property="og:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="" />
+    <meta name="twitter:title" content="VargaLABS" />
+    <meta name="twitter:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
+    <meta name="twitter:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
+
+    <!-- SEO -->
+    <link rel="canonical" href="https://vargalabs.github.io/h5cpp/thirdparty/" />
+    <meta name="description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
+    <script type="application/ld+json">
+    {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "VargaLABS",
+    "description": "H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5",
+    "url": "https://vargalabs.github.io/h5cpp/thirdparty/",
+    "datePublished": "2010-01-01",
+    "author": {
+        "@type": "Person",
+        "name": "Steven Varga"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "VargaLABS",
+        "logo": {
+        "@type": "ImageObject",
+        "url": "https://vargalabs.github.io/h5cpp//assets/logo.png"
+        }
+    },
+    "image": "https://vargalabs.github.io/h5cpp//assets/social/og-default.png"
+    }
+    </script>    
+
+<link rel="alternate" type="application/rss+xml" title="VargaLABS RSS Feed" href="../rss.xml" />
+<link rel="alternate" type="application/feed+json" title="VargaLABS JSON Feed" href="../feed.json" />
+
+
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="solarized" data-md-color-primary="orange" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#vendored-third-party-linear-algebra-dependencies" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://steven-varga.ca/" title="VargaLABS" class="md-header__button md-logo" aria-label="VargaLABS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis"> H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5 </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Vendored Third-Party Linear Algebra Dependencies
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    <div class="md-social-inline">
+      
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://wa.me/16475611829" target="_blank" rel="noopener" title="wa.me" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23-1.48 0-2.93-.39-4.19-1.15l-.3-.17-3.12.82.83-3.04-.2-.32a8.2 8.2 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.87.86-.87 2.07 0 1.22.89 2.39 1 2.56.14.17 1.76 2.67 4.25 3.73.59.27 1.05.42 1.41.53.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27-.25-.14-1.47-.74-1.69-.82-.23-.08-.37-.12-.56.12-.16.25-.64.81-.78.97-.15.17-.29.19-.53.07-.26-.13-1.06-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.12-.24-.01-.39.11-.5.11-.11.27-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.11-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43-.14 0-.3-.01-.47-.01"/></svg>
+        </a>
+      
+        
+        
+        
+        
+        <a href="mailto:steven@vargaconsulting.ca" target="_blank" rel="noopener" title="" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 5.5H9c-1.1 0-2 .9-2 2v9a2 2 0 0 0 2 2h13c1.11 0 2-.89 2-2v-9a2 2 0 0 0-2-2m0 3.67-6.5 3.33L9 9.17V7.5l6.5 3.31L22 7.5zM5 16.5c0 .17.03.33.05.5H1c-.552 0-1-.45-1-1s.448-1 1-1h4zM3 7h2.05c-.02.17-.05.33-.05.5V9H3c-.55 0-1-.45-1-1s.45-1 1-1m-2 5c0-.55.45-1 1-1h3v2H2c-.55 0-1-.45-1-1"/></svg>
+        </a>
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://x.com/vargaconsulting" target="_blank" rel="noopener" title="x.com" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.2 4.2 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.52 8.52 0 0 1-5.33 1.84q-.51 0-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23"/></svg>
+        </a>
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://www.linkedin.com/in/steven-varga-04224a19/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93zM6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37z"/></svg>
+        </a>
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://github.com/vargaconsulting" target="_blank" rel="noopener" title="github.com" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+        </a>
+      
+
+      
+      <span class="md-header__button md-icon" style="pointer-events: none; opacity: 0.4;">|</span>  
+    </div>
+  
+
+  
+  
+    
+    
+    
+
+    <input class="md-option"
+           data-md-color-media=""
+           data-md-color-scheme="solarized"
+           data-md-color-primary="orange"
+           data-md-color-accent="indigo"
+            aria-label="Switch to dark mode"
+           
+           type="radio" name="__palette" id="__palette_0">
+
+    
+      <label class="md-header__button md-icon"
+             title="Switch to dark mode"
+             for="__palette_1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon-icon lucide-moon"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+
+    <input class="md-option"
+           data-md-color-media=""
+           data-md-color-scheme="slate"
+           data-md-color-primary="orange"
+           data-md-color-accent="indigo"
+            aria-label="Switch to light mode"
+           
+           type="radio" name="__palette" id="__palette_1">
+
+    
+      <label class="md-header__button md-icon"
+             title="Switch to light mode"
+             for="__palette_0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-icon lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+<!-- -->
+
+<!-- -->
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://steven-varga.ca/" title="VargaLABS" class="md-nav__button md-logo" aria-label="VargaLABS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    VargaLABS
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compiler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compiler Tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HDF5 Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    I/O Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Type System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linalg & STL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel I/O
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#design-philosophy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design Philosophy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#library-classification-header-only-vs-compiled" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library Classification: Header-Only vs Compiled
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Library Classification: Header-Only vs Compiled">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#licensing-compliance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Licensing &amp; Compliance
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vendoring-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Vendoring Policy
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Vendoring Policy">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-vendoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why vendoring?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#future-direction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Future direction
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#update-cadence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update cadence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-selection-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library selection criteria
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#armadillo-v1267-v1526-header-only-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Armadillo: v12.6.7 → v15.2.6 Header-Only Migration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Armadillo: v12.6.7 → v15.2.6 Header-Only Migration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motivation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#business-impact" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Business impact
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-changed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What changed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#when-blaslapack-are-still-needed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When BLAS/LAPACK are still needed
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#systemic-risk-other-libraries-and-cmake-4x" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Systemic Risk: Other Libraries and CMake 4.x
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#future-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Future Work
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommendations-for-downstream-consumers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendations for Downstream Consumers
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="vendored-third-party-linear-algebra-dependencies">Vendored Third-Party Linear Algebra Dependencies</h1>
+<blockquote>
+<p><strong>Audience:</strong> This guide is for downstream packagers, CI maintainers, and H5CPP users choosing which linear algebra adapter to depend on.</p>
+</blockquote>
+<p>H5CPP provides optional adapters for popular C++ linear algebra libraries, allowing seamless HDF5 I/O for matrix, vector, and array types. The adapters are located in <code>h5cpp/H5M*.hpp</code> and the corresponding library sources are vendored under <code>thirdparty/</code>.</p>
+<h2 id="design-philosophy">Design Philosophy</h2>
+<p>Our goal is to <strong>prove that linear algebra objects work with H5CPP I/O</strong>, not to build or ship full-featured linear algebra distributions. H5CPP adapters only need a small, stable subset of each library's API:</p>
+<ul>
+<li><code>data()</code> / <code>memptr()</code> — raw pointer access to contiguous storage</li>
+<li><code>size()</code> / <code>n_elem</code>, <code>n_rows</code>, <code>n_cols</code> — dimension queries</li>
+<li><code>ctor(dims)</code> — constructors that allocate from dimensions</li>
+<li><code>begin()</code> / <code>end()</code> — iterator access (where applicable)</li>
+</ul>
+<p>Because our surface area is so small, many libraries that traditionally ship as compiled libraries can be used in <strong>header-only mode</strong>. This eliminates CMake build-time complexity, avoids version-lock issues with obsolete <code>cmake_minimum_required</code> declarations, and removes cross-platform wrapper-library headaches. The result is faster CI, fewer system-package dependencies, and reduced support burden.</p>
+<hr />
+<h2 id="library-classification-header-only-vs-compiled">Library Classification: Header-Only vs Compiled</h2>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>Vendored Version</th>
+<th>H5CPP Adapter</th>
+<th>Build Mode</th>
+<th>Header-Only?</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Eigen3</strong></td>
+<td>v3.4.0</td>
+<td><code>H5Meigen.hpp</code></td>
+<td><code>INTERFACE</code></td>
+<td>✅ Yes</td>
+<td>By design. Pure templates, no compiled runtime.</td>
+</tr>
+<tr>
+<td><strong>Blaze</strong></td>
+<td>v3.8</td>
+<td><code>H5Mblaze.hpp</code></td>
+<td><code>INTERFACE</code></td>
+<td>✅ Yes</td>
+<td>By design. Pure templates, no compiled runtime.</td>
+</tr>
+<tr>
+<td><strong>Boost.uBLAS</strong></td>
+<td>v1.74.0</td>
+<td><code>H5Mublas.hpp</code></td>
+<td><code>INTERFACE</code></td>
+<td>✅ Yes</td>
+<td>By design. Header-only subset of Boost.</td>
+</tr>
+<tr>
+<td><strong>Armadillo</strong></td>
+<td><strong>v15.2.6</strong></td>
+<td><code>H5Marma.hpp</code></td>
+<td><code>INTERFACE</code></td>
+<td>✅ <strong>Yes</strong>¹</td>
+<td><code>ARMA_DONT_USE_WRAPPER</code> disables the BLAS/LAPACK wrapper library. Headers contain fallback implementations for basic operations (creation, element access, <code>memptr()</code>, <code>print()</code>). Verified by compile-and-run test without linking BLAS/LAPACK.</td>
+</tr>
+<tr>
+<td><strong>Blitz++</strong></td>
+<td>v1.0.2</td>
+<td><code>H5Mblitz.hpp</code></td>
+<td>Compiled (<code>libblitz.a</code>)</td>
+<td>❌ No</td>
+<td>Requires <code>globals.cpp</code> (global variable instantiation) and a generated <code>bzconfig.h</code> produced by its CMake configure step.</td>
+</tr>
+<tr>
+<td><strong>dlib</strong></td>
+<td>v19.24</td>
+<td><code>H5Mdlib.hpp</code></td>
+<td>Compiled (<code>libdlib.a</code>)</td>
+<td>❌ No</td>
+<td>Matrix headers pull in ODR-violation check symbols (<code>USER_ERROR__inconsistent_build_configuration__see_dlib_faq_*</code>) that require linking the compiled <code>libdlib</code>.</td>
+</tr>
+<tr>
+<td><strong>IT++</strong></td>
+<td>v4.3.1</td>
+<td><code>H5Mitpp.hpp</code></td>
+<td><strong>Disabled</strong></td>
+<td>❌ No</td>
+<td>Adapter code exists in <code>h5cpp/H5Mitpp.hpp</code> but is excluded from all CMake targets and test suites. It is not compiled or installed. Disabled because upstream v4.3.1 uses the <code>register</code> keyword extensively, which was removed in C++17, causing build failures with GCC 14.</td>
+</tr>
+</tbody>
+</table>
+<p>¹ <strong>BLAS/LAPACK still required</strong> for high-performance linear algebra operations (matrix multiplication, inversion, SVD, eigenvalue decomposition) if exercised by downstream code. H5CPP examples do not use these paths.</p>
+<h3 id="summary">Summary</h3>
+<ul>
+<li><strong>4 of 7 libraries</strong> are already or can be header-only (Eigen3, Blaze, uBLAS, Armadillo).</li>
+<li><strong>3 libraries genuinely need compiled libraries</strong> (Blitz++, dlib, IT++).</li>
+<li>IT++ is <strong>disabled</strong> due to upstream C++17 incompatibility.</li>
+</ul>
+<hr />
+<h2 id="licensing-compliance">Licensing &amp; Compliance</h2>
+<p>H5CPP itself is distributed under the <strong>MIT License</strong>. Each vendored library retains its original license.</p>
+<table>
+<thead>
+<tr>
+<th>Library</th>
+<th>License</th>
+<th>Copyleft</th>
+<th>Vendored Path</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Armadillo</td>
+<td>Apache-2.0</td>
+<td>No</td>
+<td><code>thirdparty/armadillo/</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Blaze</td>
+<td>BSD-3-Clause</td>
+<td>No</td>
+<td><code>thirdparty/blaze/</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Blitz++</td>
+<td>Artistic-2.0 <strong>or</strong> BSD <strong>or</strong> LGPL-3.0+</td>
+<td>Yes (LGPL option)</td>
+<td><code>thirdparty/blitz/</code></td>
+<td>Triple-licensed; choose the license that best fits your distribution policy.</td>
+</tr>
+<tr>
+<td>dlib</td>
+<td>BSL-1.0</td>
+<td>No</td>
+<td><code>thirdparty/dlib/</code></td>
+<td>Boost Software License</td>
+</tr>
+<tr>
+<td>Eigen3</td>
+<td>MPL-2.0</td>
+<td>Weak</td>
+<td><code>thirdparty/eigen3/</code></td>
+<td>File-level copyleft</td>
+</tr>
+<tr>
+<td>IT++</td>
+<td>GPL-3.0+</td>
+<td><strong>Strong</strong></td>
+<td><code>thirdparty/itpp/</code></td>
+<td><strong>Disabled by default.</strong> If you require a fully non-copyleft build, ensure IT++ sources are excluded from your distribution.</td>
+</tr>
+<tr>
+<td>Boost.uBLAS</td>
+<td>BSL-1.0</td>
+<td>No</td>
+<td><code>thirdparty/ublas/</code></td>
+<td>Boost Software License</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>For Distribution Packagers:</strong> H5CPP vendors these libraries solely so that examples compile out-of-the-box without system package manager dependencies. The core <code>h5cpp/</code> headers do not depend on any third-party linear algebra library. If your distribution policy prohibits vendored dependencies, the <code>thirdparty/</code> directory may be removed; the adapter headers in <code>h5cpp/H5M*.hpp</code> are self-contained and will compile against system packages when the corresponding headers are available on the include path.</p>
+</blockquote>
+<hr />
+<h2 id="vendoring-policy">Vendoring Policy</h2>
+<h3 id="why-vendoring">Why vendoring?</h3>
+<p>Vendoring guarantees that H5CPP examples compile out-of-the-box on any platform with a C++17 compiler and CMake 3.22+, without requiring users to install Eigen3, Armadillo, or Blaze through apt, Homebrew, vcpkg, or Conan. This is especially important for CI reproducibility and for users evaluating H5CPP for the first time.</p>
+<h3 id="future-direction">Future direction</h3>
+<p>Future releases may add <code>H5CPP_USE_SYSTEM_&lt;LIB&gt;</code> CMake options (e.g., <code>H5CPP_USE_SYSTEM_EIGEN3</code>) to allow builds against system packages when available. The default will remain vendored to preserve the zero-dependency experience.</p>
+<h3 id="update-cadence">Update cadence</h3>
+<p>Vendored dependencies are reviewed quarterly. Security-critical updates are applied within 30 days of upstream release. Header-only libraries are preferred for new adapters because they eliminate compiled-library maintenance overhead.</p>
+<h3 id="library-selection-criteria">Library selection criteria</h3>
+<p>A new linear algebra adapter is considered when the target library meets at least two of the following:</p>
+<ol>
+<li><strong>Popularity:</strong> Top-tier usage in C++ scientific computing (GitHub stars, Conan/vcpkg downloads, citation count).</li>
+<li><strong>Active maintenance:</strong> Upstream releases within the last 24 months.</li>
+<li><strong>Low build complexity:</strong> Header-only preferred; compiled library acceptable only if build is CMake-native and cross-platform.</li>
+<li><strong>User demand:</strong> Explicit request via GitHub issue with demonstrated use case.</li>
+</ol>
+<hr />
+<h2 id="armadillo-v1267-v1526-header-only-migration">Armadillo: v12.6.7 → v15.2.6 Header-Only Migration</h2>
+<h3 id="motivation">Motivation</h3>
+<p>Armadillo v12.6.7's <code>CMakeLists.txt</code> declared <code>cmake_minimum_required(VERSION 2.8.12)</code>, which CMake 4.x (shipped on macOS via Homebrew) rejects outright. This broke macOS CI runners. Rather than patch the obsolete minimum version in-place, we upgraded to the latest upstream release and switched to header-only usage.</p>
+<h3 id="business-impact">Business impact</h3>
+<ul>
+<li>Eliminated a CMake 4.x configuration failure on macOS CI runners.</li>
+<li>Removed the need for CMake version pinning workarounds in CI.</li>
+<li>Reduced vendored Armadillo footprint from ~1,000+ files (including docs, tests, examples, MEX interface, and wrapper source) to ~650 headers (~6.7 MB as of v15.2.6).</li>
+</ul>
+<h3 id="what-changed">What changed</h3>
+<table>
+<thead>
+<tr>
+<th>Aspect</th>
+<th>Before (v12.6.7)</th>
+<th>After (v15.2.6)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Distribution</td>
+<td>Full source: CMake, docs, examples, <code>src/wrapper*.cpp</code>, tests, MEX interface</td>
+<td>Headers only: <code>include/armadillo</code> + <code>include/armadillo_bits/</code></td>
+</tr>
+<tr>
+<td>Build</td>
+<td><code>add_subdirectory(v12.6.7)</code> → builds <code>libarmadillo</code> wrapper library</td>
+<td><code>add_library(libarmadillo INTERFACE)</code> with <code>ARMA_DONT_USE_WRAPPER</code></td>
+</tr>
+<tr>
+<td>CMake minimum</td>
+<td><code>2.8.12</code> (breaks CMake 4.x)</td>
+<td>N/A — no CMake sub-build</td>
+</tr>
+<tr>
+<td>Linking</td>
+<td>Examples link <code>libarmadillo</code> (transitively pulls BLAS/LAPACK)</td>
+<td>Examples link <code>libarmadillo</code> (INTERFACE target; provides includes + compile definition)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="verification">Verification</h3>
+<ul>
+<li>✅ <code>examples-arma</code> (CTest target) compiles and links.</li>
+<li>✅ <code>examples-reference</code> (CTest target) compiles, links, and runs correctly.</li>
+<li>✅ <code>examples-nbit</code> (CTest target) compiles and links.</li>
+<li>✅ Standalone test (<code>arma::mat</code>, <code>M.ones()</code>, <code>M.print()</code>, <code>M.begin()</code>, <code>memptr()</code>) compiles and runs without BLAS/LAPACK.</li>
+<li>✅ CMake configure succeeds (no <code>cmake_minimum_required</code> error).</li>
+</ul>
+<h3 id="when-blaslapack-are-still-needed">When BLAS/LAPACK are still needed</h3>
+<p><code>ARMA_DONT_USE_WRAPPER</code> only affects whether Armadillo uses its runtime wrapper library. Operations that internally call BLAS/LAPACK (matrix multiplication, inversion, SVD, eigenvalue decomposition, etc.) still require linking <code>-lblas -llapack</code> (or <code>-framework Accelerate</code> on macOS) if used by downstream code. H5CPP's examples do not exercise these paths.</p>
+<p>If your downstream code needs high-performance linear algebra from Armadillo, link BLAS/LAPACK explicitly:</p>
+<div class="language-cmake highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">find_package</span><span class="p">(</span><span class="s">BLAS</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">find_package</span><span class="p">(</span><span class="s">LAPACK</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">my_target</span><span class="w"> </span><span class="s">BLAS::BLAS</span><span class="w"> </span><span class="s">LAPACK::LAPACK</span><span class="p">)</span>
+</span></code></pre></div>
+<hr />
+<h2 id="systemic-risk-other-libraries-and-cmake-4x">Systemic Risk: Other Libraries and CMake 4.x</h2>
+<p>Armadillo was the first vendored library to break on CMake 4.x, but it may not be the last. Blitz++ (v1.0.2) and dlib (v19.24) also declare legacy <code>cmake_minimum_required</code> versions in their own build systems. Because H5CPP builds these libraries via <code>execute_process()</code> during the CMake configure step, they are vulnerable to the same CMake 4.x rejection.</p>
+<p><strong>Mitigation plan:</strong></p>
+<ul>
+<li><strong>Blitz++:</strong> Adapter deprecated. Will be removed in a future release unless a maintainer steps forward. Upstream development has ceased.</li>
+<li><strong>dlib:</strong> Candidate for upgrade to v20.x, which may have a higher <code>cmake_minimum_required</code>. Tracked as future work.</li>
+</ul>
+<hr />
+<h2 id="future-work">Future Work</h2>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Owner / Tracking</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Blitz++ adapter removal</td>
+<td>Planned</td>
+<td><a href="https://github.com/vargalabs/h5cpp/issues/150">#150</a> — Adapter deprecated. Will be removed in a subsequent release unless a maintainer steps forward.</td>
+</tr>
+<tr>
+<td>dlib upgrade to v20.x</td>
+<td>Under evaluation</td>
+<td>Evaluate v20.x for Clang 20 compatibility (<code>-Wmissing-template-arg-list-after-template-kw</code>) and CMake 4.x support.</td>
+</tr>
+<tr>
+<td>IT++ adapter removal</td>
+<td>Planned</td>
+<td>Remove disabled <code>H5Mitpp.hpp</code> and <code>thirdparty/itpp/</code> from source tree in next major release.</td>
+</tr>
+<tr>
+<td>System-package fallback</td>
+<td>Proposed</td>
+<td>Add <code>H5CPP_USE_SYSTEM_*</code> CMake options for header-only libraries (Eigen3, Blaze, Armadillo).</td>
+</tr>
+<tr>
+<td>CMake 4.x CI gate</td>
+<td>Proposed</td>
+<td>Add a CI matrix entry with the latest CMake version to catch <code>cmake_minimum_required</code> breakages early.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="recommendations-for-downstream-consumers">Recommendations for Downstream Consumers</h2>
+<p>If you are building H5CPP from source and want to use the vendored linear algebra libraries:</p>
+<ol>
+<li><strong>Header-only libraries</strong> (Eigen3, Blaze, uBLAS, Armadillo) require no extra system dependencies for basic I/O.</li>
+<li><strong>Compiled libraries</strong> (Blitz++, dlib) are built automatically during the CMake configure step; no manual intervention is required.</li>
+<li><strong>Armadillo consumers</strong> who need high-performance linear algebra (matrix multiply, decompositions) should link BLAS/LAPACK explicitly in their own build.</li>
+</ol>
+<hr />
+<p><em>Document version: 2026-05-12. Armadillo version references are current as of v15.2.6.</em></p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright custom-footer">
+        <div class="custom-footer-left">
+          Blockchain, cryptographic protocols, HPC, or trading systems in C++, Rust, Julia, Python, R and CUDA
+        </div>
+        <div class="custom-footer-right">
+          © 2017–2025 VargaLABS, Toronto, ON, Canada 🇨🇦
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["search.suggest", "content.code.copy", "content.tooltips", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.tailwindcss.com"></script>
+      
+        <script src="../javascripts/tw-config.js"></script>
+      
+        <script src="../javascripts/asciinema-player.min.js"></script>
+      
+        <script src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
+      
+        <script src="https://unpkg.com/@popperjs/core@2"></script>
+      
+        <script src="https://unpkg.com/tippy.js@6"></script>
+      
+    
+  </body>
+</html>

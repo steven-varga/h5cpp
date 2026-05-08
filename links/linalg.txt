@@ -1,0 +1,15 @@
+##
+## Linear algebra library external links
+##
+
+ALIASES += larmadillo="[armadillo]: http://arma.sourceforge.net\n"
+ALIASES += lublas="[ublas]: https://www.boost.org/doc/libs/release/libs/numeric/ublas/doc/index.html\n"
+ALIASES += leigen="[eigen]: https://eigen.tuxfamily.org/index.php?title=Main_Page\n"
+ALIASES += lblitz="[blitz]: https://github.com/blitzpp/blitz\n"
+ALIASES += litpp="[itpp]: https://sourceforge.net/projects/itpp/\n"
+ALIASES += ldlib="[dlib]: http://dlib.net/linear_algebra.html\n"
+ALIASES += lblaze="[blaze]: https://bitbucket.org/blaze-lib/blaze\n"
+
+ALIASES += linalg_links="\larmadillo \lublas \leigen \lblitz \litpp \ldlib \lblaze\n"
+ALIASES += linalg_text="@sa [armadillo][] [ublas][] [eigen][] [blitz][] [itpp][] [dlib][] [blaze][]\n"
+ALIASES += sa_linalg="\linalg_text\n \linalg_links"

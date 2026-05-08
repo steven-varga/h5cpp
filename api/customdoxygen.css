@@ -1,0 +1,84 @@
+/*
+ * H5CPP Doxygen theme override — orange + solarized palette
+ * Applied on top of doxygen-awesome.css
+ * Light mode: solarized-light;  Dark mode: slate-inspired
+ */
+
+/* ------------------------------------------------------------------ */
+/* Light mode                                                          */
+/* ------------------------------------------------------------------ */
+html {
+    /* Orange primary — matches MkDocs Material 'orange' primary */
+    --primary-color:           #E65100;
+    --primary-dark-color:      #BF360C;
+    --primary-light-color:     #FF6D00;
+    --on-primary-color:        #ffffff;
+    --link-color:              #E65100;
+
+    /* Solarized light base palette */
+    --page-background-color:   #fdf6e3;   /* base3  */
+    --page-foreground-color:   #586e75;   /* base01 */
+    --page-secondary-foreground-color: #93a1a1;  /* base1 */
+    --separator-color:         #eee8d5;   /* base2  */
+    --side-nav-background:     #eee8d5;   /* base2  */
+    --code-background:         #eee8d5;   /* base2  */
+    --blockquote-background:   #f5eed9;
+    --blockquote-foreground:   #657b83;   /* base00 */
+    --tablehead-background:    #eee8d5;
+
+    /* Keep border radius from awesome */
+    --border-radius-large:     8px;
+    --border-radius-medium:    6px;
+    --border-radius-small:     4px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Dark mode (toggled by doxygen-awesome-darkmode-toggle.js)           */
+/* Palette: slate-inspired, same orange accent                         */
+/* ------------------------------------------------------------------ */
+html.dark-mode {
+    --primary-color:           #FF6D00;
+    --primary-dark-color:      #E65100;
+    --primary-light-color:     #FF8F00;
+    --on-primary-color:        #ffffff;
+    --link-color:              #FF8F00;
+
+    --page-background-color:   #2b303b;
+    --page-foreground-color:   #c0c5ce;
+    --page-secondary-foreground-color: #868d97;
+    --separator-color:         #3c414d;
+    --side-nav-background:     #232830;
+    --code-background:         #1e2229;
+    --section-code-background: rgba(255, 255, 255, 0.06);
+    --section-code-border:     rgba(255, 255, 255, 0.14);
+    --blockquote-background:   #232830;
+    --blockquote-foreground:   #868d97;
+    --tablehead-background:    #232830;
+}
+
+/* ------------------------------------------------------------------ */
+/* Typography — match MkDocs Material Roboto stack                     */
+/* ------------------------------------------------------------------ */
+html {
+    --font-family: Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    --font-family-monospace: "Roboto Mono", ui-monospace, SFMono-Regular,
+                              SF Mono, Menlo, Consolas, "Liberation Mono", monospace;
+    --page-font-size:       15.6px;
+    --content-line-height:  1.7;
+}
+
+/* ------------------------------------------------------------------ */
+/* Minor layout tweaks                                                 */
+/* ------------------------------------------------------------------ */
+
+/* Full-width content area — mirrors MkDocs md-grid max-width: 100%  */
+#MContentWrapper {
+    max-width: 1200px;
+}
+
+/* Slightly warmer code blocks */
+div.fragment,
+pre.fragment {
+    border-left: 3px solid var(--primary-light-color);
+}

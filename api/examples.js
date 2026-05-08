@@ -1,0 +1,27 @@
+var examples =
+[
+    [ "attributes.cpp", "attributes_8cpp-example.html", null ],
+    [ "collective.cpp", "collective_8cpp-example.html", null ],
+    [ "independent.cpp", "independent_8cpp-example.html", null ],
+    [ "throughput.cpp", "throughput_8cpp-example.html", null ],
+    [ "tu_01.cpp", "tu_01_8cpp-example.html", null ],
+    [ "tu_02.cpp", "tu_02_8cpp-example.html", null ],
+    [ "optimized.cpp", "optimized_8cpp-example.html", null ],
+    [ "basics.cpp", "basics_8cpp-example.html", null ],
+    [ "compound.cpp", "compound_8cpp-example.html", null ],
+    [ "compound.c", "compound_8c-example.html", null ],
+    [ "compound.h", "compound_8h-example.html", null ],
+    [ "struct.cpp", "struct_8cpp-example.html", null ],
+    [ "struct.h", "struct_8h-example.html", null ],
+    [ "arma.cpp", "arma_8cpp-example.html", null ],
+    [ "blaze.cpp", "blaze_8cpp-example.html", null ],
+    [ "blitz.cpp", "blitz_8cpp-example.html", null ],
+    [ "dlib.cpp", "dlib_8cpp-example.html", null ],
+    [ "eigen3.cpp", "eigen3_8cpp-example.html", null ],
+    [ "itpp.cpp", "itpp_8cpp-example.html", null ],
+    [ "ublas.cpp", "ublas_8cpp-example.html", null ],
+    [ "packettable.cpp", "packettable_8cpp-example.html", null ],
+    [ "raw.cpp", "raw_8cpp-example.html", null ],
+    [ "transform.cpp", "transform_8cpp-example.html", null ],
+    [ "kita.cpp", "kita_8cpp-example.html", null ]
+];

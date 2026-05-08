@@ -1,0 +1,1687 @@
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5">
+      
+      
+        <meta name="author" content="Steven Varga">
+      
+      
+        <link rel="canonical" href="https://vargalabs.github.io/h5cpp/cpp-standard-compliance-report/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>H5CPP C++ Standard Compliance Report - VargaLABS</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../styles/asciinema-player.css">
+    
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    
+      <link rel="stylesheet" href="../styles/custom.css">
+    
+      <link rel="stylesheet" href="../styles/mobile.css">
+    
+      <link rel="stylesheet" href="../styles/socials.css">
+    
+      <link rel="stylesheet" href="../styles/background.css">
+    
+      <link rel="stylesheet" href="../styles/blog.css">
+    
+      <link rel="stylesheet" href="../styles/asciinema.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+  
+
+
+    
+    
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="VargaLABS" />
+    <meta property="og:title" content="VargaLABS" />
+    <meta property="og:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
+    <meta property="og:url" content="https://vargalabs.github.io/h5cpp/cpp-standard-compliance-report/" />
+    <meta property="og:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="" />
+    <meta name="twitter:title" content="VargaLABS" />
+    <meta name="twitter:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
+    <meta name="twitter:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
+
+    <!-- SEO -->
+    <link rel="canonical" href="https://vargalabs.github.io/h5cpp/cpp-standard-compliance-report/" />
+    <meta name="description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
+    <script type="application/ld+json">
+    {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "VargaLABS",
+    "description": "H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5",
+    "url": "https://vargalabs.github.io/h5cpp/cpp-standard-compliance-report/",
+    "datePublished": "2010-01-01",
+    "author": {
+        "@type": "Person",
+        "name": "Steven Varga"
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "VargaLABS",
+        "logo": {
+        "@type": "ImageObject",
+        "url": "https://vargalabs.github.io/h5cpp//assets/logo.png"
+        }
+    },
+    "image": "https://vargalabs.github.io/h5cpp//assets/social/og-default.png"
+    }
+    </script>    
+
+<link rel="alternate" type="application/rss+xml" title="VargaLABS RSS Feed" href="../rss.xml" />
+<link rel="alternate" type="application/feed+json" title="VargaLABS JSON Feed" href="../feed.json" />
+
+
+
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="solarized" data-md-color-primary="orange" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#h5cpp-c-standard-compliance-report" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="https://steven-varga.ca/" title="VargaLABS" class="md-header__button md-logo" aria-label="VargaLABS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis"> H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5 </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              H5CPP C++ Standard Compliance Report
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    <div class="md-social-inline">
+      
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://wa.me/16475611829" target="_blank" rel="noopener" title="wa.me" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23-1.48 0-2.93-.39-4.19-1.15l-.3-.17-3.12.82.83-3.04-.2-.32a8.2 8.2 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.87.86-.87 2.07 0 1.22.89 2.39 1 2.56.14.17 1.76 2.67 4.25 3.73.59.27 1.05.42 1.41.53.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27-.25-.14-1.47-.74-1.69-.82-.23-.08-.37-.12-.56.12-.16.25-.64.81-.78.97-.15.17-.29.19-.53.07-.26-.13-1.06-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.12-.24-.01-.39.11-.5.11-.11.27-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.11-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43-.14 0-.3-.01-.47-.01"/></svg>
+        </a>
+      
+        
+        
+        
+        
+        <a href="mailto:steven@vargaconsulting.ca" target="_blank" rel="noopener" title="" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 5.5H9c-1.1 0-2 .9-2 2v9a2 2 0 0 0 2 2h13c1.11 0 2-.89 2-2v-9a2 2 0 0 0-2-2m0 3.67-6.5 3.33L9 9.17V7.5l6.5 3.31L22 7.5zM5 16.5c0 .17.03.33.05.5H1c-.552 0-1-.45-1-1s.448-1 1-1h4zM3 7h2.05c-.02.17-.05.33-.05.5V9H3c-.55 0-1-.45-1-1s.45-1 1-1m-2 5c0-.55.45-1 1-1h3v2H2c-.55 0-1-.45-1-1"/></svg>
+        </a>
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://x.com/vargaconsulting" target="_blank" rel="noopener" title="x.com" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.2 4.2 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.52 8.52 0 0 1-5.33 1.84q-.51 0-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23"/></svg>
+        </a>
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://www.linkedin.com/in/steven-varga-04224a19/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93zM6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37z"/></svg>
+        </a>
+      
+        
+        
+        
+        
+          
+          
+        
+        <a href="https://github.com/vargaconsulting" target="_blank" rel="noopener" title="github.com" class="md-header__button md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
+        </a>
+      
+
+      
+      <span class="md-header__button md-icon" style="pointer-events: none; opacity: 0.4;">|</span>  
+    </div>
+  
+
+  
+  
+    
+    
+    
+
+    <input class="md-option"
+           data-md-color-media=""
+           data-md-color-scheme="solarized"
+           data-md-color-primary="orange"
+           data-md-color-accent="indigo"
+            aria-label="Switch to dark mode"
+           
+           type="radio" name="__palette" id="__palette_0">
+
+    
+      <label class="md-header__button md-icon"
+             title="Switch to dark mode"
+             for="__palette_1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon-icon lucide-moon"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
+      </label>
+    
+  
+    
+    
+    
+
+    <input class="md-option"
+           data-md-color-media=""
+           data-md-color-scheme="slate"
+           data-md-color-primary="orange"
+           data-md-color-accent="indigo"
+            aria-label="Switch to light mode"
+           
+           type="radio" name="__palette" id="__palette_1">
+
+    
+      <label class="md-header__button md-icon"
+             title="Switch to light mode"
+             for="__palette_0">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-icon lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+<!-- -->
+
+<!-- -->
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="https://steven-varga.ca/" title="VargaLABS" class="md-nav__button md-logo" aria-label="VargaLABS" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    VargaLABS
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compiler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compiler Tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-core/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    HDF5 Concepts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    I/O Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Type System
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linalg & STL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-parallelism/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel I/O
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#executive-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Executive Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#c17-compliance-audit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C++17 Compliance Audit
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="C++17 Compliance Audit">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#violations-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Violations Found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deprecated-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deprecated Usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#best-practice-gaps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best-Practice Gaps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Recommendations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#c20-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C++20 Readiness
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="C++20 Readiness">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes-if-any" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking Changes (if any)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#features-to-adopt-with-trade-offs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features to Adopt (with trade-offs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-effort-estimate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Effort Estimate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#c23-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C++23 Readiness
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="C++23 Readiness">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes-if-any_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking Changes (if any)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#features-to-adopt-with-trade-offs_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features to Adopt (with trade-offs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migration-effort-estimate_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Migration Effort Estimate
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#c26-preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C++26 Preview
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="C++26 Preview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#anticipated-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Anticipated Breaking Changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#features-to-watch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features to Watch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#appendix-file-by-file-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Appendix: File-by-File Notes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Appendix: File-by-File Notes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-metaprogramming-h5metahpp-h5tmetahpp-compathpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Metaprogramming (H5meta.hpp, H5Tmeta.hpp, compat.hpp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#type-system-h5tallhpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Type System (H5Tall.hpp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#handle-system-h5iallhpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Handle System (H5Iall.hpp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#io-dispatch-h5dwritehpp-h5dreadhpp-h5dcreatehpp-h5dappendhpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        I/O Dispatch (H5Dwrite.hpp, H5Dread.hpp, H5Dcreate.hpp, H5Dappend.hpp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#property-lists-h5pallhpp-h5pdcplhpp-h5pdaplhpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Property Lists (H5Pall.hpp, H5Pdcpl.hpp, H5Pdapl.hpp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pipeline-h5zpipelinehpp-h5zallhpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline (H5Zpipeline.hpp, H5Zall.hpp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-handling-h5eallhpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling (H5Eall.hpp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-h5couthpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output (H5cout.hpp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#linear-algebra-adapters-h5marmahpp-h5meigenhpp-etc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linear Algebra Adapters (H5Marma.hpp, H5Meigen.hpp, etc.)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tests-testh5compatcpp-testh5metacpp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tests (test/H5compat.cpp, test/H5meta.cpp)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="h5cpp-c-standard-compliance-report">H5CPP C++ Standard Compliance Report</h1>
+<p><strong>Audited by:</strong> Winston (System Architect) 🏗️<br />
+<strong>Date:</strong> 2026-05-12<br />
+<strong>Scope:</strong> Header-only library (<code>h5cpp/*.hpp</code>), tests (<code>test/</code>), examples (<code>examples/</code>)<br />
+<strong>Baseline:</strong> C++17 (<code>cxx_std_17</code>)<br />
+<strong>Total header files audited:</strong> 40+ headers (~5,800 LOC in <code>h5cpp/</code>)</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Finding</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Current baseline</strong></td>
+<td>C++17 — enforced in CMake with <code>CMAKE_CXX_STANDARD_REQUIRED ON</code> and <code>CMAKE_CXX_EXTENSIONS OFF</code></td>
+</tr>
+<tr>
+<td><strong>Overall compliance grade</strong></td>
+<td><strong>B+</strong></td>
+</tr>
+<tr>
+<td><strong>Highest-priority findings</strong></td>
+<td>1. <code>std::is_pod</code> deprecated in C++20 (7 hits, easy fix). 2. Two latent syntax/semantic bugs in headers. 3. C++11 compatibility shims are dead weight in a C++17 baseline.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verdict:</strong> H5CPP is a <strong>solid C++17 citizen</strong>. It uses <code>if constexpr</code>, fold expressions, <code>auto</code> return-type deduction, <code>std::disjunction_v/conjunction_v</code>, <code>std::bool_constant</code>, and <code>std::string_view</code> correctly. The library compiles cleanly under C++17 today. The path to C++20 is <strong>low-friction</strong> (mostly deprecation cleanup and modernization). C++23 and C++26 introduce <strong>opportunities, not blockers</strong>.</p>
+<hr />
+<h2 id="c17-compliance-audit">C++17 Compliance Audit</h2>
+<h3 id="violations-found">Violations Found</h3>
+<p><strong>Severity: Medium — Latent bugs</strong></p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Line</th>
+<th>Issue</th>
+<th>Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>H5Pall.hpp</code></td>
+<td>209</td>
+<td><strong>Syntax error:</strong> <code>impl::fapl_args&lt;hid_t,size_t,size_t,size_t, H5Pset_fapl_direct&gt;</code> is missing a closing <code>&gt;</code>. The line reads <code>...size_t, H5Pset_fapl_direct&gt;;</code></td>
+<td>Compile failure if <code>H5_VERSION_GE(1,14,0)</code> is true.</td>
+</tr>
+<tr>
+<td><code>H5Pdcpl.hpp</code></td>
+<td>19</td>
+<td><strong>Undeclared identifier:</strong> <code>H5Pinsert2(dapl, ...)</code> uses <code>dapl</code> but the enclosing function takes <code>dcpl</code>.</td>
+<td>Compile failure or silent misuse of an unrelated variable if this code path is ever instantiated.</td>
+</tr>
+<tr>
+<td><code>H5config.hpp</code></td>
+<td>61–63</td>
+<td><strong>Duplicated macro guard:</strong> <code>#ifndef H5CPP_ERROR_MSG</code> … <code>#define H5CPP_ERROR_MSG(...)</code> appears twice (lines 57–58 and 61–63).</td>
+<td>Harmless but indicates macro-hygiene drift.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Trade-off note:</strong> These are not C++ standard violations per se, but they are <em>compliance gaps</em> — code that does not compile under any standard when the triggering macro is defined. Fix them before expanding HDF5 version support.</p>
+</blockquote>
+<h3 id="deprecated-usage">Deprecated Usage</h3>
+<table>
+<thead>
+<tr>
+<th>Construct</th>
+<th>Count</th>
+<th>C++17 Status</th>
+<th>C++20 Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>std::is_pod&lt;T&gt;::value</code></td>
+<td>7</td>
+<td>Valid</td>
+<td><strong>Deprecated</strong></td>
+<td>Used in <code>H5Tmeta.hpp</code>, <code>H5Mstl.hpp</code>, <code>H5Aread.hpp</code>, <code>H5misc.hpp</code>. Replace with <code>std::is_standard_layout_v&lt;T&gt; &amp;&amp; std::is_trivial_v&lt;T&gt;</code>.</td>
+</tr>
+<tr>
+<td><code>NULL</code></td>
+<td>~11</td>
+<td>Valid (but unidiomatic)</td>
+<td>Valid (still unidiomatic)</td>
+<td>Used in <code>H5Aread.hpp</code>, <code>H5Dread.hpp</code>, <code>H5Eall.hpp</code>, <code>H5capi.hpp</code>, <code>H5Dappend.hpp</code>, <code>H5Zpipeline.hpp</code>. Prefer <code>nullptr</code>.</td>
+</tr>
+<tr>
+<td>C-style casts <code>(type)expr</code></td>
+<td>~5</td>
+<td>Valid</td>
+<td>Valid</td>
+<td>Found in <code>H5Dappend.hpp</code> (<code>(void*) ptr_</code>), <code>H5Zpipeline.hpp</code> (<code>(char*)aligned_alloc(...)</code>). Prefer <code>static_cast</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="best-practice-gaps">Best-Practice Gaps</h3>
+<ol>
+<li>
+<p><strong>C++11 compatibility shims are redundant.</strong><br />
+<code>h5::compat::index_sequence</code>, <code>h5::compat::make_index_sequence</code>, <code>h5::meta::compat::void_t</code>, and <code>h5::meta::compat::is_detected</code> are all back-ports of C++14/17 features. Since the baseline is C++17, these add maintenance surface area with no benefit. <code>std::index_sequence</code>, <code>std::make_index_sequence</code>, and <code>std::void_t</code> are available natively. <code>std::is_detected</code> is not in C++17, but the library already uses its own compatible implementation — keep it, just drop the <code>compat</code> alias dance.</p>
+</li>
+<li>
+<p><strong><code>h5::impl::conditional</code> is a hand-rolled <code>std::conditional</code> clone.</strong><br />
+   Found in <code>H5meta.hpp</code> (lines 174–177). Pure dead weight in C++17.</p>
+</li>
+<li>
+<p><strong><code>h5cpp__constexpr</code> / <code>h5cpp__assert</code> macros for pre-C++17 <code>if constexpr</code>.</strong><br />
+   Found in <code>H5config.hpp</code> (lines 66–72). These exist to degrade <code>if constexpr</code> to runtime <code>if</code> on C++14. The project requires C++17 — remove them.</p>
+</li>
+<li>
+<p><strong><code>_v</code> suffix modernization debt.</strong><br />
+   The codebase already uses <code>std::disjunction_v</code>, <code>std::conjunction_v</code>, <code>std::is_pointer_v</code>, <code>std::remove_cv_t</code>, and <code>std::bool_constant</code> in newer code (notably <code>H5Tmeta.hpp</code>), but legacy headers still write <code>std::is_same&lt;...&gt;::value</code> (32 hits), <code>std::is_integral&lt;...&gt;::value</code> (5 hits), <code>std::is_arithmetic&lt;...&gt;::value</code> (3 hits), <code>std::is_pointer&lt;...&gt;::value</code> (4 hits), <code>std::extent&lt;T,N&gt;::value</code> (2 hits), and <code>std::rank&lt;T&gt;::value</code> (2 hits). This is not a violation, but it is <strong>inconsistent style</strong> that increases visual noise.</p>
+</li>
+<li>
+<p><strong>Macro hygiene — missing <code>#undef</code>.</strong></p>
+</li>
+<li><code>H5Pall.hpp</code> defines <code>H5CPP__capicall</code> but <code>#undef</code>s <code>H5CPP__defid</code> (a typo — the macro is never defined, so the <code>#undef</code> is a no-op, and <code>H5CPP__capicall</code> leaks into the global macro namespace).</li>
+<li>
+<p><code>H5Tall.hpp</code> defines <code>H5CPP_REGISTER_TYPE_</code> and <code>H5CPP_REGISTER_STRUCT</code> without <code>#undef</code>. They are meant to be used by consumers, so this is acceptable, but the macro names are in the global namespace without a scoped cleanup.</p>
+</li>
+<li>
+<p><strong><code>const static</code> non-integral variables in headers.</strong><br />
+<code>H5Pall.hpp</code>, <code>H5Pdcpl.hpp</code>, <code>H5Pdapl.hpp</code>, and <code>H5Sall.hpp</code> declare <code>const static</code> objects like <code>h5::dcpl_t dcpl</code>, <code>h5::layout compact</code>, etc. Pre-C++17, <code>const</code> namespace-scope variables have internal linkage, so this is technically safe from ODR. However, C++17 <code>inline</code> variables are the explicit, modern mechanism for header-only variables. No action required for C++17 compliance, but migrating to <code>inline constexpr</code> (where possible) improves clarity.</p>
+</li>
+<li>
+<p><strong>Global-namespace <code>operator&lt;&lt;</code> overloads are <code>inline</code>.</strong><br />
+   Good — no ODR risk. Found in <code>H5cout.hpp</code>, <code>H5Tall.hpp</code>, <code>H5Zpipeline.hpp</code>, <code>H5Dappend.hpp</code>.</p>
+</li>
+</ol>
+<h3 id="recommendations">Recommendations</h3>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Action</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P0</td>
+<td>Fix syntax error in <code>H5Pall.hpp:209</code> and identifier bug in <code>H5Pdcpl.hpp:19</code>.</td>
+<td>Minutes</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Replace <code>std::is_pod&lt;T&gt;::value</code> with <code>std::is_standard_layout_v&lt;T&gt; &amp;&amp; std::is_trivial_v&lt;T&gt;</code>.</td>
+<td>~30 min</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>Replace <code>NULL</code> with <code>nullptr</code>.</td>
+<td>~15 min</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>Remove <code>h5::compat</code> index-sequence shims; use <code>std::index_sequence</code> directly.</td>
+<td>~1 hour</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>Remove <code>h5cpp__constexpr</code> / <code>h5cpp__assert</code> macros.</td>
+<td>~15 min</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>Fix <code>H5CPP__capicall</code> <code>#undef</code> typo.</td>
+<td>Minutes</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>Bulk-replace legacy <code>::value</code> / <code>::type</code> trait accessors with <code>_v</code> / <code>_t</code> aliases.</td>
+<td>~2 hours</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>Replace C-style casts with <code>static_cast</code>/<code>reinterpret_cast</code>.</td>
+<td>~15 min</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="c20-readiness">C++20 Readiness</h2>
+<h3 id="breaking-changes-if-any">Breaking Changes (if any)</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>H5CPP Exposure</th>
+<th>Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>std::is_pod</code> deprecated</td>
+<td>7 hits</td>
+<td><strong>Low</strong> — deprecation warnings only; the trait is not removed.</td>
+</tr>
+<tr>
+<td><code>std::allocator::construct</code> removed</td>
+<td>0 hits</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>std::result_of</code> removed</td>
+<td>0 hits</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>std::is_literal_type</code> removed</td>
+<td>0 hits</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>std::uncaught_exception</code> removed</td>
+<td>0 hits</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>std::auto_ptr</code> removed</td>
+<td>0 hits</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>std::memory_order</code> enum names changed</td>
+<td>0 hits in H5CPP headers (doctest uses them, but that's third-party)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>throw()</code> removed</td>
+<td>0 hits in H5CPP headers (found in third-party <code>half.hpp</code>)</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>std::basic_string::reserve()</code> return value</td>
+<td>0 hits</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion:</strong> H5CPP has <strong>zero breaking changes</strong> moving to C++20. The only friction is deprecation noise from <code>std::is_pod</code>.</p>
+<h3 id="features-to-adopt-with-trade-offs">Features to Adopt (with trade-offs)</h3>
+<table>
+<thead>
+<tr>
+<th>C++20 Feature</th>
+<th>Where it helps</th>
+<th>Trade-off</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>concept</code> / <code>requires</code></strong></td>
+<td>Replace the heavy SFINAE / <code>std::enable_if</code> machinery in <code>H5Tmeta.hpp</code>, <code>H5Dread.hpp</code>, <code>H5Dwrite.hpp</code>, <code>H5Aread.hpp</code>, <code>H5Awrite.hpp</code>.</td>
+<td><strong>Pros:</strong> Cleaner error messages, faster compile times, self-documenting constraints. <strong>Cons:</strong> Breaks C++17 compatibility; must be behind feature-test macros or a major-version bump.</td>
+<td>Medium — refactoring the trait vocabulary into concepts is design work, not just syntax.</td>
+</tr>
+<tr>
+<td><strong><code>std::span&lt;T&gt;</code></strong></td>
+<td>The <code>write(const T* ptr, ...)</code> and <code>read(..., T* ptr)</code> overloads currently take raw pointers + <code>h5::count_t</code>. <code>std::span</code> would unify contiguous-buffer APIs.</td>
+<td><strong>Pros:</strong> Safer, self-describing bounds. <strong>Cons:</strong> Adds a new public-API surface; existing <code>T*</code> overloads must be preserved for backward compatibility.</td>
+<td>Low — add <code>std::span</code> overloads as thin wrappers.</td>
+</tr>
+<tr>
+<td><strong><code>explicit(bool)</code></strong></td>
+<td>The <code>hid_t</code> conversion constructors in <code>H5Iall.hpp</code> use <code>H5CPP__EXPLICIT</code> macro to toggle <code>explicit</code> on/off. <code>explicit(bool)</code> would eliminate the macro entirely.</td>
+<td><strong>Pros:</strong> Removes a macro. <strong>Cons:</strong> C++20-only; needs macro fallback for C++17.</td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong>Designated initializers</strong></td>
+<td><code>h5::offset_t</code>, <code>h5::count_t</code> etc. are initialized with braced lists. Designated init would not add much here because these are homogeneous arrays.</td>
+<td>Minimal benefit for this codebase.</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td><strong><code>using enum</code></strong></td>
+<td>The <code>filter_direction_t</code> enum in <code>H5Zpipeline.hpp</code> and HDF5 C enums like <code>H5D_layout_t</code> could be imported locally.</td>
+<td>Minor readability win in switch statements.</td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong><code>std::format</code></strong></td>
+<td>Error message construction in <code>H5config.hpp</code> uses <code>std::string</code> concatenation. <code>std::format</code> would be cleaner.</td>
+<td><strong>Pros:</strong> Type-safe formatting. <strong>Cons:</strong> <code>&lt;format&gt;</code> header is heavy; the project targets header-only minimalism.</td>
+<td>Low priority.</td>
+</tr>
+<tr>
+<td><strong><code>consteval</code></strong></td>
+<td><code>h5::meta::get_extent()</code> and <code>h5::meta::extent_to_string</code> are already <code>constexpr</code>. <code>consteval</code> would guarantee compile-time only.</td>
+<td><strong>Pros:</strong> Stronger contract. <strong>Cons:</strong> C++20-only; marginal value.</td>
+<td>Low</td>
+</tr>
+<tr>
+<td><strong><code>std::bit_cast</code></strong></td>
+<td>Could replace some <code>reinterpret_cast</code> patterns when mapping POD types to HDF5 types.</td>
+<td><strong>Pros:</strong> Safer, well-defined. <strong>Cons:</strong> Only useful if the library does raw byte-level type punning (it mostly delegates to HDF5 CAPI).</td>
+<td>Low priority.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="migration-effort-estimate">Migration Effort Estimate</h3>
+<ul>
+<li><strong>Minimal C++20 compile (fix warnings only):</strong> ~1 hour (replace <code>std::is_pod</code>, silence any new warnings).</li>
+<li><strong>Adopt concepts for core traits:</strong> ~1–2 days (design + refactor <code>H5Tmeta.hpp</code> vocabulary).</li>
+<li><strong>Add <code>std::span</code> APIs:</strong> ~half a day.</li>
+</ul>
+<hr />
+<h2 id="c23-readiness">C++23 Readiness</h2>
+<h3 id="breaking-changes-if-any_1">Breaking Changes (if any)</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>H5CPP Exposure</th>
+<th>Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>std::aligned_storage</code> deprecated</td>
+<td>0 hits</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>std::aligned_union</code> deprecated</td>
+<td>0 hits</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>std::is_pod</code> still deprecated</td>
+<td>Already noted</td>
+<td>None</td>
+</tr>
+<tr>
+<td><code>throw()</code> still removed</td>
+<td>Already noted</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion:</strong> No breaking changes.</p>
+<h3 id="features-to-adopt-with-trade-offs_1">Features to Adopt (with trade-offs)</h3>
+<table>
+<thead>
+<tr>
+<th>C++23 Feature</th>
+<th>Where it helps</th>
+<th>Trade-off</th>
+<th>Effort</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong><code>std::expected&lt;T,E&gt;</code></strong></td>
+<td>Many H5CPP functions return <code>h5::ds_t</code> and throw on error. <code>std::expected</code> would offer a non-throwing alternative for performance-critical or embedded consumers.</td>
+<td><strong>Pros:</strong> Zero-cost error paths, no exceptions. <strong>Cons:</strong> Major API design decision; would need parallel overloads or a policy-based design.</td>
+<td>High — strategic, not tactical.</td>
+</tr>
+<tr>
+<td><strong><code>if consteval</code></strong></td>
+<td>The <code>constexpr</code> metaprogramming in <code>H5meta.hpp</code> and <code>H5Tmeta.hpp</code> is already <code>if constexpr</code>. <code>if consteval</code> is not needed here because the code does not branch on "am I in a constant-evaluated context?"</td>
+<td>Not applicable.</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td><strong><code>static_assert(false)</code> relaxed</strong></td>
+<td><code>H5Dgather.hpp</code> uses <code>detail::dependent_false_t&lt;T,E&gt;</code> to force a compile error in an unconstrained <code>gather</code> fallback. C++23 allows <code>static_assert(false, "...")</code> directly in templates.</td>
+<td><strong>Pros:</strong> Removes boilerplate <code>dependent_false_t</code>. <strong>Cons:</strong> C++23-only; trivial macro-guard possible.</td>
+<td>Minutes</td>
+</tr>
+<tr>
+<td><strong><code>deducing this</code> / explicit object parameter</strong></td>
+<td>The CRTP <code>pipeline_t&lt;Derived&gt;</code> in <code>H5Zpipeline.hpp</code> and <code>filter_t&lt;Derived&gt;</code> in <code>H5Zall.hpp</code> could be simplified with deducing <code>this</code>, avoiding the <code>static_cast&lt;Derived*&gt;(this)</code> pattern.</td>
+<td><strong>Pros:</strong> Eliminates CRTP boilerplate and potential misuse. <strong>Cons:</strong> C++23-only; the current CRTP is well-tested and stable.</td>
+<td>Medium — design change.</td>
+</tr>
+<tr>
+<td><strong><code>std::print</code> / <code>std::println</code></strong></td>
+<td>Could replace <code>std::cout &lt;&lt; ...</code> in debug/diagnostic code (<code>H5cout.hpp</code>).</td>
+<td><strong>Pros:</strong> Cleaner. <strong>Cons:</strong> <code>&lt;print&gt;</code> requires formatting support; H5CPP is header-only and targets embedded/HPC where iostream may already be avoided.</td>
+<td>Low priority.</td>
+</tr>
+<tr>
+<td><strong><code>std::mdspan</code></strong></td>
+<td>Multidimensional array descriptors (<code>h5::count_t</code>, <code>h5::offset_t</code>) are custom <code>array</code>-like types. <code>std::mdspan</code> is a standardized multidimensional span.</td>
+<td><strong>Pros:</strong> Interoperability with the broader C++23 ecosystem. <strong>Cons:</strong> <code>mdspan</code> is complex; H5CPP's current descriptors are simple, constexpr-friendly, and tightly coupled to HDF5 CAPI.</td>
+<td>Low priority — watch, don't adopt yet.</td>
+</tr>
+<tr>
+<td><strong><code>std::generator</code></strong></td>
+<td>Not applicable to a synchronous I/O library.</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<h3 id="migration-effort-estimate_1">Migration Effort Estimate</h3>
+<ul>
+<li><strong>Tactical C++23 cleanups (<code>static_assert(false)</code>, <code>deducing this</code> experiments):</strong> ~half a day.</li>
+<li><strong>Strategic <code>std::expected</code> error-handling path:</strong> ~1 week (design + implementation + tests).</li>
+</ul>
+<hr />
+<h2 id="c26-preview">C++26 Preview</h2>
+<h3 id="anticipated-breaking-changes">Anticipated Breaking Changes</h3>
+<p>As of the 2026-05-12 draft status, <strong>no breaking changes</strong> are anticipated that would affect H5CPP. The library does not use:
+- <code>= delete(void)</code> (not applicable)
+- Trigraphs (already extinct)
+- <code>register</code> keyword
+- Dynamic exception specifications</p>
+<h3 id="features-to-watch">Features to Watch</h3>
+<table>
+<thead>
+<tr>
+<th>C++26 Feature</th>
+<th>Relevance to H5CPP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pack indexing</strong></td>
+<td><code>h5::meta::detail::cat</code> (tuple concatenation) and the <code>static_for</code> fold-expression patterns could be simplified with pack indexing <code>Ts...[0]</code>. This would reduce template-metaprogramming complexity.</td>
+</tr>
+<tr>
+<td><strong><code>std::is_within_lifetime</code></strong></td>
+<td>Not applicable — the library does not do low-level lifetime introspection beyond RAII handles.</td>
+</tr>
+<tr>
+<td><strong>Reflection (std::meta)</strong></td>
+<td>If reflection lands in C++26, the manual <code>H5CPP_REGISTER_STRUCT</code> macro and the <code>h5::name&lt;T&gt;</code> specialization dance could be replaced with compile-time reflection. This would be a <strong>game-changer</strong> for HDF5 type registration.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Trade-off note:</strong> C++26 reflection is the single most exciting feature for H5CPP's long-term architecture. It could eliminate the need for the external <code>h5cpp</code> compiler tool for POD struct registration. However, wait for standardization before designing around it.</p>
+</blockquote>
+<hr />
+<h2 id="appendix-file-by-file-notes">Appendix: File-by-File Notes</h2>
+<h3 id="core-metaprogramming-h5metahpp-h5tmetahpp-compathpp">Core Metaprogramming (<code>H5meta.hpp</code>, <code>H5Tmeta.hpp</code>, <code>compat.hpp</code>)</h3>
+<ul>
+<li><strong><code>H5meta.hpp</code>:</strong> Uses C++17 fold expressions correctly (<code>(callback(...), ...)</code>). Custom <code>conditional</code> and <code>cat</code> tuple-concatenation are present but redundant. <code>static_for</code> is a solid C++17 implementation.</li>
+<li><strong><code>H5Tmeta.hpp</code>:</strong> The newest code. Uses <code>std::bool_constant</code>, <code>std::remove_cv_t</code>, <code>std::remove_reference_t</code>, <code>std::disjunction_v</code>, <code>std::conjunction_v</code>, <code>std::is_pointer_v</code> — all C++17. This is the <strong>model</strong> for how the rest of the library should look.</li>
+<li><strong><code>compat.hpp</code>:</strong> Back-ports <code>index_sequence</code>, <code>make_index_sequence</code>, <code>void_t</code>, <code>is_detected</code>. All redundant in C++17 except <code>is_detected</code> (which is not in the standard). Recommend keeping <code>is_detected</code> but dropping the <code>index_sequence</code> / <code>void_t</code> shims.</li>
+</ul>
+<h3 id="type-system-h5tallhpp">Type System (<code>H5Tall.hpp</code>)</h3>
+<ul>
+<li><code>H5CPP_REGISTER_TYPE_</code> macro is clean but leaks into the global macro namespace.</li>
+<li><code>if constexpr</code> used correctly inside the macro to branch on pointer types.</li>
+<li><code>std::is_pointer&lt;C_TYPE&gt;::value</code> should be <code>std::is_pointer_v&lt;C_TYPE&gt;</code> for consistency.</li>
+</ul>
+<h3 id="handle-system-h5iallhpp">Handle System (<code>H5Iall.hpp</code>)</h3>
+<ul>
+<li>CRTP-like <code>hid_t</code> template is well-structured.</li>
+<li><code>H5CPP__EXPLICIT</code> macro could become <code>explicit(bool)</code> in C++20.</li>
+<li>Copy/move assignment operators correctly guard against self-assignment.</li>
+</ul>
+<h3 id="io-dispatch-h5dwritehpp-h5dreadhpp-h5dcreatehpp-h5dappendhpp">I/O Dispatch (<code>H5Dwrite.hpp</code>, <code>H5Dread.hpp</code>, <code>H5Dcreate.hpp</code>, <code>H5Dappend.hpp</code>)</h3>
+<ul>
+<li>Heavy use of <code>if constexpr</code> for compile-time argument parsing (offset/stride/block/count presence). This is <strong>exactly</strong> what C++17 was designed for.</li>
+<li><code>arg::tpos</code> and <code>arg::get</code> provide a clean "named optional arguments" pattern.</li>
+<li><code>try</code> / <code>catch</code> blocks around large template bodies are present; this is valid C++17 but can bloat code size. Consider <code>noexcept</code> contracts in the future.</li>
+</ul>
+<h3 id="property-lists-h5pallhpp-h5pdcplhpp-h5pdaplhpp">Property Lists (<code>H5Pall.hpp</code>, <code>H5Pdcpl.hpp</code>, <code>H5Pdapl.hpp</code>)</h3>
+<ul>
+<li><strong>Bug:</strong> <code>H5Pall.hpp:209</code> syntax error (<code>impl::fapl_args&lt;..., H5Pset_fapl_direct&gt;</code> missing <code>&gt;</code>).</li>
+<li><strong>Bug:</strong> <code>H5Pdcpl.hpp:19</code> uses <code>dapl</code> instead of <code>dcpl</code>.</li>
+<li><code>const static</code> factory objects (<code>h5::gzip</code>, <code>h5::chunk</code>, etc.) are idiomatic for this library but could be <code>inline constexpr</code> in C++17.</li>
+</ul>
+<h3 id="pipeline-h5zpipelinehpp-h5zallhpp">Pipeline (<code>H5Zpipeline.hpp</code>, <code>H5Zall.hpp</code>)</h3>
+<ul>
+<li>CRTP <code>pipeline_t&lt;Derived&gt;</code> and <code>filter_t&lt;Derived&gt;</code> are stable.</li>
+<li><code>aligned_alloc</code> + C-style cast <code>(char*)</code> is present. Prefer <code>static_cast&lt;char*&gt;(aligned_alloc(...))</code>.</li>
+<li><code>std::unique_ptr&lt;char&gt;</code> with custom <code>free</code> deleter is used; this is correct but <code>std::unique_ptr&lt;char, h5::impl::free&gt;</code> would be more explicit.</li>
+</ul>
+<h3 id="error-handling-h5eallhpp">Error Handling (<code>H5Eall.hpp</code>)</h3>
+<ul>
+<li><code>thread_local</code> function pointer and <code>void*</code> for HDF5 error stack callback — correct and thread-safe.</li>
+<li>Exception hierarchy is deep but well-organized (<code>h5::error::io::dataset::write</code>, etc.).</li>
+</ul>
+<h3 id="output-h5couthpp">Output (<code>H5cout.hpp</code>)</h3>
+<ul>
+<li><code>operator&lt;&lt;</code> overloads are <code>inline</code> and in the global namespace — safe from ODR.</li>
+<li><code>std::ostream&amp; operator&lt;&lt;(std::ostream&amp;, const std::vector&lt;T&gt;&amp;)</code> is defined globally. This <strong>could</strong> clash with user-defined overloads in other libraries. Consider moving it to <code>namespace h5</code> and relying on ADL, or scoping it.</li>
+</ul>
+<h3 id="linear-algebra-adapters-h5marmahpp-h5meigenhpp-etc">Linear Algebra Adapters (<code>H5Marma.hpp</code>, <code>H5Meigen.hpp</code>, etc.)</h3>
+<ul>
+<li>Clean specialization of <code>h5::impl::data</code>, <code>h5::impl::size</code>, <code>h5::impl::rank</code>, <code>h5::impl::get</code>.</li>
+<li><code>const_cast</code> in Eigen adapter (<code>H5Meigen.hpp:39,43</code>) is noted with a <code>// TODO: remove const_cast</code>. This is a code-quality issue, not a standard-compliance issue.</li>
+</ul>
+<h3 id="tests-testh5compatcpp-testh5metacpp">Tests (<code>test/H5compat.cpp</code>, <code>test/H5meta.cpp</code>)</h3>
+<ul>
+<li>Tests already use <code>std::is_same_v</code>, confirming the project's <em>intent</em> is to use modern idioms — the legacy headers just haven't been fully modernized yet.</li>
+<li><code>test/H5compat.cpp</code> tests the back-port shims. If the shims are removed, these tests become unnecessary.</li>
+</ul>
+<hr />
+<p><em>End of report.</em></p>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright custom-footer">
+        <div class="custom-footer-left">
+          Blockchain, cryptographic protocols, HPC, or trading systems in C++, Rust, Julia, Python, R and CUDA
+        </div>
+        <div class="custom-footer-right">
+          © 2017–2025 VargaLABS, Toronto, ON, Canada 🇨🇦
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["search.suggest", "content.code.copy", "content.tooltips", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/mathjax.js"></script>
+      
+        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+        <script src="https://cdn.tailwindcss.com"></script>
+      
+        <script src="../javascripts/tw-config.js"></script>
+      
+        <script src="../javascripts/asciinema-player.min.js"></script>
+      
+        <script src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
+      
+        <script src="https://unpkg.com/@popperjs/core@2"></script>
+      
+        <script src="https://unpkg.com/tippy.js@6"></script>
+      
+    
+  </body>
+</html>

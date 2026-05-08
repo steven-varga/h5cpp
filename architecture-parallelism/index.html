@@ -13,8 +13,10 @@
         <meta name="author" content="Steven Varga">
       
       
-        <link rel="canonical" href="https://steven-varga.ca/architecture-parallelism/">
+        <link rel="canonical" href="https://vargalabs.github.io/h5cpp/architecture-parallelism/">
       
+      
+        <link rel="prev" href="../architecture-integration/">
       
       
       
@@ -26,7 +28,7 @@
     
     
       
-        <title>Architecture parallelism - VargaLABS</title>
+        <title>Parallel I/O - VargaLABS</title>
       
     
     
@@ -81,17 +83,17 @@
     <meta property="og:site_name" content="VargaLABS" />
     <meta property="og:title" content="VargaLABS" />
     <meta property="og:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
-    <meta property="og:url" content="https://steven-varga.ca/architecture-parallelism/" />
-    <meta property="og:image" content="https://steven-varga.ca//assets/social/og-default.png" />
+    <meta property="og:url" content="https://vargalabs.github.io/h5cpp/architecture-parallelism/" />
+    <meta property="og:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="" />
     <meta name="twitter:title" content="VargaLABS" />
     <meta name="twitter:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
-    <meta name="twitter:image" content="https://steven-varga.ca//assets/social/og-default.png" />
+    <meta name="twitter:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
 
     <!-- SEO -->
-    <link rel="canonical" href="https://steven-varga.ca/architecture-parallelism/" />
+    <link rel="canonical" href="https://vargalabs.github.io/h5cpp/architecture-parallelism/" />
     <meta name="description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
     <script type="application/ld+json">
     {
@@ -99,7 +101,7 @@
     "@type": "BlogPosting",
     "headline": "VargaLABS",
     "description": "H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5",
-    "url": "https://steven-varga.ca/architecture-parallelism/",
+    "url": "https://vargalabs.github.io/h5cpp/architecture-parallelism/",
     "datePublished": "2010-01-01",
     "author": {
         "@type": "Person",
@@ -110,10 +112,10 @@
         "name": "VargaLABS",
         "logo": {
         "@type": "ImageObject",
-        "url": "https://steven-varga.ca//assets/logo.png"
+        "url": "https://vargalabs.github.io/h5cpp//assets/logo.png"
         }
     },
-    "image": "https://steven-varga.ca//assets/social/og-default.png"
+    "image": "https://vargalabs.github.io/h5cpp//assets/social/og-default.png"
     }
     </script>    
 
@@ -175,7 +177,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Architecture parallelism
+              Parallel I/O
             
           </span>
         </div>
@@ -372,15 +374,62 @@
   
   
   
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
-      <a href="../design/" class="md-nav__link">
+      <a href="../stl/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Design
+    Supported Types
   
 
     
@@ -392,23 +441,89 @@
     </li>
   
 
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compiler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compiler Tool
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
     
       
       
   
   
+    
   
   
+  
     
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
         
           
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
@@ -429,7 +544,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -447,6 +562,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../design/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Design Philosophy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../architecture-core/" class="md-nav__link">
         
   
@@ -454,7 +597,7 @@
   <span class="md-ellipsis">
     
   
-    HDF5 concepts
+    HDF5 Concepts
   
 
     
@@ -496,28 +639,21 @@
 
               
             
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
+              
+                
   
   
   
   
     <li class="md-nav__item">
-      <a href="../examples/" class="md-nav__link">
+      <a href="../architecture-types/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Examples
+    Type System
   
 
     
@@ -526,6 +662,196 @@
   
 
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture-integration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Linalg & STL
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel I/O
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Parallel I/O
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#motivating-example-parallel-hdf5-for-strategy-research" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Motivating Example: Parallel HDF5 for Strategy Research
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Motivating Example: Parallel HDF5 for Strategy Research">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-parallel-hdf5-helps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why parallel HDF5 helps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#typical-research-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Typical research layout
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-this-is-embarrassingly-parallel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this is embarrassingly parallel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example-sketch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example sketch
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-this-buys-you" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What this buys you
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#practical-payoff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Practical payoff
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -658,7 +984,7 @@
 
 
 
-  <h1>Architecture parallelism</h1>
+  <h1>Parallel I/O</h1>
 
 <h2 id="motivating-example-parallel-hdf5-for-strategy-research">Motivating Example: Parallel HDF5 for Strategy Research</h2>
 <p>A common quantitative workflow is to evaluate many independent strategies over the same historical dataset. For example:</p>
@@ -761,7 +1087,7 @@
 </span><span id="__span-1-34"><a id="__codelineno-1-34" name="__codelineno-1-34" href="#__codelineno-1-34"></a>
 </span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a><span class="w">    </span><span class="n">arma</span><span class="o">::</span><span class="n">mat</span><span class="w"> </span><span class="n">returns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">h5</span><span class="o">::</span><span class="n">read</span><span class="o">&lt;</span><span class="n">arma</span><span class="o">::</span><span class="n">mat</span><span class="o">&gt;</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;/research/input/returns&quot;</span><span class="p">);</span>
 </span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>
-</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">  </span><span class="mi">4</span><span class="w">  </span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">pnl</span><span class="p">,</span><span class="w"> </span><span class="n">stats</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">run_strategy</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span><span class="w"> </span><span class="n">rank</span><span class="p">);</span>
+</span><span id="__span-1-37"><a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a><span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="p">[</span><span class="n">pnl</span><span class="p">,</span><span class="w"> </span><span class="n">stats</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">run_strategy</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span><span class="w"> </span><span class="n">rank</span><span class="p">);</span>
 </span><span id="__span-1-38"><a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
 </span><span id="__span-1-39"><a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;/research/output/strategy_&quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="n">rank</span><span class="p">);</span>
 </span><span id="__span-1-40"><a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a>
