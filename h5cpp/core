@@ -47,6 +47,7 @@
 	#include "H5Mdlib.hpp"
 	#include "H5Meigen.hpp"
 	#include "H5Mblaze.hpp"
+	#include "H5Mnt2.hpp"
 	#include "H5Mitpp.hpp"
 	#include "H5Mblitz.hpp"
 	#include "H5Mublas.hpp"

@@ -229,6 +229,12 @@ else()
     endif()
 endif()
 
+find_file(NT2_TABLE_HPP "nt2/table.hpp" PATHS /usr/include /usr/local/include "${CMAKE_SOURCE_DIR}/thirdparty/nt2" PATH_SUFFIXES include)
+if( NT2_TABLE_HPP )
+	message( "-- Found: nt2 table header, added to examples" )
+	add_h5cpp_example(nt2 linalg/nt2.cpp LIBRARIES nt2::nt2)
+endif()
+
 # uBLAS is fully vendored (header-only closure under thirdparty/ublas, #293) —
 # libublas resolves <boost/numeric/ublas/...> standalone, so no system Boost is
 # required and the example always builds.

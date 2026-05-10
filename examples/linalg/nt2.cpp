@@ -1,0 +1,58 @@
+/*
+ * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+ * Author: Varga, Steven <steven@vargaconsulting.ca>
+ */
+
+#include <iostream>
+#include <nt2/table.hpp>
+#include <h5cpp/all>
+
+using namespace std;
+//
+
+template<class T> using Table1D = h5::nt2::table1d<T>;
+template<class T> using Table2D = h5::nt2::table2d<T>;
+/* only dynamic nt2::table is supported */
+
+int main(){
+	{ // CREATE - WRITE
+		Table2D<short> M( nt2::of_size(2,3) );
+		M = 1; // fill with ones
+		h5::fd_t fd = h5::create("nt2.h5",H5F_ACC_TRUNC); 	// and a file
+		h5::ds_t ds = h5::create<short>(fd,"create then write"
+				,h5::current_dims{10,20}
+				,h5::max_dims{10,H5S_UNLIMITED}
+				,h5::chunk{2,3} | h5::fill_value<short>{3} |  h5::gzip{9}
+		);
+		h5::write( ds,  M, h5::offset{2,2}, h5::stride{1,3}  );
+	}
+
+	{
+		Table1D<float> V( nt2::of_size(8) );
+		V(1) = 1.f; V(2) = 2.f; V(3) = 3.f; V(4) = 4.f;
+		V(5) = 5.f; V(6) = 6.f; V(7) = 7.f; V(8) = 8.f;
+		// simple one shot write that computes current dimensions and saves vector
+		h5::write( "nt2.h5", "one shot create write",  V);
+		// what if you want to position a vector inside a higher dimension with some added complexity?	
+		h5::write( "nt2.h5", "vector inside matrix",  V // object contains 'count' and rank being written
+			,h5::count{1,1} 		  // encodes rank and shape: 2x4 block
+			,h5::current_dims{40,50}  // control file_space directly where you want to place vector
+			,h5::offset{5,0}          // when no explicit current dimension given current dimension := offset .+ object_dim .* stride (hadamard product)  
+ 			,h5::stride{3,5} 		  //
+			,h5::block{2,4}           // 
+			,h5::max_dims{40,H5S_UNLIMITED}  // wouldn't it be nice to have unlimited dimension? if no explicit chunk is set, then the object dimension 
+							 // is used as unit chunk
+		);
+	}
+	{ // CREATE - READ: we're reading back the dataset created in the very first step
+	  // note that data is only data, can be reshaped, cast to any format and content be modified through filtering 
+		auto fd = h5::open("nt2.h5", H5F_ACC_RDWR,           // you can have multiple fd open with H5F_ACC_RDONLY, but single write
+				h5::fclose_degree_strong | h5::sec2); 		   // and able to set various properties  
+	}
+	{ // READ: 
+		Table2D<short> M = h5::read<Table2D<short>>("nt2.h5","create then write"); // read entire dataset back with a single read
+	}
+}
+
+
+
