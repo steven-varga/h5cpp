@@ -5,78 +5,121 @@
 #pragma once
 
 #if defined(OPENCV_CORE_HPP) || defined(H5CPP_USE_OPENCV)
-#include <opencv2/core.hpp>
-
-namespace h5::opencv {
-    template <class Object>
-    using is_supported = std::bool_constant<
-        std::is_same_v<Object, cv::Mat> ||
-        std::is_same_v<Object, cv::Mat_<float>> ||
-        std::is_same_v<Object, cv::Mat_<double>> ||
-        std::is_same_v<Object, cv::Mat_<int>> ||
-        std::is_same_v<Object, cv::Mat_<short>> ||
-        std::is_same_v<Object, cv::Mat_<unsigned char>>
-    >;
-}
 
 namespace h5::meta {
-    template<> struct is_contiguous<cv::Mat> : std::true_type {};
-    template<typename T> struct is_contiguous<cv::Mat_<T>> : std::true_type {};
+    template <class T> struct is_contiguous<cv::Mat_<T>> : std::true_type {};
+    template <class T, int N> struct is_contiguous<cv::Vec<T,N>> : std::true_type {};
+    template <class T, int M, int N> struct is_contiguous<cv::Matx<T,M,N>> : std::true_type {};
 }
 
 namespace h5::impl {
-    template<> struct decay<cv::Mat>{ using type = void; };
-    template<> struct decay<cv::Mat_<float>>{ using type = float; };
-    template<> struct decay<cv::Mat_<double>>{ using type = double; };
-    template<> struct decay<cv::Mat_<int>>{ using type = int; };
-    template<> struct decay<cv::Mat_<short>>{ using type = short; };
-    template<> struct decay<cv::Mat_<unsigned char>>{ using type = unsigned char; };
+    // decay
+    template <class T> struct decay<cv::Mat_<T>>{ using type = T; };
+    template <class T, int N> struct decay<cv::Vec<T,N>>{ using type = T; };
+    template <class T, int M, int N> struct decay<cv::Matx<T,M,N>>{ using type = T; };
 
-    inline unsigned char* data(cv::Mat& ref) { return ref.data; }
-    inline const unsigned char* data(const cv::Mat& ref) { return ref.data; }
-    template<typename T> inline T* data(cv::Mat_<T>& ref) { return reinterpret_cast<T*>(ref.data); }
-    template<typename T> inline const T* data(const cv::Mat_<T>& ref) { return reinterpret_cast<const T*>(ref.data); }
-
-    template<> struct rank<cv::Mat> : public std::integral_constant<size_t,2>{};
-    template<typename T> struct rank<cv::Mat_<T>> : public std::integral_constant<size_t,2>{};
-
-    inline std::array<size_t,2> size(const cv::Mat& ref) {
-        return { (hsize_t)ref.rows, (hsize_t)ref.cols };
+    // data
+    template <class T> inline
+    const T* data( const cv::Mat_<T>& ref ){
+        return reinterpret_cast<const T*>(ref.data);
     }
-    template<typename T>
-    inline std::array<size_t,2> size(const cv::Mat_<T>& ref) {
-        return { (hsize_t)ref.rows, (hsize_t)ref.cols };
+    template <class T> inline
+    T* data( cv::Mat_<T>& ref ){
+        return reinterpret_cast<T*>(ref.data);
+    }
+    template <class T, int N> inline
+    const T* data( const cv::Vec<T,N>& ref ){
+        return ref.val;
+    }
+    template <class T, int N> inline
+    T* data( cv::Vec<T,N>& ref ){
+        return ref.val;
+    }
+    template <class T, int M, int N> inline
+    const T* data( const cv::Matx<T,M,N>& ref ){
+        return ref.val;
+    }
+    template <class T, int M, int N> inline
+    T* data( cv::Matx<T,M,N>& ref ){
+        return ref.val;
     }
 
-    template<> struct get<cv::Mat> {
-        static inline cv::Mat ctor(std::array<size_t,2> dims) {
-            return cv::Mat((int)dims[0], (int)dims[1], CV_8U);
-        }
-    };
-    template<> struct get<cv::Mat_<float>> {
-        static inline cv::Mat_<float> ctor(std::array<size_t,2> dims) {
-            return cv::Mat_<float>((int)dims[0], (int)dims[1]);
-        }
-    };
-    template<> struct get<cv::Mat_<double>> {
-        static inline cv::Mat_<double> ctor(std::array<size_t,2> dims) {
-            return cv::Mat_<double>((int)dims[0], (int)dims[1]);
-        }
-    };
-    template<> struct get<cv::Mat_<int>> {
-        static inline cv::Mat_<int> ctor(std::array<size_t,2> dims) {
-            return cv::Mat_<int>((int)dims[0], (int)dims[1]);
-        }
-    };
-    template<> struct get<cv::Mat_<short>> {
-        static inline cv::Mat_<short> ctor(std::array<size_t,2> dims) {
-            return cv::Mat_<short>((int)dims[0], (int)dims[1]);
-        }
-    };
-    template<> struct get<cv::Mat_<unsigned char>> {
-        static inline cv::Mat_<unsigned char> ctor(std::array<size_t,2> dims) {
-            return cv::Mat_<unsigned char>((int)dims[0], (int)dims[1]);
-        }
-    };
+    // rank
+    template <class T> struct rank<cv::Mat_<T>> : public std::integral_constant<size_t,2>{};
+    template <class T, int N> struct rank<cv::Vec<T,N>> : public std::integral_constant<size_t,1>{};
+    template <class T, int M, int N> struct rank<cv::Matx<T,M,N>> : public std::integral_constant<size_t,2>{};
+
+    // size
+    template <class T> inline std::array<size_t,2> size( const cv::Mat_<T>& ref ){
+        return {(size_t)ref.rows, (size_t)ref.cols};
+    }
+    template <class T, int N> inline std::array<size_t,1> size( const cv::Vec<T,N>& ref ){
+        return {(size_t)N};
+    }
+    template <class T, int M, int N> inline std::array<size_t,2> size( const cv::Matx<T,M,N>& ref ){
+        return {(size_t)M, (size_t)N};
+    }
+
+    // CTOR-s
+    template <class T> struct get<cv::Mat_<T>> {
+        static inline cv::Mat_<T> ctor( std::array<size_t,2> dims ){
+            return cv::Mat_<T>( (int)dims[0], (int)dims[1] );
+    }};
+    template <class T, int N> struct get<cv::Vec<T,N>> {
+        static inline cv::Vec<T,N> ctor( std::array<size_t,1> dims ){
+            return cv::Vec<T,N>();
+    }};
+    template <class T, int M, int N> struct get<cv::Matx<T,M,N>> {
+        static inline cv::Matx<T,M,N> ctor( std::array<size_t,2> dims ){
+            return cv::Matx<T,M,N>();
+    }};
 }
+
+// cv::Mat runtime dispatch overloads
+namespace h5 {
+    template <class... args_t>
+    inline h5::ds_t write(const h5::ds_t& ds, const cv::Mat& mat, args_t&&... args) {
+        if (CV_MAT_CN(mat.type()) != 1)
+            throw std::runtime_error("h5::write(cv::Mat) requires single-channel cv::Mat");
+        cv::Mat continuous = mat.isContinuous() ? mat : mat.clone();
+        auto dispatch = [&](auto dummy) -> h5::ds_t {
+            using T = decltype(dummy);
+            cv::Mat_<T> mat_(continuous.rows, continuous.cols, reinterpret_cast<T*>(continuous.data));
+            return h5::write(ds, mat_, std::forward<args_t>(args)...);
+        };
+        switch (CV_MAT_DEPTH(continuous.type())) {
+            case CV_8U:  return dispatch(static_cast<uint8_t>(0));
+            case CV_8S:  return dispatch(static_cast<int8_t>(0));
+            case CV_16U: return dispatch(static_cast<uint16_t>(0));
+            case CV_16S: return dispatch(static_cast<int16_t>(0));
+            case CV_32S: return dispatch(static_cast<int32_t>(0));
+            case CV_32F: return dispatch(static_cast<float>(0));
+            case CV_64F: return dispatch(static_cast<double>(0));
+            default: throw std::runtime_error("unsupported cv::Mat element type");
+        }
+    }
+
+    template <class... args_t>
+    inline h5::ds_t write(const h5::fd_t& fd, const std::string& dataset_path, const cv::Mat& mat, args_t&&... args) {
+        if (CV_MAT_CN(mat.type()) != 1)
+            throw std::runtime_error("h5::write(cv::Mat) requires single-channel cv::Mat");
+        cv::Mat continuous = mat.isContinuous() ? mat : mat.clone();
+        auto dispatch = [&](auto dummy) -> h5::ds_t {
+            using T = decltype(dummy);
+            cv::Mat_<T> mat_(continuous.rows, continuous.cols, reinterpret_cast<T*>(continuous.data));
+            return h5::write(fd, dataset_path, mat_, std::forward<args_t>(args)...);
+        };
+        switch (CV_MAT_DEPTH(continuous.type())) {
+            case CV_8U:  return dispatch(static_cast<uint8_t>(0));
+            case CV_8S:  return dispatch(static_cast<int8_t>(0));
+            case CV_16U: return dispatch(static_cast<uint16_t>(0));
+            case CV_16S: return dispatch(static_cast<int16_t>(0));
+            case CV_32S: return dispatch(static_cast<int32_t>(0));
+            case CV_32F: return dispatch(static_cast<float>(0));
+            case CV_64F: return dispatch(static_cast<double>(0));
+            default: throw std::runtime_error("unsupported cv::Mat element type");
+        }
+    }
+}
+
 #endif
