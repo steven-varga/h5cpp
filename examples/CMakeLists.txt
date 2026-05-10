@@ -235,6 +235,12 @@ endif()
 message("-- Vendored: ublas added to examples")
 add_h5cpp_example(ublas linalg/ublas.cpp LIBRARIES libublas)
 
+find_package(OpenCV QUIET)
+if(OpenCV_FOUND)
+	message( "-- Found: OpenCV ${OpenCV_VERSION}, added to examples" )
+	add_h5cpp_example(opencv linalg/opencv.cpp LIBRARIES ${OpenCV_LIBS})
+endif()
+
 # ------------------------------------------------------------------------------
 # Sparse linalg examples (CSC group layout, scipy/Julia interop)
 # ------------------------------------------------------------------------------

@@ -53,6 +53,7 @@
 	#include "H5Mvalarray.hpp"
 	#include "H5Mxtensor.hpp"
 	#include "H5Mxtensorblas.hpp"
+	#include "H5Mopencv.hpp"
 	
 	#include "H5Iall.hpp" /* base hid_t type definitions */
 	#include "H5Tall.hpp"
