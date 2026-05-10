@@ -229,6 +229,9 @@ else()
     endif()
 endif()
 
+message( "-- Vendored: gmtl added to examples" )
+add_h5cpp_example(gmtl linalg/gmtl.cpp LIBRARIES libgmtl)
+
 # uBLAS is fully vendored (header-only closure under thirdparty/ublas, #293) —
 # libublas resolves <boost/numeric/ublas/...> standalone, so no system Boost is
 # required and the example always builds.

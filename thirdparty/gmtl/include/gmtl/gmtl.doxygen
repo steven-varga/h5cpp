@@ -1,0 +1,150 @@
+/** @mainpage Generic Math Template Library
+ *  @section Using Using This Reference Guide
+ *  Welcome to GMTL.  To use this reference guide effectively, we suggest 
+ *  you see the <a href="modules.html">Modules</a> section first.
+ *  The <a href="modules.html">Modules</a> section provides the most 
+ *  intuitive navigation of the reference guide because this
+ *  section is structured very similar GMTL.  Be sure 
+ *  to read the GMTL Programmer's Guide (available on the 
+ *  <a href="http://ggt.sf.net">GMTL web site</a>) to 
+ *  understand the philosophy behind GMTL.  Understanding abstractly what 
+ *  GMTL is and why it is designed this way will make
+ *  your life with GMTL very easy.  Lastly, you should subscribe to the mailing
+ *  lists so that you can ask questions, or propose extensions to the library.
+ *
+ *  Please see the @ref gmtlfaq "GMTL FAQ"  for more information.
+ *
+ *  @section API Quickly Understanding The GMTL API
+ *  The GMTL API has two aspects you should keep in mind. The <i>data</i>
+ *  types, and the <i>operations</i> on the data.
+ *  <p>
+ *  All data types and operations are defined in the <tt>gmtl</tt>
+ *  namespace.
+ *  Thus all types must be prefixed with the <tt>gmtl::</tt>
+ *  scope or a <tt>using gmtl;</tt> command can be used to bring all
+ *  of the GMTL functionality into the local scope.
+ *
+ *  @subsection Types Supplied GMTL Math Types
+ *  GMTL comes with many math data types: Vec, Point, Matrix, Quat, Coord, 
+ *  Sphere.
+ *  Please read the programmer's guide for more detailed information.
+ *  Or read on for a light overview on what GMTL is.
+ *
+ *  @section Overview A Light Overview Of GMTL
+ *  GMTL stands for (<b>G</b>)eneric (<b>M</b>)ath
+ *  (<b>T</b>)emplate (<b>L</b>)ibrary. 
+ *  It is a math library designed to be high-performance, 
+ *  extensible, and generic. The design is based upon discussion with many 
+ *  experts in the field of computer graphics and virtual reality and is the 
+ *  culmination of many previous graphics math library efforts. GMTL gives 
+ *  the graphics programmer several core math types and a rich library of 
+ *  graphics/math operations on those types.
+ *  
+ *  @subsection Design Design
+ *  The design of GMTL allows extensibility while mantaining a stable core.
+ *  Core data types are separated from operations. This allows anyone to write
+ *  their own math routines to extend or replace parts of the GMTL. This 
+ *  feature
+ *  allows a very stable core set of math primitives that seldom change due to
+ *  extensions, maintainance, or programmer error.
+ *  <p>
+ *  All math primitives in GMTL use generic programming techniques
+ *  to give the programmer many options to define their data. For example, 
+ *  matrices
+ *  and vectors can be any dimension and any type. GMTL suffers no loss of 
+ *  performance
+ *  due to these generalities because the parameter choices made are bound 
+ *  at <i>compile time</i>.
+ *
+ *  @subsection Implementation Implementation
+ *  GMTL is implemented using generic programming and template metaprogramming.
+ *  Generic
+ *  programming allows selection by the user of size and type information for 
+ *  all
+ *  data types in GMTL. For example, the generic Matrix type allows a 
+ *  programmer
+ *  to select between any size (N x M) and any datatype (float, double, 
+ *  int...).
+ *  The selection of these parameters is done through <i>template
+ *  parameters</i>. To ease the use of these parameters, the system declares
+ *  several typedefs that capture commonly used options.
+ *  <p>
+ *  Requested data types are statically bound and optimized by the compiler.
+ *  The operations supplied with GMTL are implemented generically using a 
+ *  technique
+ *  called <i>template metaprogramming</i>. Template metaprogramming
+ *  allows things such as loops to be unrolled and conditionals to be 
+ *  evaluated
+ *  <i>by the compiler</i>. Things such as loops and conditionals are
+ *  evaluated statically, rather than at runtime. In addition, advanced 
+ *  optimizations
+ *  can be performed that do this such as eliminate temporary variables and 
+ *  other
+ *  intermediate computations. The result is compiled code that can behave as
+ *  fast
+ *  (or faster) then using traditional hand-coding methods such as loop 
+ *  unrolling, etc...
+ *
+ *  @subsection Testing Testing
+ *  GMTL has an integrated test suite included in the source code distribution.
+ *  The suite tests GMTL for correctness as well as performance degradation.
+ *  The GMTL developers have put much time and effort into the test suite 
+ *  because
+ *  we think that it will ensure that the code stays stable when changes are 
+ *  made,
+ *  and that changes don't introduce performance hits. The bottom line is, 
+ *  if any
+ *  behaviour changes in GMTL we want to know about it before it bites us. 
+ *  As a result
+ *  of this philosophy, any contributions to GMTL also need to be well 
+ *  tested.
+ *  Submissions will not be accepted without tests for correctness and 
+ *  performance.
+ *
+ *        
+ */
+ 
+/** @defgroup Defines Global Flags: Xelt, XYZ, etc...
+ *  Constant Static Global Flags
+ */
+ 
+/** @defgroup Math C Math Abstraction: sin, cos, tan, Min, Max, PI
+ *  We've abstracted C math to be cross platform and typesafe.
+ */
+
+/** @defgroup Types Abstract Data Types: Matrix, Vec, Quat, Coord, Sphere, Plane
+ *  GMTL comes with many math data types: Vec, Point, Matrix, Quat, Coord, Sphere.
+ */
+
+
+
+/** @defgroup Ops Mathematical Operations: add(...), sub(...), mul(...), div(...), invert(...), dot(...), cross(...)
+ *  Implements fundamental mathematical operations such as +, -, *, invert, dot product.
+ */
+
+/** @defgroup Transforms Spacial Transformers: xform( ... ), operator*( ... ).
+ *  Transform points and vectors by Matrices and Quaternions.  Note that xform
+ *  is defined differently for Point and Vec.  By Point is a full xform, by Vec 
+ *  is only a rotation.
+ */
+
+/** @defgroup Compare Comparison: isEqual(...), isEquiv(...), ==, !=
+ *  Tests for equality between GMTL data types.
+ */
+
+/** @defgroup Generate Generators: make( ... ), set( ... ).
+ *  Make get and set functions for all math types in gmtl.
+ */
+
+/** @defgroup Interp Interpolation: lerp(...), slerp(...)
+ *  Functions to interpolate between two values.
+ */
+ 
+
+/** @defgroup Output Output Stream Methods: operator<<( ... ). 
+ *  Output GMTL data types to an ostream.  std::ostream& operator<< methods...
+ */
+
+
+/** @defgroup Meta Template Metaprogramming Utilities */
+/** @defgroup HelperMeta Template Metaprogramming Utilities (Helpers) */
