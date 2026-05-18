@@ -92,6 +92,7 @@ cmake --install build
 - **Rank-7** array support
 - **Expanded attribute** type coverage
 - **FAPL-scoped worker pool** — `h5::create(..., h5::threads{N} | h5::backpressure{M})` opts the file into parallel filter compression; all chunked datasets opened on that file (and pt_t built from them) inherit the pool with async-pipelined dispatch
+- **Async-mode scaffold** — `h5::async::fd_t fd = h5::async::create(...)` returns a descriptor whose `operator ::hid_t()` is `= delete`'d so accidental raw-C-API calls fail at compile time; per-fd executor thread serializes HDF5 calls.  Operation overloads land in the next PR.
 - **HDF5 1.12.2 ceiling** — tested and verified; `H5Dvlen_reclaim` / reference API compatibility
 - **Windows MSVC** in the CI matrix
 - **ASan + UBSan + TSan** clean on Clang 20
