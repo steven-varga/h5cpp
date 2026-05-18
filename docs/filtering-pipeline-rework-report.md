@@ -30,7 +30,7 @@ The current implementation is an experimental skeleton rather than a production 
 | Multi-filter read | Throws for more than one filter | Reverse-order decode through the complete filter plan |
 | Buffer sizing | Uses chunk-sized scratch buffers | Encoded buffers must allow compression expansion |
 | Filter mask | Partial handling | Preserve HDF5 chunk filter-mask semantics |
-| Threading | `threaded_pipeline_t` is a placeholder | Worker-local state and bounded chunk scheduling |
+| Threading | `threaded_pipeline_t` is a placeholder | Worker-local state and bounded chunk scheduling (delivered in #250 as FAPL-scoped `pool_pipeline_t`) |
 | Portability | Linux path is the only recently verified path | Linux, macOS, and Windows allocation/build behavior |
 
 Focused baseline probes confirmed two important failures:
@@ -175,3 +175,22 @@ Threading should initially use C++17 standard library primitives. Avoid platform
 Start with correctness, not SIMD. The highest-value first milestone is a serial `filter_plan` that can round-trip standard HDF5 filters and reject unsupported filters explicitly. Once that foundation is correct, SIMD and multithreading become execution-policy improvements rather than a risky rewrite.
 
 The strategic direction is to make H5CPP's filtering chain a modern CPU execution engine while preserving HDF5-compatible metadata and file interoperability.
+
+## Status — Phase I (#250, FAPL worker pool)
+
+Phase I of the threading workplan is delivered on PR #251.  The design and trade-offs are summarised in `tasks/h5cpp-fapl-multithreading-workplan.md`; the user-visible surface is one line in the file's FAPL:
+
+```cpp
+h5::fd_t fd = h5::create(
+    "data.h5", H5F_ACC_TRUNC,
+    h5::default_fcpl,
+    h5::threads{N} | h5::backpressure{M});       // M default = 8 × N
+```
+
+When `h5::threads{N}` is installed, the FAPL allocates a `worker_pool_t` and parks a `shared_ptr<>` to it inside an `H5Pinsert2` slot.  Every dataset created/opened on that file inherits the pool via `H5Fget_access_plist`.  When a dataset's DAPL has `h5::high_throughput`, `h5::write` and `h5::read` construct a local `pool_pipeline_t` that submits per-chunk compression closures to the pool and drains in submission order; `H5Dwrite_chunk` still runs on the calling thread.  `pt_t` resolves the same pool in `init()` and uses `pool_pipeline_t` as a variant alternative.
+
+Back-pressure is bounded by `h5::backpressure{M}`: the producer blocks on the front future once the in-flight deque hits `M`.  Default is 8 × worker count.
+
+The legacy per-pt_t `h5::filter::threads{N}` constructor from #241 is removed in this cycle (see [Phase 1.4 commit message]).  Two parallel threading paths in the pipeline invite contention bugs and confuse the surface; the FAPL pool fully subsumes it.
+
+Phase II (compile-time C-API blocking on `async_fd_t`, full async mode) is tracked separately.

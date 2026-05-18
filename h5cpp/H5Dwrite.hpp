@@ -104,10 +104,33 @@ namespace h5 {
 			const h5::block_t& block = arg::get( h5::default_block, args...);
 			const h5::offset_t& offset = arg::get( h5::default_offset, args...);
 			const h5::stride_t& stride = arg::get( h5::default_stride, args...);
-		
-			h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
-			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
-			filters->write(ds, offset, stride, block, count, dxpl, ptr);
+
+			// Phase 1.3.3 — if the file's FAPL has h5::threads{N}, route
+			// compress work through the shared pool via a local
+			// pool_pipeline_t.  Otherwise use the existing DAPL-stored
+			// basic_pipeline_t pointer for synchronous filter chain.
+			hid_t fid  = H5Iget_file_id(static_cast<hid_t>(ds));
+			hid_t fapl = H5Fget_access_plist(fid);
+			auto pool  = h5::impl::resolve_worker_pool(fapl);
+			if (pool) {
+				const unsigned cap = h5::impl::resolve_backpressure(
+					fapl, pool->worker_count());
+				h5::impl::pool_pipeline_t pipe(std::move(pool), cap);
+				// set_cache populates the filter chain from the dataset's DCPL.
+				h5::dcpl_t dcpl{H5Dget_create_plist(static_cast<hid_t>(ds))};
+				hid_t type_id  = H5Dget_type(static_cast<hid_t>(ds));
+				size_t elem_sz = H5Tget_size(type_id);
+				H5Tclose(type_id);
+				pipe.set_cache(dcpl, elem_sz);
+				pipe.write(ds, offset, stride, block, count, dxpl, ptr);
+				// pipe destructor drains in_flight before pool refcount drop.
+			} else {
+				h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
+				H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
+				filters->write(ds, offset, stride, block, count, dxpl, ptr);
+			}
+			H5Pclose(fapl);
+			H5Fclose(fid);
 		} else {
 			h5::sp_t mem_space = h5::create_simple( n_elements );
 			h5::select_all( mem_space );

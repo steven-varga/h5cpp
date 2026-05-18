@@ -7,10 +7,13 @@
 #include "H5capi.hpp"
 #include "H5Tmeta.hpp"
 #include "H5cout.hpp"
-#include "H5Zpipeline_threaded.hpp"
 #include <memory>
 #include <string>
 #include <variant>
+#include <array>
+#include <cstring>
+#include <deque>
+#include <future>
 #include <vector>
 #include <stdexcept>
 #include <type_traits>
@@ -22,17 +25,22 @@ namespace h5 {
 std::ostream& operator<<(std::ostream& os, const h5::pt_t& pt);
 
 namespace h5::impl {
-    // pt_t::pipeline selects between the synchronous basic pipeline (default,
-    // bytewise-identical to pre-241 behavior) and the parallel threaded pipeline.
-    // Both alternatives are indirect-owned through unique_ptr so that the
-    // variant remains move-assignable regardless of the underlying pipeline's
-    // move semantics (threaded_pipeline_t deletes moves because it owns
-    // std::jthread workers and atomics; basic_pipeline_t inherits a manually-
-    // written move-assign from pipeline_t<Derived> that suppresses the
-    // implicit move-ctor needed by variant assignment).
+    // pt_t::pipeline selects between two pipeline implementations:
+    //
+    //   basic_pipeline_t — synchronous filter chain on the calling
+    //                      thread; default when the file's FAPL has
+    //                      no h5::threads{N} pool installed.
+    //   pool_pipeline_t  — FAPL-scoped shared worker pool, async-
+    //                      pipelined dispatch with back-pressure.
+    //                      Selected when init() resolves a pool
+    //                      from the file's FAPL.
+    //
+    // Both are indirect-owned through unique_ptr so the variant
+    // remains move-assignable regardless of the underlying pipeline's
+    // move semantics.
     using pt_pipeline_t = std::variant<
         std::unique_ptr<impl::basic_pipeline_t>,
-        std::unique_ptr<impl::threaded_pipeline_t>
+        std::unique_ptr<impl::pool_pipeline_t>
     >;
 }
 
@@ -40,10 +48,9 @@ namespace h5::impl {
 namespace h5 {
 	struct pt_t {
 		pt_t();
-		pt_t( const h5::ds_t& handle ); // conversion ctor — synchronous pipeline
-		pt_t( const h5::ds_t& handle, h5::filter::threads workers ); // threaded pipeline
-		// deep copy with own cache memory — always uses the synchronous pipeline,
-		// since the threaded pipeline owns workers that cannot be duplicated.
+		pt_t( const h5::ds_t& handle ); // FAPL-aware ctor: pool when h5::threads{N} is set, basic otherwise
+		// deep copy with own cache memory — re-runs init(), so the copy
+		// resolves its own pipeline from the dataset's file FAPL.
 		pt_t( const h5::pt_t& pt ) : h5::pt_t(pt.ds) {
 		};
 		~pt_t();
@@ -115,6 +122,11 @@ namespace h5 {
 			chunk_dims[H5CPP_MAX_RANK], count[H5CPP_MAX_RANK];
 		size_t block_size,element_size,N,n,rank;
 		void *ptr, *fill_value;
+
+		// Phase 1.3.3 — chunk dispatch is uniform across all variant
+		// alternatives via visit_pipeline + write_chunk.  pool_pipeline_t
+		// holds the pool reference, in-flight deque, and back-pressure
+		// logic internally; pt_t no longer needs per-instance pool fields.
 	};
 }
 
@@ -128,21 +140,13 @@ inline h5::pt_t::pt_t() :
 			count[i] = 1, offset[i] = 0;
 	}
 
-// conversion ctor — synchronous pipeline (default)
+// FAPL-aware conversion ctor — init() resolves pool from the dataset's
+// FAPL and swaps the variant to pool_pipeline_t when h5::threads{N} is
+// installed.  Otherwise the default basic_pipeline_t stays active.
 inline
 h5::pt_t::pt_t( const h5::ds_t& handle ) : pt_t() {
 	/*default ctor has an invalid state -- skip initialization */
 	if( !is_valid(handle) ) return;
-	init(handle);
-}
-
-// conversion ctor — threaded pipeline with N compression workers
-inline
-h5::pt_t::pt_t( const h5::ds_t& handle, h5::filter::threads workers ) : pt_t() {
-	if( !is_valid(handle) ) return;
-	auto threaded = std::make_unique<impl::threaded_pipeline_t>();
-	threaded->set_worker_count(workers.n);
-	pipeline.emplace<std::unique_ptr<impl::threaded_pipeline_t>>(std::move(threaded));
 	init(handle);
 }
 
@@ -170,6 +174,21 @@ void h5::pt_t::init( const h5::ds_t& handle ){
 		H5Pset_chunk_cache(dapl, 0, 0, H5D_CHUNK_CACHE_W0_DEFAULT);
 		ds = h5::ds_t{H5Dopen2(fid, dname.data(), dapl)};
 		H5Pclose(dapl);
+
+		// Phase 1.3.3 — resolve the file's FAPL pool while we still hold
+		// a live fid.  When the FAPL has h5::threads{N} installed, swap
+		// the variant from basic_pipeline_t (default) to pool_pipeline_t
+		// constructed with the pool + back-pressure cap.  When no pool
+		// is present, the default basic_pipeline_t stays — synchronous
+		// behavior, identical to pre-Phase-I.
+		hid_t fapl = H5Fget_access_plist(fid);
+		if (auto pool = impl::resolve_worker_pool(fapl)) {
+			const unsigned cap = impl::resolve_backpressure(fapl, pool->worker_count());
+			pipeline.emplace<std::unique_ptr<impl::pool_pipeline_t>>(
+				std::make_unique<impl::pool_pipeline_t>(std::move(pool), cap));
+		}
+		H5Pclose(fapl);
+
 		H5Fclose(fid);
 		dt = h5::dt_t<void>{H5Dget_type(static_cast<hid_t>(ds))};
 		h5::sp_t file_space = h5::get_space( handle );
@@ -194,6 +213,7 @@ void h5::pt_t::init( const h5::ds_t& handle ){
 		throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("CTOR: unable to create handle from dataset..."));
 	}
 }
+
 template<class T> inline std::enable_if_t< h5::meta::is_scalar<T>::value,
 void> h5::pt_t::append( const T* ptr ) try {
 	//PTR: write directly chunk size from provided buffer/ptr
@@ -308,28 +328,37 @@ void> h5::pt_t::append( const T& ref ) try {
 
 inline
 void h5::pt_t::flush(){
-	if( n == 0 ) return;
-	*offset = *current_dims;
-	*current_dims += *chunk_dims;
-	h5::set_extent(ds, current_dims);
+	if( n != 0 ) {
+		*offset = *current_dims;
+		*current_dims += *chunk_dims;
+		h5::set_extent(ds, current_dims);
 
-	if( H5Tis_variable_str(this->dt)) {
-		hsize_t block = 1, count = n;
-	 	h5::sp_t mem_space{H5Screate_simple(static_cast<int>(rank), &count, nullptr )};
-		h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
-		h5::select_all( mem_space );
-		H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, nullptr, &block, &count);
+		if( H5Tis_variable_str(this->dt)) {
+			hsize_t block = 1, count = n;
+			h5::sp_t mem_space{H5Screate_simple(static_cast<int>(rank), &count, nullptr )};
+			h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
+			h5::select_all( mem_space );
+			H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, nullptr, &block, &count);
 
-		H5Dwrite( static_cast<hid_t>( ds ),
-			dt, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
-	} else {
-		// the remainder of last chunk must be set to fill_value; arbitrary type size supported
-		for(hsize_t i=0; i<(N-n); i++)
-			for(size_t j=0; j < element_size; j++)
-				static_cast<char*>( ptr )[(n + i) * element_size + j] = static_cast<char*>( fill_value )[ j ];
-    	visit_pipeline([&](auto& p){ p.write_chunk(offset, block_size, ptr); });
+			H5Dwrite( static_cast<hid_t>( ds ),
+				dt, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
+		} else {
+			// the remainder of last chunk must be set to fill_value; arbitrary type size supported
+			for(hsize_t i=0; i<(N-n); i++)
+				for(size_t j=0; j < element_size; j++)
+					static_cast<char*>( ptr )[(n + i) * element_size + j] = static_cast<char*>( fill_value )[ j ];
+			visit_pipeline([&](auto& p){ p.write_chunk(offset, block_size, ptr); });
+		}
+		n = 0;
 	}
-	n = 0;
+	// Pool path: drain in-flight chunks so flush() honors the "data
+	// on disk after this returns" contract.  basic_pipeline_t writes
+	// inline; the visit is a no-op for that alternative.
+	std::visit([](auto& p) {
+		using T = std::decay_t<decltype(*p)>;
+		if constexpr (std::is_same_v<T, impl::pool_pipeline_t>)
+			p->drain();
+	}, pipeline);
 }
 
 inline void h5::pt_t::reset() {

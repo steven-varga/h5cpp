@@ -4,7 +4,6 @@
 #include <h5cpp/io>
 #include <h5cpp/H5Zpipeline.hpp>
 #include <h5cpp/H5Zpipeline_basic.hpp>
-#include <h5cpp/H5Zpipeline_threaded.hpp>
 #include <vector>
 #include <cstring>
 #include "support/fixture.hpp"
@@ -183,85 +182,4 @@ TEST_CASE("filter::error throws runtime_error") {
     char src[8] = {};
     char dst[8] = {};
     CHECK_THROWS_AS(h5::impl::filter::error(dst, src, 8, 0, 1, nullptr), std::runtime_error);
-}
-
-TEST_CASE("threaded_pipeline_t write/read round-trip no filter") {
-    h5::test::file_fixture_t f("test-threaded-pipeline-nofilter.h5");
-    h5::ds_t ds = h5::create<int>(f.fd, "ds", h5::current_dims_t{50},
-        h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{10});
-    h5::dcpl_t dcpl = h5::get_dcpl(ds);
-    h5::impl::threaded_pipeline_t pipeline;
-    pipeline.set_cache(dcpl, sizeof(int));
-
-    std::vector<int> data(50);
-    for (size_t i = 0; i < data.size(); ++i)
-        data[i] = static_cast<int>(i * 3);
-
-    h5::offset_t offset{0};
-    h5::stride_t stride{1};
-    h5::block_t  block{1};
-    h5::count_t  count{50};
-
-    pipeline.write(ds, offset, stride, block, count, h5::default_dxpl, data.data());
-    pipeline.flush();
-
-    std::vector<int> readback(50);
-    pipeline.read(ds, offset, stride, block, count, h5::default_dxpl, readback.data());
-
-    for (size_t i = 0; i < data.size(); ++i)
-        CHECK(readback[i] == data[i]);
-}
-
-TEST_CASE("threaded_pipeline_t write/read round-trip gzip") {
-    h5::test::file_fixture_t f("test-threaded-pipeline-gzip.h5");
-    h5::ds_t ds = h5::create<double>(f.fd, "ds", h5::current_dims_t{100},
-        h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{10} | h5::gzip{6});
-    h5::dcpl_t dcpl = h5::get_dcpl(ds);
-    h5::impl::threaded_pipeline_t pipeline;
-    pipeline.set_cache(dcpl, sizeof(double));
-
-    std::vector<double> data(100);
-    for (size_t i = 0; i < data.size(); ++i)
-        data[i] = static_cast<double>(i) * 1.5;
-
-    h5::offset_t offset{0};
-    h5::stride_t stride{1};
-    h5::block_t  block{1};
-    h5::count_t  count{100};
-
-    pipeline.write(ds, offset, stride, block, count, h5::default_dxpl, data.data());
-    pipeline.flush();
-
-    std::vector<double> readback(100);
-    pipeline.read(ds, offset, stride, block, count, h5::default_dxpl, readback.data());
-
-    for (size_t i = 0; i < data.size(); ++i)
-        CHECK(readback[i] == data[i]);
-}
-
-TEST_CASE("threaded_pipeline_t write/read round-trip shuffle+gzip") {
-    h5::test::file_fixture_t f("test-threaded-pipeline-multi.h5");
-    h5::ds_t ds = h5::create<int>(f.fd, "ds", h5::current_dims_t{50},
-        h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{10} | h5::shuffle | h5::gzip{6});
-    h5::dcpl_t dcpl = h5::get_dcpl(ds);
-    h5::impl::threaded_pipeline_t pipeline;
-    pipeline.set_cache(dcpl, sizeof(int));
-
-    std::vector<int> data(50);
-    for (size_t i = 0; i < data.size(); ++i)
-        data[i] = static_cast<int>(i + 1);
-
-    h5::offset_t offset{0};
-    h5::stride_t stride{1};
-    h5::block_t  block{1};
-    h5::count_t  count{50};
-
-    pipeline.write(ds, offset, stride, block, count, h5::default_dxpl, data.data());
-    pipeline.flush();
-
-    std::vector<int> readback(50);
-    pipeline.read(ds, offset, stride, block, count, h5::default_dxpl, readback.data());
-
-    for (size_t i = 0; i < data.size(); ++i)
-        CHECK(readback[i] == data[i]);
 }

@@ -499,10 +499,86 @@ jobs:
           name: status-ubsan
           path: badge-status/status-ubsan.json
 
+  tsan:
+    name: tsan / ubuntu-24.04 / clang-20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    concurrency:
+      group: tsan-${{ github.ref }}
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build wget gnupg lsb-release software-properties-common libhdf5-dev
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 20 all
+          echo "CC=$(command -v clang-20)" >> "$GITHUB_ENV"
+          echo "CXX=$(command -v clang++-20)" >> "$GITHUB_ENV"
+
+      - name: Configure
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_C_COMPILER="$CC" \
+            -DCMAKE_CXX_COMPILER="$CXX" \
+            -DCMAKE_CXX_STANDARD=17 \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS="-fsanitize=thread -fno-omit-frame-pointer -O1 -g" \
+            -DCMAKE_CXX_FLAGS="-fsanitize=thread -fno-omit-frame-pointer -O1 -g" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=thread" \
+            -DH5CPP_BUILD_TESTS=ON
+
+      - name: Build
+        shell: bash
+        run: cmake --build build --parallel
+
+      - name: Test
+        shell: bash
+        env:
+          # halt_on_error=1: TSAN exits on the first data race so CI fails loud.
+          # second_deadlock_stack=1: print full stack of the lock that completed
+          #   the cycle (default prints only one stack for the offending pair).
+          TSAN_OPTIONS: "halt_on_error=1:second_deadlock_stack=1"
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Record Badge Status
+        if: always()
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p badge-status
+          cat <<EOF > badge-status/status-tsan.json
+          {
+            "os": "ubuntu-24.04",
+            "compiler": "clang-20",
+            "label": "TSan",
+            "status": "${{ job.status }}"
+          }
+          EOF
+
+      - name: Upload Status Artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: status-tsan
+          path: badge-status/status-tsan.json
+
   badge:
     name: Generate SVG Badges
     if: always()
-    needs: [build, asan, ubsan]
+    needs: [build, asan, ubsan, tsan]
     runs-on: ubuntu-24.04
 
     steps:
@@ -648,8 +724,8 @@ jobs:
             -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_C_COMPILER=gcc-14 \
             -DCMAKE_CXX_COMPILER=g++-14 \
-            -DCMAKE_C_FLAGS="--coverage -O0 -g" \
-            -DCMAKE_CXX_FLAGS="--coverage -O0 -g" \
+            -DCMAKE_C_FLAGS="--coverage -fprofile-update=atomic -O0 -g" \
+            -DCMAKE_CXX_FLAGS="--coverage -fprofile-update=atomic -O0 -g" \
             -DH5CPP_BUILD_TESTS=ON \
             -DH5CPP_BUILD_EXAMPLES=ON
 
