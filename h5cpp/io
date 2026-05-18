@@ -8,7 +8,8 @@
 
 	#include "H5Fcreate.hpp"
 	#include "H5Fopen.hpp"
-	
+	#include "H5async.hpp"     /* h5::async::create / h5::async::open factories */
+
 	#include "H5Dcreate.hpp"
 	#include "H5Dopen.hpp"
 	#include "H5Rall.hpp"

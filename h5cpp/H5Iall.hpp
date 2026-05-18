@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <memory>      /* std::shared_ptr — async descriptor exec field */
 #include <initializer_list>
 
 #ifdef H5CPP_CONVERSION_IMPLICIT
@@ -32,6 +33,18 @@ namespace h5::impl {
 	};
 	//forward declarations
 	struct at_t;
+
+	// Phase II — async descriptors carry a shared_ptr<executor_t> field
+	// directly on the wrapper.  Why direct storage and not the FAPL slot
+	// pattern from Phase I:  HDF5 1.10.9's H5Fget_access_plist returns a
+	// synthetic FAPL reconstructed from standard properties only; user
+	// properties installed via H5Pinsert2 are dropped.  Storing the
+	// executor inside the wrapper class lets operation overloads in
+	// Phase II PR-B reach it as `fd.exec` without round-tripping through
+	// HDF5's property machinery.  std::shared_ptr's type-erased deleter
+	// makes the forward declaration sufficient — the complete type is
+	// only needed at h5::async::create / open (defined in H5async.hpp).
+	struct executor_t;
 }
 
 namespace h5::impl::detail {
@@ -128,6 +141,13 @@ namespace h5::impl::detail {
 				H5Iinc_ref( handle_ );
 		}
 
+		// Factory ctor — h5::async::create / open construct the executor
+		// during file creation and inject it here so operation overloads
+		// (Phase II PR-B) can reach it via `fd.exec`.  Used by mode-
+		// transitive factories too (ds_t inherits parent fd's executor).
+		hid_t( ::hid_t handle_, std::shared_ptr<h5::impl::executor_t> e ) noexcept
+			: handle( handle_ ), exec( std::move(e) ) {}
+
 		// TO CAPI — DELETED.  Async descriptors must not be implicitly
 		// converted back to ::hid_t; doing so would let user code call
 		// HDF5 directly and bypass the executor thread.  Internal code
@@ -144,6 +164,7 @@ namespace h5::impl::detail {
 			handle = ref.handle;
 			if( H5Iis_valid( handle ) )
 				H5Iinc_ref( handle );
+			exec = ref.exec;             // shared_ptr copy bumps refcount
 		}
 		hid_t& operator=( const hid_t& ref ){
 			if( this == &ref ) return *this;
@@ -152,11 +173,13 @@ namespace h5::impl::detail {
 			handle = ref.handle;
 			if( H5Iis_valid( handle ) )
 				H5Iinc_ref( handle );
+			exec = ref.exec;
 			return *this;
 		}
 		hid_t( hid_t&& ref ) noexcept {
 			handle = ref.handle;
 			ref.handle = H5I_UNINIT;
+			exec = std::move(ref.exec);
 		}
 		hid_t& operator=( hid_t&& ref ) noexcept {
 			if( this == &ref ) return *this;
@@ -164,6 +187,7 @@ namespace h5::impl::detail {
 				capi_close( handle );
 			handle = ref.handle;
 			ref.handle = H5I_UNINIT;
+			exec = std::move(ref.exec);
 			return *this;
 		}
 		~hid_t(){
@@ -176,6 +200,13 @@ namespace h5::impl::detail {
 		// User code is expected to use h5::write / h5::read / h5::async::*
 		// factories rather than touch this field directly.
 		::hid_t handle;
+
+		// Phase II — shared_ptr to the executor that owns this descriptor's
+		// HDF5 lifetime.  Populated by h5::async::create / open at the
+		// file-level, then propagated to derived descriptors (async ds,
+		// async at, etc.) by mode-transitive factories.  May be null on
+		// default-constructed async wrappers (un-initialized state).
+		std::shared_ptr<h5::impl::executor_t> exec;
 	};
 
 	// Phase II — async dataset id.  Mirrors hdf5::dataset (line above) but
