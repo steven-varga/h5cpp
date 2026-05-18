@@ -163,83 +163,10 @@ TEST_CASE("packet table output stream for invalid handle") {
 }
 
 // =====================================================================
-// [#241] Threaded filter pipeline opt-in via h5::filter::threads{N}
+// (#241 h5::filter::threads tests removed in #250 — the per-pt_t worker
+// pool API is superseded by FAPL-scoped h5::threads{N}.  Coverage moved
+// to test/H5Pall.cpp ([#250 1.3.3] cases).)
 // =====================================================================
-
-TEST_CASE("[#241] h5::filter::threads tag construction") {
-    // Default-constructed tag means "use hardware_concurrency() workers".
-    constexpr h5::filter::threads default_t{};
-    CHECK(default_t.n == 0);
-
-    // Explicit count.
-    constexpr h5::filter::threads explicit_t{4};
-    CHECK(explicit_t.n == 4);
-}
-
-TEST_CASE("[#241] pt_t with threaded pipeline — basic round-trip (no filter)") {
-    h5::test::file_fixture_t f("test-pt-threaded-nofilter.h5");
-    h5::ds_t ds = h5::create<int>(f.fd, "ds", h5::current_dims_t{0},
-        h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{16});
-    {
-        h5::pt_t pt(ds, h5::filter::threads{2});
-        for (int i = 0; i < 64; ++i)
-            h5::append(pt, i);
-        h5::flush(pt);   // ensure all workers drain before close
-    }
-    auto readback = h5::read<std::vector<int>>(f.fd, "ds");
-    REQUIRE(readback.size() == 64);
-    for (int i = 0; i < 64; ++i) CHECK(readback[i] == i);
-}
-
-TEST_CASE("[#241] pt_t with threaded pipeline — gzip-compressed bytewise equivalence") {
-    // Write the same data with basic and threaded pipelines into two files,
-    // read back, assert content matches. Different filter chain ordering can
-    // produce different on-disk bytes; we assert decompressed content equivalence.
-    constexpr int N = 256;
-    std::vector<int> expected(N);
-    for (int i = 0; i < N; ++i) expected[i] = i * 7 + 3;
-
-    auto write_file = [&](const char* path, auto pt_factory) {
-        h5::test::file_fixture_t f(path);
-        h5::ds_t ds = h5::create<int>(f.fd, "ds", h5::current_dims_t{0},
-            h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{32} | h5::gzip{6});
-        {
-            auto pt = pt_factory(ds);
-            for (int v : expected) h5::append(pt, v);
-            h5::flush(pt);
-        }
-    };
-
-    write_file("test-pt-basic-gzip.h5",
-        [](const h5::ds_t& ds) { return h5::pt_t(ds); });
-    write_file("test-pt-threaded-gzip.h5",
-        [](const h5::ds_t& ds) { return h5::pt_t(ds, h5::filter::threads{4}); });
-
-    h5::fd_t basic = h5::open("test-pt-basic-gzip.h5", H5F_ACC_RDONLY);
-    h5::fd_t threaded = h5::open("test-pt-threaded-gzip.h5", H5F_ACC_RDONLY);
-    auto basic_data    = h5::read<std::vector<int>>(basic,    "ds");
-    auto threaded_data = h5::read<std::vector<int>>(threaded, "ds");
-    REQUIRE(basic_data.size() == expected.size());
-    REQUIRE(threaded_data.size() == expected.size());
-    CHECK(basic_data == expected);
-    CHECK(threaded_data == expected);
-    CHECK(basic_data == threaded_data);
-}
-
-TEST_CASE("[#241] pt_t with threaded pipeline — default worker count (hw_concurrency)") {
-    h5::test::file_fixture_t f("test-pt-threaded-default.h5");
-    h5::ds_t ds = h5::create<int>(f.fd, "ds", h5::current_dims_t{0},
-        h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{16} | h5::gzip{1});
-    {
-        // h5::filter::threads{} with no number → hw_concurrency() workers
-        h5::pt_t pt(ds, h5::filter::threads{});
-        for (int i = 0; i < 96; ++i) h5::append(pt, i);
-        h5::flush(pt);
-    }
-    auto readback = h5::read<std::vector<int>>(f.fd, "ds");
-    REQUIRE(readback.size() == 96);
-    for (int i = 0; i < 96; ++i) CHECK(readback[i] == i);
-}
 
 TEST_CASE("[#232] std::forward_list<int> append streams elements into chunked dataset") {
     h5::test::file_fixture_t f("test-pt-fwdlist.h5");
@@ -275,4 +202,126 @@ TEST_CASE("[#239] h5::reset zeroes packet table dimension tracker") {
     h5::flush(pt);          // advances current_dims to one chunk past the data
     h5::reset(pt);          // must compile and run without throwing
     CHECK(true);
+}
+
+// =====================================================================
+// [#250 1.3.2] pt_t resolves FAPL pool + backpressure at init
+// =====================================================================
+
+TEST_CASE("[#250 1.3.2] pt_t picks up worker pool + cap from file's FAPL") {
+    // Construct a file with h5::threads{4} | h5::backpressure{16} on its FAPL.
+    // The fixture's default file_fixture_t opens without these properties;
+    // we make a custom one inline here.
+    const char* path = "test-pt-1.3.2-pool-resolve.h5";
+    std::remove(path);
+    {
+        h5::fapl_t fapl = h5::threads{4} | h5::backpressure{16};
+        h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC, h5::default_fcpl, fapl);
+
+        h5::ds_t ds = h5::create<int>(fd, "ds", h5::current_dims_t{0},
+            h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{32});
+
+        h5::pt_t pt(ds);
+        // pt_t::pool_ and ::backpressure_cap_ are private; the visible
+        // contract is that operations on this pt_t SHOULD use the pool
+        // (Phase 1.3.3).  In this commit we just verify the pt_t was
+        // constructed without error and the file FAPL has the pool.
+        auto pool_check = h5::impl::resolve_worker_pool(static_cast<hid_t>(fapl));
+        REQUIRE(pool_check);
+        CHECK(pool_check->worker_count() == 4);
+        CHECK(h5::impl::resolve_backpressure(
+                  static_cast<hid_t>(fapl), pool_check->worker_count()) == 16u);
+    }
+    std::remove(path);
+}
+
+TEST_CASE("[#250 1.3.2] pt_t with no FAPL pool falls back cleanly") {
+    // Default FAPL — no h5::threads applied.
+    h5::test::file_fixture_t f("test-pt-1.3.2-no-pool.h5");
+    h5::ds_t ds = h5::create<int>(f.fd, "ds", h5::current_dims_t{0},
+        h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{16});
+
+    h5::pt_t pt(ds);
+    // pt_t constructs without throwing; pool_ resolves to nullptr internally.
+    // Writes go through visit_pipeline (synchronous) — verify by appending
+    // and reading back.
+    for (int i = 0; i < 32; ++i) h5::append(pt, i);
+    h5::flush(pt);
+
+    auto readback = h5::read<std::vector<int>>(f.fd, "ds");
+    REQUIRE(readback.size() == 32);
+    for (int i = 0; i < 32; ++i) CHECK(readback[i] == i);
+}
+
+// =====================================================================
+// [#250 1.3.2 step 2] pt_t pool path: bytewise equivalence + parallelism
+// =====================================================================
+
+TEST_CASE("[#250 1.3.2] pt_t with FAPL pool — gzip round-trip equivalence vs synchronous") {
+    constexpr int N = 256;
+    std::vector<int> expected(N);
+    for (int i = 0; i < N; ++i) expected[i] = i * 7 + 3;
+
+    // Helper: write N ints through a pt_t built from a given fapl,
+    // read back, return the content.
+    auto write_and_read = [&](const char* path, h5::fapl_t fapl) {
+        std::remove(path);
+        {
+            h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC, h5::default_fcpl, fapl);
+            h5::ds_t ds = h5::create<int>(fd, "ds", h5::current_dims_t{0},
+                h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{32} | h5::gzip{6});
+            h5::pt_t pt(ds);
+            for (int v : expected) h5::append(pt, v);
+            h5::flush(pt);
+        }
+        h5::fd_t fd = h5::open(path, H5F_ACC_RDONLY);
+        return h5::read<std::vector<int>>(fd, "ds");
+    };
+
+    // 1) Default FAPL: synchronous path
+    auto sync_data = write_and_read("test-pt-1.3.2-sync.h5", h5::default_fapl);
+    REQUIRE(sync_data.size() == expected.size());
+    CHECK(sync_data == expected);
+
+    // 2) Pool FAPL with 4 workers, default backpressure
+    h5::fapl_t pool_fapl = h5::threads{4};
+    auto pool_data = write_and_read("test-pt-1.3.2-pool.h5", pool_fapl);
+    REQUIRE(pool_data.size() == expected.size());
+    CHECK(pool_data == expected);
+
+    // 3) Pool with explicit backpressure
+    h5::fapl_t bp_fapl = h5::threads{4} | h5::backpressure{8};
+    auto bp_data = write_and_read("test-pt-1.3.2-bp.h5", bp_fapl);
+    REQUIRE(bp_data.size() == expected.size());
+    CHECK(bp_data == expected);
+
+    // All three produce the same logical content.
+    CHECK(sync_data == pool_data);
+    CHECK(pool_data == bp_data);
+
+    std::remove("test-pt-1.3.2-sync.h5");
+    std::remove("test-pt-1.3.2-pool.h5");
+    std::remove("test-pt-1.3.2-bp.h5");
+}
+
+TEST_CASE("[#250 1.3.2] pt_t pool path — back-pressure bounds in-flight") {
+    // Tight back-pressure cap (2) forces frequent drains.  The test
+    // exercises the producer-blocking branch in write_chunk_via_pool.
+    constexpr int N = 64;
+    const char* path = "test-pt-1.3.2-tight-bp.h5";
+    std::remove(path);
+    {
+        h5::fapl_t fapl = h5::threads{2} | h5::backpressure{2};
+        h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC, h5::default_fcpl, fapl);
+        h5::ds_t ds = h5::create<int>(fd, "ds", h5::current_dims_t{0},
+            h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{8} | h5::gzip{1});
+        h5::pt_t pt(ds);
+        for (int i = 0; i < N; ++i) h5::append(pt, i);
+        h5::flush(pt);
+    }
+    h5::fd_t fd = h5::open(path, H5F_ACC_RDONLY);
+    auto data = h5::read<std::vector<int>>(fd, "ds");
+    REQUIRE(data.size() == N);
+    for (int i = 0; i < N; ++i) CHECK(data[i] == i);
+    std::remove(path);
 }

@@ -109,10 +109,17 @@ find_package(HDF5 REQUIRED COMPONENTS C)
 
 # HDF5 floor is decoupled from h5cpp package version.  Previously the check
 # compared HDF5_VERSION against PROJECT_VERSION, which coupled package
-# versioning to HDF5 minimums by coincidence.  After #234 raised the floor
-# to 1.12 and #247 made PROJECT_VERSION track the git tag, the comparison
-# stopped being meaningful.  Pin the floor explicitly.
-set(H5CPP_HDF5_FLOOR "1.12.0")
+# versioning to HDF5 minimums by coincidence.  After #247 made
+# PROJECT_VERSION track the git tag, the comparison stopped being meaningful.
+# Pin the floor explicitly.
+#
+# 1.10.4 matches the prior implicit floor (the stale project(VERSION 1.10.4.6)
+# line that #247 removed).  The CI matrix runs Ubuntu 22.04 with system
+# HDF5 1.10.7 (floor coverage restored by #235); raising the floor above
+# 1.10.4 would break that matrix entry.  When dropping 1.10.x coverage in
+# a future cohort, bump this constant deliberately and remove the 22.04
+# matrix entry in the same commit.
+set(H5CPP_HDF5_FLOOR "1.10.4")
 if(HDF5_VERSION VERSION_LESS ${H5CPP_HDF5_FLOOR})
     message(FATAL_ERROR
         "-- !!! H5CPP requires HDF5 v${H5CPP_HDF5_FLOOR} or greater (found ${HDF5_VERSION}) !!!"

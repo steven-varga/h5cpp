@@ -91,10 +91,10 @@ cmake --install build
 - **`std::float16_t`** (C++23 IEEE 754 half-precision)
 - **Rank-7** array support
 - **Expanded attribute** type coverage
-- **Threaded I/O pipeline** for filter chains
+- **FAPL-scoped worker pool** — `h5::create(..., h5::threads{N} | h5::backpressure{M})` opts the file into parallel filter compression; all chunked datasets opened on that file (and pt_t built from them) inherit the pool with async-pipelined dispatch
 - **HDF5 1.12.2 ceiling** — tested and verified; `H5Dvlen_reclaim` / reference API compatibility
 - **Windows MSVC** in the CI matrix
-- **ASan + UBSan** clean on Clang 20
+- **ASan + UBSan + TSan** clean on Clang 20
 
 ## Documentation
 
