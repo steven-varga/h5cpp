@@ -81,6 +81,17 @@ struct executor_t {
             tasks_.emplace([task] { (*task)(); });
         }
         bell_.ring();
+        // Decrement counter on the submitter's path, AFTER fut.get()
+        // unblocks (causal: the worker has completed task() because the
+        // future is ready).  RAII guard ensures the decrement also fires
+        // when fut.get() rethrows.  This ties in_flight_ to "submit_and_wait
+        // is in flight on this thread" rather than "task is still queued"
+        // — tests that check in_flight() right after the call now see 0
+        // deterministically, no race with the worker thread.
+        struct decrement_on_exit {
+            std::atomic<int>& counter;
+            ~decrement_on_exit() { counter.fetch_sub(1, std::memory_order_release); }
+        } guard{in_flight_};
         return fut.get();   // blocks on executor; rethrows exception
     }
 
@@ -117,7 +128,10 @@ private:
 
             if (got_task) {
                 try { task(); } catch (...) { /* packaged_task captures it */ }
-                in_flight_.fetch_sub(1, std::memory_order_release);
+                // in_flight_ is decremented by submit_and_wait on the
+                // submitter's path (see RAII guard there), not here.
+                // Worker just executes the task; the counter belongs to
+                // the submission's lifetime.
                 continue;
             }
 
