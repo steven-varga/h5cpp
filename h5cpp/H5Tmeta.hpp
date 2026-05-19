@@ -428,7 +428,17 @@ namespace h5::meta {
     template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<
         is_array_like<T>::value && !is_text_like<T>::value>>
         : is_transport_contiguous_t<typename meta::decay<T>::type> {};
-        
+
+    // Trivially copyable aggregates are safe for bulk memcpy: no padding surprises,
+    // no non-trivial copy semantics.  Excludes arrays and text already handled above,
+    // and plugin-registered types which may have non-trivial HDF5 field ordering.
+    template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<
+        std::is_aggregate_v<T> &&
+        !is_array_like<T>::value &&
+        !is_text_like<T>::value &&
+        !is_reflected_compound_t<T>::value &&
+        std::is_trivially_copyable_v<T>>> : std::true_type {};
+
     template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<is_reflected_compound_t<T>::value>> {
     private:
         static_assert(compiler_meta_t<T>::version == metadata_version,
@@ -626,13 +636,34 @@ namespace h5::meta {
         static constexpr std::size_t bytes(const T&) noexcept { return sizeof(T); }
     };
 
-    // Reflected compound structs
+    // Reflected compound structs (plugin-registered)
     template <class T>
     struct access_traits_t<T, std::enable_if_t<is_reflected_compound_t<T>::value>> {
         using element_t  = T;
         using pointer_t  = const T*;
         static constexpr access_t kind = access_t::object;
         static constexpr bool is_trivially_packable = is_transport_contiguous_v<T>;
+        static const T*  data(const T& v)  noexcept { return &v; }
+        static T*        data(T& v)        noexcept { return &v; }
+        static constexpr std::array<std::size_t,0> size(const T&) noexcept { return {}; }
+        static constexpr std::size_t bytes(const T&) noexcept { return sizeof(T); }
+    };
+
+    // Plain aggregates: any struct/class that is an aggregate but not arithmetic,
+    // array-like, text-like, or already plugin-registered via is_reflected_compound_t.
+    // Provides the memory-access contract so h5::write(ds, pod_value) works once
+    // storage_traits_impl_t<T> is populated (old dt_t path or future C++26 reflection).
+    template <class T>
+    struct access_traits_t<T, std::enable_if_t<
+        std::is_aggregate_v<T> &&
+        !std::is_arithmetic_v<T> &&
+        !is_array_like<T>::value &&
+        !is_text_like<T>::value &&
+        !is_reflected_compound_t<T>::value>> {
+        using element_t  = T;
+        using pointer_t  = const T*;
+        static constexpr access_t kind = access_t::object;
+        static constexpr bool is_trivially_packable = std::is_trivially_copyable_v<T>;
         static const T*  data(const T& v)  noexcept { return &v; }
         static T*        data(T& v)        noexcept { return &v; }
         static constexpr std::array<std::size_t,0> size(const T&) noexcept { return {}; }
