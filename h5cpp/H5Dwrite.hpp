@@ -7,6 +7,7 @@
 #include "H5Tmeta.hpp"
 #include "H5Dopen.hpp"
 #include "H5Dgather.hpp"
+#include "H5Dscatter.hpp"
 
 namespace h5 {
   /** @ingroup io-write
@@ -396,35 +397,42 @@ namespace h5 {
 		template <class T, class... args_t,
 			class = std::enable_if_t<!std::is_pointer_v<std::decay_t<T>>>>
 		inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
-			h5::ds_t ds; // initialized to H5I_UNINIT
-		// find out if we have to create the dataset
-		h5::mute();
-			// Returns a negative value when the function fails and may return a negative value if the link does not exist.
-			// - name is not local to the group specified by loc_id or, if loc_id is something other than a group identifier, 
-			//        name is not local to the root group
-			// - Any element of the relative path or absolute path in name, except the target link, does not exist.
-			bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
-		h5::unmute(); // <- make sure not to mute error handling longer than needed
-		
-		if (is_dataset_present) {
-			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
-			ds = h5::open(fd, dataset_path, dapl);
-		} else {
-			// dataset doesn't exist, or some error happened, since h5::create doesn't know of the 
-			// memory space size as `T& ref` never passed along we have to compute the `h5::current_dims_t{}` upfront
-			using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&, const args_t&...>;
-			using element_t = typename h5::impl::decay<T>::type;
-			if constexpr (tcurrent_dims::present) // user knows what he is doing, specified h5::current_dims{} explicitly
-				ds = h5::create<element_t>(fd, dataset_path, args...);
-			else { // h5::current_dims{..} is explicitly given by `h5::count` and optional h5::offset{}, h5::stride{}, h5::block{}
-				h5::count_t count = impl::size(ref);
-				h5::current_dims_t current_dims = h5::impl::get_current_dims(count, args...); // get correct dimensions
-				ds = h5::create<element_t>(fd, dataset_path, current_dims, args...);          // and use it to create dataset
+			if constexpr (h5::has_scatter<std::decay_t<T>>::value) {
+				// Scatter path: compiler-generated scatter<T> handles open/create + row append.
+				// Call-site properties (chunk, compress, etc.) are ignored here; the generated
+				// specialization embeds them or the dataset was pre-created.
+				return h5::scatter<std::decay_t<T>>(fd, dataset_path, ref);
+			} else {
+				h5::ds_t ds; // initialized to H5I_UNINIT
+			// find out if we have to create the dataset
+			h5::mute();
+				// Returns a negative value when the function fails and may return a negative value if the link does not exist.
+				// - name is not local to the group specified by loc_id or, if loc_id is something other than a group identifier, 
+				//        name is not local to the root group
+				// - Any element of the relative path or absolute path in name, except the target link, does not exist.
+				bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
+			h5::unmute(); // <- make sure not to mute error handling longer than needed
+			
+			if (is_dataset_present) {
+				const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+				ds = h5::open(fd, dataset_path, dapl);
+			} else {
+				// dataset doesn't exist, or some error happened, since h5::create doesn't know of the 
+				// memory space size as `T& ref` never passed along we have to compute the `h5::current_dims_t{}` upfront
+				using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&, const args_t&...>;
+				using element_t = typename h5::impl::decay<T>::type;
+				if constexpr (tcurrent_dims::present) // user knows what he is doing, specified h5::current_dims{} explicitly
+					ds = h5::create<element_t>(fd, dataset_path, args...);
+				else { // h5::current_dims{..} is explicitly given by `h5::count` and optional h5::offset{}, h5::stride{}, h5::block{}
+					h5::count_t count = impl::size(ref);
+					h5::current_dims_t current_dims = h5::impl::get_current_dims(count, args...); // get correct dimensions
+					ds = h5::create<element_t>(fd, dataset_path, current_dims, args...);          // and use it to create dataset
+				}
+			}
+			// we either have `ds` != H5I_UNINIT or an exception thrown, safe to delegate
+			return ::h5::write(ds, ref,  args...);
 			}
 		}
-		// we either have `ds` != H5I_UNINIT or an exception thrown, safe to delegate
-		return ::h5::write(ds, ref,  args...);
-	}
 
 
    /** @ingroup io-write
