@@ -9,27 +9,6 @@
 
 namespace h5 {
 
-/**
- * @brief Compile-time trait to determine if a type uses scatter/gather I/O.
- *
- * The h5cpp-compiler emits specializations of h5::scatter<T> and h5::gather<T>
- * for user-defined structs with heap-indirection fields (std::vector, std::string,
- * etc.). The H5CPP_REGISTER_SCATTER(T) macro sets this trait to true_type.
- *
- * @tparam T C++ type being queried
- */
-template <typename T> struct has_scatter : std::false_type {};
-
-/**
- * @brief Registers a type as scatter/gather eligible.
- *
- * Place this macro at file scope next to the compiler-generated scatter/gather
- * specializations. It sets h5::has_scatter<T> to std::true_type, enabling
- * dispatch in h5::write and h5::read.
- */
-#define H5CPP_REGISTER_SCATTER( SCATTER_TYPE ) \
-    template<> struct h5::has_scatter<SCATTER_TYPE> : std::true_type {}
-
 namespace detail {
     /**
      * @brief Returns the next row index for a 1-D extendable dataset.
