@@ -31,8 +31,6 @@ template <typename T> struct has_scatter : std::false_type {};
     template<> struct h5::has_scatter<SCATTER_TYPE> : std::true_type {}
 
 namespace detail {
-    template <class...> struct dependent_false_t : std::false_type {};
-
     /**
      * @brief Returns the next row index for a 1-D extendable dataset.
      *
