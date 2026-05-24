@@ -55,6 +55,54 @@ namespace h5{ namespace impl {
 		return aligned_ptr(static_cast<char*>(ptr));
 	}
 
+	// ------------------------------------------------------------------
+	// Bump-pointer arena: eliminates per-allocation system calls.
+	// Default 256 MiB holds ~32K 8 KB chunks; tunable at construction.
+	// ------------------------------------------------------------------
+	struct chunk_arena_t {
+		static constexpr size_t alignment = H5CPP_MEM_ALIGNMENT;
+		static constexpr size_t default_capacity = 256 * 1024 * 1024;
+
+		std::unique_ptr<char[]> base;
+		char* bump = nullptr;
+		char* end = nullptr;
+
+		explicit chunk_arena_t(size_t capacity = default_capacity)
+			: base(std::make_unique<char[]>(capacity))
+			, bump(base.get())
+			, end(bump + capacity)
+		{}
+
+		chunk_arena_t(chunk_arena_t&&) = default;
+		chunk_arena_t& operator=(chunk_arena_t&&) = default;
+		chunk_arena_t(const chunk_arena_t&) = delete;
+		chunk_arena_t& operator=(const chunk_arena_t&) = delete;
+
+		[[nodiscard]] char* allocate(size_t size) {
+			size = round_up_to_alignment(size, alignment);
+			if (bump + size > end) [[unlikely]]
+				return allocate_fallback(size);
+			char* ptr = bump;
+			bump += size;
+			return ptr;
+		}
+
+		void reset() noexcept { bump = base.get(); }
+
+		bool owns(const void* ptr) const noexcept {
+			const char* p = static_cast<const char*>(ptr);
+			return p >= base.get() && p < end;
+		}
+
+	private:
+		[[nodiscard]] char* allocate_fallback(size_t size) {
+			void* ptr = nullptr;
+			if (posix_memalign(&ptr, alignment, size) != 0)
+				throw std::bad_alloc();
+			return static_cast<char*>(ptr);
+		}
+	};
+
 	enum struct filter_direction_t {
 		forward = 0, reverse = 1
 	};
@@ -71,8 +119,7 @@ namespace h5{ namespace impl {
             this->tail = rhs.tail; rhs.tail = 0;
             this->rank = rhs.rank; rhs.rank = 0;
 
-            this->ptr0 = std::move(rhs.ptr0);
-            this->ptr1 = std::move(rhs.ptr1);
+            this->arena = std::move(rhs.arena);
             memcpy(filter, rhs.filter,  sizeof(filter));
 
             memcpy(cd_values, rhs.cd_values,  sizeof(cd_values));
@@ -116,7 +163,7 @@ namespace h5{ namespace impl {
 		void push( filter::call_t filter );
 		void pop();
 
-		aligned_ptr ptr0, ptr1;
+		chunk_arena_t arena;
 		filter::call_t filter[H5CPP_MAX_FILTER];
 		hsize_t n,
 				C[H5CPP_MAX_RANK], D[H5CPP_MAX_RANK],
@@ -209,10 +256,10 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 	}
 
 	const size_t scratch_size = filter::filter_scratch_bound(block_size);
-	ptr0 = make_aligned( H5CPP_MEM_ALIGNMENT, scratch_size );
-	ptr1 = make_aligned( H5CPP_MEM_ALIGNMENT, scratch_size );
-	// get an alias to smart ptr
-	if( (chunk0 = ptr0.get()) == nullptr || (chunk1 = ptr1.get()) == nullptr )
+	chunk0 = arena.allocate(scratch_size);
+	chunk1 = arena.allocate(scratch_size);
+
+	if( chunk0 == nullptr || chunk1 == nullptr )
 	   	throw h5::error::io::dataset::open( H5CPP_ERROR_MSG("CTOR: couldn't allocate memory for caching chunks, invalid/check size?"));
 }
 
