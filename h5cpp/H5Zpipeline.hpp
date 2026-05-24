@@ -328,6 +328,23 @@ template< class Derived>
 	// rx - remainder at the leading edges, ry - remainder at trailing edges 
 	h5cpp_def(0) h5cpp_def(1) h5cpp_def(2) h5cpp_def(3) h5cpp_def(4) h5cpp_def(5) h5cpp_def(6)
 
+	// rank-1 fast path: single large memcpy per chunk, no nested loops
+	if (rank == 1 && (O[0] % B[0]) == 0) [[likely]] {
+		constexpr hsize_t prefetch_distance = 4;
+		for (hsize_t j = 0; j < N[0]; j += B[0]) {
+			if (j + (prefetch_distance + 1) * B[0] < N[0])
+				__builtin_prefetch(ptr + (j + prefetch_distance * B[0]) * element_size, 0, 3);
+			hsize_t bytes_in_chunk = (j + B[0] <= N[0]) ? B[0] : (N[0] - j);
+			hsize_t bytes_to_copy = bytes_in_chunk * element_size;
+			if (bytes_to_copy < block_size) [[unlikely]]
+				memset(chunk0, 0x00, block_size);
+			memcpy(chunk0, ptr + j * element_size, bytes_to_copy);
+			C[0] = j + O[0];
+			write_chunk(C, block_size, chunk0);
+		}
+		return;
+	}
+
 	h5cpp_outer( 6 ){ h5cpp_outer( 5 ){ h5cpp_outer( 4 ){ h5cpp_outer( 3 ){
 	h5cpp_outer( 2 ){ h5cpp_outer( 1 ){ h5cpp_outer( 0 ){
 		char* p = chunk0;
