@@ -63,15 +63,21 @@ namespace h5{ namespace impl {
 		static constexpr size_t alignment = H5CPP_MEM_ALIGNMENT;
 		static constexpr size_t default_capacity = 256 * 1024 * 1024;
 
-		std::unique_ptr<char[]> base;
+		struct aligned_deleter {
+			void operator()(char* ptr) const { std::free(ptr); }
+		};
+		std::unique_ptr<char, aligned_deleter> base;
 		char* bump = nullptr;
 		char* end = nullptr;
 
-		explicit chunk_arena_t(size_t capacity = default_capacity)
-			: base(std::make_unique<char[]>(capacity))
-			, bump(base.get())
-			, end(bump + capacity)
-		{}
+		explicit chunk_arena_t(size_t capacity = default_capacity) {
+			void* ptr = nullptr;
+			if (posix_memalign(&ptr, alignment, capacity) != 0)
+				throw std::bad_alloc();
+			base.reset(static_cast<char*>(ptr));
+			bump = base.get();
+			end = bump + capacity;
+		}
 
 		chunk_arena_t(chunk_arena_t&&) = default;
 		chunk_arena_t& operator=(chunk_arena_t&&) = default;
@@ -375,7 +381,7 @@ template< class Derived>
 			if (bytes_to_copy < block_size) [[unlikely]]
 				simd_memset_zero(chunk0, block_size);
 			if (tail == 0)
-				nontemporal_memcpy(chunk0, ptr + j * element_size, bytes_to_copy);
+				std::memcpy(chunk0, ptr + j * element_size, bytes_to_copy);
 			else
 				memcpy(chunk0, ptr + j * element_size, bytes_to_copy);
 			C[0] = j + O[0];
