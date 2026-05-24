@@ -103,6 +103,39 @@ namespace h5{ namespace impl {
 		}
 	};
 
+	// ------------------------------------------------------------------
+	// Processor-matched memory operations
+	// ------------------------------------------------------------------
+#if defined(__AVX__)
+	#include <immintrin.h>
+#endif
+
+	inline void simd_memset_zero(char* dst, size_t n) {
+#if defined(__AVX2__)
+		size_t m = n;
+		const __m256i zero = _mm256_setzero_si256();
+		for (; m >= 32; m -= 32, dst += 32)
+			_mm256_store_si256(reinterpret_cast<__m256i*>(dst), zero);
+		std::memset(dst, 0, m);
+#else
+		std::memset(dst, 0, n);
+#endif
+	}
+
+	inline void nontemporal_memcpy(char* __restrict dst, const char* __restrict src, size_t n) {
+#if defined(__AVX__)
+		size_t m = n;
+		for (; m >= 32; m -= 32, dst += 32, src += 32) {
+			_mm256_stream_si256(reinterpret_cast<__m256i*>(dst),
+				_mm256_loadu_si256(reinterpret_cast<const __m256i*>(src)));
+		}
+		_mm_sfence();
+		std::memcpy(dst, src, m);
+#else
+		std::memcpy(dst, src, n);
+#endif
+	}
+
 	enum struct filter_direction_t {
 		forward = 0, reverse = 1
 	};
@@ -337,8 +370,11 @@ template< class Derived>
 			hsize_t bytes_in_chunk = (j + B[0] <= N[0]) ? B[0] : (N[0] - j);
 			hsize_t bytes_to_copy = bytes_in_chunk * element_size;
 			if (bytes_to_copy < block_size) [[unlikely]]
-				memset(chunk0, 0x00, block_size);
-			memcpy(chunk0, ptr + j * element_size, bytes_to_copy);
+				simd_memset_zero(chunk0, block_size);
+			if (tail == 0)
+				nontemporal_memcpy(chunk0, ptr + j * element_size, bytes_to_copy);
+			else
+				memcpy(chunk0, ptr + j * element_size, bytes_to_copy);
 			C[0] = j + O[0];
 			write_chunk(C, block_size, chunk0);
 		}
