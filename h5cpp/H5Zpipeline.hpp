@@ -154,6 +154,7 @@ namespace h5{ namespace impl {
 
             this->arena = std::move(rhs.arena);
             memcpy(filter, rhs.filter,  sizeof(filter));
+            memcpy(filter_id, rhs.filter_id, sizeof(filter_id));
 
             memcpy(cd_values, rhs.cd_values,  sizeof(cd_values));
             memcpy(cd_size, rhs.cd_size,  sizeof(cd_size));
@@ -198,6 +199,7 @@ namespace h5{ namespace impl {
 
 		chunk_arena_t arena;
 		filter::call_t filter[H5CPP_MAX_FILTER];
+		H5Z_filter_t filter_id[H5CPP_MAX_FILTER];
 		hsize_t n,
 				C[H5CPP_MAX_RANK], D[H5CPP_MAX_RANK],
 				N[H5CPP_MAX_RANK], B[H5CPP_MAX_RANK], Rx[H5CPP_MAX_RANK],Ry[H5CPP_MAX_RANK];
@@ -276,8 +278,9 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 	unsigned N = H5Pget_nfilters( dcpl );
 	for(unsigned i=0; i<N; i++){
 		cd_size[i] = H5CPP_MAX_FILTER_PARAM;
-		push(
-			filter::get_callback( H5Pget_filter2( dcpl, i, &flags[i], &cd_size[i], cd_values[i], 0, nullptr, &filter_config )));
+		H5Z_filter_t id = H5Pget_filter2( dcpl, i, &flags[i], &cd_size[i], cd_values[i], 0, nullptr, &filter_config );
+		push( filter::get_callback( id ) );
+		filter_id[i] = id;
 		// Guarantee that params[1] always holds the uncompressed chunk byte count as a
 		// reliable decompression output-size hint.  External HDF5 files written by
 		// community plugins (LZ4 ID 32004, Zstd ID 32015, …) may store only
