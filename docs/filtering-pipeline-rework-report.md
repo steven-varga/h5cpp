@@ -33,10 +33,14 @@ The current implementation is an experimental skeleton rather than a production 
 | Threading | `threaded_pipeline_t` is a placeholder | Worker-local state and bounded chunk scheduling (delivered in #250 as FAPL-scoped `pool_pipeline_t`) |
 | Portability | Linux path is the only recently verified path | Linux, macOS, and Windows allocation/build behavior |
 
-Focused baseline probes confirmed two important failures:
+Focused baseline probes confirmed two important failures (both now resolved):
 
-1. `h5::high_throughput` does not currently activate the DAPL property with HDF5 1.10.9.
-2. The gzip callback can encode data, but it cannot decode using the reverse filter path.
+1. ~~`h5::high_throughput` does not currently activate the DAPL property with HDF5 1.10.9.~~
+   **Fixed in #242** — copy callback added to DAPL property; `H5D_CHUNKED` gating prevents
+   segfault on non-chunked datasets. Activation verified on HDF5 1.10.7 through 1.12.2.
+2. ~~The gzip callback can encode data, but it cannot decode using the reverse filter path.~~
+   **Fixed** — `deflate()` now branches on `H5Z_FLAG_REVERSE` to call the decode path.
+   shuffle, fletcher32, szip, and zstd callbacks also support reverse (decode) direction.
 
 ## iex2h5 Vendored H5CPP Review
 
