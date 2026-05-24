@@ -328,7 +328,10 @@ jobs:
         run: cmake --build build --parallel --config Release
 
       - name: Test
-        run: ctest --test-dir build -C Release --output-on-failure
+        run: ctest -D Experimental --test-dir build -C Release --output-on-failure
+        env:
+          CTEST_SITE: "github-actions"
+          CTEST_BUILD_NAME: "${{ matrix.os }}-${{ matrix.compiler }}"
 
       - name: Record Badge Status
         if: always()
@@ -402,7 +405,9 @@ jobs:
         shell: bash
         env:
           ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1:abort_on_error=1:strict_string_checks=1"
-        run: ctest --test-dir build --output-on-failure
+          CTEST_SITE: "github-actions"
+          CTEST_BUILD_NAME: "asan-ubuntu-24.04-clang-20"
+        run: ctest -D Experimental --test-dir build --output-on-failure
 
       - name: Record Badge Status
         if: always()
@@ -475,7 +480,9 @@ jobs:
         shell: bash
         env:
           UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
-        run: ctest --test-dir build --output-on-failure
+          CTEST_SITE: "github-actions"
+          CTEST_BUILD_NAME: "ubsan-ubuntu-24.04-clang-20"
+        run: ctest -D Experimental --test-dir build --output-on-failure
 
       - name: Record Badge Status
         if: always()
@@ -737,9 +744,12 @@ jobs:
 
       - name: Test
         shell: bash
+        env:
+          CTEST_SITE: "github-actions"
+          CTEST_BUILD_NAME: "coverage-ubuntu-24.04-gcc-14"
         run: |
           set -euxo pipefail
-          ctest --test-dir build --output-on-failure --parallel
+          ctest -D Experimental --test-dir build --output-on-failure --parallel
 
       - name: Capture coverage
         shell: bash
