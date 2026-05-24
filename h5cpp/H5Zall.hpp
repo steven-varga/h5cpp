@@ -239,10 +239,26 @@ namespace h5::impl::filter {
 	inline uint32_t fletcher32_checksum(const void* data, size_t nbytes) {
 		const uint8_t* p = static_cast<const uint8_t*>(data);
 		uint32_t sum1 = 0, sum2 = 0;
-		// Process 16-bit words; if nbytes is odd the final byte is treated as a
-		// zero-padded 16-bit word (matching HDF5's reference implementation).
 		const size_t words = nbytes / 2;
-		for (size_t i = 0; i < words; ++i) {
+		size_t i = 0;
+
+		// Process in batches of 360 words to reduce modulo overhead.
+		// Fletcher32 can accumulate up to 360 words in 32-bit registers
+		// before modulo is required to avoid overflow.
+		for (; i + 360 <= words; i += 360) {
+			uint32_t batch_sum1 = 0, batch_sum2 = 0;
+			for (size_t j = 0; j < 360; ++j) {
+				const uint16_t w = (static_cast<uint16_t>(p[2*(i+j)]) << 8) | p[2*(i+j)+1];
+				batch_sum1 += w;
+				batch_sum2 += batch_sum1;
+			}
+			sum2 += 360 * sum1 + batch_sum2;
+			sum1 += batch_sum1;
+			sum1 %= 65535u;
+			sum2 %= 65535u;
+		}
+
+		for (; i < words; ++i) {
 			const uint16_t w = (static_cast<uint16_t>(p[2*i]) << 8) | p[2*i+1];
 			sum1 = (sum1 + w) % 65535u;
 			sum2 = (sum2 + sum1) % 65535u;
