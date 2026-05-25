@@ -8,6 +8,7 @@
 #include "H5misc.hpp"
 #include "H5Dopen.hpp" // be sure this precedes error handling macro-s !!!
 #include "H5Rreference.hpp"
+#include "H5Dscatter.hpp"
 #include <string>
 #include <stdexcept>
 #include <type_traits>
@@ -192,10 +193,14 @@ namespace h5 {
  	*/ 
 	template<class T,  class... args_t> // dispatch to above
 		void read( const h5::fd_t& fd,  const std::string& dataset_path, T& ref, args_t&&... args ){
-
-		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
-		h5::ds_t ds = h5::open(fd, dataset_path, dapl );
-		::h5::read<T>(ds, ref, args...);
+		if constexpr (h5::has_scatter<std::decay_t<T>>::value) {
+			// Gather path: compiler-generated gather<T> handles open + row read.
+			h5::gather<std::decay_t<T>>(fd, dataset_path, ref);
+		} else {
+			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+			h5::ds_t ds = h5::open(fd, dataset_path, dapl );
+			::h5::read<T>(ds, ref, args...);
+		}
 	}
 
  	/** \func_read_hdr
