@@ -55,6 +55,93 @@ namespace h5{ namespace impl {
 		return aligned_ptr(static_cast<char*>(ptr));
 	}
 
+	// ------------------------------------------------------------------
+	// Bump-pointer arena: eliminates per-allocation system calls.
+	// Default 256 MiB holds ~32K 8 KB chunks; tunable at construction.
+	// ------------------------------------------------------------------
+	struct chunk_arena_t {
+		static constexpr size_t alignment = H5CPP_MEM_ALIGNMENT;
+		static constexpr size_t default_capacity = 256 * 1024 * 1024;
+
+		struct aligned_deleter {
+			void operator()(char* ptr) const { std::free(ptr); }
+		};
+		std::unique_ptr<char, aligned_deleter> base;
+		char* bump = nullptr;
+		char* end = nullptr;
+
+		explicit chunk_arena_t(size_t capacity = default_capacity) {
+			void* ptr = nullptr;
+			if (posix_memalign(&ptr, alignment, capacity) != 0)
+				throw std::bad_alloc();
+			base.reset(static_cast<char*>(ptr));
+			bump = base.get();
+			end = bump + capacity;
+		}
+
+		chunk_arena_t(chunk_arena_t&&) = default;
+		chunk_arena_t& operator=(chunk_arena_t&&) = default;
+		chunk_arena_t(const chunk_arena_t&) = delete;
+		chunk_arena_t& operator=(const chunk_arena_t&) = delete;
+
+		[[nodiscard]] char* allocate(size_t size) {
+			size = round_up_to_alignment(size, alignment);
+			if (bump + size > end) [[unlikely]]
+				return allocate_fallback(size);
+			char* ptr = bump;
+			bump += size;
+			return ptr;
+		}
+
+		void reset() noexcept { bump = base.get(); }
+
+		bool owns(const void* ptr) const noexcept {
+			const char* p = static_cast<const char*>(ptr);
+			return p >= base.get() && p < end;
+		}
+
+	private:
+		[[nodiscard]] char* allocate_fallback(size_t size) {
+			void* ptr = nullptr;
+			if (posix_memalign(&ptr, alignment, size) != 0)
+				throw std::bad_alloc();
+			return static_cast<char*>(ptr);
+		}
+	};
+
+	// ------------------------------------------------------------------
+	// Processor-matched memory operations
+	// ------------------------------------------------------------------
+#if defined(__AVX__)
+	#include <immintrin.h>
+#endif
+
+	inline void simd_memset_zero(char* dst, size_t n) {
+#if defined(__AVX2__)
+		size_t m = n;
+		const __m256i zero = _mm256_setzero_si256();
+		for (; m >= 32; m -= 32, dst += 32)
+			_mm256_store_si256(reinterpret_cast<__m256i*>(dst), zero);
+		std::memset(dst, 0, m);
+#else
+		std::memset(dst, 0, n);
+#endif
+	}
+
+	inline void nontemporal_memcpy(char* __restrict dst, const char* __restrict src, size_t n) {
+#if defined(__AVX__)
+		size_t m = n;
+		for (; m >= 32; m -= 32, dst += 32, src += 32) {
+			_mm256_stream_si256(reinterpret_cast<__m256i*>(dst),
+				_mm256_loadu_si256(reinterpret_cast<const __m256i*>(src)));
+		}
+		_mm_sfence();
+		std::memcpy(dst, src, m);
+#else
+		std::memcpy(dst, src, n);
+#endif
+	}
+
 	enum struct filter_direction_t {
 		forward = 0, reverse = 1
 	};
@@ -71,9 +158,9 @@ namespace h5{ namespace impl {
             this->tail = rhs.tail; rhs.tail = 0;
             this->rank = rhs.rank; rhs.rank = 0;
 
-            this->ptr0 = std::move(rhs.ptr0);
-            this->ptr1 = std::move(rhs.ptr1);
+            this->arena = std::move(rhs.arena);
             memcpy(filter, rhs.filter,  sizeof(filter));
+            memcpy(filter_id, rhs.filter_id, sizeof(filter_id));
 
             memcpy(cd_values, rhs.cd_values,  sizeof(cd_values));
             memcpy(cd_size, rhs.cd_size,  sizeof(cd_size));
@@ -116,8 +203,9 @@ namespace h5{ namespace impl {
 		void push( filter::call_t filter );
 		void pop();
 
-		aligned_ptr ptr0, ptr1;
+		chunk_arena_t arena;
 		filter::call_t filter[H5CPP_MAX_FILTER];
+		H5Z_filter_t filter_id[H5CPP_MAX_FILTER];
 		hsize_t n,
 				C[H5CPP_MAX_RANK], D[H5CPP_MAX_RANK],
 				N[H5CPP_MAX_RANK], B[H5CPP_MAX_RANK], Rx[H5CPP_MAX_RANK],Ry[H5CPP_MAX_RANK];
@@ -196,8 +284,9 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 	unsigned N = H5Pget_nfilters( dcpl );
 	for(unsigned i=0; i<N; i++){
 		cd_size[i] = H5CPP_MAX_FILTER_PARAM;
-		push(
-			filter::get_callback( H5Pget_filter2( dcpl, i, &flags[i], &cd_size[i], cd_values[i], 0, nullptr, &filter_config )));
+		H5Z_filter_t id = H5Pget_filter2( dcpl, i, &flags[i], &cd_size[i], cd_values[i], 0, nullptr, &filter_config );
+		push( filter::get_callback( id ) );
+		filter_id[i] = id;
 		// Guarantee that params[1] always holds the uncompressed chunk byte count as a
 		// reliable decompression output-size hint.  External HDF5 files written by
 		// community plugins (LZ4 ID 32004, Zstd ID 32015, …) may store only
@@ -209,10 +298,10 @@ inline void h5::impl::pipeline_t<Derived>::set_cache( const h5::dcpl_t& dcpl, si
 	}
 
 	const size_t scratch_size = filter::filter_scratch_bound(block_size);
-	ptr0 = make_aligned( H5CPP_MEM_ALIGNMENT, scratch_size );
-	ptr1 = make_aligned( H5CPP_MEM_ALIGNMENT, scratch_size );
-	// get an alias to smart ptr
-	if( (chunk0 = ptr0.get()) == nullptr || (chunk1 = ptr1.get()) == nullptr )
+	chunk0 = arena.allocate(scratch_size);
+	chunk1 = arena.allocate(scratch_size);
+
+	if( chunk0 == nullptr || chunk1 == nullptr )
 	   	throw h5::error::io::dataset::open( H5CPP_ERROR_MSG("CTOR: couldn't allocate memory for caching chunks, invalid/check size?"));
 }
 
@@ -280,6 +369,26 @@ template< class Derived>
 	// b - block size, j - block index pos, n - actual dimension of data
 	// rx - remainder at the leading edges, ry - remainder at trailing edges 
 	h5cpp_def(0) h5cpp_def(1) h5cpp_def(2) h5cpp_def(3) h5cpp_def(4) h5cpp_def(5) h5cpp_def(6)
+
+	// rank-1 fast path: single large memcpy per chunk, no nested loops
+	if (rank == 1 && (O[0] % B[0]) == 0) [[likely]] {
+		constexpr hsize_t prefetch_distance = 4;
+		for (hsize_t j = 0; j < N[0]; j += B[0]) {
+			if (j + (prefetch_distance + 1) * B[0] < N[0])
+				__builtin_prefetch(ptr + (j + prefetch_distance * B[0]) * element_size, 0, 3);
+			hsize_t bytes_in_chunk = (j + B[0] <= N[0]) ? B[0] : (N[0] - j);
+			hsize_t bytes_to_copy = bytes_in_chunk * element_size;
+			if (bytes_to_copy < block_size) [[unlikely]]
+				simd_memset_zero(chunk0, block_size);
+			if (tail == 0)
+				std::memcpy(chunk0, ptr + j * element_size, bytes_to_copy);
+			else
+				memcpy(chunk0, ptr + j * element_size, bytes_to_copy);
+			C[0] = j + O[0];
+			write_chunk(C, block_size, chunk0);
+		}
+		return;
+	}
 
 	h5cpp_outer( 6 ){ h5cpp_outer( 5 ){ h5cpp_outer( 4 ){ h5cpp_outer( 3 ){
 	h5cpp_outer( 2 ){ h5cpp_outer( 1 ){ h5cpp_outer( 0 ){

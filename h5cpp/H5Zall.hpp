@@ -160,12 +160,64 @@ namespace h5::impl::filter {
 	// Matching HDF5 H5Z_FILTER_SHUFFLE semantics: for n elements of `type_size` bytes
 	// each, reorder bytes so that byte-k of every element is contiguous.
 	// params[0] = element size in bytes (set by H5Pset_shuffle / H5Pget_filter2).
+#if defined(__SSSE3__)
+	#include <tmmintrin.h>
+	inline void shuffle_ssse3(void* dst, const void* src, size_t size, size_t type_size, bool reverse) {
+		const char* s = static_cast<const char*>(src);
+		char* d = static_cast<char*>(dst);
+		const size_t count = size / type_size;
+		const size_t block = 16 / type_size;
+		const size_t nblocks = count / block;
+
+		__m128i mask;
+		switch (type_size) {
+			case 2: mask = _mm_set_epi8(15,13,11,9,7,5,3,1,14,12,10,8,6,4,2,0); break;
+			case 4: mask = _mm_set_epi8(15,11,7,3,14,10,6,2,13,9,5,1,12,8,4,0); break;
+			case 8: mask = _mm_set_epi8(15,7,14,6,13,5,12,4,11,3,10,2,9,1,8,0); break;
+			default: {
+				if (reverse) {
+					for (size_t byte = 0; byte < type_size; ++byte)
+						for (size_t elem = 0; elem < count; ++elem)
+							d[elem * type_size + byte] = s[byte * count + elem];
+				} else {
+					for (size_t byte = 0; byte < type_size; ++byte)
+						for (size_t elem = 0; elem < count; ++elem)
+							d[byte * count + elem] = s[elem * type_size + byte];
+				}
+				return;
+			}
+		}
+
+		for (size_t b = 0; b < nblocks; ++b) {
+			__m128i v = _mm_loadu_si128(reinterpret_cast<const __m128i*>(s + b * 16));
+			__m128i shuf = _mm_shuffle_epi8(v, mask);
+			_mm_storeu_si128(reinterpret_cast<__m128i*>(d + b * 16), shuf);
+		}
+
+		if (reverse) {
+			for (size_t byte = 0; byte < type_size; ++byte)
+				for (size_t elem = nblocks * block; elem < count; ++elem)
+					d[elem * type_size + byte] = s[byte * count + elem];
+		} else {
+			for (size_t byte = 0; byte < type_size; ++byte)
+				for (size_t elem = nblocks * block; elem < count; ++elem)
+					d[byte * count + elem] = s[elem * type_size + byte];
+		}
+	}
+#endif
+
 	inline size_t shuffle( void* dst, const void* src, size_t size, unsigned flags, size_t n, const unsigned params[] ){
 		const size_t type_size = (n > 0 && params[0] > 1) ? static_cast<size_t>(params[0]) : 1;
 		if (type_size == 1 || size == 0) {
 			memcpy(dst, src, size);
 			return size;
 		}
+#if defined(__SSSE3__)
+		if (type_size == 2 || type_size == 4 || type_size == 8) {
+			shuffle_ssse3(dst, src, size, type_size, flags & H5Z_FLAG_REVERSE);
+			return size;
+		}
+#endif
 		const size_t count = size / type_size;
 		const char* s = static_cast<const char*>(src);
 		char*       d = static_cast<char*>(dst);
@@ -187,10 +239,26 @@ namespace h5::impl::filter {
 	inline uint32_t fletcher32_checksum(const void* data, size_t nbytes) {
 		const uint8_t* p = static_cast<const uint8_t*>(data);
 		uint32_t sum1 = 0, sum2 = 0;
-		// Process 16-bit words; if nbytes is odd the final byte is treated as a
-		// zero-padded 16-bit word (matching HDF5's reference implementation).
 		const size_t words = nbytes / 2;
-		for (size_t i = 0; i < words; ++i) {
+		size_t i = 0;
+
+		// Process in batches of 360 words to reduce modulo overhead.
+		// Fletcher32 can accumulate up to 360 words in 32-bit registers
+		// before modulo is required to avoid overflow.
+		for (; i + 360 <= words; i += 360) {
+			uint32_t batch_sum1 = 0, batch_sum2 = 0;
+			for (size_t j = 0; j < 360; ++j) {
+				const uint16_t w = (static_cast<uint16_t>(p[2*(i+j)]) << 8) | p[2*(i+j)+1];
+				batch_sum1 += w;
+				batch_sum2 += batch_sum1;
+			}
+			sum2 += 360 * sum1 + batch_sum2;
+			sum1 += batch_sum1;
+			sum1 %= 65535u;
+			sum2 %= 65535u;
+		}
+
+		for (; i < words; ++i) {
 			const uint16_t w = (static_cast<uint16_t>(p[2*i]) << 8) | p[2*i+1];
 			sum1 = (sum1 + w) % 65535u;
 			sum2 = (sum2 + sum1) % 65535u;
