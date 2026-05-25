@@ -13,7 +13,13 @@
 #include <algorithm>
 #include <iterator>
 
+#ifndef H5Z_FILTER_GORILLA
+#define H5Z_FILTER_GORILLA 32016
+#endif
+
 namespace h5::impl {
+	// Forward declaration; defined in H5Zall.hpp.
+	herr_t gorilla_register_filter();
 	/* proxy object that gets converted to property_id with restriction that 
 	 * only same class properties may be daisy chained */
 	template <class Derived, class phid_t>
@@ -286,6 +292,26 @@ using chunk_opts               = impl::dcpl_call< impl::dcpl_args<hid_t,unsigned
 #endif
 using deflate                  = impl::dcpl_call< impl::dcpl_args<hid_t,unsigned>,H5Pset_deflate>;
 using gzip                     = deflate;
+	/** Gorilla XOR floating-point compression filter (community ID 32016).
+	 *  element_size: 4 for float, 8 for double. 0 (default) means auto-detect
+	 *  from chunk byte-size at compression time.
+	 */
+	struct gorilla : impl::prop_base<gorilla, h5::dcpl_t> {
+		size_t element_size;
+		gorilla(size_t element_size_ = 0) : element_size(element_size_) {
+			H5CPP_CHECK_NZ( (handle = H5Pcreate(H5P_DATASET_CREATE)),
+				h5::error::property_list::misc, "failed to create DCPL for gorilla");
+		}
+		void copy_impl(::hid_t id) const {
+			h5::impl::gorilla_register_filter();
+			unsigned params[1] = { static_cast<unsigned>(element_size) };
+			size_t n = (element_size > 0) ? 1 : 0;
+			H5CPP_CHECK_NZ(
+				H5Pset_filter(id, H5Z_FILTER_GORILLA, 0,
+					static_cast<unsigned>(n), n > 0 ? params : nullptr),
+				h5::error::property_list::argument, "H5Pset_filter(gorilla) failed");
+		}
+	};
 using fill_time                = impl::dcpl_call< impl::dcpl_args<hid_t,H5D_fill_time_t>,H5Pset_fill_time>;
 using alloc_time               = impl::dcpl_call< impl::dcpl_args<hid_t,H5D_alloc_time_t>,H5Pset_alloc_time>;
 template<class T> /*tcall ::= templated call with T*/

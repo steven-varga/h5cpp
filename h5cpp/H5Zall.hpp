@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cstdint>
 #include <algorithm>
+#include <mutex>
 #include <zlib.h>
 #include "H5config.hpp"
 
@@ -34,12 +35,19 @@
 #include <szlib.h>
 #endif
 
+#if defined(_MSC_VER)
+#include <intrin.h>
+#endif
+
 // Community HDF5 filter IDs
 #ifndef H5Z_FILTER_LZ4
 #define H5Z_FILTER_LZ4  32004
 #endif
 #ifndef H5Z_FILTER_ZSTD
 #define H5Z_FILTER_ZSTD 32015
+#endif
+#ifndef H5Z_FILTER_GORILLA
+#define H5Z_FILTER_GORILLA 32016
 #endif
 
 namespace h5::impl::filter {
@@ -301,6 +309,7 @@ namespace h5::impl::filter {
 			return size + 4;
 		}
 	}
+
 	inline size_t gzip( void* dst, const void* src, size_t size, unsigned flags, size_t n, const unsigned params[]){
 		return deflate(dst, src, size, flags, n, params);
 	}
@@ -413,6 +422,233 @@ namespace h5::impl::filter {
 #endif
 	}
 
+		// Gorilla delta-of-delta XOR compression for time-series floating-point data.
+		// Based on Pelkonen et al., VLDB 2015.  Compresses IEEE-754 float32/float64
+		// by XOR-ing consecutive values and suppressing leading/trailing zero bits.
+		// Params: params[0] = element size in bytes (4 or 8).
+		namespace {
+			template<typename T>
+			inline int gorilla_clz(T value) {
+				if (value == 0) return sizeof(T) * 8;
+#if defined(__GNUC__) || defined(__clang__)
+				if constexpr (sizeof(T) == 8) return __builtin_clzll(value);
+				else return __builtin_clz(static_cast<unsigned>(value));
+#elif defined(_MSC_VER)
+				unsigned long index;
+				if constexpr (sizeof(T) == 8) {
+					if (_BitScanReverse64(&index, value)) return 63 - static_cast<int>(index);
+				} else {
+					if (_BitScanReverse(&index, static_cast<unsigned long>(value))) return 31 - static_cast<int>(index);
+				}
+				return sizeof(T) * 8;
+#else
+				int count = 0;
+				for (int i = sizeof(T) * 8 - 1; i >= 0; --i) {
+					if ((value >> i) & 1) break;
+					++count;
+				}
+				return count;
+#endif
+			}
+
+			template<typename T>
+			inline int gorilla_ctz(T value) {
+				if (value == 0) return sizeof(T) * 8;
+#if defined(__GNUC__) || defined(__clang__)
+				if constexpr (sizeof(T) == 8) return __builtin_ctzll(value);
+				else return __builtin_ctz(static_cast<unsigned>(value));
+#elif defined(_MSC_VER)
+				unsigned long index;
+				if constexpr (sizeof(T) == 8) {
+					_BitScanForward64(&index, value);
+				} else {
+					_BitScanForward(&index, static_cast<unsigned long>(value));
+				}
+				return static_cast<int>(index);
+#else
+				int count = 0;
+				for (int i = 0; i < sizeof(T) * 8; ++i) {
+					if ((value >> i) & 1) break;
+					++count;
+				}
+				return count;
+#endif
+			}
+
+			struct bit_writer_t {
+				uint8_t* buf;
+				size_t byte_pos = 0;
+				unsigned bit_pos = 0; // 0-7, MSB first
+
+				void write_bit(bool bit) {
+					if (bit_pos == 0) buf[byte_pos] = 0;
+					if (bit) buf[byte_pos] |= (1u << (7 - bit_pos));
+					if (++bit_pos == 8) { bit_pos = 0; ++byte_pos; }
+				}
+				void write_bits(uint64_t value, unsigned nbits) {
+					for (int i = nbits - 1; i >= 0; --i)
+						write_bit((value >> i) & 1);
+				}
+			};
+
+			struct bit_reader_t {
+				const uint8_t* buf;
+				size_t byte_pos = 0;
+				unsigned bit_pos = 0;
+
+				bool read_bit() {
+					bool bit = (buf[byte_pos] >> (7 - bit_pos)) & 1;
+					if (++bit_pos == 8) { bit_pos = 0; ++byte_pos; }
+					return bit;
+				}
+				uint64_t read_bits(unsigned nbits) {
+					uint64_t result = 0;
+					for (unsigned i = 0; i < nbits; ++i)
+						result = (result << 1) | (read_bit() ? 1u : 0u);
+					return result;
+				}
+			};
+
+			template<typename T>
+			inline size_t gorilla_encode_impl(void* dst, const void* src, size_t size) {
+				const size_t element_size = sizeof(T);
+				const size_t count = size / element_size;
+				if (count == 0) return 0;
+				const T* values = static_cast<const T*>(src);
+				uint8_t* out = static_cast<uint8_t*>(dst);
+
+				// Header: element_size (1 byte) + count (big-endian uint32_t)
+				out[0] = static_cast<uint8_t>(element_size);
+				out[1] = static_cast<uint8_t>(count >> 24);
+				out[2] = static_cast<uint8_t>(count >> 16);
+				out[3] = static_cast<uint8_t>(count >>  8);
+				out[4] = static_cast<uint8_t>(count);
+
+				// First value raw
+				std::memcpy(out + 5, &values[0], element_size);
+				if (count == 1) return 5 + element_size;
+
+				bit_writer_t writer{out + 5 + element_size};
+				T prev = values[0];
+				int prev_leading = -1;
+				int prev_meaningful = -1;
+
+				for (size_t i = 1; i < count; ++i) {
+					T curr = values[i];
+					T xored = prev ^ curr;
+					if (xored == 0) {
+						writer.write_bit(false); // same value
+					} else {
+						writer.write_bit(true);  // different value
+						int leading = gorilla_clz(xored);
+						int trailing = gorilla_ctz(xored);
+						int meaningful = sizeof(T) * 8 - leading - trailing;
+						// Original Gorilla condition: current meaningful bits fit inside previous block.
+						// Chimp heuristic: only reuse if it's cheaper than paying the 14-bit new-block overhead.
+						bool fits_in_prev = prev_leading >= 0 && leading >= prev_leading &&
+						    (leading + meaningful) <= (prev_leading + prev_meaningful);
+						bool cheaper_to_reuse = fits_in_prev && (2 + prev_meaningful) <= (14 + meaningful);
+						if (cheaper_to_reuse) {
+							writer.write_bit(false); // same block
+							int block_trailing = sizeof(T) * 8 - prev_leading - prev_meaningful;
+							writer.write_bits(static_cast<uint64_t>(xored >> block_trailing), prev_meaningful);
+						} else {
+							writer.write_bit(true);  // new block
+							writer.write_bits(static_cast<uint64_t>(leading), 6);
+							// meaningful can be 64, which doesn't fit in 6 bits.
+							// Encode 64 as 0 (same convention as go-tsz); decoder remaps 0 -> 64.
+							writer.write_bits(static_cast<uint64_t>(meaningful == 64 ? 0 : meaningful), 6);
+							prev_leading = leading;
+							prev_meaningful = meaningful;
+							writer.write_bits(static_cast<uint64_t>(xored >> trailing), meaningful);
+						}
+					}
+					prev = curr;
+				}
+				return 5 + element_size + writer.byte_pos + (writer.bit_pos > 0 ? 1 : 0);
+			}
+
+			template<typename T>
+			inline size_t gorilla_decode_impl(void* dst, const void* src, size_t size) {
+				if (size < 5) return 0;
+				const uint8_t* in = static_cast<const uint8_t*>(src);
+				// byte 0 = element_size, already verified by caller
+				uint32_t count =
+					(static_cast<uint32_t>(in[1]) << 24) |
+					(static_cast<uint32_t>(in[2]) << 16) |
+					(static_cast<uint32_t>(in[3]) <<  8) |
+					 static_cast<uint32_t>(in[4]);
+				if (size < 5 + sizeof(T) || count == 0) return 0;
+
+				T* values = static_cast<T*>(dst);
+				std::memcpy(&values[0], in + 5, sizeof(T));
+				if (count == 1) return sizeof(T);
+
+				bit_reader_t reader{in + 5 + sizeof(T)};
+				T prev = values[0];
+				int prev_leading = -1;
+				int prev_meaningful = -1;
+
+				for (uint32_t i = 1; i < count; ++i) {
+					if (!reader.read_bit()) {
+						values[i] = prev;
+					} else {
+						int leading, meaningful;
+						if (!reader.read_bit()) {
+							leading = prev_leading;
+							meaningful = prev_meaningful;
+						} else {
+							leading = static_cast<int>(reader.read_bits(6));
+							meaningful = static_cast<int>(reader.read_bits(6));
+							// meaningful=64 is encoded as 0 in 6 bits (see encoder).
+							if (meaningful == 0) meaningful = 64;
+							prev_leading = leading;
+							prev_meaningful = meaningful;
+						}
+						int trailing = sizeof(T) * 8 - leading - meaningful;
+						T xored = static_cast<T>(reader.read_bits(meaningful));
+						xored <<= trailing;
+						values[i] = prev ^ xored;
+					}
+					prev = values[i];
+				}
+				return static_cast<size_t>(count) * sizeof(T);
+			}
+		} // anonymous namespace
+
+		inline size_t gorilla(void* dst, const void* src, size_t size, unsigned flags, size_t n, const unsigned params[]) {
+			if (size == 0) return 0;
+
+			if (flags & H5Z_FLAG_REVERSE) {
+				// Decode: element_size is self-described in header
+				if (size < 1) return 0;
+				const uint8_t* in = static_cast<const uint8_t*>(src);
+				size_t element_size = in[0];
+				if (element_size != 4 && element_size != 8) return 0;
+				return (element_size == 4)
+					? gorilla_decode_impl<uint32_t>(dst, src, size)
+					: gorilla_decode_impl<uint64_t>(dst, src, size);
+			} else {
+				// Encode: element_size must be provided (n >= 1, params[0] > 0).
+				// Auto-detect is intentionally not supported because chunk sizes
+				// divisible by both 4 and 8 are ambiguous (float32 vs float64).
+				// HDF5 set_local callback or explicit h5::gorilla{N} is the correct
+				// way to communicate element size.
+				if (n == 0 || params[0] == 0) {
+					std::memcpy(dst, src, size);
+					return size;
+				}
+				size_t element_size = params[0];
+				if (element_size != 4 && element_size != 8) {
+					std::memcpy(dst, src, size);
+					return size;
+				}
+				return (element_size == 4)
+					? gorilla_encode_impl<uint32_t>(dst, src, size)
+					: gorilla_encode_impl<uint64_t>(dst, src, size);
+			}
+		}
+
 		inline size_t error( void* dst, const void* src, size_t size, unsigned flags, size_t n, const unsigned params[] ){
 			(void)dst; (void)src; (void)flags; (void)n; (void)params;
 			throw std::runtime_error("invalid filter");
@@ -429,8 +665,57 @@ namespace h5::impl::filter {
 			case H5Z_FILTER_SCALEOFFSET:return filter::scaleoffset;
 			case H5Z_FILTER_LZ4:        return filter::lz4;
 			case H5Z_FILTER_ZSTD:       return filter::zstd;
+			case H5Z_FILTER_GORILLA:    return filter::gorilla;
 			default:
 					return filter::error;
 		}
+	}
+}
+
+namespace h5::impl {
+	// HDF5 filter callback wrapper for Gorilla XOR compression.
+	// Bridges HDF5's filter interface to h5cpp's filter::gorilla.
+	inline size_t gorilla_hdf5_filter(unsigned int flags, size_t cd_nelmts,
+								  const unsigned int cd_values[],
+								  size_t nbytes, size_t* buf_size, void** buf) {
+		// Worst-case expansion: ~2x for 64-bit random data + header overhead.
+		size_t max_out = nbytes * 2 + 256;
+		void* out = std::malloc(max_out);
+		if (!out) return 0;
+
+		size_t out_size = filter::gorilla(out, *buf, nbytes, flags, cd_nelmts, cd_values);
+		if (out_size == 0) {
+			std::free(out);
+			return 0;
+		}
+
+		if (out_size <= *buf_size) {
+			std::memcpy(*buf, out, out_size);
+			std::free(out);
+			return out_size;
+		} else {
+			// Hand ownership of the larger buffer to HDF5.
+			*buf = out;
+			*buf_size = out_size;
+			return out_size;
+		}
+	}
+
+	// Register the Gorilla filter with HDF5. Thread-safe; idempotent.
+	inline herr_t gorilla_register_filter() {
+		static const H5Z_class2_t gorilla_class = {
+			H5Z_CLASS_T_VERS,
+			H5Z_FILTER_GORILLA,
+			1, 1,
+			"gorilla",
+			nullptr,
+			nullptr,
+			gorilla_hdf5_filter
+		};
+		static std::once_flag flag;
+		std::call_once(flag, []() {
+			H5Zregister(&gorilla_class);
+		});
+		return 0;
 	}
 }
