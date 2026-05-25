@@ -97,6 +97,7 @@ add_test_case(H5Zfletcher32)
 add_test_case(H5Zlz4)
 add_test_case(H5Zzstd)
 add_test_case(H5Zszip)
+add_test_case(H5Zgorilla)
 # add_test_case(H5Iall)
 
 # ---------------------------------------------------------------------------
