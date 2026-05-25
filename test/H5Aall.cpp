@@ -141,11 +141,9 @@ TEST_CASE("awrite/aread std::array of arithmetic") {
 
 // ---------------------------------------------------------------------------
 // POD struct (compound type) — KNOWN LIMITATION (not tested here)
-// h5::awrite/aread for compound structs requires the h5cpp compiler plugin to
-// emit compiler_meta_t<T> and register the HDF5 compound type.  Without the
-// plugin, H5CPP_REGISTER_STRUCT only returns H5I_UNINIT and H5Acreate2 fails.
-// Compound attribute round-trips work correctly when the plugin is used to
-// generate the reflection shim — no fix needed in H5Awrite.hpp / H5Aread.hpp.
+// h5::awrite/aread for compound structs requires a manual h5::create<T>()
+// specialization (dt_t path) or C++26 auto-reflection.  Without either,
+// H5CPP_REGISTER_STRUCT returns H5I_UNINIT and H5Acreate2 fails.
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------

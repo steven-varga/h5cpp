@@ -8,6 +8,7 @@
 #include "H5misc.hpp"
 #include "H5Dopen.hpp" // be sure this precedes error handling macro-s !!!
 #include "H5Rreference.hpp"
+#include "H5Dscatter.hpp"
 #include <string>
 #include <stdexcept>
 #include <type_traits>
@@ -74,9 +75,32 @@ namespace h5 {
 			return layout == H5D_CHUNKED;
 		}();
 		if( use_pipeline ){
-			h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
-			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
-			filters->read(ds, offset, stride, block, count, dxpl, ptr);
+			// Phase 1.3.3 — if the file's FAPL has h5::threads{N}, route
+			// reads through a local pool_pipeline_t.  Currently pool_pipeline_t::
+			// read_chunk_impl is synchronous (parallel decompress is Phase 1.5+),
+			// so the FAPL-pool branch is semantically equivalent to the DAPL
+			// path today; the structure is in place for the read-ahead
+			// optimization to land later without changing call sites.
+			hid_t fid  = H5Iget_file_id(static_cast<hid_t>(ds));
+			hid_t fapl = H5Fget_access_plist(fid);
+			auto pool  = h5::impl::resolve_worker_pool(fapl);
+			if (pool) {
+				const unsigned cap = h5::impl::resolve_backpressure(
+					fapl, pool->worker_count());
+				h5::impl::pool_pipeline_t pipe(std::move(pool), cap);
+				h5::dcpl_t dcpl{H5Dget_create_plist(static_cast<hid_t>(ds))};
+				hid_t type_id  = H5Dget_type(static_cast<hid_t>(ds));
+				size_t elem_sz = H5Tget_size(type_id);
+				H5Tclose(type_id);
+				pipe.set_cache(dcpl, elem_sz);
+				pipe.read(ds, offset, stride, block, count, dxpl, ptr);
+			} else {
+				h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
+				H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
+				filters->read(ds, offset, stride, block, count, dxpl, ptr);
+			}
+			H5Pclose(fapl);
+			H5Fclose(fid);
 		}else{
 			h5::sp_t mem_space = h5::create_simple( size );
 			h5::select_all( mem_space );
@@ -169,10 +193,14 @@ namespace h5 {
  	*/ 
 	template<class T,  class... args_t> // dispatch to above
 		void read( const h5::fd_t& fd,  const std::string& dataset_path, T& ref, args_t&&... args ){
-
-		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
-		h5::ds_t ds = h5::open(fd, dataset_path, dapl );
-		::h5::read<T>(ds, ref, args...);
+		if constexpr (h5::has_scatter<std::decay_t<T>>::value) {
+			// Gather path: compiler-generated gather<T> handles open + row read.
+			h5::gather<std::decay_t<T>>(fd, dataset_path, ref);
+		} else {
+			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+			h5::ds_t ds = h5::open(fd, dataset_path, dapl );
+			::h5::read<T>(ds, ref, args...);
+		}
 	}
 
  	/** \func_read_hdr

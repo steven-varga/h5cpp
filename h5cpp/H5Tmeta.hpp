@@ -283,23 +283,6 @@ namespace h5::meta {
 
     template <class T> struct storage_representation : detail_capabilities::storage_representation_impl<remove_cvref_t<T>> {};
     template <class T> constexpr storage_representation_t storage_representation_v = storage_representation<T>::value;
-    inline constexpr std::uint32_t metadata_version = 1;
-
-    /** Base class for compiler-emitted reflected field descriptors. */
-    template <class owner_t, class field_t>
-    struct field_descriptor_t {
-        using owner_type = owner_t;
-        using field_type = field_t;
-    };
-
-    /** Specialize to std::true_type for any struct described by compiler_meta_t<T>. */
-    template <class T>
-    struct is_reflected_compound_t : std::false_type {};
-
-    /** Specialize to provide the field-descriptor tuple for a reflected compound. */
-    template <class T>
-    struct compiler_meta_t;
-
     template <class T, class = void>
     struct storage_traits_impl_t;
     template <class T, class = void>
@@ -395,64 +378,30 @@ namespace h5::meta {
         }
     };
 
-    template <class T>
-    struct storage_traits_impl_t<T, std::enable_if_t<is_reflected_compound_t<T>::value>> {
-        static_assert(compiler_meta_t<T>::version == metadata_version,
-            "H5CPP compiler metadata version mismatch");
-        static constexpr bool supported   = true;
-        static constexpr bool owns_handle = true;
-        static hid_t create_type() noexcept {
-            using fields_t = typename compiler_meta_t<T>::fields_t;
-            hid_t dt = H5Tcreate(H5T_COMPOUND, sizeof(T));
-            insert_fields<fields_t>(dt,
-                std::make_index_sequence<std::tuple_size_v<fields_t>>{});
-            return dt;
-        }
-    private:
-        template <class Fields, std::size_t... Is>
-        static void insert_fields(hid_t dt, std::index_sequence<Is...>) noexcept {
-            (insert_field<std::tuple_element_t<Is, Fields>>(dt), ...);
-        }
-        template <class FieldDesc>
-        static void insert_field(hid_t dt) noexcept {
-            using field_t = typename FieldDesc::field_type;
-            hid_t field_dt = storage_traits_t<field_t>::create_type();
-            H5Tinsert(dt, FieldDesc::name(), FieldDesc::offset, field_dt);
-            if constexpr (storage_traits_t<field_t>::owns_handle) H5Tclose(field_dt);
-        }
-    };
-
     template <class T, class> struct is_transport_contiguous_impl_t : std::false_type {};
     template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<std::is_arithmetic_v<T>>> : std::true_type {};
     template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<is_fixed_text_like<T>::value>> : std::true_type {};
     template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<
         is_array_like<T>::value && !is_text_like<T>::value>>
         : is_transport_contiguous_t<typename meta::decay<T>::type> {};
-        
-    template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<is_reflected_compound_t<T>::value>> {
-    private:
-        static_assert(compiler_meta_t<T>::version == metadata_version,
-            "H5CPP compiler metadata version mismatch");
-        using fields_t = typename compiler_meta_t<T>::fields_t;
-        template <std::size_t... Is>
-        static constexpr bool check_contiguous(std::index_sequence<Is...>) noexcept {
-            return (... && is_transport_contiguous_v<
-                typename std::tuple_element_t<Is, fields_t>::field_type>);
-        }
-    public:
-        static constexpr bool value = check_contiguous(std::make_index_sequence<std::tuple_size_v<fields_t>>{});
-    };
+
+    // Trivially copyable aggregates are safe for bulk memcpy: no padding surprises,
+    // no non-trivial copy semantics.  Excludes arrays and text already handled above.
+    template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<
+        std::is_aggregate_v<T> &&
+        !is_array_like<T>::value &&
+        !is_text_like<T>::value &&
+        std::is_trivially_copyable_v<T>>> : std::true_type {};
 
     // Gap 1: contiguous STL sequence containers (vector<T>, span<T>, linalg types, etc.)
     // Triggers when T exposes a data() pointer and size(), but is not a C/std::array,
-    // not text, not arithmetic, and not a reflected compound.
+    // not text, and not arithmetic.
     // The element type inferred from data() must be standard-layout and trivial
     // (prevents nested containers like vector<vector<T>> or vector<string> from matching).
     template <class T>
     struct is_transport_contiguous_impl_t<T, std::enable_if_t<
         !is_array_like<T>::value &&
         !is_text_like<T>::value &&
-        !is_reflected_compound_t<T>::value &&
         !std::is_arithmetic_v<T> &&
         has_data_pointer<T>::value &&
         meta::has_size<T>::value &&
@@ -626,13 +575,20 @@ namespace h5::meta {
         static constexpr std::size_t bytes(const T&) noexcept { return sizeof(T); }
     };
 
-    // Reflected compound structs
+    // Plain aggregates: any struct/class that is an aggregate but not arithmetic,
+    // array-like, or text-like.
+    // Provides the memory-access contract so h5::write(ds, pod_value) works once
+    // storage_traits_impl_t<T> is populated (old dt_t path or future C++26 reflection).
     template <class T>
-    struct access_traits_t<T, std::enable_if_t<is_reflected_compound_t<T>::value>> {
+    struct access_traits_t<T, std::enable_if_t<
+        std::is_aggregate_v<T> &&
+        !std::is_arithmetic_v<T> &&
+        !is_array_like<T>::value &&
+        !is_text_like<T>::value>> {
         using element_t  = T;
         using pointer_t  = const T*;
         static constexpr access_t kind = access_t::object;
-        static constexpr bool is_trivially_packable = is_transport_contiguous_v<T>;
+        static constexpr bool is_trivially_packable = std::is_trivially_copyable_v<T>;
         static const T*  data(const T& v)  noexcept { return &v; }
         static T*        data(T& v)        noexcept { return &v; }
         static constexpr std::array<std::size_t,0> size(const T&) noexcept { return {}; }
@@ -673,7 +629,6 @@ namespace h5::meta {
     struct access_traits_t<T, std::enable_if_t<
         !detail::has_explicit_access_traits<remove_cvref_t<T>>::value &&
         !std::is_array_v<T> &&
-        !is_reflected_compound_t<T>::value &&
         has_data_pointer<T>::value &&
         meta::has_size<T>::value &&
         is_transport_contiguous_v<T>>> {
@@ -693,7 +648,6 @@ namespace h5::meta {
     struct access_traits_t<T, std::enable_if_t<
         !detail::has_explicit_access_traits<remove_cvref_t<T>>::value &&
         !std::is_array_v<T> &&
-        !is_reflected_compound_t<T>::value &&
         has_data_pointer<T>::value &&
         meta::has_size<T>::value &&
         compat::is_detected<value_type_f, remove_cvref_t<T>>::value &&

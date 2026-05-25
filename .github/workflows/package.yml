@@ -86,10 +86,12 @@ jobs:
 
       - name: Configure
         run: |
+          HDF5_PREFIX="$(brew --prefix hdf5)"
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr/local \
-            -DHDF5_ROOT=$(brew --prefix hdf5) \
+            -DHDF5_ROOT="$HDF5_PREFIX" \
+            -DCMAKE_PREFIX_PATH="$HDF5_PREFIX" \
             -DH5CPP_BUILD_EXAMPLES=OFF \
             -DH5CPP_BUILD_TESTS=OFF \
             -DH5CPP_BUILD_BENCH=OFF
@@ -107,21 +109,100 @@ jobs:
           if-no-files-found: error
 
   # ── Windows (NSIS .exe) ───────────────────────────────────────────────────────
+  # No Chocolatey 'hdf5' package exists; mirror the build-from-source approach
+  # from ci.yml.  zlib is built fresh each run (~30s); HDF5 install prefix is
+  # cached between runs.
   package-windows:
     name: windows / x64 / NSIS
     runs-on: windows-latest
+    env:
+      HDF5_VERSION: 1.12.2
+      HDF5_CACHE_VERSION: v3
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install HDF5
-        run: choco install hdf5 -y --no-progress
+      - name: Build zlib from source
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $zlib_version = "1.3.1"
+          $zlib_archive = "$env:RUNNER_TEMP\zlib-$zlib_version.tar.gz"
+          $zlib_source  = "$env:RUNNER_TEMP\zlib-$zlib_version"
+          $zlib_build   = "$env:RUNNER_TEMP\zlib-build"
+          $zlib_prefix  = "$env:RUNNER_TEMP\zlib-install"
+
+          Invoke-WebRequest `
+            -Uri "https://github.com/madler/zlib/archive/refs/tags/v$zlib_version.tar.gz" `
+            -OutFile $zlib_archive
+          tar -xzf $zlib_archive -C $env:RUNNER_TEMP
+
+          cmake -S $zlib_source -B $zlib_build `
+            -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_INSTALL_PREFIX="$zlib_prefix"
+          cmake --build $zlib_build --parallel --config Release
+          cmake --install $zlib_build --config Release
+
+      - name: Restore HDF5 cache
+        id: cache-hdf5
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ runner.temp }}\hdf5-${{ env.HDF5_VERSION }}-install
+          key: hdf5-windows-vs2022-${{ env.HDF5_VERSION }}-pkg-${{ env.HDF5_CACHE_VERSION }}
+
+      - name: Build HDF5 from source
+        if: steps.cache-hdf5.outputs.cache-hit != 'true'
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $hdf5_version = "${{ env.HDF5_VERSION }}"
+          $hdf5_archive = "$env:RUNNER_TEMP\hdf5-$hdf5_version.tar.gz"
+          $hdf5_source  = "$env:RUNNER_TEMP\hdf5-$hdf5_version"
+          $hdf5_build   = "$env:RUNNER_TEMP\hdf5-$hdf5_version-build"
+          $hdf5_prefix  = "$env:RUNNER_TEMP\hdf5-$hdf5_version-install"
+
+          Invoke-WebRequest `
+            -Uri "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-$hdf5_version/src/hdf5-$hdf5_version.tar.gz" `
+            -OutFile $hdf5_archive
+          tar -xzf $hdf5_archive -C $env:RUNNER_TEMP
+
+          cmake -S $hdf5_source -B $hdf5_build `
+            -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_INSTALL_PREFIX="$hdf5_prefix" `
+            -DHDF_CFG_NAME=Release `
+            -DBUILD_SHARED_LIBS=ON `
+            -DBUILD_TESTING=OFF `
+            -DHDF5_BUILD_TOOLS=OFF `
+            -DHDF5_BUILD_UTILS=OFF `
+            -DHDF5_BUILD_EXAMPLES=OFF `
+            -DHDF5_BUILD_CPP_LIB=OFF `
+            -DHDF5_BUILD_HL_LIB=OFF `
+            -DHDF5_BUILD_FORTRAN=OFF `
+            -DHDF5_ENABLE_Z_LIB_SUPPORT=ON `
+            -DHDF5_ENABLE_SZIP_SUPPORT=OFF `
+            -DZLIB_USE_EXTERNAL=OFF `
+            -DZLIB_INCLUDE_DIR="$env:RUNNER_TEMP/zlib-install/include" `
+            -DZLIB_LIBRARY="$env:RUNNER_TEMP/zlib-install/lib/zlib.lib"
+
+          cmake --build $hdf5_build --parallel --config Release
+          cmake --install $hdf5_build --config Release
+
+      - name: Save HDF5 cache
+        if: steps.cache-hdf5.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ runner.temp }}\hdf5-${{ env.HDF5_VERSION }}-install
+          key: ${{ steps.cache-hdf5.outputs.cache-primary-key }}
 
       - name: Configure
         shell: pwsh
         run: |
+          $hdf5_prefix = "$env:RUNNER_TEMP/hdf5-${{ env.HDF5_VERSION }}-install"
+          $zlib_prefix = "$env:RUNNER_TEMP/zlib-install"
           cmake -B build `
             -DCMAKE_BUILD_TYPE=Release `
+            -DHDF5_ROOT="$hdf5_prefix" `
+            -DCMAKE_PREFIX_PATH="$hdf5_prefix;$zlib_prefix" `
             -DH5CPP_BUILD_EXAMPLES=OFF `
             -DH5CPP_BUILD_TESTS=OFF `
             -DH5CPP_BUILD_BENCH=OFF `

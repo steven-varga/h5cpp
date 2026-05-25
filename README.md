@@ -6,7 +6,6 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20123216.svg)](https://doi.org/10.5281/zenodo.20123216)
 [![GitHub release](https://img.shields.io/github/v/release/vargalabs/h5cpp.svg)](https://github.com/vargalabs/h5cpp/releases)
 [![Documentation](https://img.shields.io/badge/docs-stable-blue)](https://vargalabs.github.io/h5cpp)
-[![Downloads](https://img.shields.io/github/downloads/vargalabs/h5cpp/total)](https://github.com/vargalabs/h5cpp/releases)
 
 # H5CPP — High-Performance [HDF5][hdf5] for Modern C++
 
@@ -92,10 +91,11 @@ cmake --install build
 - **`std::float16_t`** (C++23 IEEE 754 half-precision)
 - **Rank-7** array support
 - **Expanded attribute** type coverage
-- **Threaded I/O pipeline** for filter chains
+- **FAPL-scoped worker pool** — `h5::create(..., h5::threads{N} | h5::backpressure{M})` opts the file into parallel filter compression; all chunked datasets opened on that file (and pt_t built from them) inherit the pool with async-pipelined dispatch
+- **Async-mode scaffold** — `h5::async::fd_t fd = h5::async::create(...)` returns a descriptor whose `operator ::hid_t()` is `= delete`'d so accidental raw-C-API calls fail at compile time; per-fd executor thread serializes HDF5 calls.  Operation overloads land in the next PR.
 - **HDF5 1.12.2 ceiling** — tested and verified; `H5Dvlen_reclaim` / reference API compatibility
 - **Windows MSVC** in the CI matrix
-- **ASan + UBSan** clean on Clang 20
+- **ASan + UBSan + TSan** clean on Clang 20
 
 ## Documentation
 

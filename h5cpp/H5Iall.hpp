@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
+#include <memory>      /* std::shared_ptr — async descriptor exec field */
 #include <initializer_list>
 
 #ifdef H5CPP_CONVERSION_IMPLICIT
@@ -32,6 +33,18 @@ namespace h5::impl {
 	};
 	//forward declarations
 	struct at_t;
+
+	// Phase II — async descriptors carry a shared_ptr<executor_t> field
+	// directly on the wrapper.  Why direct storage and not the FAPL slot
+	// pattern from Phase I:  HDF5 1.10.9's H5Fget_access_plist returns a
+	// synthetic FAPL reconstructed from standard properties only; user
+	// properties installed via H5Pinsert2 are dropped.  Storing the
+	// executor inside the wrapper class lets operation overloads in
+	// Phase II PR-B reach it as `fd.exec` without round-tripping through
+	// HDF5's property machinery.  std::shared_ptr's type-erased deleter
+	// makes the forward declaration sufficient — the complete type is
+	// only needed at h5::async::create / open (defined in H5async.hpp).
+	struct executor_t;
 }
 
 namespace h5::impl::detail {
@@ -110,13 +123,133 @@ namespace h5::impl::detail {
 		::hid_t handle;
 	};
 
-	// disable from CAPI and TOCAPI conversions 
-	//conversion ctor to packet table enabled, used for h5::impl::ds_t
+	// Phase II async-mode specialization — operator ::hid_t() is = delete'd so
+	// user code that accidentally hands an async descriptor to a raw HDF5 C
+	// API fails to compile with a clear "use of deleted function" diagnostic.
+	// h5cpp internal code reaches the raw handle via the public `handle`
+	// field (see workplan §4.4); user code routes through h5::write / h5::read
+	// / etc. which detect the type via is_async_v<> and dispatch through the
+	// FAPL-resolved executor.
 	template<class T, capi_close_t capi_close>
-	struct hid_t<T,capi_close, false,false,hdf5::any> : private hid_t<T,capi_close,true,true,hdf5::any> {
-		using parent = hid_t<T,capi_close,true,true,hdf5::any>;
+	struct hid_t<T,capi_close, false,false,hdf5::any> {
 		using hidtype = T;
-        hid_t( std::initializer_list<::hid_t> fd ) : parent( fd ){}
+
+		// from CAPI — mirrors the true,true ctor; explicit so an accidental
+		// implicit promotion from ::hid_t doesn't slip an async wrapper in.
+		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
+			if( H5Iis_valid( handle_ ) )
+				H5Iinc_ref( handle_ );
+		}
+
+		// Factory ctor — h5::async::create / open construct the executor
+		// during file creation and inject it here so operation overloads
+		// (Phase II PR-B) can reach it via `fd.exec`.  Used by mode-
+		// transitive factories too (ds_t inherits parent fd's executor).
+		hid_t( ::hid_t handle_, std::shared_ptr<h5::impl::executor_t> e ) noexcept
+			: handle( handle_ ), exec( std::move(e) ) {}
+
+		// TO CAPI — DELETED.  Async descriptors must not be implicitly
+		// converted back to ::hid_t; doing so would let user code call
+		// HDF5 directly and bypass the executor thread.  Internal code
+		// reads the raw value from `handle` directly.
+		operator ::hid_t() const = delete;
+
+		// direct-initialization ctor; matches the classic shape — does not
+		// increment the refcount (caller owns the handle).
+		hid_t( std::initializer_list<::hid_t> fd ) : handle( *fd.begin() ){}
+
+		hid_t() : handle(H5I_UNINIT) {}
+
+		hid_t( const hid_t& ref ){
+			handle = ref.handle;
+			if( H5Iis_valid( handle ) )
+				H5Iinc_ref( handle );
+			exec = ref.exec;             // shared_ptr copy bumps refcount
+		}
+		hid_t& operator=( const hid_t& ref ){
+			if( this == &ref ) return *this;
+			if( H5Iis_valid( handle ) )
+				capi_close( handle );
+			handle = ref.handle;
+			if( H5Iis_valid( handle ) )
+				H5Iinc_ref( handle );
+			exec = ref.exec;
+			return *this;
+		}
+		hid_t( hid_t&& ref ) noexcept {
+			handle = ref.handle;
+			ref.handle = H5I_UNINIT;
+			exec = std::move(ref.exec);
+		}
+		hid_t& operator=( hid_t&& ref ) noexcept {
+			if( this == &ref ) return *this;
+			if( H5Iis_valid( handle ) )
+				capi_close( handle );
+			handle = ref.handle;
+			ref.handle = H5I_UNINIT;
+			exec = std::move(ref.exec);
+			return *this;
+		}
+		~hid_t(){
+			if( H5Iis_valid( handle ) )
+				capi_close( handle );
+		}
+
+		// Public so internal h5cpp code (the executor, dispatch lambdas)
+		// can read the raw id without invoking the deleted conversion.
+		// User code is expected to use h5::write / h5::read / h5::async::*
+		// factories rather than touch this field directly.
+		::hid_t handle;
+
+		// Phase II — shared_ptr to the executor that owns this descriptor's
+		// HDF5 lifetime.  Populated by h5::async::create / open at the
+		// file-level, then propagated to derived descriptors (async ds,
+		// async at, etc.) by mode-transitive factories.  May be null on
+		// default-constructed async wrappers (un-initialized state).
+		std::shared_ptr<h5::impl::executor_t> exec;
+	};
+
+	// Phase II — async dataset id.  Mirrors hdf5::dataset (line above) but
+	// with conversion to ::hid_t deleted.  Adds the `dapl` field and the
+	// attribute subscript operator the classic ds_t exposes.
+	template<class T, capi_close_t capi_close>
+	struct hid_t<T,capi_close, false,false,hdf5::dataset>
+		: public hid_t<T,capi_close,false,false,hdf5::any> {
+		using parent = hid_t<T,capi_close,false,false,hdf5::any>;
+		using parent::parent;
+		using parent::handle;
+		using hidtype = T;
+		using at_t = hid_t<h5::impl::at_t,H5Aclose,false,false,hdf5::attribute>;
+
+		hid_t(){
+			this->handle = H5I_UNINIT;
+			this->dapl   = H5I_UNINIT;
+		}
+		at_t operator[]( const char arg[] );
+
+		::hid_t dapl;
+	};
+
+	// Phase II — async attribute id.
+	template<class T, capi_close_t capi_close>
+	struct hid_t<T,capi_close, false,false,hdf5::attribute>
+		: public hid_t<T,capi_close,false,false,hdf5::any> {
+		using parent = hid_t<T,capi_close,false,false,hdf5::any>;
+		using parent::parent;
+		using parent::handle;
+		using hidtype = T;
+		using at_t = hid_t<h5::impl::at_t,H5Aclose,false,false,hdf5::attribute>;
+
+		hid_t(){
+			this->handle = H5I_UNINIT;
+			this->ds     = H5I_UNINIT;
+		}
+
+		template <class V> at_t operator=( V arg );
+		template <class V> at_t operator=( const std::initializer_list<V> args ){ return at_t{H5I_UNINIT}; }
+
+		::hid_t ds;
+		std::string name;
 	};
 	/*property id*/
 	template<class T, capi_close_t capi_close>
@@ -176,6 +309,14 @@ namespace h5::impl {
 	template <class T, capi_close_t capi_call> using hid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::any>;
 	template <class T, capi_close_t capi_call> using pid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::property>;
 	template <class T, capi_close_t capi_call> using did_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::dataset>;
+
+	// Phase II — async-mode variants.  Same shape as the classic aliases
+	// above but with operator ::hid_t() = delete'd at the type level.
+	// Users opt in by calling h5::async::create / h5::async::open; everything
+	// downstream deduces these types through TAD.
+	template <class T, capi_close_t capi_call> using async_aid_t = detail::hid_t<T,capi_call, false,false,detail::hdf5::attribute>;
+	template <class T, capi_close_t capi_call> using async_hid_t = detail::hid_t<T,capi_call, false,false,detail::hdf5::any>;
+	template <class T, capi_close_t capi_call> using async_did_t = detail::hid_t<T,capi_call, false,false,detail::hdf5::dataset>;
 }
 
 /*hide gory details, and stamp out descriptors */
@@ -203,4 +344,29 @@ namespace h5 {
 	#undef H5CPP__defaid_t
 	#undef H5CPP__defpid_t
 	#undef H5CPP__defhid_t
+
+	// Phase II — async-mode descriptor type aliases.  Parallel to the
+	// classic h5::fd_t / h5::ds_t / h5::gr_t / h5::at_t above; the
+	// underlying class template is the false,false specialization of
+	// impl::hid_t so any attempt to pass one of these to a raw HDF5
+	// C-API call fails with "use of deleted function".
+	namespace async {
+		using fd_t   = impl::async_hid_t<impl::fd_t,  H5Fclose>;
+		using ds_t   = impl::async_did_t<impl::ds_t,  H5Dclose>;
+		using at_t   = impl::async_aid_t<impl::at_t,  H5Aclose>;
+		using gr_t   = impl::async_aid_t<impl::gr_t,  H5Gclose>;
+		using ob_t   = impl::async_hid_t<impl::ob_t,  H5Oclose>;
+	}
+
+	// Phase II type-trait: is_async_v<T> answers "is T one of the
+	// h5::async::* descriptors?".  Used by concept-constrained operation
+	// overloads (Phase II PR-B) to pick the executor dispatch branch.
+	template <class T>
+	struct is_async : std::false_type {};
+
+	template <class T, impl::capi_close_t C, int K>
+	struct is_async< impl::detail::hid_t<T,C,false,false,K> > : std::true_type {};
+
+	template <class T>
+	inline constexpr bool is_async_v = is_async<std::decay_t<T>>::value;
 }

@@ -67,6 +67,7 @@ add_test_case(H5Adelete)
 add_test_case(H5Aall)
 add_test_case(H5compat)
 add_test_case(H5Dgather)
+add_test_case(H5Dscatter)
 add_test_case(H5meta)
 add_test_case(H5Rreference)
 add_test_case(H5Tmeta)
@@ -97,7 +98,10 @@ add_test_case(H5Zfletcher32)
 add_test_case(H5Zlz4)
 add_test_case(H5Zzstd)
 add_test_case(H5Zszip)
+add_test_case(H5Zpipeline_parallel_read)
+add_test_case(H5Zgorilla)
 # add_test_case(H5Iall)
+add_test_case(H5async)        # Phase II scaffold lifecycle + submit_and_wait tests
 
 # ---------------------------------------------------------------------------
 # C++20 streaming ranges view — issue [#181].

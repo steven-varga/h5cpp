@@ -7,6 +7,7 @@
 #include "H5Tmeta.hpp"
 #include "H5Dopen.hpp"
 #include "H5Dgather.hpp"
+#include "H5Dscatter.hpp"
 
 namespace h5 {
   /** @ingroup io-write
@@ -104,10 +105,33 @@ namespace h5 {
 			const h5::block_t& block = arg::get( h5::default_block, args...);
 			const h5::offset_t& offset = arg::get( h5::default_offset, args...);
 			const h5::stride_t& stride = arg::get( h5::default_stride, args...);
-		
-			h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
-			H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
-			filters->write(ds, offset, stride, block, count, dxpl, ptr);
+
+			// Phase 1.3.3 — if the file's FAPL has h5::threads{N}, route
+			// compress work through the shared pool via a local
+			// pool_pipeline_t.  Otherwise use the existing DAPL-stored
+			// basic_pipeline_t pointer for synchronous filter chain.
+			hid_t fid  = H5Iget_file_id(static_cast<hid_t>(ds));
+			hid_t fapl = H5Fget_access_plist(fid);
+			auto pool  = h5::impl::resolve_worker_pool(fapl);
+			if (pool) {
+				const unsigned cap = h5::impl::resolve_backpressure(
+					fapl, pool->worker_count());
+				h5::impl::pool_pipeline_t pipe(std::move(pool), cap);
+				// set_cache populates the filter chain from the dataset's DCPL.
+				h5::dcpl_t dcpl{H5Dget_create_plist(static_cast<hid_t>(ds))};
+				hid_t type_id  = H5Dget_type(static_cast<hid_t>(ds));
+				size_t elem_sz = H5Tget_size(type_id);
+				H5Tclose(type_id);
+				pipe.set_cache(dcpl, elem_sz);
+				pipe.write(ds, offset, stride, block, count, dxpl, ptr);
+				// pipe destructor drains in_flight before pool refcount drop.
+			} else {
+				h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
+				H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
+				filters->write(ds, offset, stride, block, count, dxpl, ptr);
+			}
+			H5Pclose(fapl);
+			H5Fclose(fid);
 		} else {
 			h5::sp_t mem_space = h5::create_simple( n_elements );
 			h5::select_all( mem_space );
@@ -373,35 +397,42 @@ namespace h5 {
 		template <class T, class... args_t,
 			class = std::enable_if_t<!std::is_pointer_v<std::decay_t<T>>>>
 		inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
-			h5::ds_t ds; // initialized to H5I_UNINIT
-		// find out if we have to create the dataset
-		h5::mute();
-			// Returns a negative value when the function fails and may return a negative value if the link does not exist.
-			// - name is not local to the group specified by loc_id or, if loc_id is something other than a group identifier, 
-			//        name is not local to the root group
-			// - Any element of the relative path or absolute path in name, except the target link, does not exist.
-			bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
-		h5::unmute(); // <- make sure not to mute error handling longer than needed
-		
-		if (is_dataset_present) {
-			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
-			ds = h5::open(fd, dataset_path, dapl);
-		} else {
-			// dataset doesn't exist, or some error happened, since h5::create doesn't know of the 
-			// memory space size as `T& ref` never passed along we have to compute the `h5::current_dims_t{}` upfront
-			using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&, const args_t&...>;
-			using element_t = typename h5::impl::decay<T>::type;
-			if constexpr (tcurrent_dims::present) // user knows what he is doing, specified h5::current_dims{} explicitly
-				ds = h5::create<element_t>(fd, dataset_path, args...);
-			else { // h5::current_dims{..} is explicitly given by `h5::count` and optional h5::offset{}, h5::stride{}, h5::block{}
-				h5::count_t count = impl::size(ref);
-				h5::current_dims_t current_dims = h5::impl::get_current_dims(count, args...); // get correct dimensions
-				ds = h5::create<element_t>(fd, dataset_path, current_dims, args...);          // and use it to create dataset
+			if constexpr (h5::has_scatter<std::decay_t<T>>::value) {
+				// Scatter path: compiler-generated scatter<T> handles open/create + row append.
+				// Call-site properties (chunk, compress, etc.) are ignored here; the generated
+				// specialization embeds them or the dataset was pre-created.
+				return h5::scatter<std::decay_t<T>>(fd, dataset_path, ref);
+			} else {
+				h5::ds_t ds; // initialized to H5I_UNINIT
+			// find out if we have to create the dataset
+			h5::mute();
+				// Returns a negative value when the function fails and may return a negative value if the link does not exist.
+				// - name is not local to the group specified by loc_id or, if loc_id is something other than a group identifier, 
+				//        name is not local to the root group
+				// - Any element of the relative path or absolute path in name, except the target link, does not exist.
+				bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
+			h5::unmute(); // <- make sure not to mute error handling longer than needed
+			
+			if (is_dataset_present) {
+				const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+				ds = h5::open(fd, dataset_path, dapl);
+			} else {
+				// dataset doesn't exist, or some error happened, since h5::create doesn't know of the 
+				// memory space size as `T& ref` never passed along we have to compute the `h5::current_dims_t{}` upfront
+				using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&, const args_t&...>;
+				using element_t = typename h5::impl::decay<T>::type;
+				if constexpr (tcurrent_dims::present) // user knows what he is doing, specified h5::current_dims{} explicitly
+					ds = h5::create<element_t>(fd, dataset_path, args...);
+				else { // h5::current_dims{..} is explicitly given by `h5::count` and optional h5::offset{}, h5::stride{}, h5::block{}
+					h5::count_t count = impl::size(ref);
+					h5::current_dims_t current_dims = h5::impl::get_current_dims(count, args...); // get correct dimensions
+					ds = h5::create<element_t>(fd, dataset_path, current_dims, args...);          // and use it to create dataset
+				}
+			}
+			// we either have `ds` != H5I_UNINIT or an exception thrown, safe to delegate
+			return ::h5::write(ds, ref,  args...);
 			}
 		}
-		// we either have `ds` != H5I_UNINIT or an exception thrown, safe to delegate
-		return ::h5::write(ds, ref,  args...);
-	}
 
 
    /** @ingroup io-write
