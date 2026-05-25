@@ -3,6 +3,7 @@ name: CI
 env:
   HDF5_VERSION: 1.12.2
   HDF5_CACHE_VERSION: v3
+  CDASH_SUBMIT: ${{ (github.event_name == 'push' && github.ref_name == 'release') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'cdash')) }}
 
 on:
   push:
@@ -328,7 +329,15 @@ jobs:
         run: cmake --build build --parallel --config Release
 
       - name: Test
-        run: ctest --test-dir build -C Release --output-on-failure
+        run: |
+          if [ "$CDASH_SUBMIT" = "true" ]; then
+            ctest -D Experimental --test-dir build -C Release --output-on-failure
+          else
+            ctest --test-dir build -C Release --output-on-failure
+          fi
+        env:
+          CTEST_SITE: "github-actions"
+          CTEST_BUILD_NAME: "${{ matrix.os }}-${{ matrix.compiler }}"
 
       - name: Record Badge Status
         if: always()
@@ -402,7 +411,14 @@ jobs:
         shell: bash
         env:
           ASAN_OPTIONS: "detect_leaks=1:halt_on_error=1:abort_on_error=1:strict_string_checks=1"
-        run: ctest --test-dir build --output-on-failure
+          CTEST_SITE: "github-actions"
+          CTEST_BUILD_NAME: "asan-ubuntu-24.04-clang-20"
+        run: |
+          if [ "$CDASH_SUBMIT" = "true" ]; then
+            ctest -D Experimental --test-dir build --output-on-failure
+          else
+            ctest --test-dir build --output-on-failure
+          fi
 
       - name: Record Badge Status
         if: always()
@@ -475,7 +491,14 @@ jobs:
         shell: bash
         env:
           UBSAN_OPTIONS: "print_stacktrace=1:halt_on_error=1"
-        run: ctest --test-dir build --output-on-failure
+          CTEST_SITE: "github-actions"
+          CTEST_BUILD_NAME: "ubsan-ubuntu-24.04-clang-20"
+        run: |
+          if [ "$CDASH_SUBMIT" = "true" ]; then
+            ctest -D Experimental --test-dir build --output-on-failure
+          else
+            ctest --test-dir build --output-on-failure
+          fi
 
       - name: Record Badge Status
         if: always()
@@ -551,7 +574,14 @@ jobs:
           # second_deadlock_stack=1: print full stack of the lock that completed
           #   the cycle (default prints only one stack for the offending pair).
           TSAN_OPTIONS: "halt_on_error=1:second_deadlock_stack=1"
-        run: ctest --test-dir build --output-on-failure
+          CTEST_SITE: "github-actions"
+          CTEST_BUILD_NAME: "tsan-ubuntu-24.04-clang-20"
+        run: |
+          if [ "$CDASH_SUBMIT" = "true" ]; then
+            ctest -D Experimental --test-dir build --output-on-failure
+          else
+            ctest --test-dir build --output-on-failure
+          fi
 
       - name: Record Badge Status
         if: always()
@@ -737,9 +767,16 @@ jobs:
 
       - name: Test
         shell: bash
+        env:
+          CTEST_SITE: "github-actions"
+          CTEST_BUILD_NAME: "coverage-ubuntu-24.04-gcc-14"
         run: |
           set -euxo pipefail
-          ctest --test-dir build --output-on-failure --parallel
+          if [ "$CDASH_SUBMIT" = "true" ]; then
+            ctest -D Experimental --test-dir build --output-on-failure --parallel
+          else
+            ctest --test-dir build --output-on-failure --parallel
+          fi
 
       - name: Capture coverage
         shell: bash
