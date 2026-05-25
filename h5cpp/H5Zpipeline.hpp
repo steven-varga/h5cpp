@@ -63,16 +63,28 @@ namespace h5{ namespace impl {
 		static constexpr size_t alignment = H5CPP_MEM_ALIGNMENT;
 		static constexpr size_t default_capacity = 256 * 1024 * 1024;
 
-		struct aligned_deleter {
-			void operator()(char* ptr) const { std::free(ptr); }
+		struct arena_deleter {
+			void operator()(char* ptr) const {
+#ifdef _WIN32
+				_aligned_free(ptr);
+#else
+				std::free(ptr);
+#endif
+			}
 		};
-		std::unique_ptr<char, aligned_deleter> base;
+		std::unique_ptr<char, arena_deleter> base;
 		char* bump = nullptr;
 		char* end = nullptr;
 
 		explicit chunk_arena_t(size_t capacity = default_capacity) {
 			void* ptr = nullptr;
+#ifdef _WIN32
+			ptr = _aligned_malloc(capacity, alignment);
+#else
 			if (posix_memalign(&ptr, alignment, capacity) != 0)
+				ptr = nullptr;
+#endif
+			if (!ptr)
 				throw std::bad_alloc();
 			base.reset(static_cast<char*>(ptr));
 			bump = base.get();
@@ -103,7 +115,13 @@ namespace h5{ namespace impl {
 	private:
 		[[nodiscard]] char* allocate_fallback(size_t size) {
 			void* ptr = nullptr;
+#ifdef _WIN32
+			ptr = _aligned_malloc(size, alignment);
+#else
 			if (posix_memalign(&ptr, alignment, size) != 0)
+				ptr = nullptr;
+#endif
+			if (!ptr)
 				throw std::bad_alloc();
 			return static_cast<char*>(ptr);
 		}
@@ -374,8 +392,10 @@ template< class Derived>
 	if (rank == 1 && (O[0] % B[0]) == 0) [[likely]] {
 		constexpr hsize_t prefetch_distance = 4;
 		for (hsize_t j = 0; j < N[0]; j += B[0]) {
+#ifndef _WIN32
 			if (j + (prefetch_distance + 1) * B[0] < N[0])
 				__builtin_prefetch(ptr + (j + prefetch_distance * B[0]) * element_size, 0, 3);
+#endif
 			hsize_t bytes_in_chunk = (j + B[0] <= N[0]) ? B[0] : (N[0] - j);
 			hsize_t bytes_to_copy = bytes_in_chunk * element_size;
 			if (bytes_to_copy < block_size) [[unlikely]]

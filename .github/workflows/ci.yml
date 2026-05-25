@@ -329,7 +329,9 @@ jobs:
         run: cmake --build build --parallel --config Release
 
       - name: Test
+        shell: bash
         run: |
+          set -euxo pipefail
           if [ "$CDASH_SUBMIT" = "true" ]; then
             ctest -D Experimental --test-dir build -C Release --output-on-failure
           else
