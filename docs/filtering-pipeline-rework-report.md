@@ -193,4 +193,47 @@ Back-pressure is bounded by `h5::backpressure{M}`: the producer blocks on the fr
 
 The legacy per-pt_t `h5::filter::threads{N}` constructor from #241 is removed in this cycle (see [Phase 1.4 commit message]).  Two parallel threading paths in the pipeline invite contention bugs and confuse the surface; the FAPL pool fully subsumes it.
 
-Phase II (compile-time C-API blocking on `async_fd_t`, full async mode) is tracked separately.
+Phase II (compile-time C-API blocking on `h5::async::fd_t`, full async mode) is tracked separately.
+
+## Status — Phase II PR-A (#252, async descriptors + executor scaffold)
+
+Phase II is delivered in two PRs.  PR-A (this work) lands the descriptor types, FAPL executor property, and executor thread; PR-B will wire the concept-constrained `h5::write` / `h5::read` / `h5::create(fd, "ds", …)` overloads that branch on `is_async_v<FD>`.
+
+### User-visible surface (PR-A)
+
+```cpp
+// Namespace shape: nested h5::async::*, parallel to the classic h5::*.
+namespace h5::async {
+    using fd_t   = impl::async_hid_t<impl::fd_t,  H5Fclose>;
+    using ds_t   = impl::async_did_t<impl::ds_t,  H5Dclose>;
+    using gr_t   = impl::async_aid_t<impl::gr_t,  H5Gclose>;
+    using at_t   = impl::async_aid_t<impl::at_t,  H5Aclose>;
+
+    fd_t create(const std::string& path, unsigned flags,
+                const h5::fcpl_t& fcpl = h5::default_fcpl,
+                const h5::fapl_t& fapl = h5::default_fapl);
+    fd_t open  (const std::string& path, unsigned flags,
+                const h5::fapl_t& fapl = h5::default_fapl);
+}
+
+// Mode is declared exactly once — at h5::async::create / open.
+// Every downstream operation deduces async-ness from the FD type via
+// TAD (Phase II PR-B).
+```
+
+`h5::async::fd_t` has `operator ::hid_t() = delete`, so a stray `H5Gcreate2(async_fd, …)` is a clean compile error ("use of deleted function") rather than a silent thread-safety hazard.
+
+### Mechanism (PR-A)
+
+- `h5cpp/H5executor.hpp` — single worker thread per async fd, `std::packaged_task` in a `shared_ptr` wrapped in `std::function<void()>`, `submit_and_wait<Fn>(Fn&&)` blocking the caller via the future.  Exceptions propagate back through `future::get`; same-thread re-entry runs the callable inline.
+- `h5cpp/H5Pfapl_async.hpp` — FAPL executor slot using the same `H5Pinsert2` + shared-ptr pattern as Phase I.  Kept as a defensive utility; the primary code path does not depend on it.
+- `h5cpp/H5async.hpp` — the two factories.  Each constructs an `executor_t`, then calls `H5Fcreate` / `H5Fopen`, then returns `h5::async::fd_t{raw_hid, exec}`.
+
+The executor lives **directly on the wrapper** (a `std::shared_ptr<executor_t> exec` field on the `false,false` `hid_t` specialization), not retrieved from the file's FAPL via `H5Fget_access_plist`.  HDF5 1.10.9 reconstructs the retrieved FAPL from standard properties only — `H5Pinsert2`-installed properties do not survive the round-trip.  (This also affects Phase I's pool resolution path; tracked as a follow-up.)
+
+### Out of scope for PR-A (lands in PR-B)
+
+- Concept-constrained overloads of `h5::write`, `h5::read`, `h5::append`, `h5::flush`, `h5::create(fd, "ds", …)`.
+- Mode-transitive factory pattern (async fd → async ds → async at).
+- `h5::pt_t` as a class template `template <class DS = h5::ds_t>` deduced via CTAD.
+- Performance benchmarks vs. HDF5 `--enable-threadsafe`.
