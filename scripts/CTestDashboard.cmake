@@ -17,9 +17,15 @@ get_filename_component(CTEST_SOURCE_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/.." ABS
 set(CTEST_BINARY_DIRECTORY "${CTEST_SOURCE_DIRECTORY}/build-cdash")
 
 # ── defaults ───────────────────────────────────────────────────────────────
-if(NOT DEFINED BUILD_TYPE)  set(BUILD_TYPE "Release")      endif()
-if(NOT DEFINED TRACK)       set(TRACK      "Experimental") endif()
-if(NOT DEFINED SUBMIT)      set(SUBMIT     ON)             endif()
+if(NOT DEFINED BUILD_TYPE)
+  set(BUILD_TYPE "Release")
+endif()
+if(NOT DEFINED TRACK)
+  set(TRACK "Experimental")
+endif()
+if(NOT DEFINED SUBMIT)
+  set(SUBMIT ON)
+endif()
 if(NOT DEFINED JOBS)
   cmake_host_system_information(RESULT JOBS QUERY NUMBER_OF_LOGICAL_CORES)
 endif()
