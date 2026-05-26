@@ -8,6 +8,7 @@
 #   scripts/cdash TRACK=Nightly
 #   scripts/cdash BUILD_TYPE=Debug HDF5_ROOT=/opt/hdf5
 #   scripts/cdash CTEST_BUILD_NAME=linux-aarch64-gcc-13-Release
+#   scripts/cdash BUILD_EXAMPLES=ON   # also build and test examples (needs armadillo/blaze/etc.)
 #   scripts/cdash SUBMIT=OFF          # dry run: build+test, no upload
 #   CXX=clang++-18 scripts/cdash
 #

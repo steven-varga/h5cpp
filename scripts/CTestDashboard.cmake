@@ -58,11 +58,15 @@ set(CTEST_BUILD_CONFIGURATION "${BUILD_TYPE}")
 set(CTEST_BUILD_FLAGS          "-j${JOBS}")
 
 # ── cmake configure options ────────────────────────────────────────────────
+if(NOT DEFINED BUILD_EXAMPLES)
+  set(BUILD_EXAMPLES OFF)
+endif()
+
 set(_options
   -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
   -DCMAKE_CXX_STANDARD=17
   -DH5CPP_BUILD_TESTS=ON
-  -DH5CPP_BUILD_EXAMPLES=ON
+  -DH5CPP_BUILD_EXAMPLES=${BUILD_EXAMPLES}
 )
 if(DEFINED ENV{CC})
   list(APPEND _options "-DCMAKE_C_COMPILER=$ENV{CC}")
@@ -82,6 +86,7 @@ message(STATUS "  build name: ${CTEST_BUILD_NAME}")
 message(STATUS "  track:      ${TRACK}")
 message(STATUS "  build dir:  ${CTEST_BINARY_DIRECTORY}")
 message(STATUS "  jobs:       ${JOBS}")
+message(STATUS "  examples:   ${BUILD_EXAMPLES}")
 message(STATUS "  submit:     ${SUBMIT}")
 message(STATUS "────────────────────────────────────────")
 
