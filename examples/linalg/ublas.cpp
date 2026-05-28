@@ -1,54 +1,52 @@
-/*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
- */
+// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada
+//
+// Boost.uBLAS round-trip with shape + element verification.
+
 #include <iostream>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/vector.hpp>
 #include <h5cpp/all>
 
-#include <boost/numeric/ublas/io.hpp>
+template <class T> using Matrix = boost::numeric::ublas::matrix<T>;
+template <class T> using Vector = boost::numeric::ublas::vector<T>;
 
-using namespace std;
-// 
-template<class T> using Matrix = boost::numeric::ublas::matrix<T>;
-template<class T> using Colvec = boost::numeric::ublas::vector<T>;
+int main() {
+    auto fd = h5::create("ublas.h5", H5F_ACC_TRUNC);
 
+    auto check = [](const char* label, bool ok) {
+        std::cout << (ok ? "✔ ok    " : "✘ failed") << "  " << label << "\n";
+    };
 
-int main(){
-	{ // CREATE - WRITE
-		Matrix<short> M(2,3); 							            // create a matrix
-		h5::fd_t fd = h5::create("linalg.h5",H5F_ACC_TRUNC); 	// and a file
-		h5::ds_t ds = h5::create<short>(fd,"create then write"
-				,h5::current_dims{10,20}
-				,h5::max_dims{10,H5S_UNLIMITED}
-				,h5::chunk{2,3} | h5::fill_value<short>{3} |  h5::gzip{9}
-		);
-		h5::write( ds,  M, h5::offset{2,2}, h5::stride{1,3}  );
-	}
+    // vector ─────────────────────────────────────────────────────────────────
+    {
+        Vector<double> v(8);
+        for (std::size_t i = 0; i < v.size(); ++i) v(i) = i + 1.0;
+        h5::write(fd, "/ublas/vec", v);
+        auto back = h5::read<Vector<double>>(fd, "/ublas/vec");
 
-	{
-		Colvec<float> V(8); 			                  // create a vector
-		// simple one shot write that computes current dimensions and saves matrix
-		h5::write( "linalg.h5", "one shot create write",  V);
-		// what if you want to position a matrix inside a higher dimension with some added complexity?	
-		h5::write( "linalg.h5", "vector inside matrix",  V // object contains 'count' and rank being written
-			,h5::current_dims{40,50}  // control file_space directly where you want to place vector
-			,h5::offset{5,0}            // when no explicit current dimension given current dimension := offset .+ object_dim .* stride (hadamard product)  
- 			,h5::count{1,1}, h5::stride{3,5}, h5::block{2,4}
-			,h5::max_dims{40,H5S_UNLIMITED}  // wouldn't it be nice to have unlimited dimension? if no explicit chunk is set, then the object dimension 
-							 // is used as unit chunk
-		);
-	}
-	{ // CREATE - READ: we're reading back the dataset created in the very first step
-	  // note that data is only data, can be reshaped, cast to any format and content be modified through filtering 
-		auto fd = h5::open("linalg.h5", H5F_ACC_RDWR,           // you can have multiple fd open with H5F_ACC_RDONLY, but single write
-				h5::fclose_degree_strong | h5::sec2); 		   // and able to set various properties  
-	}
-	{ // READ: 
-		Matrix<short> M = h5::read<Matrix<short>>("linalg.h5","create then write"); // read entire dataset back with a single read
-	}
+        bool shape  = (back.size() == v.size());
+        bool values = shape;
+        for (std::size_t i = 0; values && i < v.size(); ++i)
+            values = values && (back(i) == v(i));
+        check("ublas::vector<double>(8)    shape + values", shape && values);
+    }
+
+    // matrix ────────────────────────────────────────────────────────────────
+    {
+        Matrix<short> M(3, 4);
+        for (std::size_t r = 0; r < M.size1(); ++r)
+            for (std::size_t c = 0; c < M.size2(); ++c)
+                M(r, c) = static_cast<short>(r * M.size2() + c);
+
+        h5::write(fd, "/ublas/mat", M);
+        auto back = h5::read<Matrix<short>>(fd, "/ublas/mat");
+
+        bool shape  = (back.size1() == M.size1()) && (back.size2() == M.size2());
+        bool values = shape;
+        for (std::size_t r = 0; values && r < M.size1(); ++r)
+            for (std::size_t c = 0; values && c < M.size2(); ++c)
+                values = values && (back(r, c) == M(r, c));
+        check("ublas::matrix<short>(3x4)   shape + values", shape && values);
+    }
+    return 0;
 }
-
-
-

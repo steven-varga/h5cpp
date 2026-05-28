@@ -1,58 +1,38 @@
-/*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
- */
+// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada
+#pragma once
 
-#ifndef  H5TEST_STRUCT_01 
-#define  H5TEST_STRUCT_01
+// POD struct declarations shared by every translation unit in this example.
+// No h5cpp dependency here on purpose — this header is pure data layout.
 
-/* typedef is allowed */
-typedef unsigned long long int MyUInt;
+typedef unsigned long long int my_uint_t;
 
 namespace sn {
-	namespace typecheck {
-		struct Record { /*the types with direct mapping to HDF5*/
-			char  _char; unsigned char _uchar; short _short; unsigned short _ushort; int _int; unsigned int _uint;
-			long _long; unsigned long _ulong; long long int _llong; unsigned long long _ullong;
-			float _float; double _double; long double _ldouble;
-			bool _bool;
-			// wide characters are not supported in HDF5
-			// wchar_t _wchar; char16_t _wchar16; char32_t _wchar32;
-		};
-	}
-	namespace other {
-		struct Record {                    // POD struct with nested namespace
-			MyUInt                    idx; // typedef type 
-			MyUInt                     aa; // typedef type 
-			double            field_02[3]; // const array mapped 
-			typecheck::Record field_03[4]; //
-		};
-	}
-	namespace example {
-		struct Record {                    // POD struct with nested namespace
-			MyUInt                    idx; // typedef type 
-			float             field_02[7]; // const array mapped 
-			sn::other::Record field_03[5]; // embedded Record
-			sn::other::Record field_04[5]; // must be optimized out, same as previous
-			other::Record  field_05[3][8]; // array of arrays 
-		};
-	}
-	namespace not_supported_yet {
-		// NON POD: not supported in phase 1
-		// C++ Class -> PODstruct -> persistence[ HDF5 | ??? ] -> PODstruct -> C++ Class 
-		struct Container {
-			double                            idx; // 
-			std::string                  field_05; // c++ object makes it non-POD
-			std::vector<example::Record> field_02; // ditto
-		};
-	}
-	/* BEGIN IGNORED STRUCT */
-	// these structs are not referenced with h5::read|h5::write|h5::create operators
-	// hence compiler should ignore them.
-	struct IgnoredRecord {
-		signed long int   idx;
-		float        field_0n;
-	};
-	/* END IGNORED STRUCTS */
+    namespace typecheck {
+        struct record_t {                  // all natively-mapped scalar types
+            char  _char;  unsigned char  _uchar;
+            short _short; unsigned short _ushort;
+            int   _int;   unsigned int   _uint;
+            long  _long;  unsigned long  _ulong;
+            long long _llong; unsigned long long _ullong;
+            float _float; double _double; long double _ldouble;
+            bool  _bool;
+        };
+    }
+    namespace other {
+        struct record_t {                  // typedef + arrays + nested compound
+            my_uint_t           idx;
+            my_uint_t           aa;
+            double              field_02[3];
+            typecheck::record_t field_03[4];
+        };
+    }
+    namespace example {
+        struct record_t {                  // arrays of arrays + repeated nested type
+            my_uint_t            idx;
+            float                field_02[7];
+            sn::other::record_t  field_03[5];
+            sn::other::record_t  field_04[5];  // dedup test: same shape as field_03
+            sn::other::record_t  field_05[3][8];
+        };
+    }
 }
-#endif

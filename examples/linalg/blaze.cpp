@@ -1,55 +1,43 @@
-/*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
- */
+// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada
+//
+// Blaze round-trip with shape + element verification.
 
 #include <iostream>
 #include <blaze/Math.h>
 #include <h5cpp/all>
 
-using namespace std;
-// 
+template <class T> using Matrix = blaze::DynamicMatrix<T, blaze::rowMajor>;
+template <class T> using Vector = blaze::DynamicVector<T, blaze::columnVector>;
 
-template<class T> using Matrix = blaze::DynamicMatrix<T,blaze::rowMajor>;
-template<class T> using Colvec = blaze::DynamicVector<T,blaze::columnVector>;
-/* only DYNAMIC [MATRIX|VECTOR] are supported */
+int main() {
+    auto fd = h5::create("blaze.h5", H5F_ACC_TRUNC);
 
-int main(){
-	{ // CREATE - WRITE
-		Matrix<short> M(2,3); 							            // create a matrix
-		h5::fd_t fd = h5::create("linalg.h5",H5F_ACC_TRUNC); 	// and a file
-		h5::ds_t ds = h5::create<short>(fd,"create then write"
-				,h5::current_dims{10,20}
-				,h5::max_dims{10,H5S_UNLIMITED}
-				,h5::chunk{2,3} | h5::fill_value<short>{3} |  h5::gzip{9}
-		);
-		h5::write( ds,  M, h5::offset{2,2}, h5::stride{1,3}  );
-	}
+    auto check = [](const char* label, bool ok) {
+        std::cout << (ok ? "✔ ok    " : "✘ failed") << "  " << label << "\n";
+    };
 
-	{
-		Colvec<float> V( {1.,2.,3.,4.,5.,6.,7.,8.}); 			                  // create a vector
-		// simple one shot write that computes current dimensions and saves matrix
-		h5::write( "linalg.h5", "one shot create write",  V);
-		// what if you want to position a matrix inside a higher dimension with some added complexity?	
-		h5::write( "linalg.h5", "vector inside matrix",  V // object contains 'count' and rank being written
-			,h5::count{1,1} 		  // encodes rank and shape: 2x4 block
-			,h5::current_dims{40,50}  // control file_space directly where you want to place vector
-			,h5::offset{5,0}          // when no explicit current dimension given current dimension := offset .+ object_dim .* stride (hadamard product)  
- 			,h5::stride{3,5} 		  //
-			,h5::block{2,4}           // 
-			,h5::max_dims{40,H5S_UNLIMITED}  // wouldn't it be nice to have unlimited dimension? if no explicit chunk is set, then the object dimension 
-							 // is used as unit chunk
-		);
-	}
-	{ // CREATE - READ: we're reading back the dataset created in the very first step
-	  // note that data is only data, can be reshaped, cast to any format and content be modified through filtering 
-		auto fd = h5::open("linalg.h5", H5F_ACC_RDWR,           // you can have multiple fd open with H5F_ACC_RDONLY, but single write
-				h5::fclose_degree_strong | h5::sec2); 		   // and able to set various properties  
-	}
-	{ // READ: 
-		Matrix<short> M = h5::read<Matrix<short>>("linalg.h5","create then write"); // read entire dataset back with a single read
-	}
+    // vector ─────────────────────────────────────────────────────────────────
+    {
+        Vector<double> v(8);
+        for (std::size_t i = 0; i < v.size(); ++i) v[i] = i + 1.0;
+        h5::write(fd, "/blaze/vec", v);
+        auto back = h5::read<Vector<double>>(fd, "/blaze/vec");
+        bool shape  = (back.size() == v.size());
+        bool values = shape && (v == back);
+        check("blaze::DynamicVector<double>(8)    shape + values", shape && values);
+    }
+
+    // matrix ────────────────────────────────────────────────────────────────
+    {
+        Matrix<short> M(3, 4);
+        for (std::size_t r = 0; r < M.rows(); ++r)
+            for (std::size_t c = 0; c < M.columns(); ++c)
+                M(r, c) = static_cast<short>(r * M.columns() + c);
+        h5::write(fd, "/blaze/mat", M);
+        auto back = h5::read<Matrix<short>>(fd, "/blaze/mat");
+        bool shape  = (back.rows() == M.rows()) && (back.columns() == M.columns());
+        bool values = shape && (M == back);
+        check("blaze::DynamicMatrix<short>(3x4)   shape + values", shape && values);
+    }
+    return 0;
 }
-
-
-

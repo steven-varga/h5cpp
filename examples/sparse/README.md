@@ -1,125 +1,166 @@
-# Sparse Matrix[^1]
-<div id="object" style="float: right">
-	![Object](../pix/sparse-csr.svg)
-</div>
+# Sparse Matrices & Vectors — CSC Round-Trip
 
-The fill rate of a matrix is a ration between non-zero and zero elements. If the latter significantly outweighs the former then we speak of Sparse Matrices. Depending on the sparsity pattern some storage format are more efficient than others. Nevertheless a sparse matrix is an object of multiple fields as opposed to a single contagious memory location with homogeneous type.
+A sparse matrix is written as an HDF5 *group* containing four datasets in canonical Compressed Sparse Column form. The call shape is the same as for dense linalg, but it returns `h5::gr_t` instead of `h5::ds_t`:
 
-Netlib considers the following [sparse storage formats][109]:
+```cpp
+arma::SpMat<double> A = ...; A.sync();
+h5::gr_t g = h5::write(fd, "/matrix/A", A);          // writes a CSC group
+auto A_back = h5::read<arma::SpMat<double>>(fd, "/matrix/A");
+```
 
-|description                             | `h5::dapl_t`        |
-|--------------------|:----------------------------------------|
-|[Compressed Sparse Row][110]            | `h5::sparse::csr`   |
-|[Compressed Sparse Column][111]         | `h5::sparse::csc`   |
-|[Block Compressed Sparse Storage][112]  | `h5::sparse::bcrs`  |
-|[Compressed Diagonal Storage][113]      | `h5::sparse::cds`   |
-|[Jagged Diagonal Storage][114]          | `h5::sparse::jds`   |
-|[Skyline Storage][115]                  | `h5::sparse::ss`    |
+The on-disk layout is the convention scipy / 10x Genomics / Loompy / h5sparse already use, so the file round-trips with Python consumers without an out-of-band schema. `is_sparse<T>` selects this overload via SFINAE; non-sparse types stay on the dense `h5::write` path.
 
+## Files
 
+| File         | Library  | What it covers                                                                  |
+| ------------ | -------- | ------------------------------------------------------------------------------- |
+| `arma.cpp`   | Armadillo | `arma::SpMat<double>` matrix + `arma::SpCol<double>` vector round-trip          |
+| `eigen.cpp`  | Eigen3    | `Eigen::SparseMatrix<double>` + `Eigen::SparseVector<double>` round-trip        |
+| `Makefile`   | —         | Standalone build that resolves `h5cpp/` + vendored arma/eigen from the worktree |
 
+Sparse traits live in the per-library mapper headers (`H5Marma.hpp`, `H5Meigen.hpp`); the I/O dispatch is in `H5Dsparse.hpp`; the on-disk constants and the `is_sparse<T>` / `sparse_traits<T>` contract are in `H5Tsparse.hpp`.
 
-## Multi Dataset Storage Format
+## On-Disk Layout
 
+```
+group/
+  data    : 1-D, dtype = T,        length = nnz       — non-zero values
+  indices : 1-D, uint32,           length = nnz       — row indices (CSC)
+  indptr  : 1-D, uint32,           length = cols + 1  — column pointers
+  shape   : 1-D, uint64,           length = 2         — [n_rows, n_cols]
+@format = "csc"
+@axis   = "column"
+```
 
+Indices are fixed `uint32` (10x Genomics / Loompy convention). `h5::write` throws if `nnz`, `n_rows`, or `n_cols` exceeds `2^32 - 1`. Vectors (Arma `SpRow`/`SpCol`, Eigen `SparseVector`) are promoted to `1xN` / `Nx1` CSC matrices so a scipy reader sees a normal `csc_matrix`.
 
-## Single Dataset Storage Format
-TODO: write code and documentation
+## Build & Run
 
+Via the project's CMake build:
 
-# Interop With Other Systems
-## Python
-[Alex Wolf discusses HDF5][1] and Sparse Matrix formats, and [h5py][11] nor [pytables][10] support sparse matrices.
-### PyTables
-has no direct support to save / load sparse matrices
+```sh
+cd <build-dir>
+cmake --build . --target examples-sparse-arma examples-sparse-eigen
+./examples-sparse-arma
+./examples-sparse-eigen
+```
+
+Or standalone via the local `Makefile` (does not need the CMake build tree):
+
+```sh
+cd examples/sparse
+make test      # builds arma + eigen, runs both
+```
+
+Expected output:
+
+```
+✔ ok    wrote  SpMat: 8x12 nnz=16
+✔ ok    read   SpMat: 8x12 nnz=16
+        round-trip residual (max|A - A'| on nonzeros): 0
+✔ ok    vec round-trip: nnz=3, v(17)=-2.25 (expected -2.25)
+
+✔ ok    wrote  SparseMatrix: 10x15 nnz=23
+✔ ok    read   SparseMatrix: 10x15 nnz=23
+        round-trip residual (max|A - A'|): 0
+✔ ok    vec round-trip: nnz=3, v.coeff(11)=-3.14 (expected -3.14)
+```
+
+Inspecting the result with `h5dump arma.h5` shows the four datasets and two attributes per CSC group exactly as the layout block above describes.
+
+The arma example sticks to a hand-rolled `max(abs(...))` over `arma::SpMat::const_iterator` rather than `arma::norm(...)`, because `norm` pulls in the BLAS `dnrm2_` symbol and we want the example to link without an external BLAS dependency.
+
+## Preconditions
+
+Both libraries lazy-cache inserts; h5cpp does **not** call `sync()` / `makeCompressed()` implicitly to avoid mutating a user's `const SpMat&`.
+
+| Library    | Required call before `h5::write`         |
+| ---------- | ---------------------------------------- |
+| Armadillo  | `M.sync()` after `M(i,j) = x` insertions |
+| Eigen3     | `M.makeCompressed()` (or use `setFromTriplets` which leaves it compressed) |
+
+A non-compressed Eigen matrix passed to `h5::write` will produce a wrong file — the runtime check is on the trait's `valuePtr()` access path. The arma `sync()` precondition is identical to what direct `values` / `row_indices` / `col_ptrs` access requires per the Arma docs.
+
+## Library × Shape Support
+
+| Library    | Sparse matrix                              | Sparse vector                          | Storage order |
+| ---------- | ------------------------------------------ | -------------------------------------- | ------------- |
+| Armadillo  | ✔ `arma::SpMat<T>`                          | ✔ `arma::SpRow<T>`, `arma::SpCol<T>`    | CSC (native)  |
+| Eigen3     | ✔ `Eigen::SparseMatrix<T, ColMajor, I>`     | ✔ `Eigen::SparseVector<T, ColMajor, I>` | CSC (native)  |
+| Eigen3     | ✘ `Eigen::SparseMatrix<T, RowMajor, I>`     | ✘ row-vector form                        | rejected at compile time — would need a transpose on write |
+
+`is_sparse<T>` evaluates `false` for RowMajor Eigen types, so the dense `h5::write` path is selected instead — which then fails its own `unsupported` static_assert with a clear message. If you need CSR on disk, transpose to ColMajor first (`SpMat tmp = src.transpose(); tmp.makeCompressed();`).
+
+## Interop with Python and Julia
+
+### Python — works out of the box
 
 ```python
-import scipy.sparse as sp_sparse
-import tables
-
-with tables.open_file(filename, 'r') as f:
-	mat_group = f.get_node(f.root, 'matrix')
-	data = getattr(mat_group, 'data').read()
-	indices = getattr(mat_group, 'indices').read()
-	indptr = getattr(mat_group, 'indptr').read()
-	shape = getattr(mat_group, 'shape').read()
-	matrix = sp_sparse.csc_matrix((data, indices, indptr), shape=shape)
+import h5py, scipy.sparse as sp
+with h5py.File("arma.h5") as f:
+    g = f["/matrix/A"]
+    A = sp.csc_matrix(
+        (g["data"][:], g["indices"][:], g["indptr"][:]),
+        shape=tuple(g["shape"][:]))
 ```
 
-### H5PY
-```python
+scipy accepts the `uint32` indices without conversion. The file also matches the **10x Genomics** layout (`/matrix/{data, indices, indptr, shape}`), so scanpy / cellranger / Loompy-adjacent tooling that targets 10x format reads it directly.
+
+The one caveat is the **h5sparse** Python library — it dispatches on an attribute named `h5sparse_format`, not `format`, so its auto-detection won't fire. The group still reads fine with the snippet above.
+
+### Julia — needs one `.+ 1`
+
+```julia
+using HDF5, SparseArrays
+h5open("arma.h5", "r") do f
+    g       = f["/matrix/A"]
+    shape   = read(g, "shape")             # [n_rows, n_cols]
+    data    = read(g, "data")
+    indices = read(g, "indices") .+ 1      # 0-based -> 1-based
+    indptr  = read(g, "indptr")  .+ 1      # 0-based -> 1-based
+    A = SparseMatrixCSC(shape[1], shape[2], indptr, indices, data)
+end
 ```
 
-### h5sparse
+The two `.+ 1` are intrinsic to crossing the C/Python ↔ Julia boundary — scipy and the C convention are 0-based, `SparseMatrixCSC` is 1-based. Writing both 0-based and 1-based copies to disk would double the index storage for one ecosystem's convenience, so the file stays 0-based and the Julia reader adjusts.
+
+`JLD.jl` / `JLD2.jl` won't auto-recognize the file — they use their own ad-hoc layout (the historical `_refs` directory the earlier sparse note complained about). For Julia, route through `HDF5.jl` directly as above.
+
+### Interop matrix
+
+| Reader                                         | Reads our files | Notes                                                                        |
+| ---------------------------------------------- | --------------- | ---------------------------------------------------------------------------- |
+| Python `h5py` + `scipy.sparse.csc_matrix`      | ✔ ok            | 4-line snippet above; no conversion needed                                   |
+| Python `scanpy` / `cellranger` (10x layout)    | ✔ ok            | Same dataset names as 10x Genomics matrix format                             |
+| Python `h5sparse`                              | ◇ partial       | Auto-dispatch keyed off `h5sparse_format` not `format`; manual read works    |
+| Julia `HDF5.jl` + `SparseArrays`               | ✔ ok            | After `.+ 1` to convert 0-based indices                                      |
+| Julia `JLD.jl` / `JLD2.jl`                     | ✘ na            | Uses its own non-standard layout; bypass via `HDF5.jl`                       |
+
+`@format` and `@axis` are advisory attributes — they let format-aware readers like Loompy dispatch correctly; plain h5py / HDF5.jl ignore them and read the four datasets directly.
+
+## CMake Wiring
+
+```cmake
+if(${ARMADILLO_FOUND})
+    add_h5cpp_example(sparse-arma sparse/arma.cpp LIBRARIES libarmadillo)
+endif()
+add_h5cpp_example(sparse-eigen sparse/eigen.cpp LIBRARIES Eigen3::Eigen)
 ```
-```
 
+Lives in `examples/CMakeLists.txt` right after the linalg block. The `sparse-arma` target is gated on `ARMADILLO_FOUND` (same gate as the dense `arma` example); `sparse-eigen` has no gate because Eigen3 is required by the wider build. Output binaries land in `<build>/examples-sparse-arma` and `<build>/examples-sparse-eigen`.
 
-## Julia
-<div id="object" style="float: left;">
-	![Object](../pix/julia-sparse-mat.png)
-</div>
-[SparseArrays][14] uses Compressed Sparse Column format and the official JLD format can save and load sparse matrices. Less fortunate how the data sets are organized within the HDF5 container, instead the actual data is placed under `_refs` directory. The screen shot shows A,B sparse matrices saved in Julia, and a Pyhton `h5sparse` to compare.  On the bright side the julia HDF5 package is feature full, it is possible loading sparse matrices to H5PY.
+## Build State (as of HEAD)
 
-```
-using JLD, SparseArrays
+| Target                    | Status                                                                |
+| ------------------------- | --------------------------------------------------------------------- |
+| `examples-sparse-arma`    | ✔ ok — SpMat 8x12 round-trip + SpCol vector round-trip, residual = 0  |
+| `examples-sparse-eigen`   | ✔ ok — SparseMatrix 10x15 + SparseVector round-trip, residual = 0     |
 
-A = sprand(Float64, 10,20, 0.1)
-B = sprand(Float64, 10,20, 0.1)
-@save "interop.h5" "data-01/A" A "data-02/B" B 
-```
+Both targets also build via the local `Makefile` in this directory (resolves headers from `../../h5cpp` plus the vendored `thirdparty/armadillo` and `thirdparty/eigen3` trees) for standalone iteration outside the CMake build tree.
 
+## Cross-References
 
-## R
-
-
-
-# Bio Informatics
-## [Loompy][13]
-is an efficient file format for large omics datasets. Loom files contain a main matrix, optional additional layers, a variable number of row and column annotations, and sparse graph objects. Under the hood, Loom files are HDF5 and can be opened from many programming languages, including Python, R, C, C++, Java, MATLAB, Mathematica, and Julia.
-
-## [10x Genomics][12]
-
-The top level of the file contains a single HDF5 group, called matrix, and metadata stored as HDF5 attributes. Within the matrix group are datasets containing the dimensions of the matrix, the matrix entries, as well as the features and cell-barcodes associated with the matrix rows and columns, respectively.
-format
---------
-|Column  |	  Type|	Description                                                                                                          |
-|--------|--------|----------------------------------------------------------------------------------------------------------------------|
-|barcodes| string | Barcode sequences and their corresponding GEM wells (e.g. AAACGGGCAGCTCGAC-1)                                        |
-|data	 | uint32 |	Nonzero UMI counts in column-major order                                                                             |
-|indices | uint32 | Zero-based row index of corresponding element in data                                                                |
-|indptr  | uint32 |	Zero-based index into data / indices of the start of each column, i.e., the data corresponding to each barcode sequence |
-|shape	 | uint64 |	Tuple of (# rows, # columns) indicating the matrix dimensions                                                        |
-
-
-
-
-[1]: http://www.falexwolf.de/blog/171212_sparse_matrices_with_h5py/
-[10]: http://www.pytables.org/
-[11]: http://www.h5py.org/
-[12]: https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/advanced/h5_matrices
-[13]: http://loompy.org/
-[14]: https://docs.julialang.org/en/v1/stdlib/SparseArrays/#man-csc-1
-
-[99]: https://en.wikipedia.org/wiki/C_(programming_language)#Pointers
-[100]: http://arma.sourceforge.net/
-[101]: http://www.boost.org/doc/libs/1_66_0/libs/numeric/ublas/doc/index.html
-[102]: http://eigen.tuxfamily.org/index.php?title=Main_Page#Documentation
-[103]: https://sourceforge.net/projects/blitz/
-[104]: https://sourceforge.net/projects/itpp/
-[105]: http://dlib.net/linear_algebra.html
-[106]: https://bitbucket.org/blaze-lib/blaze
-[107]: https://github.com/wichtounet/etl
-[108]: http://www.netlib.org/utk/people/JackDongarra/la-sw.html
-[109]: http://www.netlib.org/utk/people/JackDongarra/etemplates/node372.html
-[110]: http://www.netlib.org/utk/people/JackDongarra/etemplates/node373.html
-[111]: http://www.netlib.org/utk/people/JackDongarra/etemplates/node374.html
-[112]: http://www.netlib.org/utk/people/JackDongarra/etemplates/node375.html
-[113]: http://www.netlib.org/utk/people/JackDongarra/etemplates/node376.html
-[114]: http://www.netlib.org/utk/people/JackDongarra/etemplates/node377.html
-[115]: http://www.netlib.org/utk/people/JackDongarra/etemplates/node378.html
-[116]: https://docs.scipy.org/doc/scipy/reference/sparse.html
-
-
-[^1]: Material based on Netlib Documentation
-
+- **`examples/linalg/`** — dense linalg-container round-trip; same `h5::write` / `h5::read<T>` call shape, returns `h5::ds_t`.
+- **`h5cpp/H5Tsparse.hpp`** — `is_sparse<T>` / `sparse_traits<T>` contract, on-disk name constants.
+- **`h5cpp/H5Dsparse.hpp`** — `h5::write(parent, name, spmat)` returning `h5::gr_t`, plus the symmetric `h5::read<Sparse>`.
+- **`h5cpp/H5Marma.hpp`** / **`h5cpp/H5Meigen.hpp`** — per-library `sparse_traits` specializations.
