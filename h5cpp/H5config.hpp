@@ -112,7 +112,6 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
 @example packettable.cpp
 @example raw.cpp
 @example transform.cpp
-@example kita.cpp
 */
 
 

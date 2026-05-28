@@ -37,9 +37,12 @@
 	
 	#include "H5meta.hpp"
 	#include "H5Tmeta.hpp"
+	#include "H5Tsparse.hpp"
 	#include "H5Mstl.hpp"
 	
 	#include "H5Sall.hpp"
+	#include "H5Mmdspan.hpp"
+	#include "H5Mmemory.hpp"
 	#include "H5Marma.hpp"
 	#include "H5Mdlib.hpp"
 	#include "H5Meigen.hpp"
@@ -69,4 +72,5 @@
 	#include "H5Ialgorithm.hpp"
 	#include "H5capi.hpp"
 	#include "H5cout.hpp"
+	#include "H5Uall.hpp"
 #endif	

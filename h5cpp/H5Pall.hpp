@@ -404,8 +404,8 @@ struct fapl_ros3 : impl::prop_base<fapl_ros3, h5::fapl_t> {
         H5CPP_CHECK_NZ( (handle = H5Pcreate(H5P_FILE_ACCESS)),
             h5::error::property_list::misc, "failed to create FAPL for ros3");
     }
-#if H5_VERSION_GE(1,12,1)
-    // Temporary credentials — AWS STS / IAM role (v2 FAPL, HDF5 >= 1.12.1)
+#if H5FD_CURR_ROS3_FAPL_T_VERSION >= 2
+    // Temporary credentials — AWS STS / IAM role (v2 FAPL, HDF5 >= 1.14.x)
     fapl_ros3(bool authenticate,
               const std::string& aws_region,
               const std::string& secret_id,

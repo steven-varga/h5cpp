@@ -23,6 +23,8 @@
 #include <complex>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
+#include <utility>
 
 //FIXME: move it elsewhere
 #define H5CPP_supported_elementary_types "supported elementary types ::= pod_struct | float | double |  [signed](int8 | int16 | int32 | int64)"
@@ -152,8 +154,20 @@ namespace h5::meta {
     template <class T> struct has_data_pointer : std::bool_constant<std::is_pointer_v<
         compat::detected_or_t<void, data_f, remove_cvref_t<T>>>> {};
 
+    // Marker trait set to std::true_type by H5CPP_REGISTER_TYPE_ and
+    // H5CPP_REGISTER_STRUCT macros (see H5Tall.hpp). Gates the aggregate
+    // storage_representation_impl fallback so unregistered POD aggregates fall
+    // through to 'unsupported' and are rejected at compile time by the static_assert
+    // stoppers in H5Dwrite/H5Dread/H5Awrite/H5Aread. Preserves review item A7.
+    template <class T> struct has_registered_compound : std::false_type {};
+
     enum class storage_representation_t {
-        unsupported, scalar, c_array, linear_value_dataset, key_value_dataset, ragged_vlen_dataset, fixed_inner_extent_dataset, vlen_text_dataset };
+        unsupported, scalar, c_array, linear_value_dataset, key_value_dataset, ragged_vlen_dataset, fixed_inner_extent_dataset, vlen_text_dataset, fixed_length_string,
+        // Canonical fixed-extent mapping (Winston model):
+        //   array_element   — top-level T[N] / std::array<T,N> (non-char) → scalar dataspace + H5T_ARRAY[N] dt_t<T>
+        //   array_dataset   — vector/list/set/etc.<std::array<T,N>> (non-char) → rank-1 dataspace of H5T_ARRAY[N] elements
+        //   fls_dataset     — vector/list/set/etc.<std::array<char,N>> → rank-1 dataspace of H5T_C_S1+H5Tset_size(N) elements
+        array_element, array_dataset, fls_dataset };
         
     namespace detail_capabilities {
 
@@ -195,54 +209,145 @@ namespace h5::meta {
     template <class T, class = void> struct storage_representation_impl
         : std::integral_constant<storage_representation_t, storage_representation_t::unsupported> {};
 
+    template <class... Ts> struct has_explicit_storage_repr<std::tuple<Ts...>> : std::true_type {};
+    template <class K, class V> struct has_explicit_storage_repr<std::pair<K,V>> : std::true_type {};
+    // W4: explicit storage reps for scalar text / complex — registered so the
+    // structural fallbacks (sequential_like / map_like / aggregate) don't shadow them.
+    template <class Tr, class A>
+    struct has_explicit_storage_repr<std::basic_string<char, Tr, A>>      : std::true_type {};
+    template <class Tr>
+    struct has_explicit_storage_repr<std::basic_string_view<char, Tr>>    : std::true_type {};
+    template <> struct has_explicit_storage_repr<char*>                   : std::true_type {};
+    template <> struct has_explicit_storage_repr<const char*>             : std::true_type {};
+    template <class T> struct has_explicit_storage_repr<std::complex<T>>  : std::true_type {};
+    template <class... Ts> struct storage_representation_impl<std::tuple<Ts...>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::scalar> {};
+    template <class K, class V> struct storage_representation_impl<std::pair<K,V>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::scalar> {};
+
     // arithmetic and enum scalars
     template <class T> struct storage_representation_impl<T,
         typename std::enable_if<std::is_arithmetic<T>::value || std::is_enum<T>::value>::type>
         : std::integral_constant<storage_representation_t, storage_representation_t::scalar> {};
 
-    // C arrays — ranks 1–7 (rank-7 is the documented upper bound, issue #115)
-    template <class T, std::size_t N> struct storage_representation_impl<T[N]>
-        : std::integral_constant<storage_representation_t, storage_representation_t::c_array> {};
+    // W4: scalar text — std::basic_string<char,...> standalone (the vector<string>
+    // case is already covered below). HDF5 variable-length string maps cleanly.
+    template <class Tr, class A>
+    struct storage_representation_impl<std::basic_string<char, Tr, A>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::vlen_text_dataset> {};
+    template <class Tr>
+    struct storage_representation_impl<std::basic_string_view<char, Tr>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::vlen_text_dataset> {};
+
+    // W4: raw C-string pointers — same vlen_text path as std::string.
+    template <> struct storage_representation_impl<char*>
+        : std::integral_constant<storage_representation_t, storage_representation_t::vlen_text_dataset> {};
+    template <> struct storage_representation_impl<const char*>
+        : std::integral_constant<storage_representation_t, storage_representation_t::vlen_text_dataset> {};
+
+    // W4: std::complex<T> (floating-point T) — scalar value with two HDF5 fields.
+    // Routed via dt_t<complex<T>> in H5Tall.hpp (native H5T_COMPLEX or compound fallback).
+    template <class T>
+    struct storage_representation_impl<std::complex<T>,
+        std::enable_if_t<std::is_floating_point<T>::value>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::scalar> {};
+
+    // char[N] is treated as a fixed-length HDF5 string at the top-level write/
+    // read boundary — H5Tcopy(H5T_C_S1) + H5Tset_size(N), scalar dataspace.
+    // Other T[N] (e.g., int[10], double[4]) keep the c_array representation.
+    // Compound-internal char[N] fields (the compiler-emitted path) are
+    // unaffected — those go through H5Tinsert with an explicit array type.
+    template <std::size_t N> struct storage_representation_impl<char[N]>
+        : std::integral_constant<storage_representation_t, storage_representation_t::fixed_length_string> {};
+
+    // Canonical mapping (Winston model): top-level T[N] / std::array<T,N> for
+    // non-char T lands as a scalar dataspace with an H5T_ARRAY[N] element
+    // type. This is the `array_element` storage.  char[N] (above) and
+    // std::array<char,N> (below) take the fixed_length_string path instead.
+    template <class T, std::size_t N>
+    struct storage_representation_impl<T[N], std::enable_if_t<
+        !std::is_same_v<std::remove_cv_t<T>, char>
+        && !std::is_array_v<T>>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_element> {};
     template <class T, std::size_t N, std::size_t M> struct storage_representation_impl<T[N][M]>
-        : std::integral_constant<storage_representation_t, storage_representation_t::c_array> {};
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_element> {};
     template <class T, std::size_t N, std::size_t M, std::size_t P> struct storage_representation_impl<T[N][M][P]>
-        : std::integral_constant<storage_representation_t, storage_representation_t::c_array> {};
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_element> {};
     template <class T, std::size_t N, std::size_t M, std::size_t P, std::size_t Q>
     struct storage_representation_impl<T[N][M][P][Q]>
-        : std::integral_constant<storage_representation_t, storage_representation_t::c_array> {};
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_element> {};
     template <class T, std::size_t N, std::size_t M, std::size_t P, std::size_t Q, std::size_t R>
     struct storage_representation_impl<T[N][M][P][Q][R]>
-        : std::integral_constant<storage_representation_t, storage_representation_t::c_array> {};
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_element> {};
     template <class T, std::size_t N, std::size_t M, std::size_t P, std::size_t Q, std::size_t R, std::size_t S>
     struct storage_representation_impl<T[N][M][P][Q][R][S]>
-        : std::integral_constant<storage_representation_t, storage_representation_t::c_array> {};
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_element> {};
     template <class T, std::size_t N, std::size_t M, std::size_t P, std::size_t Q, std::size_t R, std::size_t S, std::size_t U>
     struct storage_representation_impl<T[N][M][P][Q][R][S][U]>
-        : std::integral_constant<storage_representation_t, storage_representation_t::c_array> {};
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_element> {};
 
     // contiguous sequence containers — generic vector<T> and array<T,N>
     // more-specific specializations (vector<vector<T>>, vector<string>, vector<array<T,N>>) take priority
     // std::vector<bool> is a bit-packing specialization with no contiguous bool* — must be unsupported
     template <class A> struct storage_representation_impl<std::vector<bool,A>>
         : std::integral_constant<storage_representation_t, storage_representation_t::unsupported> {};
-    template <class T, class A> struct storage_representation_impl<std::vector<T,A>>
+    // Primary vector spec — flat element type with linear-value storage.
+    // The enable_if excludes inner types handled by the more specific specs
+    // below (vector<vector>, vector<string>, vector<array>, vector<list>,
+    // vector<set>, etc.) — these would otherwise create ambiguous template
+    // instantiations because C++ partial ordering doesn't compare enable_if.
+    template <class T, class A>
+    struct storage_representation_impl<std::vector<T,A>, std::enable_if_t<
+        !is_sequential_like<T>::value &&
+        !is_set_like<T>::value &&
+        !is_associative_like<T>::value &&
+        !is_text_like<T>::value &&
+        !is_array_like<T>::value>>
         : std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
-    template <class T, std::size_t N> struct storage_representation_impl<std::array<T,N>>
-        : std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
+    // std::array<char,N> → fixed_length_string (same path as char[N]).
+    template <std::size_t N>
+    struct storage_representation_impl<std::array<char,N>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::fixed_length_string> {};
 
-    template <class T, class A> struct storage_representation_impl<std::deque<T,A>>
+    // std::array<T,N> for non-char T → array_element (scalar + H5T_ARRAY).
+    // Excludes inner stl-like/text-like/bitfield types so they go through
+    // the structural fallback / unsupported as appropriate.
+    template <class T, std::size_t N>
+    struct storage_representation_impl<std::array<T,N>,
+        std::enable_if_t<
+            !std::is_same_v<std::remove_cv_t<T>, char> &&
+            !is_stl_like<T>::value &&
+            !is_text_like<T>::value &&
+            !is_bitfield_like<T>::value>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_element> {};
+
+    // std::array<std::array<T,N>, M> — nested fixed extent. Routes through
+    // array_element with a two-level H5T_ARRAY type (composition is handled
+    // at the dt_t<> layer in H5Tall.hpp).
+    template <class T, std::size_t N, std::size_t M>
+    struct storage_representation_impl<std::array<std::array<T,N>, M>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_element> {};
+
+    template <class T, class A>
+    struct storage_representation_impl<std::deque<T,A>, std::enable_if_t<!is_array_like<T>::value>>
         : std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
-    template <class T, class A> struct storage_representation_impl<std::list<T,A>>
+    template <class T, class A>
+    struct storage_representation_impl<std::list<T,A>, std::enable_if_t<!is_array_like<T>::value>>
         : std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
-    template <class T, class A> struct storage_representation_impl<std::forward_list<T,A>>
+    template <class T, class A>
+    struct storage_representation_impl<std::forward_list<T,A>, std::enable_if_t<!is_array_like<T>::value>>
         : std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
-    template <class T, class C, class A> struct storage_representation_impl<std::set<T,C,A>>
+    template <class T, class C, class A>
+    struct storage_representation_impl<std::set<T,C,A>, std::enable_if_t<!is_array_like<T>::value>>
         : std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
-    template <class T, class C, class A> struct storage_representation_impl<std::multiset<T,C,A>>
+    template <class T, class C, class A>
+    struct storage_representation_impl<std::multiset<T,C,A>, std::enable_if_t<!is_array_like<T>::value>>
         : std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
-    template <class T, class H, class E, class A> struct storage_representation_impl<std::unordered_set<T,H,E,A>>
+    template <class T, class H, class E, class A>
+    struct storage_representation_impl<std::unordered_set<T,H,E,A>, std::enable_if_t<!is_array_like<T>::value>>
         : std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
-    template <class T, class H, class E, class A> struct storage_representation_impl<std::unordered_multiset<T,H,E,A>>
+    template <class T, class H, class E, class A>
+    struct storage_representation_impl<std::unordered_multiset<T,H,E,A>, std::enable_if_t<!is_array_like<T>::value>>
         : std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
 
     template <class K, class V, class C, class A> struct storage_representation_impl<std::map<K,V,C,A>>
@@ -259,8 +364,63 @@ namespace h5::meta {
                   ? storage_representation_t::ragged_vlen_dataset : storage_representation_t::unsupported> {};
     template <class Tr, class A0, class A1> struct storage_representation_impl<std::vector<std::basic_string<char, Tr, A0>,A1>>
         : std::integral_constant<storage_representation_t, storage_representation_t::vlen_text_dataset> {};
-    template <class T, std::size_t N, class A> struct storage_representation_impl<std::vector<std::array<T,N>,A>>
-        : std::integral_constant<storage_representation_t, storage_representation_t::fixed_inner_extent_dataset> {};
+    // vector<std::array<char,N>> → fls_dataset (rank-1 of fixed-length-string elements).
+    template <std::size_t N, class A>
+    struct storage_representation_impl<std::vector<std::array<char,N>,A>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::fls_dataset> {};
+
+    // vector<std::array<T,N>> for non-char T → array_dataset (rank-1 of H5T_ARRAY elements).
+    template <class T, std::size_t N, class A>
+    struct storage_representation_impl<std::vector<std::array<T,N>,A>, std::enable_if_t<
+        !std::is_same_v<std::remove_cv_t<T>, char>>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_dataset> {};
+
+    // Generic: non-vector, non-array iterable Outer<std::array<T,N>>
+    // (list, deque, set, forward_list, etc.) — routes to array_dataset
+    // (non-char T) or fls_dataset (char T). Excludes std::vector (has
+    // dedicated specs above) and std::array (handled by the array_element
+    // nested spec for compile-time fixed outer extents).
+    template <class Outer>
+    struct storage_representation_impl<Outer, std::enable_if_t<
+        (is_sequential_like<Outer>::value || is_set_like<Outer>::value) &&
+        !std::is_same_v<Outer, std::vector<typename Outer::value_type,
+            std::allocator<typename Outer::value_type>>> &&
+        !is_array_like<Outer>::value &&
+        is_array_like<typename Outer::value_type>::value &&
+        !std::is_same_v<typename Outer::value_type::value_type, char>>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::array_dataset> {};
+
+    template <class Outer>
+    struct storage_representation_impl<Outer, std::enable_if_t<
+        (is_sequential_like<Outer>::value || is_set_like<Outer>::value) &&
+        !std::is_same_v<Outer, std::vector<typename Outer::value_type,
+            std::allocator<typename Outer::value_type>>> &&
+        !is_array_like<Outer>::value &&
+        is_array_like<typename Outer::value_type>::value &&
+        std::is_same_v<typename Outer::value_type::value_type, char>>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::fls_dataset> {};
+
+    // vector<L> for iterable L (list / deque / forward_list / set / multiset /
+    // unordered_set / unordered_multiset). Each outer element is a variable-
+    // length inner sequence; serialise as an hvl_t<value_type> at write time
+    // and walk back via iterator-collect at read time. The inner value_type
+    // must be flat (not itself stl-like / text-like) — same gate as the
+    // vector<vector<T>> spec above.
+    // vector<L> for ITERABLE L (list / deque / forward_list / set / multiset /
+    // unordered_set / unordered_multiset). Excludes the cases already handled
+    // explicitly above: vector<vector<T>>, vector<string>, vector<array<T,N>>.
+    // Inner value_type must be flat (not stl-like / text-like).
+    template <class L, class A>
+    struct storage_representation_impl<std::vector<L, A>, std::enable_if_t<
+        (is_sequential_like<L>::value || is_set_like<L>::value) &&
+        !std::is_same_v<L, std::vector<typename L::value_type,
+            std::allocator<typename L::value_type>>> &&   // vector<vector<T>>
+        !is_array_like<L>::value &&                       // vector<array<T,N>>
+        !is_text_like<L>::value &&                        // vector<string>
+        compat::is_detected<value_type_f, L>::value &&
+        !is_text_like<typename L::value_type>::value &&
+        !is_stl_like<typename L::value_type>::value>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::ragged_vlen_dataset> {};
 
     // Gap 4: structural fallbacks for third-party / unregistered containers.
     // has_explicit_storage_repr<T> guards against ambiguity with the STL explicit
@@ -279,10 +439,41 @@ namespace h5::meta {
         is_map_like<T>::value &&
         !has_explicit_storage_repr<T>::value>>
         : std::integral_constant<storage_representation_t, storage_representation_t::key_value_dataset> {};
+    // Set-like (has key_type + value_type, no mapped_type): flat value dataset.
+    // Mirrors the sequential-like fallback — std::set sits in this slot via its
+    // named partial spec; this fallback opens the door for custom set-shaped
+    // containers (tiny::set, abseil::flat_hash_set, etc.).
+    template <class T>
+    struct storage_representation_impl<T, std::enable_if_t<
+        is_set_like<T>::value &&
+        !is_map_like<T>::value &&
+        !is_text_like<T>::value &&
+        !has_explicit_storage_repr<T>::value>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
+
+    // W4: aggregate / registered-compound fallback. Gated on has_registered_compound<T>
+    // so unregistered POD aggregates fall through to 'unsupported' and are caught by
+    // the static_assert stoppers (review item A7). Excludes arithmetic / enum / array /
+    // text / iterable types so explicit specs above always win.
+    template <class T>
+    struct storage_representation_impl<T, std::enable_if_t<
+        has_registered_compound<T>::value &&
+        !std::is_arithmetic_v<T> &&
+        !std::is_enum_v<T> &&
+        !is_array_like<T>::value &&
+        !is_text_like<T>::value &&
+        !is_iterable<T>::value &&
+        !has_explicit_storage_repr<T>::value>>
+        : std::integral_constant<storage_representation_t, storage_representation_t::scalar> {};
     }
 
     template <class T> struct storage_representation : detail_capabilities::storage_representation_impl<remove_cvref_t<T>> {};
     template <class T> constexpr storage_representation_t storage_representation_v = storage_representation<T>::value;
+
+    template <class T> struct is_tuple : std::false_type {};
+    template <class... Ts> struct is_tuple<std::tuple<Ts...>> : std::true_type {};
+    template <class T> inline constexpr bool is_tuple_v = is_tuple<remove_cvref_t<T>>::value;
+
     template <class T, class = void>
     struct storage_traits_impl_t;
     template <class T, class = void>
@@ -382,7 +573,8 @@ namespace h5::meta {
     template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<std::is_arithmetic_v<T>>> : std::true_type {};
     template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<is_fixed_text_like<T>::value>> : std::true_type {};
     template <class T> struct is_transport_contiguous_impl_t<T, std::enable_if_t<
-        is_array_like<T>::value && !is_text_like<T>::value>>
+        is_array_like<T>::value && !is_text_like<T>::value &&
+        !is_stl_like<typename meta::decay<T>::type>::value>>
         : is_transport_contiguous_t<typename meta::decay<T>::type> {};
 
     // Trivially copyable aggregates are safe for bulk memcpy: no padding surprises,
@@ -414,6 +606,89 @@ namespace h5::meta {
         : is_transport_contiguous_t<
             std::remove_pointer_t<
                 compat::detected_or_t<void, data_f, remove_cvref_t<T>>>> {};
+
+    namespace detail {
+        // Flat-buffer layout for std::tuple<Ts...>.
+        // std::tuple is not standard-layout, so staging buffers use this custom
+        // C-style layout (each field at its natural alignment, in declaration order).
+        template <class Tuple, std::size_t I, class = void> struct tuple_field_end;
+        template <class Tuple>
+        struct tuple_field_end<Tuple, 0, void> {
+            static constexpr std::size_t value = sizeof(std::tuple_element_t<0, Tuple>);
+        };
+        template <class Tuple, std::size_t I>
+        struct tuple_field_end<Tuple, I, std::enable_if_t<(I > 0)>> {
+            using elem_t = std::tuple_element_t<I, Tuple>;
+            static constexpr std::size_t prev = tuple_field_end<Tuple, I-1>::value;
+            static constexpr std::size_t value = ((prev + alignof(elem_t) - 1) & ~(alignof(elem_t) - 1)) + sizeof(elem_t);
+        };
+
+        template <class Tuple, std::size_t I, class = void> struct tuple_field_offset;
+        template <class Tuple>
+        struct tuple_field_offset<Tuple, 0, void> {
+            static constexpr std::size_t value = 0;
+        };
+        template <class Tuple, std::size_t I>
+        struct tuple_field_offset<Tuple, I, std::enable_if_t<(I > 0)>> {
+            using elem_t = std::tuple_element_t<I, Tuple>;
+            static constexpr std::size_t value =
+                (tuple_field_end<Tuple, I-1>::value + alignof(elem_t) - 1) & ~(alignof(elem_t) - 1);
+        };
+
+        template <class... Ts>
+        struct tuple_layout {
+            using tuple_t = std::tuple<Ts...>;
+            static constexpr std::size_t count = sizeof...(Ts);
+
+            template <std::size_t I>
+            static constexpr std::size_t offset() noexcept {
+                return tuple_field_offset<tuple_t, I>::value;
+            }
+            template <std::size_t... Is>
+            static constexpr std::size_t max_align_impl(std::index_sequence<Is...>) noexcept {
+                std::size_t r = 1;
+                ((r = r < alignof(std::tuple_element_t<Is, tuple_t>) ? alignof(std::tuple_element_t<Is, tuple_t>) : r), ...);
+                return r;
+            }
+            static constexpr std::size_t max_alignment() noexcept {
+                return max_align_impl(std::make_index_sequence<count>{});
+            }
+            static constexpr std::size_t total_size() noexcept {
+                constexpr std::size_t end = tuple_field_end<tuple_t, count - 1>::value;
+                constexpr std::size_t ma  = max_align_impl(std::make_index_sequence<count>{});
+                return (end + ma - 1) & ~(ma - 1);
+            }
+        };
+
+        // Convenience wrapper: unwrap std::tuple<Ts...> → tuple_layout<Ts...>
+        template <class Tuple> struct tuple_layout_t;
+        template <class... Ts>
+        struct tuple_layout_t<std::tuple<Ts...>> {
+            static constexpr std::size_t total_size()    noexcept { return tuple_layout<Ts...>::total_size(); }
+            static constexpr std::size_t max_alignment() noexcept { return tuple_layout<Ts...>::max_alignment(); }
+            template <std::size_t I>
+            static constexpr std::size_t offset()        noexcept { return tuple_layout<Ts...>::template offset<I>(); }
+            static void to_buffer(const std::tuple<Ts...>& t, char* buf) noexcept {
+                tuple_to_buffer_impl(t, buf, std::make_index_sequence<sizeof...(Ts)>{});
+            }
+            static void from_buffer(std::tuple<Ts...>& t, const char* buf) noexcept {
+                buffer_to_tuple_impl(t, buf, std::make_index_sequence<sizeof...(Ts)>{});
+            }
+        private:
+            template <std::size_t... Is>
+            static void tuple_to_buffer_impl(const std::tuple<Ts...>& t, char* buf, std::index_sequence<Is...>) noexcept {
+                (std::memcpy(buf + tuple_layout<Ts...>::template offset<Is>(),
+                             static_cast<const void*>(&std::get<Is>(t)),
+                             sizeof(std::tuple_element_t<Is, std::tuple<Ts...>>)), ...);
+            }
+            template <std::size_t... Is>
+            static void buffer_to_tuple_impl(std::tuple<Ts...>& t, const char* buf, std::index_sequence<Is...>) noexcept {
+                (std::memcpy(static_cast<void*>(&std::get<Is>(t)),
+                             buf + tuple_layout<Ts...>::template offset<Is>(),
+                             sizeof(std::tuple_element_t<Is, std::tuple<Ts...>>)), ...);
+            }
+        };
+    } // namespace detail
 
     // DEFAULT CASE
     template <class T> struct rank<T*>: public std::integral_constant<size_t,1>{};
@@ -537,9 +812,10 @@ namespace h5::meta {
 // Used to decouple I/O dispatch from concrete container types.
 namespace h5::meta {
     enum class access_t {
-        object,      // scalar / arithmetic / reflected compound — single addressable value
+        object,      // scalar / arithmetic / std-layout aggregate — direct memcpy via &v safe
+        composite,   // non-std-layout aggregate (std::tuple) — needs pack/unpack via traits::pack/unpack
         contiguous,  // has .data() pointer + is_transport_contiguous (bulk memcpy safe)
-        pointers,    // has .data() but element is not flat (e.g., vector<string>)
+        pointers,    // has .data() but element is not flat (e.g., vector<string>, vector<tuple>)
         iterators,   // begin/end traversal only — no direct pointer
         text,        // variable-length or fixed-length text (std::string, char*, etc.)
         unsupported
@@ -554,6 +830,17 @@ namespace h5::meta {
         // fallback (which would size by vec.size()) doesn't claim it.
         template <class T, std::size_t N, class A>
         struct has_explicit_access_traits<std::vector<std::array<T,N>, A>> : std::true_type {};
+        // std::array<char,N>: explicit text/FLS spec — overrides the generic
+        // contiguous-container fallback that would treat it as a byte sequence.
+        template <std::size_t N>
+        struct has_explicit_access_traits<std::array<char, N>> : std::true_type {};
+        // std::pair<K,V>: explicit object access (not aggregate, not arithmetic)
+        template <class K, class V>
+        struct has_explicit_access_traits<std::pair<K,V>> : std::true_type {};
+        // std::tuple<Ts...>: explicit composite access — needs pack/unpack
+        // because tuple is not guaranteed standard-layout.
+        template <class... Ts>
+        struct has_explicit_access_traits<std::tuple<Ts...>> : std::true_type {};
     }
 
     // Primary (unsupported — no match)
@@ -611,6 +898,24 @@ namespace h5::meta {
         static std::array<std::size_t,1> size(const T& s) noexcept { return {static_cast<std::size_t>(s.size())}; }
     };
 
+    // Raw C-string pointers (char*, const char*) — same vlen_text path as std::string,
+    // but value_type doesn't exist on a pointer so the spec above excludes them via
+    // !std::is_pointer_v. element_t is fixed at char (matching dt_t<char*> = H5T_C_S1 VLEN).
+    template <class T>
+    struct access_traits_t<T, std::enable_if_t<
+        !detail::has_explicit_access_traits<remove_cvref_t<T>>::value &&
+        is_text_like<T>::value &&
+        std::is_pointer_v<remove_cvref_t<T>>>> {
+        using element_t  = char;
+        using pointer_t  = const char*;
+        static constexpr access_t kind = access_t::text;
+        static constexpr bool is_trivially_packable = false;
+        static const char* data(const T& s) noexcept { return s; }
+        static std::array<std::size_t,1> size(const T& s) noexcept {
+            return { s ? std::char_traits<char>::length(s) : std::size_t{0} };
+        }
+    };
+
     // C-style arrays T[N] — contiguous by definition
     template <class T, std::size_t N>
     struct access_traits_t<T[N]> {
@@ -622,6 +927,37 @@ namespace h5::meta {
         static element_t*       data(T(&a)[N])       noexcept { return reinterpret_cast<element_t*>(a); }
         static constexpr std::array<std::size_t,1> size(const T(&)[N]) noexcept { return {N}; }
         static constexpr std::size_t bytes(const T(&)[N]) noexcept { return N * sizeof(T); }
+    };
+
+    // char[N] — fixed-length HDF5 string override of the generic T[N] spec.
+    // Sets kind=text + reports N as the string capacity (used by the dispatch
+    // when constructing H5Tcopy(H5T_C_S1)+H5Tset_size(N)).
+    template <std::size_t N>
+    struct access_traits_t<char[N]> {
+        using element_t  = char;
+        using pointer_t  = const char*;
+        static constexpr access_t kind = access_t::text;
+        static constexpr std::size_t fixed_length = N;
+        static constexpr bool is_trivially_packable = false;
+        static const char* data(const char (&a)[N]) noexcept { return a; }
+        static char*       data(char (&a)[N])       noexcept { return a; }
+        static constexpr std::array<std::size_t, 1> size(const char (&)[N]) noexcept { return {N}; }
+        static constexpr std::size_t bytes(const char (&)[N]) noexcept { return N; }
+    };
+
+    // std::array<char, N> — same as char[N]: fixed-length string at the
+    // top-level write/read boundary.  Mirror of the char[N] spec above.
+    template <std::size_t N>
+    struct access_traits_t<std::array<char, N>> {
+        using element_t  = char;
+        using pointer_t  = const char*;
+        static constexpr access_t kind = access_t::text;
+        static constexpr std::size_t fixed_length = N;
+        static constexpr bool is_trivially_packable = false;
+        static const char* data(const std::array<char, N>& a) noexcept { return a.data(); }
+        static char*       data(std::array<char, N>& a)       noexcept { return a.data(); }
+        static constexpr std::array<std::size_t, 1> size(const std::array<char, N>&) noexcept { return {N}; }
+        static constexpr std::size_t bytes(const std::array<char, N>&) noexcept { return N; }
     };
 
     // Contiguous sequence containers: has .data() pointer + transport contiguous element
@@ -644,10 +980,15 @@ namespace h5::meta {
     };
 
     // Non-contiguous sequence containers with .data() (e.g., vector<string>)
+    // Excludes text-like (string, string_view) — those route via the dedicated
+    // text spec above; without this exclusion access_traits_t<std::string> would
+    // be ambiguous because is_transport_contiguous_v<string>=false makes it look
+    // like a "non-contiguous container with data()" to this spec.
     template <class T>
     struct access_traits_t<T, std::enable_if_t<
         !detail::has_explicit_access_traits<remove_cvref_t<T>>::value &&
         !std::is_array_v<T> &&
+        !is_text_like<T>::value &&
         has_data_pointer<T>::value &&
         meta::has_size<T>::value &&
         compat::is_detected<value_type_f, remove_cvref_t<T>>::value &&
@@ -678,14 +1019,64 @@ namespace h5::meta {
         }
     };
 
+    // std::pair<K,V>: object access — single addressable value, compound HDF5 type
+    template <class K, class V>
+    struct access_traits_t<std::pair<K,V>> {
+        using element_t  = std::pair<K,V>;
+        using pointer_t  = const std::pair<K,V>*;
+        static constexpr access_t kind = access_t::object;
+        static constexpr bool is_trivially_packable = std::is_trivially_copyable_v<std::pair<K,V>>;
+        static const std::pair<K,V>* data(const std::pair<K,V>& v) noexcept { return &v; }
+        static std::pair<K,V>*       data(std::pair<K,V>& v)       noexcept { return &v; }
+        static constexpr std::array<std::size_t,0> size(const std::pair<K,V>&) noexcept { return {}; }
+        static constexpr std::size_t bytes(const std::pair<K,V>&) noexcept { return sizeof(std::pair<K,V>); }
+    };
+
+    // std::tuple<Ts...>: composite access — std::tuple is not guaranteed standard-layout,
+    // so dispatch must pack into a flat buffer matching the HDF5 compound type's field
+    // offsets (see detail::tuple_layout). pack/unpack replace data()/sizeof on this kind.
+    template <class... Ts>
+    struct access_traits_t<std::tuple<Ts...>> {
+        using element_t  = std::tuple<Ts...>;
+        using pointer_t  = const std::tuple<Ts...>*;
+        using layout_t   = detail::tuple_layout_t<std::tuple<Ts...>>;
+        static constexpr access_t kind = access_t::composite;
+        static constexpr bool is_trivially_packable = false;
+        static constexpr std::array<std::size_t,0> size(const std::tuple<Ts...>&) noexcept { return {}; }
+        static constexpr std::size_t bytes() noexcept { return layout_t::total_size(); }
+        static constexpr std::size_t bytes(const std::tuple<Ts...>&) noexcept { return layout_t::total_size(); }
+        static void pack(const std::tuple<Ts...>& t, char* buf) noexcept { layout_t::to_buffer(t, buf); }
+        static void unpack(std::tuple<Ts...>& t, const char* buf) noexcept { layout_t::from_buffer(t, buf); }
+    };
+
+    // std::complex<T>: object access — trivially copyable, standard-layout; not aggregate
+    // so it falls through to unsupported without this explicit specialization.
+    template <class T>
+    struct access_traits_t<std::complex<T>, std::enable_if_t<std::is_floating_point_v<T>>> {
+        using element_t  = std::complex<T>;
+        using pointer_t  = const std::complex<T>*;
+        static constexpr access_t kind = access_t::object;
+        static constexpr bool is_trivially_packable = true;
+        static const std::complex<T>* data(const std::complex<T>& v) noexcept { return &v; }
+        static std::complex<T>*       data(std::complex<T>& v)       noexcept { return &v; }
+        static constexpr std::array<std::size_t,0> size(const std::complex<T>&) noexcept { return {}; }
+        static constexpr std::size_t bytes(const std::complex<T>&) noexcept { return sizeof(std::complex<T>); }
+    };
+
     // vector<array<T,N>>: contiguous, but the inner extent N means the flat
     // element count is vec.size()*N, not vec.size(). The generic contiguous
     // fallback sizes by vec.size() only and produces a dataset that's 1/N too
     // small — see has_explicit_access_traits registration above.
+    // vector<std::array<T,N>> — Canonical mapping (Winston):
+    //   element_t = std::array<T,N> (so the array_dataset dispatch can
+    //   recover the inner extent via std::tuple_size).
+    //   size      = {c.size()}     (outer count only).
+    // The previous flatten-to-(outer*N) layout was the fixed_inner_extent
+    // path; superseded by the H5T_ARRAY-element representation.
     template <class T, std::size_t N, class A>
     struct access_traits_t<std::vector<std::array<T,N>, A>> {
-        using element_t  = T;
-        using pointer_t  = const T*;
+        using element_t  = std::array<T,N>;
+        using pointer_t  = const std::array<T,N>*;
         static constexpr access_t kind = access_t::contiguous;
         static constexpr bool is_trivially_packable = true;
         static const T* data(const std::vector<std::array<T,N>,A>& c) noexcept {
@@ -695,7 +1086,7 @@ namespace h5::meta {
             return c.empty() ? nullptr : c.front().data();
         }
         static std::array<std::size_t,1> size(const std::vector<std::array<T,N>,A>& c) noexcept {
-            return {c.size() * N};
+            return {c.size()};
         }
         static std::size_t bytes(const std::vector<std::array<T,N>,A>& c) noexcept {
             return c.size() * N * sizeof(T);

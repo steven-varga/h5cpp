@@ -85,6 +85,8 @@ namespace h5 {
 		friend std::ostream& ::operator<<(std::ostream &os, const h5::pt_t& pt);
 		template<class T>
 		friend void append( h5::pt_t& ds, const T& ref);
+		template<class T>
+		friend void append( h5::pt_t& ds, const T* ptr);
 		friend void flush(h5::pt_t&);
 		// resets the packet-table dimension tracker so the same pt_t can be reused
 		// for a fresh logical session (e.g. start-of-day re-init in streaming sinks).
@@ -376,6 +378,20 @@ namespace h5 {
 	template<class T> inline
 	void append( h5::pt_t& pt, const T& ref){
 		pt.append( ref );
+	}
+
+	/** @ingroup io-append
+	 * @brief raw-pointer overload: writes one full chunk straight from `ptr`
+	 *        (no per-element buffering).  Caller is responsible for providing
+	 *        exactly `chunk_dims[0] * ... * chunk_dims[rank-1]` contiguous
+	 *        elements.  Without this overload, raw pointers would bind to the
+	 *        by-ref template above (`T` deduced as `<scalar>*`) and route to
+	 *        the non-scalar member overload, which expects a container with
+	 *        `meta::data` / `meta::size` — silently the wrong path.
+	 */
+	template<class T> inline
+	void append( h5::pt_t& pt, const T* ptr){
+		pt.append( ptr );
 	}
 
 	inline void flush(h5::pt_t& pt) try {
