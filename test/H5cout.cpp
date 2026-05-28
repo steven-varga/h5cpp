@@ -48,7 +48,10 @@ TEST_CASE("operator<< for std::vector with many elements prints ellipsis") {
     std::vector<int> vec(200, 42);
     std::ostringstream oss;
     oss << vec;
-    CHECK(oss.str().find(".. fix me ..") != std::string::npos);
+    // H5Uall.hpp recursive STL printer truncates at H5CPP_CONSOLE_WIDTH with
+    // a ", ..." marker (replaced the legacy ".. fix me .." printer that was
+    // removed alongside the operator<<(std::vector<T>) overload in H5cout.hpp).
+    CHECK(oss.str().find(", ...") != std::string::npos);
 }
 
 TEST_CASE("operator<< for sp_t with hyperslab selection prints blocks") {

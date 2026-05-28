@@ -8,6 +8,10 @@
 
 	#include "H5Fcreate.hpp"
 	#include "H5Fopen.hpp"
+
+	#include "H5Gcreate.hpp"
+	#include "H5Gopen.hpp"
+
 	#include "H5async.hpp"     /* h5::async::create / h5::async::open factories */
 
 	#include "H5Dcreate.hpp"
@@ -16,6 +20,7 @@
 	#include "H5Dwrite.hpp"
 	#include "H5Dread.hpp"
 	#include "H5Dappend.hpp"
+	#include "H5Dsparse.hpp"
 	
 	#include "H5Acreate.hpp"
 	#include "H5Aopen.hpp"
@@ -23,5 +28,7 @@
 	#include "H5Aread.hpp"
 
 	#include "H5Dranges.hpp"
+
+	#include "H5Mmemory_io.hpp"   /* smart_ptr<T[]> forwarding overloads of h5::write / h5::read */
 #endif
 

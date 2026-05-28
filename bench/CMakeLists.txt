@@ -37,6 +37,9 @@ function(add_bench file_name)
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
+        # Drop the `bench/` path prefix so binaries land in <build>/bench-<name>
+        # instead of <build>/bench/bench-<name>. Run as `./bench-<name>`.
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 endfunction()
 

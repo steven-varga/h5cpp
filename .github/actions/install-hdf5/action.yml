@@ -1,0 +1,97 @@
+name: 'Install HDF5 from source (cached)'
+description: |
+  Builds HDF5 from the HDF Group release tarball and installs it to a stable
+  prefix under $RUNNER_TEMP/hdf5-${version}-install, with actions/cache
+  restore/save so subsequent runs hit the cache. Exports HDF5_ROOT,
+  CMAKE_PREFIX_PATH, LD_LIBRARY_PATH (Linux), DYLD_LIBRARY_PATH (macOS),
+  PATH (Windows). Compatibility macros are disabled via
+  HDF5_ENABLE_DEPRECATED_SYMBOLS=OFF.
+
+  Version pin lives in the calling workflow's env block:
+    HDF5_SERIES         (e.g. "1.12")
+    HDF5_VERSION        (e.g. "1.12.3")
+    HDF5_CACHE_VERSION  (bump to invalidate caches without changing tarball)
+
+  To move from 1.12.x to 1.14.x, bump those three env values in the workflow.
+  This action does not need to change.
+
+inputs:
+  cache-key-suffix:
+    description: |
+      Extra string appended to the cache key. Use to differentiate caches for
+      different compilers / matrix entries. Default is empty (single cache
+      shared across the job's compiler matrix).
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Set HDF5 prefix env
+      shell: bash
+      run: |
+        echo "HDF5_PREFIX=${RUNNER_TEMP}/hdf5-${HDF5_VERSION}-install" >> "$GITHUB_ENV"
+
+    - name: Restore HDF5 cache
+      id: cache-hdf5
+      uses: actions/cache/restore@v5
+      with:
+        path: ${{ runner.temp }}/hdf5-${{ env.HDF5_VERSION }}-install
+        key: hdf5-${{ runner.os }}-${{ env.HDF5_VERSION }}-${{ env.HDF5_CACHE_VERSION }}${{ inputs.cache-key-suffix }}
+
+    - name: Build HDF5 from source (Linux/macOS)
+      if: runner.os != 'Windows' && steps.cache-hdf5.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        set -euxo pipefail
+
+        hdf5_archive="${RUNNER_TEMP}/hdf5-${HDF5_VERSION}.tar.gz"
+        hdf5_source="${RUNNER_TEMP}/hdf5-${HDF5_VERSION}"
+        hdf5_build="${RUNNER_TEMP}/hdf5-${HDF5_VERSION}-build"
+        hdf5_prefix="${HDF5_PREFIX}"
+
+        curl -fsSL -o "${hdf5_archive}" \
+          "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${HDF5_SERIES}/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.gz"
+        tar -xzf "${hdf5_archive}" -C "${RUNNER_TEMP}"
+
+        cmake -S "${hdf5_source}" -B "${hdf5_build}" \
+          -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX="${hdf5_prefix}" \
+          -DBUILD_SHARED_LIBS=ON \
+          -DBUILD_TESTING=OFF \
+          -DHDF5_BUILD_TOOLS=OFF \
+          -DHDF5_BUILD_UTILS=OFF \
+          -DHDF5_BUILD_EXAMPLES=OFF \
+          -DHDF5_BUILD_CPP_LIB=OFF \
+          -DHDF5_BUILD_HL_LIB=OFF \
+          -DHDF5_BUILD_FORTRAN=OFF \
+          -DHDF5_ENABLE_DEPRECATED_SYMBOLS=OFF \
+          -DHDF5_ENABLE_Z_LIB_SUPPORT=ON \
+          -DHDF5_ENABLE_SZIP_SUPPORT=OFF
+        cmake --build "${hdf5_build}" --parallel
+        cmake --install "${hdf5_build}"
+
+    - name: Save HDF5 cache
+      if: steps.cache-hdf5.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ runner.temp }}/hdf5-${{ env.HDF5_VERSION }}-install
+        key: ${{ steps.cache-hdf5.outputs.cache-primary-key }}
+
+    - name: Export HDF5 environment (Linux/macOS)
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        set -euxo pipefail
+
+        test -d "${HDF5_PREFIX}/include" || { echo "HDF5 install missing"; exit 1; }
+        test -f "${HDF5_PREFIX}/include/hdf5.h" || { echo "hdf5.h missing"; exit 1; }
+
+        echo "HDF5_ROOT=${HDF5_PREFIX}" >> "$GITHUB_ENV"
+        echo "CMAKE_PREFIX_PATH=${HDF5_PREFIX}${CMAKE_PREFIX_PATH:+:${CMAKE_PREFIX_PATH}}" >> "$GITHUB_ENV"
+        echo "LD_LIBRARY_PATH=${HDF5_PREFIX}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
+        echo "DYLD_LIBRARY_PATH=${HDF5_PREFIX}/lib${DYLD_LIBRARY_PATH:+:${DYLD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
+
+        ls -la "${HDF5_PREFIX}/include/hdf5.h"
+        ls -la "${HDF5_PREFIX}/lib/"libhdf5* 2>/dev/null || true

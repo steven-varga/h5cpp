@@ -1,8 +1,14 @@
 name: CI
 
 env:
-  HDF5_VERSION: 1.12.2
-  HDF5_CACHE_VERSION: v3
+  # HDF5 version pinning. To move to a different patch on 1.12.x, bump
+  # HDF5_VERSION and HDF5_CACHE_VERSION. To move to a different series
+  # (e.g. 1.14.x), bump HDF5_SERIES + HDF5_VERSION + HDF5_CACHE_VERSION.
+  # The release tarball URL follows the pattern:
+  #   https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${SERIES}/hdf5-${VERSION}/src/hdf5-${VERSION}.tar.gz
+  HDF5_SERIES: "1.12"
+  HDF5_VERSION: 1.12.3
+  HDF5_CACHE_VERSION: v5
   CDASH_SUBMIT: ${{ (github.event_name == 'push' && github.ref_name == 'release') || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'cdash')) }}
 
 on:
@@ -79,7 +85,9 @@ jobs:
           set -euxo pipefail
 
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build wget gnupg lsb-release software-properties-common libhdf5-dev
+          sudo apt-get install -y cmake ninja-build wget gnupg lsb-release software-properties-common libboost-dev
+          # libhdf5-dev intentionally NOT installed — HDF5 is source-built
+          # from a pinned version below for consistency across the matrix.
 
       - name: Setup compiler on Linux
         if: runner.os == 'Linux'
@@ -132,34 +140,24 @@ jobs:
           set -euxo pipefail
 
           brew update
-          brew install --quiet cmake ninja hdf5
+          brew install --quiet cmake ninja boost
+          # hdf5 intentionally NOT installed via brew — built from source below.
 
-          HDF5_PREFIX="$(brew --prefix hdf5)"
+          # Expose Boost.uBLAS headers (header-only) to downstream cmake configures.
+          BOOST_PREFIX="$(brew --prefix boost)"
+          echo "CMAKE_PREFIX_PATH=${BOOST_PREFIX}" >> "$GITHUB_ENV"
+          echo "CPATH=${BOOST_PREFIX}/include:${CPATH:-}" >> "$GITHUB_ENV"
 
-          echo "CC=clang" >> "$GITHUB_ENV"
+          # macOS uses apple-clang as the default compiler.
+          echo "CC=clang"  >> "$GITHUB_ENV"
           echo "CXX=clang++" >> "$GITHUB_ENV"
-
-          echo "HDF5_ROOT=${HDF5_PREFIX}" >> "$GITHUB_ENV"
-          echo "CMAKE_PREFIX_PATH=${HDF5_PREFIX}" >> "$GITHUB_ENV"
-          echo "HDF5_C_COMPILER_EXECUTABLE=${HDF5_PREFIX}/bin/h5cc" >> "$GITHUB_ENV"
-
-          if [[ -x "${HDF5_PREFIX}/bin/h5c++" ]]; then
-            echo "HDF5_CXX_COMPILER_EXECUTABLE=${HDF5_PREFIX}/bin/h5c++" >> "$GITHUB_ENV"
-          fi
-
-          echo "${HDF5_PREFIX}/bin" >> "$GITHUB_PATH"
-
           clang++ --version
-          brew info hdf5
-          test -x "${HDF5_PREFIX}/bin/h5cc"
-          "${HDF5_PREFIX}/bin/h5cc" -show
 
-          if [[ -x "${HDF5_PREFIX}/bin/h5c++" ]]; then
-            "${HDF5_PREFIX}/bin/h5c++" -show
-          fi
-
-          ls -la "${HDF5_PREFIX}/include/hdf5.h"
-          ls -la "${HDF5_PREFIX}/lib"/libhdf5*
+      - name: Install HDF5 from source (Linux/macOS, cached)
+        if: runner.os != 'Windows'
+        uses: ./.github/actions/install-hdf5
+        with:
+          cache-key-suffix: -${{ matrix.os }}-${{ matrix.compiler }}
 
       - name: Build Windows zlib from source
         if: runner.os == 'Windows'
@@ -193,7 +191,7 @@ jobs:
 
           Get-ChildItem -Recurse "$zlib_prefix\lib","$zlib_prefix\include"
 
-      - name: Restore HDF5 1.12.2 cache
+      - name: Restore HDF5 ${{ env.HDF5_VERSION }} cache
         if: runner.os == 'Windows'
         id: cache-hdf5
         uses: actions/cache/restore@v5
@@ -201,20 +199,21 @@ jobs:
           path: ${{ runner.temp }}\hdf5-${{ env.HDF5_VERSION }}-install
           key: hdf5-${{ runner.os }}-${{ matrix.compiler }}-${{ env.HDF5_VERSION }}-${{ env.HDF5_CACHE_VERSION }}
 
-      - name: Build HDF5 1.12.2
+      - name: Build HDF5 ${{ env.HDF5_VERSION }} from source (Windows)
         if: runner.os == 'Windows' && steps.cache-hdf5.outputs.cache-hit != 'true'
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
 
           $hdf5_version = "${{ env.HDF5_VERSION }}"
+          $hdf5_series = "${{ env.HDF5_SERIES }}"
           $hdf5_archive = "$env:RUNNER_TEMP\hdf5-$hdf5_version.tar.gz"
           $hdf5_source = "$env:RUNNER_TEMP\hdf5-$hdf5_version"
           $hdf5_build = "$env:RUNNER_TEMP\hdf5-$hdf5_version-build"
           $hdf5_prefix = "$env:RUNNER_TEMP\hdf5-$hdf5_version-install"
 
           Invoke-WebRequest `
-            -Uri "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.12/hdf5-$hdf5_version/src/hdf5-$hdf5_version.tar.gz" `
+            -Uri "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-$hdf5_series/hdf5-$hdf5_version/src/hdf5-$hdf5_version.tar.gz" `
             -OutFile $hdf5_archive
           tar -xzf $hdf5_archive -C $env:RUNNER_TEMP
 
@@ -231,6 +230,7 @@ jobs:
             -DHDF5_BUILD_CPP_LIB=OFF `
             -DHDF5_BUILD_HL_LIB=OFF `
             -DHDF5_BUILD_FORTRAN=OFF `
+            -DHDF5_ENABLE_DEPRECATED_SYMBOLS=OFF `
             -DHDF5_ENABLE_Z_LIB_SUPPORT=ON `
             -DHDF5_ENABLE_SZIP_SUPPORT=OFF `
             -DZLIB_USE_EXTERNAL=OFF `
@@ -240,7 +240,7 @@ jobs:
           cmake --build $hdf5_build --parallel --config Release
           cmake --install $hdf5_build --config Release
 
-      - name: Save HDF5 1.12.2 cache
+      - name: Save HDF5 ${{ env.HDF5_VERSION }} cache
         if: runner.os == 'Windows' && steps.cache-hdf5.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
@@ -312,14 +312,38 @@ jobs:
 
           cmake "${cmake_args[@]}"
 
+      - name: Install Boost.uBLAS via vcpkg (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          # Boost.uBLAS is header-only; examples/attributes/attributes.cpp
+          # consumes <boost/numeric/ublas/matrix.hpp>. Pre-installed vcpkg
+          # on windows-latest has boost-ublas readily available.
+          & "$env:VCPKG_INSTALLATION_ROOT\vcpkg.exe" install boost-ublas:x64-windows
+
       - name: Configure Windows
         if: runner.os == 'Windows'
         shell: powershell
         run: |
+          # vcpkg deposits headers under
+          # <vcpkg>/installed/x64-windows/include/boost/...; expose that path
+          # to find_path() via CMAKE_PREFIX_PATH AND pre-seed the cache
+          # variable directly so examples/CMakeLists.txt's
+          # find_path(H5CPP_BOOST_CONFIG_INCLUDE_EX ...) succeeds regardless
+          # of CMake's prefix-path search behaviour with the vcpkg toolchain.
+          $vcpkg_prefix  = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows" -replace '\\','/'
+          $vcpkg_include = "$vcpkg_prefix/include"
+          $prefix_path   = "$env:CMAKE_PREFIX_PATH;$vcpkg_prefix"
+
+          if (-not (Test-Path "$vcpkg_include\boost\config.hpp")) {
+            throw "vcpkg boost-ublas missing: $vcpkg_include\boost\config.hpp not present"
+          }
+
           cmake -S . -B build `
             -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" `
             -DHDF5_ROOT="$env:HDF5_ROOT" `
-            -DCMAKE_PREFIX_PATH="$env:CMAKE_PREFIX_PATH" `
+            -DCMAKE_PREFIX_PATH="$prefix_path" `
+            -DH5CPP_BOOST_CONFIG_INCLUDE_EX="$vcpkg_include" `
             -DCMAKE_CXX_STANDARD=23 `
             -DCMAKE_BUILD_TYPE=Release `
             -DH5CPP_BUILD_TESTS=ON `
@@ -384,12 +408,17 @@ jobs:
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build wget gnupg lsb-release software-properties-common libhdf5-dev
+          sudo apt-get install -y cmake ninja-build wget gnupg lsb-release software-properties-common libboost-dev
+          # libhdf5-dev intentionally NOT installed — source-built via the
+          # ./.github/actions/install-hdf5 composite action below.
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 20 all
           echo "CC=$(command -v clang-20)" >> "$GITHUB_ENV"
           echo "CXX=$(command -v clang++-20)" >> "$GITHUB_ENV"
+
+      - name: Install HDF5 from source (cached)
+        uses: ./.github/actions/install-hdf5
 
       - name: Configure
         shell: bash
@@ -464,12 +493,17 @@ jobs:
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build wget gnupg lsb-release software-properties-common libhdf5-dev
+          sudo apt-get install -y cmake ninja-build wget gnupg lsb-release software-properties-common libboost-dev
+          # libhdf5-dev intentionally NOT installed — source-built via the
+          # ./.github/actions/install-hdf5 composite action below.
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 20 all
           echo "CC=$(command -v clang-20)" >> "$GITHUB_ENV"
           echo "CXX=$(command -v clang++-20)" >> "$GITHUB_ENV"
+
+      - name: Install HDF5 from source (cached)
+        uses: ./.github/actions/install-hdf5
 
       - name: Configure
         shell: bash
@@ -544,12 +578,17 @@ jobs:
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build wget gnupg lsb-release software-properties-common libhdf5-dev
+          sudo apt-get install -y cmake ninja-build wget gnupg lsb-release software-properties-common libboost-dev
+          # libhdf5-dev intentionally NOT installed — source-built via the
+          # ./.github/actions/install-hdf5 composite action below.
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 20 all
           echo "CC=$(command -v clang-20)" >> "$GITHUB_ENV"
           echo "CXX=$(command -v clang++-20)" >> "$GITHUB_ENV"
+
+      - name: Install HDF5 from source (cached)
+        uses: ./.github/actions/install-hdf5
 
       - name: Configure
         shell: bash
@@ -742,7 +781,12 @@ jobs:
             gcc-14 \
             g++-14 \
             lcov \
-            libhdf5-dev
+            libboost-dev
+          # libhdf5-dev intentionally NOT installed — source-built via the
+          # ./.github/actions/install-hdf5 composite action below.
+
+      - name: Install HDF5 from source (cached)
+        uses: ./.github/actions/install-hdf5
 
       - name: Clean and configure
         shell: bash

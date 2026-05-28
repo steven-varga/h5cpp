@@ -1,50 +1,60 @@
 /*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+ * Copyright (c) 2018-2026 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 #include <armadillo>
 #include <h5cpp/all>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <iostream>
 #include <random>
 
+// Demonstrates h5cpp sparse round-trip with Armadillo SpMat and SpCol.
+// On-disk layout is canonical CSC (data / indices / indptr / shape) and is
+// directly readable by scipy.sparse.csc_matrix / 10x Genomics / Loompy.
 
-int main(){
-
-	h5::fd_t fd = h5::create("example.h5",H5F_ACC_TRUNC);
-
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_int_distribution<> dist(40, 45);
-
-	arma::SpMat<int>M(20,40);
-	for(int i = 0, j=dist(gen); i<M.n_elem; i += j)
-	   	M[i] = j, j = dist(gen);
-	//std::cout << M;
-	std::cout <<"size: " << M.n_rows << "x" << M.n_cols 
-		<<" state: " << M.vec_state // 0 matrix, 1 colvec, 2 rowvec
-	   	<<" non zeros: " <<  M.n_nonzero
-		<< " fill rate: " <<  (double)M.n_nonzero / (double)M.n_cols *  (double)M.n_rows   <<"\n";
-
-	auto extra_attributes = std::make_tuple(
-		"author", "Steven Varga",  "company","vargaconsulting",  "date", "2019-oct-17");
-
-
-	/* single IO op to write a sparse matrix
-	 */
-	h5::gr_t gr = h5::write(fd, "sparse-multi-file.plain", M );
-	h5::awrite(gr,extra_attributes);
-
-	/* compression and sub setting is supported, although the interpretation is delegated to software writer
-	 * generally it is suggested to use single IO calls instead of chunked access
-	 * */
-	h5::write(fd, "sparse-multi-file.gzip", M, h5::chunk{254} | h5::gzip{9}, h5::offset{1024});
-	arma::mat K(4,4);
-
-	auto spmat = h5::read<arma::sp_mat>(gr);
-	std::cout<<"is dense: " << h5::exp::linalg::is_dense<decltype(K)>::value <<"\n";
-	std::cout<<"is continuous: " << h5::exp::is_contigious<decltype(K)>::value <<"\n";
-	std::cout<<"rank: " << h5::exp::rank<int>::value << "\n";
-	std::cout<<"rank: " << h5::exp::rank<std::vector<int>>::value << "\n";
-
-	//std::cout << values <<"\n";
+static arma::SpMat<double> make_random_spmat(std::size_t rows, std::size_t cols, double density) {
+    std::mt19937 gen(42);
+    std::uniform_real_distribution<double> uni(-1.0, 1.0);
+    std::bernoulli_distribution coin(density);
+    arma::SpMat<double> M(rows, cols);
+    for (std::size_t j = 0; j < cols; ++j)
+        for (std::size_t i = 0; i < rows; ++i)
+            if (coin(gen)) M(i, j) = uni(gen);
+    M.sync();    // flush insert cache before direct CSC array access
+    return M;
 }
 
+int main() {
+    h5::fd_t fd = h5::create("arma.h5", H5F_ACC_TRUNC);
+
+    // ---- matrix ----
+    arma::SpMat<double> A = make_random_spmat(8, 12, 0.15);
+    std::cout << "wrote  SpMat: " << A.n_rows << "x" << A.n_cols
+              << " nnz=" << A.n_nonzero << "\n";
+    h5::write(fd, "matrix/A", A);
+
+    auto A_back = h5::read<arma::SpMat<double>>(fd, "matrix/A");
+    std::cout << "read   SpMat: " << A_back.n_rows << "x" << A_back.n_cols
+              << " nnz=" << A_back.n_nonzero << "\n";
+
+    arma::SpMat<double> diff = A - A_back;
+    // Hand-roll max-abs over the iterator to avoid pulling in BLAS via arma::norm.
+    double err = 0.0;
+    for (auto it = diff.begin(); it != diff.end(); ++it)
+        err = std::max(err, std::abs(*it));
+    std::cout << "round-trip residual (max|A - A'| on nonzeros): " << err << "\n";
+
+    // ---- vector ----
+    arma::SpCol<double> v(50);
+    v(3) = 1.5; v(17) = -2.25; v(42) = 7.0;
+    v.sync();    // flush insert cache; same precondition as for SpMat
+    h5::write(fd, "matrix/v", v);
+    auto v_back = h5::read<arma::SpCol<double>>(fd, "matrix/v");
+    std::cout << "vec round-trip: nnz=" << v_back.n_nonzero
+              << ", v(17)=" << v_back(17) << " (expected -2.25)\n";
+
+    return (err == 0.0) ? 0 : 1;
+}

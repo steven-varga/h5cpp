@@ -86,6 +86,13 @@ jobs:
 
       - name: Configure
         run: |
+          # The .pkg payload is the amalgamated header. The optional filter
+          # libs (libdeflate / zstd / lz4 / szip) compile to static archives
+          # whose targets we never `cmake --build`, so their install rules
+          # would reference non-existent .a files and CPack would fail with
+          # "file INSTALL cannot find liblibh5cpp-libdeflate-static.a".
+          # Disabling the H5CPP_USE_* options prunes both the build and the
+          # install rules. Mirror what package-linux already does.
           HDF5_PREFIX="$(brew --prefix hdf5)"
           cmake -B build \
             -DCMAKE_BUILD_TYPE=Release \
@@ -94,7 +101,11 @@ jobs:
             -DCMAKE_PREFIX_PATH="$HDF5_PREFIX" \
             -DH5CPP_BUILD_EXAMPLES=OFF \
             -DH5CPP_BUILD_TESTS=OFF \
-            -DH5CPP_BUILD_BENCH=OFF
+            -DH5CPP_BUILD_BENCH=OFF \
+            -DH5CPP_USE_LIBDEFLATE=OFF \
+            -DH5CPP_USE_ZSTD=OFF \
+            -DH5CPP_USE_LZ4=OFF \
+            -DH5CPP_USE_SZIP=OFF
 
       - name: Build (amalgamation only)
         run: cmake --build build --target h5cpp-amalgamate
@@ -121,6 +132,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install NSIS
+        shell: powershell
+        run: |
+          # NSIS is not on windows-latest by default; CPack -G NSIS needs
+          # `makensis` on PATH and the NSIS registry key to initialise the
+          # generator. The chocolatey package installs both.
+          choco install nsis -y --no-progress
+          # Add NSIS dir to GITHUB_PATH explicitly — refreshenv only updates
+          # the current shell, not subsequent step shells.
+          $nsisDir = "C:\Program Files (x86)\NSIS"
+          if (-not (Test-Path "$nsisDir\makensis.exe")) {
+            $nsisDir = "C:\Program Files\NSIS"
+          }
+          if (-not (Test-Path "$nsisDir\makensis.exe")) {
+            throw "makensis.exe not found after NSIS install"
+          }
+          Add-Content -Path $env:GITHUB_PATH -Value $nsisDir
+          & "$nsisDir\makensis.exe" /VERSION
 
       - name: Build zlib from source
         shell: powershell
@@ -197,6 +227,9 @@ jobs:
       - name: Configure
         shell: pwsh
         run: |
+          # Mirror Linux/macOS: prune the H5CPP_USE_* filter libs we never
+          # actually build (the only target we run is h5cpp-amalgamate),
+          # so their install rules don't reference non-existent .lib files.
           $hdf5_prefix = "$env:RUNNER_TEMP/hdf5-${{ env.HDF5_VERSION }}-install"
           $zlib_prefix = "$env:RUNNER_TEMP/zlib-install"
           cmake -B build `
@@ -207,13 +240,23 @@ jobs:
             -DH5CPP_BUILD_TESTS=OFF `
             -DH5CPP_BUILD_BENCH=OFF `
             -DH5CPP_USE_LIBDEFLATE=OFF `
-            -DH5CPP_USE_ZSTD=OFF
+            -DH5CPP_USE_ZSTD=OFF `
+            -DH5CPP_USE_LZ4=OFF `
+            -DH5CPP_USE_SZIP=OFF
 
       - name: Build (amalgamation only)
         run: cmake --build build --target h5cpp-amalgamate --config Release
 
       - name: Package
         run: cd build && cpack -G NSIS
+
+      - name: Upload NSIS output log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nsis-output-log
+          path: build/_CPack_Packages/win64/NSIS/NSISOutput.log
+          if-no-files-found: warn
 
       - uses: actions/upload-artifact@v4
         with:
@@ -245,11 +288,21 @@ jobs:
       - name: List artifacts
         run: ls -lh dist/
 
-      - name: Create GitHub release
+      - name: Create or update GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${{ github.ref_name }}" dist/* \
-            --title "h5cpp ${{ github.ref_name }}" \
-            --generate-notes \
-            --repo ${{ github.repository }}
+          set -euxo pipefail
+          tag="${{ github.ref_name }}"
+          repo="${{ github.repository }}"
+          # First-time publish: create the release with auto-generated notes.
+          # Re-run: the release already exists (possibly with hand-edited body
+          # and notes), so just upload/replace assets via --clobber.
+          if gh release view "$tag" --repo "$repo" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/* --clobber --repo "$repo"
+          else
+            gh release create "$tag" dist/* \
+              --title "h5cpp $tag" \
+              --generate-notes \
+              --repo "$repo"
+          fi

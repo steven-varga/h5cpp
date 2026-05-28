@@ -21,6 +21,13 @@ namespace h5::meta {
 		// Register types so generic access_traits_t fallbacks don't create ambiguous partial specializations
 		template <class T> struct detail::has_explicit_access_traits<h5::dlib::rowmat<T>> : std::true_type {};
 }
+// Explicit storage_representation so h5::awrite's static_assert(storage != unsupported)
+// always passes for vendored dlib matrices.
+namespace h5::meta::detail_capabilities {
+		template <class T> struct has_explicit_storage_repr<h5::dlib::rowmat<T>> : std::true_type {};
+		template <class T> struct storage_representation_impl<h5::dlib::rowmat<T>>
+			: std::integral_constant<storage_representation_t, storage_representation_t::linear_value_dataset> {};
+}
 
 namespace h5::impl {
 	// 1.) object -> H5T_xxx
@@ -58,6 +65,7 @@ namespace h5::meta {
 			static constexpr access_t kind = access_t::contiguous;
 			static constexpr bool is_trivially_packable = true;
 			static auto data(const h5::dlib::rowmat<T>& c) noexcept { return h5::impl::data(c); }
+			static auto data(h5::dlib::rowmat<T>& c)       noexcept { return h5::impl::data(c); }
 			static auto size(const h5::dlib::rowmat<T>& c) noexcept { return h5::impl::size(c); }
 			static std::size_t bytes(const h5::dlib::rowmat<T>& c) noexcept {
 				auto s = size(c); std::size_t n = 1;

@@ -10,9 +10,9 @@
 #include <vector>
 #include <numeric>
 
+// No utils.hpp shim — test data is fabricated inline below.
 #include "examples/packet-table/struct.h"
 #include "examples/packet-table/generated.h"
-#include "examples/packet-table/utils.hpp"
 
 TEST_CASE("[example] packet table int stream round-trip") {
     const char* filename = "test_packet_table_io.h5";
@@ -48,7 +48,9 @@ TEST_CASE("[example] packet table compound struct stream round-trip") {
     const char* filename = "test_packet_table_struct_io.h5";
     std::filesystem::remove(filename);
 
-    std::vector<sn::example::Record> original = h5::utils::get_test_data<sn::example::Record>(10);
+    std::vector<sn::example::Record> original(10);
+    for (std::size_t i = 0; i < original.size(); ++i)
+        original[i].idx = static_cast<decltype(original[i].idx)>(i);
 
     // WRITE via packet table append
     {

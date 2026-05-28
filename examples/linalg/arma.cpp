@@ -1,49 +1,56 @@
-/*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
- */
+// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada
+//
+// Armadillo round-trip with shape + element verification.
+//
+// Each block writes a freshly populated container, reads it back, and asserts
+// (1) shape equality and (2) per-element equality. Status is printed using the
+// project's ✔/✘ symbol convention.
+
 #include <armadillo>
 #include <h5cpp/all>
+#include <iostream>
 
+int main() {
+    auto fd = h5::create("arma.h5", H5F_ACC_TRUNC);
 
-int main(){
-	{ // CREATE - WRITE
-		arma::mat M(2,3); M.ones();				            // create a matrix
-		h5::fd_t fd = h5::create("arma.h5",H5F_ACC_TRUNC); 	// and a file
-		h5::ds_t ds = h5::create<short>(fd,"create then write"
-				,h5::current_dims{10,20}
-				,h5::max_dims{10,H5S_UNLIMITED}
-				,h5::chunk{2,3} | h5::fill_value<short>{3} |  h5::gzip{9}
-		);
-		h5::write( ds,  M, h5::offset{2,2}, h5::stride{1,3}  );
-	}
-	{
-		arma::vec V( {1.,2.,3.,4.,5.,6.,7.,8.}); 	// create a vector
-		// simple one shot write that computes current dimensions and saves matrix
-		h5::write( "arma.h5", "one shot create write",  V);
-		// what if you want to position a matrix inside a higher dimension with some added complexity?	
-		h5::write( "arma.h5", "arma vec inside matrix",  V // object contains 'count' and rank being written
-			,h5::current_dims{40,50}  // control file_space directly where you want to place vector
-			,h5::offset{5,0}            // when no explicit current dimension given current dimension := offset .+ object_dim .* stride (hadamard product)  
- 			,h5::count{1,1}
-			,h5::stride{3,5}
-			,h5::block{2,4}
-			,h5::max_dims{40,H5S_UNLIMITED}  // wouldn't it be nice to have unlimited dimension? if no explicit chunk is set, then the object dimension 
-							 // is used as unit chunk
-		);
-	}
-	{ // CREATE - READ: we're reading back the dataset created in the very first step
-	  // note that data is only data, can be reshaped, cast to any format and content be modified through filtering 
-		auto fd = h5::open("arma.h5", H5F_ACC_RDWR,           // you can have multiple fd open with H5F_ACC_RDONLY, but single write
-				h5::fclose_degree_strong | h5::sec2); 		   // and able to set various properties  
-		h5::ds_t ds = h5::create<float>(fd,"dataset", h5::current_dims{3,2}, h5::fill_value<float>(NAN));  // create dataset, default to NaN-s
-		auto M  = h5::read<arma::mat>( fd,"dataset" ); 				   // read data back as matrix
-		M.print();
-	}
-	{ // READ: 
-		arma::mat M = h5::read<arma::mat>("arma.h5","create then write"); // read entire dataset back with a single read
-		M.print();
-	}
+    auto check = [](const char* label, bool ok) {
+        std::cout << (ok ? "✔ ok    " : "✘ failed") << "  " << label << "\n";
+    };
+
+    // vector ─────────────────────────────────────────────────────────────────
+    {
+        arma::vec v = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+        h5::write(fd, "/arma/vec", v);
+        auto back = h5::read<arma::vec>(fd, "/arma/vec");
+        bool ok = (back.n_elem == v.n_elem) && arma::approx_equal(v, back, "absdiff", 0.0);
+        check("arma::vec(8)            shape + values", ok);
+    }
+
+    // matrix (chunked + gzip) ───────────────────────────────────────────────
+    {
+        arma::mat M = arma::linspace<arma::mat>(1, 12, 12).reshape(3, 4); 
+        h5::write(fd, "/arma/mat", M, h5::chunk{3, 4} | h5::gzip{6});
+        auto back = h5::read<arma::mat>(fd, "/arma/mat");
+        bool shape  = (back.n_rows == M.n_rows) && (back.n_cols == M.n_cols);
+        bool values = shape && arma::approx_equal(M, back, "absdiff", 1e-12);
+        check("arma::mat(3x4)          shape + values", shape && values);
+    }
+
+    // cube ──────────────────────────────────────────────────────────────────
+    {
+        arma::cube C(2, 3, 4);
+        for (arma::uword s = 0; s < C.n_slices; ++s)
+            for (arma::uword r = 0; r < C.n_rows; ++r)
+                for (arma::uword c = 0; c < C.n_cols; ++c)
+                    C(r, c, s) = double(s * 100 + r * 10 + c);
+
+        h5::write(fd, "/arma/cube", C);
+        auto back = h5::read<arma::cube>(fd, "/arma/cube");
+        bool shape  = (back.n_rows == C.n_rows)
+                   && (back.n_cols == C.n_cols)
+                   && (back.n_slices == C.n_slices);
+        bool values = shape && arma::approx_equal(C, back, "absdiff", 0.0);
+        check("arma::cube(2x3x4)       shape + values", shape && values);
+    }
+    return 0;
 }
-
-

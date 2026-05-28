@@ -137,6 +137,17 @@ namespace h5::impl {
 	inline std::array<size_t,1> size( const std::vector<std::array<T,N>, A>& ref ){
 		return {ref.size() * N};
 	}
+	// Structural fallback for the read path. Deliberately NOT named `data` so it
+	// doesn't join the impl::data overload set — linalg mappers (blitz, ublas,
+	// eigen, …) each define their own `impl::data(Object& ref)` template gated
+	// by a per-library is_supported<T>, and adding another generic template here
+	// would cause overload ambiguity for those types. Called from H5Dread.hpp's
+	// read fallback only when `impl::rank<T>::value == 0` (i.e., no by-name
+	// spec). Returns `ref.data()` for any T that exposes a `.data()` member.
+	template <class T>
+	inline auto structural_data(T& ref) -> decltype(ref.data()) {
+		return ref.data();
+	}
 	template <class T> inline std::array<size_t,1> size( const std::initializer_list<T>& ref ){ return {ref.size()}; }
 	template <class T, class A>
 	inline std::array<size_t,1> size( const std::forward_list<T,A>& ref ){
