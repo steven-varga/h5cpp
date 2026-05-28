@@ -4,14 +4,9 @@
  */
 
 #include "csv.h"
-// data structure include file: `struct.h` must precede 'generated.h' as the latter contains dependencies
-// from previous
 #include "struct.h"
-
-#include <h5cpp/core>      // has handle + type descriptors
-// sandwiched: as `h5cpp/io` depends on `henerated.h` which needs `h5cpp/core`
-	#include "generated.h" // uses type descriptors
-#include <h5cpp/io>        // uses generated.h + core 
+#include <h5cpp/all>
+#include "generated.h"
 
 int main(){
 

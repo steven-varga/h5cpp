@@ -1,93 +1,115 @@
-/*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
- */
-#define ARMA_DONT_USE_WRAPPER
+// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada
+//
+// Packet-table writers — append-only streams that buffer up to a chunk's worth
+// of records in memory and flush when full. The point is the call shape:
+//
+//     auto pt = h5::create<T>(fd, "...", h5::max_dims{H5S_UNLIMITED, ...}, h5::chunk{...});
+//     for (auto record : stream) h5::append(pt, record);
+//
+// `h5::pt_t` is just `h5::ds_t` with a thin write-cache layered on top, so
+// every dataset creation flag — `h5::chunk`, `h5::gzip`, `h5::fill_value`, ...
+// — applies unchanged.
+
+#include <Eigen/Dense>          // include before h5cpp/all to enable the eigen mapper
 #include <armadillo>
-#include <Eigen/Dense> // must include Eigen before <h5cpp/core>
+#include <h5cpp/all>
+#include "generated.h"          // registers sn::example::Record via H5CPP_REGISTER_STRUCT
 
-#include <cstdint>
+#include <iostream>
 #include <numeric>
-#include "struct.h"
-#include <h5cpp/core>
-	// generated file must be sandwiched between core and io 
-	// to satisfy template dependencies in <h5cpp/io>  
-	#include "generated.h"
-#include <h5cpp/io>
-#include "utils.hpp"
+#include <vector>
 
-template<class T> using Matrix   = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+template <class T> using RowMajor = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
-int main(){
+int main() {
+    auto fd = h5::create("packettable.h5", H5F_ACC_TRUNC);
 
-	h5::fd_t fd = h5::create("example.h5",H5F_ACC_TRUNC);
+    auto check = [](const char* label, bool ok) {
+        std::cout << (ok ? "✔ ok    " : "✘ failed") << "  " << label << "\n";
+    };
 
-	// SCALAR: integral
-	// The motivation behind this example to allow 2D frames be recorded into a stream
-	// 3x5 is the frame or image size, with 2 planes. 
-	try { // centrally used error handling
-		std::vector<int> stream(83);
-		std::iota(std::begin(stream), std::end(stream), 1);
-		// the leading dimension is extended once chunk is full, chunk is filled in row major order
-		// zero copy writes directly to chunk buffer then pushed through filter chain if specified
-		// works up to H5CPP_MAX_RANK default to 7
-		// last chunk if partial filled with h5::fill_value<T>( some_value )  
-		h5::pt_t pt = h5::create<int>(fd, "stream of integral 01",
-				 h5::max_dims{H5S_UNLIMITED,3,5}, h5::chunk{2,3,5} | h5::gzip{9} | h5::fill_value<int>(3) );
-		for( auto record : stream )
-			h5::append(pt, record);
-		//auto M = h5::read<arma::mat>(fd,"stream of integral" );
-	} catch ( const h5::error::any& e ){
-		std::cerr << "ERROR:" << e.what();
-	}
+    // Packet-table aligns the on-disk extent to chunk boundaries.  Streams
+    // below are sized to whole-chunk multiples so the read-back has no
+    // fill-value tail.  See the README for what happens with partial chunks.
 
-	try { // centrally used error handling
-		std::vector<int> stream(83);
-		std::iota(std::begin(stream), std::end(stream), 1);
-		// the leading dimension is extended once chunk is full, chunk is filled in row major order
-		// zero copy writes directly to chunk buffer then pushed through filter chain if specified
-		// works up to H5CPP_MAX_RANK default to 7
-		// last chunk if partial filled with h5::fill_value<T>( some_value )  
-		h5::pt_t pt = h5::create<int>(fd, "stream of integral 02",
-									  h5::max_dims{H5S_UNLIMITED}, h5::chunk{6} | h5::gzip{9} | h5::fill_value<int>(3) );
-		for( auto record : stream )
-			h5::append(pt, record);
-	} catch ( const h5::error::any& e ){
-		std::cerr << "ERROR:" << e.what();
-	}
-	
+    // 1. stream of int into a 1-D unlimited dataset ──────────────────────────
+    {
+        std::vector<int> stream(80);     // 5 chunks of 16
+        std::iota(stream.begin(), stream.end(), 1);
+        {
+            h5::pt_t pt = h5::create<int>(fd, "/stream/int_1d",
+                    h5::max_dims{H5S_UNLIMITED},
+                    h5::chunk{16} | h5::gzip{6} | h5::fill_value<int>(0));
+            for (int x : stream) h5::append(pt, x);
+        }   // pt destructor flushes the trailing partial chunk
+        auto back = h5::read<std::vector<int>>(fd, "/stream/int_1d");
+        check("stream<int> -> 1D unlimited dataset      (80 elements)",
+              back.size() == stream.size() && back == stream);
+    }
 
-	// SCALAR: pod 
-	try { //
-		std::vector<sn::example::Record> stream = h5::utils::get_test_data<sn::example::Record>(127);
+    // 2. stream of int into a 3-D unlimited dataset (frame stream) ──────────
+    //    Each appended int fills one cell of a 3×5 frame; once 15 ints land
+    //    a frame is complete and the leading dim grows by one.  Chunk holds
+    //    two frames, so we use 4 frames = 60 ints to land cleanly.
+    {
+        std::vector<int> stream(60);     // 4 frames; 2-frame chunks; clean
+        std::iota(stream.begin(), stream.end(), 1);
+        {
+            h5::pt_t pt = h5::create<int>(fd, "/stream/int_3d",
+                    h5::max_dims{H5S_UNLIMITED, 3, 5},
+                    h5::chunk{2, 3, 5} | h5::gzip{6} | h5::fill_value<int>(0));
+            for (int x : stream) h5::append(pt, x);
+        }
+        auto back = h5::read<std::vector<int>>(fd, "/stream/int_3d");
+        check("stream<int> -> 3D unlimited dataset      (4 x 3 x 5)",
+              back.size() == stream.size() && back == stream);
+    }
 
-		// implicit conversion from h5::ds_t to h5::pt_t makes it a breeze to create
-		// packet_table from h5::open | h5::create calls,
-		// The newly created h5::pt_t  stateful container caches the incoming data until
-		// bucket filled. IO operations are at h5::chunk boundaries
-		// or when resource is released. Last partial chunk handled as expected.
-		//
-		// compiler assisted introspection generates boilerplate, developer 
-		// can focus on the idea, leaving boring details to machines 
-		h5::pt_t pt = h5::create<sn::example::Record>(fd, "stream of struct",
-				 h5::max_dims{H5S_UNLIMITED,7}, h5::chunk{4,7} | h5::gzip{9} );
-		for( auto record : stream )
-			h5::append(pt, record);
-	} catch ( const h5::error::any& e ){
-		std::cerr << "ERROR:" << e.what();
-	}
+    // 3. stream of POD struct into a 1-D unlimited dataset ──────────────────
+    {
+        auto stream = h5::pod<sn::example::Record>{} | h5::take(128);   // 4 chunks of 32
+        for (size_t i = 0; i < stream.size(); ++i) stream[i].idx = i;
 
-	{ 	// packet table for a collection of matrices modelling a HD resolution of gray scale images
-		size_t nrows = 2, ncols=256, nframes=100;
-		h5::pt_t pt = h5::create<double>(fd, "stream of matrices",
-				h5::max_dims{H5S_UNLIMITED,nrows,ncols}, h5::chunk{1,nrows,ncols} );
-		Matrix<double> M(nrows,ncols);
-		int k=0;
-	   	for( int i=0; i<nrows; i++) for(int j=0; j<ncols; j++) M(i,j) = ++k;
-		// actual code, you may insert arbitrary number of frames: nrows x ncols
-		for( int i = 0; i < nframes; i++)
-			h5::append( pt, M);
-	}
+        {
+            h5::pt_t pt = h5::create<sn::example::Record>(fd, "/stream/record",
+                    h5::max_dims{H5S_UNLIMITED},
+                    h5::chunk{32} | h5::gzip{6});
+            for (const auto& r : stream) h5::append(pt, r);
+        }
+        auto back = h5::read<std::vector<sn::example::Record>>(fd, "/stream/record");
+        bool size_ok = back.size() == stream.size();
+        bool idx_ok = size_ok;
+        for (size_t i = 0; idx_ok && i < back.size(); ++i)
+            idx_ok = (back[i].idx == stream[i].idx);
+        check("stream<POD struct> -> 1D unlimited        (128 records, idx)",
+              size_ok && idx_ok);
+    }
 
-	return 0;
+    // 4. stream of fixed-size matrices into a 3-D unlimited dataset ─────────
+    //    A "frame" is a 2 x 256 row-major float matrix; we stream `nframes`
+    //    of them and the leading dim grows.
+    {
+        constexpr size_t nrows = 2, ncols = 256, nframes = 20;
+        RowMajor<float> frame(nrows, ncols);
+        for (size_t i = 0; i < nrows; ++i)
+            for (size_t j = 0; j < ncols; ++j)
+                frame(i, j) = static_cast<float>(i * ncols + j);
+        {
+            h5::pt_t pt = h5::create<float>(fd, "/stream/frames",
+                    h5::max_dims{H5S_UNLIMITED, nrows, ncols},
+                    h5::chunk{1, nrows, ncols});
+            for (size_t f = 0; f < nframes; ++f) h5::append(pt, frame);
+        }
+
+        // Read back; size should be nframes * nrows * ncols.
+        auto back = h5::read<std::vector<float>>(fd, "/stream/frames");
+        bool size_ok = back.size() == nframes * nrows * ncols;
+        bool values_ok = size_ok;
+        // Compare the first frame's worth of data.
+        for (size_t k = 0; values_ok && k < nrows * ncols; ++k)
+            values_ok = (back[k] == static_cast<float>(k));
+        check("stream<Eigen frame> -> 3D unlimited   (20 x 2 x 256)",
+              size_ok && values_ok);
+    }
+    return 0;
 }

@@ -1,47 +1,36 @@
-/*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
- */
-#include <armadillo>
-#include <cstdint>
-#include "struct.h"
-#include <h5cpp/core>
-	// generated file must be sandwiched between core and io 
-	// to satisfy template dependencies in <h5cpp/io>  
-	#include "tu-02.h"
-	// multiple inclusion is on purpose to test 
-	// include guards in generated file: tu_02.h 
-	#include "tu-02.h"
-#include <h5cpp/io>
-#include "utils.hpp"
+// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada
+//
+// Translation unit #2.  Independently includes generated.h — proving that the
+// inline H5CPP_REGISTER_STRUCT bodies survive multiple TU inclusions without
+// ODR violations.
 
-#define CHUNK_SIZE 5
-#define NROWS 4*CHUNK_SIZE
-#define NCOLS 1*CHUNK_SIZE
+#include <h5cpp/all>
+#include "generated.h"
 
+#include <iostream>
 
-void test_03( const h5::fd_t& fd ){ // creates + writes entire object tree
+void tu_02_pod_vector_round_trip(const h5::fd_t& fd) {
+    // Build a small vector of POD records.  The h5::pod<T> | h5::take(n)
+    // adaptor default-constructs records; we fill in the discriminator field
+    // so the readback is recognisable.
+    auto records = h5::pod<sn::example::record_t>{} | h5::take(8);
+    for (size_t i = 0; i < records.size(); ++i)
+        records[i].idx = i;
 
-	std::vector<sn::example::Record> vec = h5::utils::get_test_data<sn::example::Record>(20);
-	h5::write(fd, "orm/partial/vector one_shot", vec );
-	// dimensions and other properties specified additional argument 
-	h5::write(fd, "orm/partial/vector custom_dims", vec,
-		h5::max_dims{H5S_UNLIMITED}, h5::gzip{9} | h5::chunk{20} );
-	// you don't need to remember order, compiler will do it for you without runtime penalty:
-	h5::write(fd, "orm/partial/vector custom_dims different_order", vec,
-		h5::chunk{20} | h5::gzip{9}, 
-		h5::max_dims{H5S_UNLIMITED}, h5::offset{3} );
+    // One-shot write into a fresh path.
+    h5::write(fd, "/orm/partial/one_shot", records);
+
+    // Same data, custom chunking + gzip.
+    h5::write(fd, "/orm/partial/custom_dims", records,
+        h5::max_dims{H5S_UNLIMITED}, h5::gzip{9} | h5::chunk{20});
+
+    // Read it back through the type system defined in *this* TU.
+    auto back = h5::read<std::vector<sn::example::record_t>>(
+        fd, "/orm/partial/one_shot");
+
+    std::vector<my_uint_t> idx;
+    idx.reserve(back.size());
+    for (const auto& r : back) idx.push_back(r.idx);
+    std::cout << "tu-02: read back " << back.size()
+              << " records, idx = " << idx << "\n";
 }
-
-void test_04( const h5::fd_t& fd ){ // read entire dataset back
-
-	using T = std::vector<sn::example::Record>;
-	std::cerr<< "reading data: \n";
-	auto data = h5::read<T>(fd,"/orm/partial/vector one_shot");
-	std::cerr <<"reading back data previously written:\n\t";
-	for( auto r:data )
-		std::cerr << r.idx <<" ";
-
-	std::cerr << std::endl;
-}
-

@@ -1,32 +1,34 @@
-/*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
- */
+// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada
+//
+// Translation unit #1.  Includes generated.h so this TU knows how to map the
+// POD structs to HDF5 compound types; uses Armadillo to show that linalg
+// containers and registered compound types coexist in the same TU.
+
 #include <armadillo>
-#include <cstdint>
-#include "struct.h"
-#include <h5cpp/core>
-	// generated file must be sandwiched between core and io 
-	// to satisfy template dependencies in <h5cpp/io>  
-	#include "tu-01.h"
-#include <h5cpp/io>
-#include "utils.hpp"
+#include <h5cpp/all>
+#include "generated.h"
 
-#define CHUNK_SIZE 5
-#define NROWS 4*CHUNK_SIZE
-#define NCOLS 1*CHUNK_SIZE
+#include <iostream>
 
-void test_01( const h5::fd_t& fd ){// LINARG:=[armaidllo|eigen3|blaze|blitz|it++|dlib|ublas] supported
+void tu_01_linalg_and_create(const h5::fd_t& fd) {
+    constexpr int CHUNK = 5;
+    constexpr int NROWS = 4 * CHUNK;
+    constexpr int NCOLS = 1 * CHUNK;
 
-	arma::imat M(NROWS,NCOLS);              // define a linalg object
-	h5::write(fd, "/linalg/armadillo",M);   // save it somewhere, partial and full read|write and append supported
+    // 1. A plain linalg write — no compound, no generated.h needed for this call.
+    arma::imat M(NROWS, NCOLS, arma::fill::eye);
+    h5::write(fd, "/linalg/armadillo", M);
+
+    // 2. Create a 2-D compound dataset of `sn::example::record_t`, chunked + gzipped,
+    //    ready for partial I/O later.  Possible because this TU saw generated.h.
+    h5::create<sn::example::record_t>(fd, "/orm/chunked_2D",
+        h5::current_dims{NROWS, NCOLS},
+        h5::chunk{1, CHUNK} | h5::gzip{8});
+
+    // 3. Unbounded dataset of the type-check record.
+    h5::create<sn::typecheck::record_t>(fd, "/orm/typecheck",
+        h5::max_dims{H5S_UNLIMITED});
+
+    std::cout << "tu-01: wrote arma::imat(" << NROWS << "x" << NCOLS
+              << ") and created two compound datasets\n";
 }
-
-void test_02( const h5::fd_t& fd ){// create a Matrix of STRUCT with chunked and GZIP compressed properties ready for partial read|write
-
-	// upto 7 dimensions/extents are supported
-	h5::create<sn::example::Record>(fd, "/orm/chunked_2D", 
-		h5::current_dims{NROWS,NCOLS}, h5::chunk{1,CHUNK_SIZE} | h5::gzip{8} );
-	h5::create<sn::typecheck::Record>(fd, "/orm/typecheck",	h5::max_dims{H5S_UNLIMITED} );
-}
-

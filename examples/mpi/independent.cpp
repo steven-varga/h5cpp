@@ -1,67 +1,58 @@
-/*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
- */
+// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada
+//
+// Parallel HDF5 — INDEPENDENT write/read across MPI ranks.
+//
+// Same dataset shape as collective.cpp but uses h5::independent for the
+// transfer mode.  In INDEPENDENT mode each rank issues its own MPI-IO
+// operation without cross-rank coordination — ranks may opt out of any
+// given call.  Lower-latency for irregular workloads; lower throughput
+// than COLLECTIVE for regular slabs.
+//
+// REQUIRES: HDF5 built with --enable-parallel (HDF5_IS_PARALLEL=ON).
+//
+// RUN: mpirun -n <N> ./examples-mpi-independent
 
 #include <mpi.h>
 #include <h5cpp/all>
-#include <chrono>
 #include <vector>
-#include <algorithm>
 
-#pragma GCC diagnostic ignored "-Wnarrowing"
-// armadillo
-//./configure -DCMAKE_INSTALL_PREFIX=/usr/local -DDETECT_HDF5=OFF
 int main(int argc, char** argv) {
-
-	// usual boiler place
-    int size, rank, name_len;
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
-    MPI_Init(NULL, NULL);
-	MPI_Info info  = MPI_INFO_NULL;
-	MPI_Comm comm  = MPI_COMM_WORLD;
-
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Init(&argc, &argv);
+    int rank = 0, world_size = 0;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Get_processor_name(processor_name, &name_len);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-	int nrows = 10;
-	{ // CREATE - WRITE
-		std::vector<double> v(nrows);
-		std::fill(std::begin(v), std::end(v), rank + 2 );
-		// open file with MPIIO
-		auto fd = h5::create("collective.h5", H5F_ACC_TRUNC,
-				h5::fcpl, 
-				h5::mpiio({MPI_COMM_WORLD, info}) // pass the communicator and hints as usual
-		);
-		// single write request is expanded to chunked write at compile time, setting up 
-		// required arguments. 
-		// Passed property lists, chunk and size descriptors may be interchanged, and or omitted
-		h5::write( fd, "dataset", v,
-				h5::chunk{nrows,1}, h5::current_dims{nrows,size}, h5::offset{0,rank}, h5::count{nrows,1},
-				h5::independent ); // this makes `collective IO` magic happen
-		// RAII will close all descriptors when leaving code block
-	}
+    constexpr int nrows = 10;
 
-	{ // READ
-		// open container with MPIIO enabled
-		auto fd = h5::open("collective.h5", H5F_ACC_RDWR,  h5::mpiio({MPI_COMM_WORLD, info}));
-		// this is a single shot read, all memory reservations are inside the `read` operator, convenient
-		// but suboptimal for loops. 
-		auto data = h5::read<std::vector<double>>(fd, "dataset", h5::offset{0,rank}, h5::count{nrows,1}, h5::collective);
-		std::cout << "rank: " << rank <<" data: ";
-		for( auto v : data) std::cout << v << " "; std::cout <<" ";
+    // ── CREATE + WRITE (independent transfer mode) ────────────────────────
+    {
+        std::vector<double> v(nrows, double(rank + 2));
+        auto fd = h5::create("independent.h5", H5F_ACC_TRUNC, h5::default_fcpl,
+            h5::mpiio({MPI_COMM_WORLD, MPI_INFO_NULL}));
+        h5::write(fd, "dataset", v,
+            h5::current_dims{nrows, world_size},
+            h5::chunk{nrows, 1},
+            h5::offset{0, rank},
+            h5::count{nrows, 1},
+            h5::independent);
+    }
 
-		// for high performance loops constructs please use:
-		std::vector<double> buffer(nrows); // pre-allocate buffer, see documentation for variety of
-		// linear algebra, the STL or raw memory objects
+    // ── READ (independent transfer mode — matches write) ─────────────────
+    {
+        auto fd = h5::open("independent.h5", H5F_ACC_RDWR,
+            h5::mpiio({MPI_COMM_WORLD, MPI_INFO_NULL}));
+        auto data = h5::read<std::vector<double>>(fd, "dataset",
+            h5::offset{0, rank}, h5::count{nrows, 1}, h5::independent);
+        std::cout << "rank " << rank << " of " << world_size
+                  << " read " << data.size() << " elements, first = " << data[0] << "\n";
 
-		// make sure to open dataset outside of the loop
-		auto ds = h5::open(fd, "dataset");
-		// this is as efficient as it gets
-		h5::read(ds, buffer.data(),  h5::offset{0,rank}, h5::count{nrows,1}, h5::independent);
-	}
+        std::vector<double> buffer(nrows);
+        auto ds = h5::open(fd, "dataset");
+        h5::read(ds, buffer.data(),
+            h5::offset{0, rank}, h5::count{nrows, 1}, h5::independent);
+    }
 
-	MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
+    return 0;
 }

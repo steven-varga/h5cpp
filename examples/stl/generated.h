@@ -1,12 +1,9 @@
-/*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
- * Author: Varga, Steven <steven@vargaconsulting.ca>
- */
-#ifndef H5CPP_GUARD_iBJBS
-#define H5CPP_GUARD_iBJBS
+#pragma once
 
-namespace h5{
-    //template specialization of sn::example::Record to create HDF5 COMPOUND type
+#include <h5cpp/all>
+#include "struct.h"
+
+namespace h5 {
     template<> hid_t inline register_struct<sn::example::Record>(){
         hsize_t at_00_[] ={7};            hid_t at_00 = H5Tarray_create(H5T_NATIVE_FLOAT,1,at_00_);
         hsize_t at_01_[] ={3};            hid_t at_01 = H5Tarray_create(H5T_NATIVE_DOUBLE,1,at_01_);
@@ -48,11 +45,9 @@ namespace h5{
         H5Tclose(at_00); H5Tclose(at_01); H5Tclose(ct_00); H5Tclose(at_02); H5Tclose(ct_01);
         H5Tclose(at_03); H5Tclose(at_04); H5Tclose(at_05); 
 
-        //if not used with h5cpp framework, but as a standalone code generator then
-        //the returned 'hid_t ct_02' must be closed: H5Tclose(ct_02);
         return ct_02;
     };
 }
 H5CPP_REGISTER_STRUCT(sn::example::Record);
 
-#endif
+

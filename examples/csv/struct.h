@@ -3,8 +3,7 @@
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 
-#ifndef  CSV2H5_H 
-#define  CSV2H5_H
+#pragma once
 
 constexpr int STR_ARRAY_SIZE = 20;
 /*define C++ representation as POD struct*/
@@ -15,4 +14,3 @@ struct input_t {
 	double Longitude;
 	char ReportedLocation[STR_ARRAY_SIZE];
 };
-#endif
