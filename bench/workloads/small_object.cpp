@@ -18,6 +18,7 @@ struct Particle {
     int id;
     char type;
 };
+H5CPP_REGISTER_STRUCT(Particle);
 
 int main() {
     // Single double
