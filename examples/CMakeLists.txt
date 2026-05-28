@@ -1,5 +1,5 @@
 #  _________________________________________________________
-#  Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+#  Copyright (c) 2018-2026 Steven Varga, Toronto,ON Canada
 #  Author: Varga, Steven <steven@vargaconsulting.ca>
 #  _________________________________________________________
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
@@ -9,6 +9,21 @@ project(h5cpp-examples VERSION 1.10.4.5 LANGUAGES CXX C)
 
 # check if the correct version of hdf5 available
 set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+
+# Mirror the top-level CMakeLists' HDF5 search-path policy: pick up custom
+# HDF Group installs at /usr/local/HDF_Group/HDF5/<version>/ before system
+# paths. Needed when the examples sub-project is configured standalone — if
+# we relied solely on the parent setting HDF5_ROOT, a standalone configure
+# would silently fall through to /usr/local/lib/libhdf5.so. When examples is
+# added via add_subdirectory() the parent's HDF5_ROOT is already in scope
+# and the union (custom + /usr/local + /usr) reaches find_package correctly.
+if(UNIX AND NOT DEFINED HDF5_ROOT)
+	file(GLOB _hdf5_custom_roots LIST_DIRECTORIES true
+		"/usr/local/HDF_Group/HDF5/[0-9]*")
+	list(SORT _hdf5_custom_roots ORDER DESCENDING)
+	set(HDF5_ROOT ${_hdf5_custom_roots} "/usr/local" "/usr")
+endif()
+
 find_package(HDF5 REQUIRED COMPONENTS C)
 
 if(HDF5_VERSION VERSION_LESS ${H5CPP_VERSION})
@@ -16,10 +31,6 @@ if(HDF5_VERSION VERSION_LESS ${H5CPP_VERSION})
 else()
 	message("-- H5CPP ${PROJECT_VERSION} matches with minimum required HDF5 v${HDF5_VERSION}")
 endif()
-if(HDF5_VERSION VERSION_GREATER 1.12.0)
-	message("H5CPP KITA support is available, see webpage for details...")
-endif()
-
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
@@ -40,11 +51,7 @@ list(APPEND CMAKE_INCLUDE_PATH "/usr/include")
 list(APPEND CMAKE_INCLUDE_PATH "/usr/local/include" )
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
-find_program(H5CPP 
-	NAME h5cpp
-	HINTS /usr/bin /usr/local/bin
-	DOC "path to h5cpp source code transformation tool")
-
+find_program(H5CPP NAME h5cpp HINTS /usr/bin /usr/local/bin DOC "path to h5cpp source code transformation tool")
 if( H5CPP )
 	message("-- H5CPP compiler found: ${H5CPP}" )
 	set(H5CPP_COMPILER_FOUND TRUE)
@@ -89,71 +96,124 @@ endif()
 
 list(APPEND LIBS ${HDF5_C_LIBRARIES} ZLIB::ZLIB libh5cpp-libdeflate)
 list(APPEND INCLUDE_DIRS ${CMAKE_SOURCE_DIR} ${HDF5_INCLUDE_DIRS}  ${ZLIB_INCLUDE_DIRS})
-
 include_directories(BEFORE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/.. ${HDF5_C_INCLUDE_DIRS})
-
-if( H5CPP_COMPILER_FOUND )
-	add_custom_target(h5cpp-compiler-generated ALL
-		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/attributes/attributes.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/attributes/generated.h
-		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/compound/struct.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/compound/generated.h
-		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-01.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-01.h
-		COMMAND	${H5CPP}  ${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-02.cpp -- ${CMAKE_CXXFLAGS} -D${CMAKE_CURRENT_SOURCE_DIR}/multi-tu/tu-02.h
-		COMMENT "-- generating hdf5 compound type descriptors with h5cpp compiler ...")
-	get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
-	add_custom_target(h5cpp-compiler-generated-eigen ALL
-		${H5CPP} ${CMAKE_CURRENT_SOURCE_DIR}/packet-table/packettable.cpp -- 
-		${CMAKE_CXXFLAGS}  -I${EIGEN3_INCLUDE_DIR} -D${CMAKE_CURRENT_SOURCE_DIR}/packet-table/generated.h
-	COMMENT "-- generating hdf5 compound type descriptors with h5cpp compiler ...")
-	add_custom_target(examples ALL DEPENDS h5cpp-compiler-generated h5cpp-compiler-generated-eigen )
-else()
-	add_custom_target(examples ALL)
+if(NOT H5CPP_COMPILER_FOUND)
 	message("-- H5CPP compiler NOT found: using `generated.h` already present...")
 endif()
 
+# ------------------------------------------------------------------------------
+# Centralised helper for example executables
+# ------------------------------------------------------------------------------
+## usage:
+##   add_h5cpp_example(<target-suffix> <source-path>
+##       [GENERATED <header-path>]
+##       [LIBRARIES <lib>...]
+##       [COMPILER_INCLUDES <dir>...]
+##       [COMPILER_FLAGS <flag>...]
+##       [COMPILE_DEFINITIONS <def>...]
+##       [INCLUDE_DIRECTORIES <dir>...]
+##   )
+function(add_h5cpp_example target_suffix source_path)
+	set(options)
+	set(one_value_args GENERATED)
+	set(multi_value_args LIBRARIES COMPILER_INCLUDES COMPILER_FLAGS COMPILER_SOURCES COMPILE_DEFINITIONS INCLUDE_DIRECTORIES)
+	cmake_parse_arguments(ARG "${options}" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+	set(target_name examples-${target_suffix})
+	set(source_file ${CMAKE_CURRENT_SOURCE_DIR}/${source_path})
+
+	# Ensure aggregate target exists (first call creates it)
+	if(NOT TARGET examples)
+		add_custom_target(examples ALL)
+	endif()
+
+	# ---- generated header handling ----
+	if(ARG_GENERATED)
+		set(generated_file ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_GENERATED})
+		if(H5CPP_COMPILER_FOUND)
+			set(h5cpp_args "-o" "${generated_file}")
+			foreach(inc IN LISTS ARG_COMPILER_INCLUDES)
+				list(APPEND h5cpp_args "--extra-arg=-I${inc}")
+			endforeach()
+			foreach(flag IN LISTS ARG_COMPILER_FLAGS)
+				list(APPEND h5cpp_args "--extra-arg=${flag}")
+			endforeach()
+
+			set(compiler_inputs ${source_file})
+			foreach(src IN LISTS ARG_COMPILER_SOURCES)
+				list(APPEND compiler_inputs ${CMAKE_CURRENT_SOURCE_DIR}/${src})
+			endforeach()
+
+			get_filename_component(generated_name ${ARG_GENERATED} NAME_WE)
+			set(generated_target ${target_name}-generated-${generated_name})
+
+			add_custom_command(
+				OUTPUT  ${generated_file}
+				COMMAND ${H5CPP} ${h5cpp_args} ${compiler_inputs}
+				DEPENDS ${compiler_inputs}
+				COMMENT "Generating ${ARG_GENERATED} for ${target_name}"
+				VERBATIM
+			)
+			add_custom_target(${generated_target} DEPENDS ${generated_file})
+			set(generated_dep ${generated_target})
+		else()
+			message(STATUS "H5CPP compiler not found: assuming ${generated_file} is present")
+		endif()
+	endif()
+
+	# ---- executable ----
+	add_executable(${target_name} EXCLUDE_FROM_ALL ${source_file})
+	target_link_libraries(${target_name} PRIVATE ${LIBS} ${ARG_LIBRARIES})
+	target_compile_options(${target_name} PRIVATE "-w")
+	# Drop the `examples/` path prefix from the binary's output location so the
+	# executables land in the top-level build directory: <build>/examples-<name>
+	# instead of <build>/examples/examples-<name>. Run as `./examples-<name>`.
+	set_target_properties(${target_name} PROPERTIES
+		RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+	if(ARG_COMPILE_DEFINITIONS)
+		target_compile_definitions(${target_name} PUBLIC ${ARG_COMPILE_DEFINITIONS})
+	endif()
+	if(ARG_INCLUDE_DIRECTORIES)
+		target_include_directories(${target_name} PUBLIC ${ARG_INCLUDE_DIRECTORIES})
+	endif()
+
+	if(generated_dep)
+		add_dependencies(${target_name} ${generated_dep})
+	endif()
+	add_dependencies(examples ${target_name})
+endfunction()
+
+# ------------------------------------------------------------------------------
+# Linalg examples
+# ------------------------------------------------------------------------------
 message( "-- Vendored: dlib library, added to examples" )
-add_executable(examples-dlib EXCLUDE_FROM_ALL "linalg/dlib.cpp")
-target_compile_options(examples-dlib PRIVATE "-w")
-target_link_libraries(examples-dlib ${LIBS} libdlib)
-add_dependencies(examples examples-dlib)
+add_h5cpp_example(dlib linalg/dlib.cpp LIBRARIES libdlib)
 
 message( "-- Vendored: eigen3 added to examples" )
-add_executable(examples-eigen3 EXCLUDE_FROM_ALL "linalg/eigen3.cpp")
-target_link_libraries(examples-eigen3 ${LIBS} Eigen3::Eigen)
-add_dependencies(examples examples-eigen3)
+add_h5cpp_example(eigen3 linalg/eigen3.cpp LIBRARIES Eigen3::Eigen)
 
 message( "-- Vendored: armadillo added to examples" )
-add_executable(examples-arma EXCLUDE_FROM_ALL "linalg/arma.cpp")
-target_link_libraries(examples-arma ${LIBS} libarmadillo)
-add_dependencies(examples examples-arma)
+add_h5cpp_example(arma linalg/arma.cpp LIBRARIES libarmadillo)
 
 message( "-- Vendored: blaze added to examples" )
-add_executable(examples-blaze EXCLUDE_FROM_ALL "linalg/blaze.cpp")
-target_link_libraries(examples-blaze ${LIBS} libblaze)
-add_dependencies(examples examples-blaze)
+add_h5cpp_example(blaze linalg/blaze.cpp LIBRARIES libblaze)
 
 # NOTE: itpp example disabled — upstream ITPP v4.3.1 is not C++17 compatible
 # (uses removed 'register' keyword). Fails with GCC 14. Not an h5cpp bug.
 # message( "-- Vendored: itpp added to examples" )
-# add_executable(examples-itpp EXCLUDE_FROM_ALL "linalg/itpp.cpp")
-# target_link_libraries(examples-itpp ${LIBS} libitpp)
-# add_dependencies(examples examples-itpp)
+# add_h5cpp_example(itpp linalg/itpp.cpp LIBRARIES libitpp)
 
 message( "-- Vendored: blitz added to examples" )
-add_executable(examples-blitz EXCLUDE_FROM_ALL "linalg/blitz.cpp")
-target_link_libraries(examples-blitz ${LIBS} libblitz)
-add_dependencies(examples examples-blitz)
+add_h5cpp_example(blitz linalg/blitz.cpp LIBRARIES libblitz)
 
 message( "-- Vendored: xtensor added to examples" )
-add_executable(examples-xtensor EXCLUDE_FROM_ALL "linalg/xtensor.cpp")
-target_link_libraries(examples-xtensor ${LIBS} libxtensor)
-add_dependencies(examples examples-xtensor)
+add_h5cpp_example(xtensor linalg/xtensor.cpp LIBRARIES libxtensor)
 
 find_package(BLAS)
 if(BLAS_FOUND AND XFLENS_FOUND)
     message( "-- Vendored: xtensor-blas added to examples" )
-    add_executable(examples-xtensor-blas EXCLUDE_FROM_ALL "linalg/xtensor-blas.cpp")
-    target_link_libraries(examples-xtensor-blas ${LIBS} libxtensor-blas ${BLAS_LIBRARIES})
-    add_dependencies(examples examples-xtensor-blas)
+    add_h5cpp_example(xtensor-blas linalg/xtensor-blas.cpp LIBRARIES libxtensor-blas ${BLAS_LIBRARIES})
 else()
     if(BLAS_FOUND)
         message("-- xflens not found — xtensor-blas example disabled")
@@ -166,170 +226,257 @@ endif()
 find_path(H5CPP_BOOST_CONFIG_INCLUDE_EX NAMES boost/config.hpp)
 if(H5CPP_BOOST_CONFIG_INCLUDE_EX)
     message( "-- Vendored: ublas added to examples" )
-    add_executable(examples-ublas EXCLUDE_FROM_ALL "linalg/ublas.cpp")
-    target_link_libraries(examples-ublas ${LIBS} libublas)
-    add_dependencies(examples examples-ublas)
+    # examples/attributes/attributes.cpp uses the boost/* layout
+    # (#include <boost/numeric/ublas/matrix.hpp>); the vendored libublas only
+    # exposes the numeric/* layout, so propagate the system/vcpkg Boost include
+    # dir through libublas for any target that links it.
+    target_include_directories(libublas INTERFACE ${H5CPP_BOOST_CONFIG_INCLUDE_EX})
+    add_h5cpp_example(ublas linalg/ublas.cpp LIBRARIES libublas)
 else()
     message("-- Boost config headers not found — ublas example disabled")
 endif()
 
+# ------------------------------------------------------------------------------
+# Sparse linalg examples (CSC group layout, scipy/Julia interop)
+# ------------------------------------------------------------------------------
+if(${ARMADILLO_FOUND})
+    add_h5cpp_example(sparse-arma sparse/arma.cpp LIBRARIES libarmadillo)
+endif()
+add_h5cpp_example(sparse-eigen sparse/eigen.cpp LIBRARIES Eigen3::Eigen)
+
+# ------------------------------------------------------------------------------
+# MPI examples
+# ------------------------------------------------------------------------------
+# Two tiers:
+#   * Parallel HDF5 (collective / independent / throughput) — need HDF5 built
+#     with --enable-parallel.  Gated on HDF5_IS_PARALLEL.
+#   * MPI + serial HDF5 (file_per_rank) — needs only MPI; runs on any HDF5
+#     build, no parallel filesystem required.
 include(FindMPI)
-if( MPI_FOUND AND HDF5_IS_PARALLEL )
+
+if( MPI_FOUND )
 	find_program(SLURM_SBATCH_COMMAND sbatch DOC "Path to the SLURM sbatch executable")
 	find_program(SLURM_SRUN_COMMAND srun DOC "Path to the SLURM srun executable")
 	find_program(SLURM_SACCTMGR_COMMAND sacctmgr DOC "Path to the SLURM sacctmgr executable")
-
-	message("-- MPI and PHDF5 found: Parallel H5CPP enabled")
-	message("-- using ${MPI_CXX_COMPILER} ${MPIEXEC_EXECUTABLE}")
 	if(SLURM_SRUN_COMMAND AND SLURM_SBATCH_COMMAND)
 		set(SLURM_FOUND true)
 	endif()
+
+	message("-- MPI found: ${MPI_CXX_COMPILER} (mpiexec: ${MPIEXEC_EXECUTABLE})")
 	if( SLURM_FOUND )
-		message("-- SLURM found, scheduling with ${SLURM_SBATCH_COMMAND} ${SLURM_SRUN_COMMAND}")
-	elseif()
-		message("-- SLURM NOT FOUND schedule the test with mpiexec -n proc_num ...")
+		message("-- SLURM found: schedule with ${SLURM_SBATCH_COMMAND} / ${SLURM_SRUN_COMMAND}")
+	else()
+		message("-- SLURM not found: run with mpirun -n <N> ./examples-mpi-<name>")
 	endif()
-	## mpi-collective ###
-	add_executable(examples-mpi-collective EXCLUDE_FROM_ALL "mpi/collective.cpp")
-	target_link_libraries(examples-mpi-collective ${LIBS} ${MPI_CXX_LIBRARIES} )
-	target_compile_definitions(examples-mpi-collective PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
-	target_include_directories(examples-mpi-collective PUBLIC ${MPI_CXX_INCLUDE_DIRS})
-	add_dependencies(examples examples-mpi-collective)
 
-	## mpi-independent ###
-	add_executable(examples-mpi-independent EXCLUDE_FROM_ALL "mpi/independent.cpp")
-	target_link_libraries(examples-mpi-independent ${LIBS} ${MPI_CXX_LIBRARIES} )
-	target_compile_definitions(examples-mpi-independent PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
-	target_include_directories(examples-mpi-independent PUBLIC ${MPI_CXX_INCLUDE_DIRS})
-	add_dependencies(examples examples-mpi-independent)
+	# ── Tier 1: MPI + serial HDF5 — builds on any HDF5 install ───────────
+	add_h5cpp_example(mpi-file-per-rank mpi/file_per_rank.cpp
+		LIBRARIES ${MPI_CXX_LIBRARIES}
+		COMPILE_DEFINITIONS ${MPI_CXX_COMPILE_DEFINITIONS}
+		INCLUDE_DIRECTORIES ${MPI_CXX_INCLUDE_DIRS})
 
-	## mpi throughput
-	add_executable(examples-mpi-throughput EXCLUDE_FROM_ALL "mpi/throughput.cpp")
-	target_link_libraries(examples-mpi-throughput ${LIBS} ${MPI_CXX_LIBRARIES} )
-	target_compile_definitions(examples-mpi-throughput PUBLIC ${MPI_CXX_COMPILE_DEFINITIONS})
-	target_include_directories(examples-mpi-throughput PUBLIC ${MPI_CXX_INCLUDE_DIRS})
-	add_dependencies(examples examples-mpi-throughput)
+	# ── Tier 2: parallel HDF5 — requires --enable-parallel build ─────────
+	if( HDF5_IS_PARALLEL )
+		message("-- Parallel HDF5 found: collective / independent / throughput enabled")
+		add_h5cpp_example(mpi-collective mpi/collective.cpp
+			LIBRARIES ${MPI_CXX_LIBRARIES}
+			COMPILE_DEFINITIONS ${MPI_CXX_COMPILE_DEFINITIONS}
+			INCLUDE_DIRECTORIES ${MPI_CXX_INCLUDE_DIRS})
 
+		add_h5cpp_example(mpi-independent mpi/independent.cpp
+			LIBRARIES ${MPI_CXX_LIBRARIES}
+			COMPILE_DEFINITIONS ${MPI_CXX_COMPILE_DEFINITIONS}
+			INCLUDE_DIRECTORIES ${MPI_CXX_INCLUDE_DIRS})
 
+		add_h5cpp_example(mpi-throughput mpi/throughput.cpp
+			LIBRARIES ${MPI_CXX_LIBRARIES}
+			COMPILE_DEFINITIONS ${MPI_CXX_COMPILE_DEFINITIONS}
+			INCLUDE_DIRECTORIES ${MPI_CXX_INCLUDE_DIRS})
+	else()
+		message("-- Parallel HDF5 NOT found (HDF5 built without --enable-parallel):")
+		message("--   skipping mpi-collective / mpi-independent / mpi-throughput")
+		message("--   mpi-file-per-rank still builds — it uses serial HDF5 per rank")
+	endif()
+else()
+	message("-- MPI not found: skipping all mpi/* examples")
 endif()
 
+# ------------------------------------------------------------------------------
+# Core examples
+# ------------------------------------------------------------------------------
 if( ${ARMADILLO_FOUND} )
 ## attributes ###
-add_executable(examples-attributes EXCLUDE_FROM_ALL "attributes/attributes.cpp")
-target_link_libraries(examples-attributes ${LIBS} libarmadillo)
-add_dependencies(examples examples-attributes)
+# Pick up include directories for each vendored linalg target so the h5cpp-compiler
+# preprocessor pass can resolve the library headers (it parses attributes.cpp without
+# the regular CMake target propagation).
+get_target_property(H5CPP_EX_EIGEN3_INC    Eigen3::Eigen   INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(H5CPP_EX_BLAZE_INC     libblaze        INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(H5CPP_EX_BLITZ_INC     libblitz        INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(H5CPP_EX_DLIB_INC      libdlib         INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(H5CPP_EX_UBLAS_INC     libublas        INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(H5CPP_EX_XTENSOR_INC   libxtensor      INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(H5CPP_EX_XTL_INC       xtl::xtl        INTERFACE_INCLUDE_DIRECTORIES)
+add_h5cpp_example(attributes attributes/attributes.cpp
+	# generated.h is committed alongside struct.h — no GENERATED line. The
+	# h5cpp-compiler tool segfaults on a few of the canonical-mapping types
+	# this example exercises (std::complex / std::array<char,N> appearing in
+	# the same TU); the existing generated.h covers the sn::example::record_t
+	# registration which is the only compiler-emitted body the example needs.
+	LIBRARIES libarmadillo Eigen3::Eigen libblaze libblitz libdlib libublas libxtensor xtl::xtl
+	COMPILER_INCLUDES
+		${H5CPP_EX_EIGEN3_INC}
+		${H5CPP_EX_BLAZE_INC}
+		${H5CPP_EX_BLITZ_INC}
+		${H5CPP_EX_DLIB_INC}
+		${H5CPP_EX_UBLAS_INC}
+		${H5CPP_EX_XTENSOR_INC}
+		${H5CPP_EX_XTL_INC})
 endif()
 
 ## basics ###
-add_executable(examples-basics EXCLUDE_FROM_ALL "basics/basics.cpp")
-target_link_libraries(examples-basics ${LIBS} )
-add_dependencies(examples examples-basics)
+add_h5cpp_example(basics basics/basics.cpp)
+
+## container ###
+add_h5cpp_example(container container/container.cpp)
+
+## detected — header-only custom containers picked up by detection idiom ###
+add_h5cpp_example(detected container/detected.cpp)
+
+## custom-pipeline — write/read pipeline opt-in surfaces ###
+# Three sections: default basic_pipeline_t, h5::high_throughput DAPL flag,
+# and h5::threads{N} + h5::backpressure{M} pool_pipeline_t (Phase 1.3.3).
+add_h5cpp_example(custom-pipeline custom-pipeline/pipeline.cpp
+	LIBRARIES Threads::Threads)
+
+## pprint ###
+# Stream-inserter demonstration for the operator<< overloads in H5Uall.hpp.
+# Covers iterable containers, stack/queue/priority_queue adaptors, pairs,
+# tuples, and deeply-nested compositions. No HDF5 file is opened.
+add_h5cpp_example(pprint pprint/pprint.cpp)
 
 if( ${ARMADILLO_FOUND} )
 ## compound ###
-add_executable(examples-compound EXCLUDE_FROM_ALL "compound/struct.cpp")
-target_link_libraries(examples-compound ${LIBS} libarmadillo)
-add_dependencies(examples examples-compound)
+add_h5cpp_example(compound compound/compound.cpp
+	GENERATED compound/generated.h
+	COMPILER_SOURCES compound/non-pod.h
+	LIBRARIES libarmadillo)
 endif()
 
+## reflection ###
+# Showcases the full power of h5cpp compile-time reflection in one TU:
+# tier-1 POD (H5CPP_REGISTER_STRUCT) + tier-2 VLEN (scatter/gather), with
+# every supported annotation exercised.  No linalg dependency.
+add_h5cpp_example(reflection reflection/reflection.cpp
+	GENERATED reflection/generated.h
+	COMPILER_SOURCES reflection/types.h)
+
 ## csv ###
-add_executable(examples-csv EXCLUDE_FROM_ALL "csv/csv2hdf5.cpp")
-target_link_libraries(examples-csv ${LIBS} Threads::Threads h5cpp::csv)
-add_dependencies(examples examples-csv)
+add_h5cpp_example(csv csv/csv2hdf5.cpp
+	GENERATED csv/generated.h
+	LIBRARIES Threads::Threads h5cpp::csv)
 if(MSVC)
     target_compile_definitions(examples-csv PRIVATE _CRT_SECURE_NO_WARNINGS)
 endif()
+# csv2hdf5 opens "input.csv" from the current working directory. The binary
+# lands in CMAKE_BINARY_DIR (RUNTIME_OUTPUT_DIRECTORY), but the data file is in
+# the source tree — stage it next to the binary so `./examples-csv` works.
+add_custom_command(TARGET examples-csv POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different
+		${CMAKE_CURRENT_SOURCE_DIR}/csv/input.csv
+		${CMAKE_BINARY_DIR}/input.csv
+	COMMENT "Staging csv/input.csv next to examples-csv binary")
 
-if( ${ARMADILLO_FOUND} )
 ## datasets ###
-add_executable(examples-datasets EXCLUDE_FROM_ALL "datasets/datasets.cpp")
-target_link_libraries(examples-datasets ${LIBS} libarmadillo)
-add_dependencies(examples examples-datasets)
-endif()
+# Pure-STL tutorial of the dataset surface. No linalg dependency.
+# Bumped to C++23 so the std::mdspan section can compile against <mdspan>;
+# the mdspan path is feature-gated on __cpp_lib_mdspan in the source.
+add_h5cpp_example(datasets datasets/datasets.cpp)
+target_compile_features(examples-datasets PRIVATE cxx_std_23)
 
-## datatypes nbit ###
-add_executable(examples-nbit EXCLUDE_FROM_ALL "datatypes/n-bit.cpp")
-target_link_libraries(examples-nbit ${LIBS} libarmadillo Eigen3::Eigen)
-add_dependencies(examples examples-nbit)
+## datatypes ###
+# Custom datatype tutorial: six sections covering strong typedef, N-bit packed
+# integer, opaque bytes, naming/introspection, std::float16_t (C++23-gated),
+# and H5T_ENUM. All four user-defined types live in custom_types.hpp.
+# Bumped to C++23 so the std::float16_t section can compile against <stdfloat>;
+# the half-float path is feature-gated on __STDCPP_FLOAT16_T__ in the source.
+add_h5cpp_example(datatypes datatypes/datatypes.cpp)
+target_compile_features(examples-datatypes PRIVATE cxx_std_23)
 
-## datatypes twobit ###
-add_executable(examples-twobit EXCLUDE_FROM_ALL "datatypes/two-bit.cpp")
-target_link_libraries(examples-twobit ${LIBS} )
-add_dependencies(examples examples-twobit)
+## half-float — third-party variants of the std::float16_t pattern ###
+# Two backends, same h5cpp dt_t<T> specialization technique. Both vendor
+# libraries are shipped under thirdparty/ and exposed as CMake targets.
+# For the C++23-native std::float16_t path see examples/datatypes section 5.
+add_h5cpp_example(half-float-rau     half-float/christian-rau/half-float.cpp
+    LIBRARIES h5cpp::half)
+add_h5cpp_example(half-float-openexr half-float/open-exr/half-float.cpp
+    LIBRARIES h5cpp::imath)
 
 ## multi translation unit ###
-#add_library(examples-multi-tu01 OBJECT "multi-tu/tu_01.cpp")
-#add_library(examples-multi-tu02 OBJECT "multi-tu/tu_02.cpp")
-
-#add_executable(examples-multi-tu EXCLUDE_FROM_ALL "multi-tu/main.cpp")
-#target_link_libraries(examples-multi-tu  examples-multi-tu01 examples-multi-tu02 ${LIBS}   )
-#add_dependencies(examples examples-multi-tu)
+# Demonstrates that the H5CPP_REGISTER_STRUCT bodies in `multi-tu/generated.h`
+# survive being included by two TUs (the headers themselves are #pragma once,
+# the macro expansions are `inline`). Requires Armadillo because tu-01 mixes a
+# linalg write into the same TU as the compound `h5::create` calls.
+if( ${ARMADILLO_FOUND} )
+    add_executable(examples-multi-tu EXCLUDE_FROM_ALL
+        "multi-tu/main.cpp" "multi-tu/tu-01.cpp" "multi-tu/tu-02.cpp")
+    target_link_libraries(examples-multi-tu PRIVATE ${LIBS} libarmadillo)
+    target_compile_options(examples-multi-tu PRIVATE "-w")
+    set_target_properties(examples-multi-tu PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+    add_dependencies(examples examples-multi-tu)
+endif()
 
 if( ${ARMADILLO_FOUND} )
 ## optimized ###
-add_executable(examples-optimized EXCLUDE_FROM_ALL "optimized/optimized.cpp")
-target_link_libraries(examples-optimized ${LIBS} libarmadillo)
-add_dependencies(examples examples-optimized)
+add_h5cpp_example(optimized optimized/optimized.cpp
+	LIBRARIES libarmadillo)
 endif()
 
 if( ${Eigen3_FOUND} AND ${ARMADILLO_FOUND} )
 	## packet-table ###
-	add_executable(examples-packet-table EXCLUDE_FROM_ALL "packet-table/packettable.cpp")
-	target_link_libraries(examples-packet-table ${LIBS} libarmadillo Eigen3::Eigen)
-	add_dependencies(examples examples-packet-table)
+	# generated.h is checked-in alongside struct.h — no GENERATED line, no
+	# h5cpp-compiler invocation at build time.  Update by hand or by running
+	# the h5cpp compiler manually if struct.h changes.
+	add_h5cpp_example(packet-table packet-table/packettable.cpp
+		LIBRARIES libarmadillo Eigen3::Eigen)
+	add_h5cpp_example(packet-batches packet-table/packet_batches.cpp
+		LIBRARIES libarmadillo)
 endif()
 
-## raw memory ###
-add_executable(examples-raw EXCLUDE_FROM_ALL "raw_memory/raw.cpp")
-target_link_libraries(examples-raw ${LIBS} )
-add_dependencies(examples examples-raw)
-
-## valarray ###
-add_executable(examples-valarray EXCLUDE_FROM_ALL "linalg/valarray.cpp")
-target_link_libraries(examples-valarray ${LIBS} )
-add_dependencies(examples examples-valarray)
-
+add_h5cpp_example(raw raw_memory/raw.cpp)
+## smart-ptr ###
+# Demonstrates the std::unique_ptr<T[]>, std::shared_ptr<T[]>, std::unique_ptr<T>,
+# std::shared_ptr<T> integration added in h5cpp/H5Mmemory.hpp + H5Mmemory_io.hpp.
+add_h5cpp_example(smart-ptr smart-ptr/smart_ptr.cpp)
+add_h5cpp_example(valarray linalg/valarray.cpp)
 ## stl ###
-add_executable(examples-stl EXCLUDE_FROM_ALL "stl/vector.cpp")
-target_link_libraries(examples-stl ${LIBS} )
-add_dependencies(examples examples-stl)
-
-## string ###
-add_executable(examples-string EXCLUDE_FROM_ALL "string/string.cpp")
-target_link_libraries(examples-string ${LIBS} )
-add_dependencies(examples examples-string)
-
+# Full showdown of STL types supported by the dispatch matrix. Each family
+# is its own binary so the failure surface stays narrow on bisection.
+# See examples/stl/README.md for the type matrix.
+add_h5cpp_example(stl-sequences    stl/sequences.cpp)
+add_h5cpp_example(stl-sets         stl/sets.cpp)
+add_h5cpp_example(stl-maps         stl/maps.cpp)
+add_h5cpp_example(stl-strings      stl/strings.cpp)
+add_h5cpp_example(stl-tuples-pairs stl/tuples_pairs.cpp)
+add_h5cpp_example(stl-nested       stl/nested.cpp)
+# generated.h is committed alongside struct.h — no GENERATED line.
+add_h5cpp_example(stl-compound     stl/compound.cpp)
+add_h5cpp_example(string string/string.cpp)
 if( ${ARMADILLO_FOUND} )
-## transform ###
-add_executable(examples-transform EXCLUDE_FROM_ALL "transform/transform.cpp")
-target_link_libraries(examples-transform ${LIBS} libarmadillo)
-add_dependencies(examples examples-transform)
-endif()
+	add_h5cpp_example(transform transform/transform.cpp
+		LIBRARIES libarmadillo)
+	endif()
+	add_h5cpp_example(groups groups/groups.cpp)
+add_h5cpp_example(reference reference/reference.cpp LIBRARIES libarmadillo)
 
-## groups ###
-add_executable(examples-groups EXCLUDE_FROM_ALL "groups/groups.cpp")
-target_link_libraries(examples-groups ${LIBS} )
-add_dependencies(examples examples-groups)
-
-## reference ###
-add_executable(examples-reference EXCLUDE_FROM_ALL "reference/reference.cpp")
-target_link_libraries(examples-reference ${LIBS} libarmadillo)
-add_dependencies(examples examples-reference)
-
-## kita ###
-find_library(RESTVOL_LIBRARY NAMES restvol h5restvol DOC "REST VOL library" PATHS /usr/local/lib /usr/lib)
-if( RESTVOL_LIBRARY )
-	message("-- Found REST VOL library: ${RESTVOL_LIBRARY}")
-	add_executable(examples-kita EXCLUDE_FROM_ALL "kita/kita.cpp")
-	target_link_libraries(examples-kita ${LIBS} ${RESTVOL_LIBRARY} )
-	add_dependencies(examples examples-kita)
-else()
-	message("-- REST VOL library NOT found: kita example disabled")
-endif()
 ## utf ###
-add_executable(examples-utf EXCLUDE_FROM_ALL "utf/utf.cpp")
-target_link_libraries(examples-utf ${LIBS} libarmadillo)
-add_dependencies(examples examples-utf)
+add_h5cpp_example(utf utf/utf.cpp LIBRARIES libarmadillo)
 
-## s3 / ROS3 VFD ###
+## cout — operator<< pretty-printers from H5cout.hpp / H5Uall.hpp
+add_h5cpp_example(cout cout/cout.cpp)
+
+## mdspan — std::mdspan round-trip (C++23; inert on libstdc++ < 15)
+add_h5cpp_example(mdspan mdspan/mdspan.cpp)
+target_compile_features(examples-mdspan PRIVATE cxx_std_23)
+
 add_subdirectory(s3)

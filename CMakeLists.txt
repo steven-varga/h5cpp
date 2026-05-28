@@ -81,27 +81,34 @@ find_package(Threads REQUIRED QUIET)
 find_package(Python3 COMPONENTS Interpreter QUIET)
 
 # match hdf5 versioning x.x.x.h5cpp-version
-set(H5CPP_VERSION
-    ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}
-)
-
+set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 if(WIN32)
     if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         set(CMAKE_INSTALL_PREFIX "C:/h5cpp" CACHE PATH "default install path" FORCE)
     endif()
 elseif(UNIX)
-    set(HDF5_ROOT "/usr/local" "/usr")
+    # Pick up custom HDF Group installs at /usr/local/HDF_Group/HDF5/<version>/
+    # before falling back to system paths.  Versioned directories are sorted
+    # in descending order so the newest custom install wins over older ones
+    # and over /usr/local. Honour a pre-set HDF5_ROOT (via -D or $ENV{...},
+    # e.g. CI source-build at /home/runner/work/_temp/hdf5-X.Y.Z-install)
+    # without overwriting it.
+    if(NOT DEFINED HDF5_ROOT AND DEFINED ENV{HDF5_ROOT})
+        set(HDF5_ROOT "$ENV{HDF5_ROOT}")
+    endif()
+    if(NOT DEFINED HDF5_ROOT)
+        file(GLOB _hdf5_custom_roots LIST_DIRECTORIES true "/usr/local/HDF_Group/HDF5/[0-9]*")
+        list(SORT _hdf5_custom_roots ORDER DESCENDING)
+        set(HDF5_ROOT ${_hdf5_custom_roots} "/usr/local" "/usr")
+    endif()
     find_package(PkgConfig REQUIRED QUIET)
 endif()
-
 if(APPLE)
     message(STATUS "H5CPP macOS support: CI runs on macos-13 with Homebrew HDF5 and LLVM clang-17/18")
 endif()
-
 if(ANDROID)
     message(STATUS "***WARNING: h5cpp is not fully tested on android ***")
 endif()
-
 find_package(Threads REQUIRED QUIET)
 
 # ─── HDF5 ─────────────────────────────────────────────────────────────────────────
@@ -128,10 +135,6 @@ else()
     message(STATUS
         "H5CPP ${PROJECT_VERSION} matches with minimum required HDF5 v${HDF5_VERSION}"
     )
-endif()
-
-if(HDF5_VERSION VERSION_GREATER 1.12.0)
-    message(STATUS "H5CPP KITA support is available, see webpage for details...")
 endif()
 
 # ─── ROS3 VFD detection ───────────────────────────────────────────────────────────
@@ -165,21 +168,11 @@ endif()
 
 # ─── Include Directories & Libraries ──────────────────────────────────────────────
 find_package(ZLIB REQUIRED)
-
-list(APPEND H5CPP_INCLUDE_DIRS
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${HDF5_INCLUDE_DIRS}
-)
-
-list(APPEND H5CPP_LIBS
-    Threads::Threads
-    ${HDF5_LIBRARIES}
-    ZLIB::ZLIB
-)
+list(APPEND H5CPP_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${HDF5_INCLUDE_DIRS})
+list(APPEND H5CPP_LIBS Threads::Threads ${HDF5_LIBRARIES} ZLIB::ZLIB)
 
 # ─── Thirdparty ───────────────────────────────────────────────────────────────────
 add_subdirectory(thirdparty EXCLUDE_FROM_ALL)
-
 if(H5CPP_LIBDEFLATE_FOUND)
     message(STATUS "H5CPP libdeflate support: vendored ${H5CPP_LIBDEFLATE_INCLUDE_DIR}")
 elseif(H5CPP_USE_LIBDEFLATE)
@@ -222,11 +215,7 @@ endif()
 # ─── Header-only Library Target ───────────────────────────────────────────────────
 add_library(h5cpp INTERFACE)
 add_library(h5cpp::h5cpp ALIAS h5cpp)
-
-target_include_directories(h5cpp INTERFACE
-    $<BUILD_INTERFACE:${H5CPP_INCLUDE_DIRS}>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
+target_include_directories(h5cpp INTERFACE  $<BUILD_INTERFACE:${H5CPP_INCLUDE_DIRS}> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 target_link_libraries(h5cpp INTERFACE ${H5CPP_LIBS})
 target_compile_features(h5cpp INTERFACE cxx_std_20)
@@ -293,11 +282,8 @@ message(STATUS "Install directory: ${INSTALL_DIR_INCLUDE}")
 set(H5CPP_AMALGAMATED_HEADER ${CMAKE_BINARY_DIR}/h5cpp.hpp)
 add_custom_command(
     OUTPUT ${H5CPP_AMALGAMATED_HEADER}
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/amalgamate.py
-            ${CMAKE_SOURCE_DIR}/h5cpp ${H5CPP_AMALGAMATED_HEADER}
-    DEPENDS ${CMAKE_SOURCE_DIR}/scripts/amalgamate.py
-            ${CMAKE_SOURCE_DIR}/h5cpp/core
-            ${CMAKE_SOURCE_DIR}/h5cpp/io
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/amalgamate.py ${CMAKE_SOURCE_DIR}/h5cpp ${H5CPP_AMALGAMATED_HEADER}
+    DEPENDS ${CMAKE_SOURCE_DIR}/scripts/amalgamate.py ${CMAKE_SOURCE_DIR}/h5cpp/core ${CMAKE_SOURCE_DIR}/h5cpp/io
     COMMENT "Amalgamating h5cpp headers into h5cpp.hpp"
 )
 add_custom_target(h5cpp-amalgamate ALL DEPENDS ${H5CPP_AMALGAMATED_HEADER})
@@ -309,21 +295,14 @@ install(TARGETS h5cpp EXPORT h5cpp-targets)
 
 if(H5CPP_LIBDEFLATE_FOUND)
     install(FILES "${H5CPP_LIBDEFLATE_INCLUDE_DIR}/libdeflate.h" DESTINATION "${INSTALL_DIR_INCLUDE}")
-    install(TARGETS libh5cpp-libdeflate libh5cpp-libdeflate-static
-        EXPORT h5cpp-targets
-        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+    install(TARGETS libh5cpp-libdeflate libh5cpp-libdeflate-static EXPORT h5cpp-targets ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 endif()
 
 if(H5CPP_ZSTD_FOUND)
-    install(TARGETS libh5cpp-zstd libh5cpp-zstd-static
-        EXPORT h5cpp-targets
-        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+    install(TARGETS libh5cpp-zstd libh5cpp-zstd-static EXPORT h5cpp-targets ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 endif()
-
 if(H5CPP_SZIP_FOUND)
-    install(TARGETS libh5cpp-szip libh5cpp-szip-static
-        EXPORT h5cpp-targets
-        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
+    install(TARGETS libh5cpp-szip libh5cpp-szip-static  EXPORT h5cpp-targets ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 endif()
 
 # Install examples
@@ -344,7 +323,6 @@ install(DIRECTORY examples/string       DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/transform    DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/utf          DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(FILES     examples/CMakeLists.txt DESTINATION "${INSTALL_DIR_EXAMPLES}")
-install(FILES     examples/Makefile       DESTINATION "${INSTALL_DIR_EXAMPLES}")
 
 # Package config
 include(CMakePackageConfigHelpers)
@@ -416,8 +394,7 @@ set(CPACK_PRODUCTBUILD_IDENTIFIER     "org.h5cpp.h5cpp")
 # aarch64 / darwin-arm64 / windows-amd64 produce distinct names when collected
 # into a single release upload directory.  Without this, multi-arch CI matrix
 # builds emit identical filenames and overwrite each other on the Release page.
-set(CPACK_PACKAGE_FILE_NAME
-    "${CPACK_PACKAGE_NAME}-v${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-v${PROJECT_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
 string(TOLOWER "${CPACK_PACKAGE_FILE_NAME}" CPACK_PACKAGE_FILE_NAME)
 
 include(CPack)
@@ -427,26 +404,23 @@ find_program(MKDOCS_EXECUTABLE mkdocs)
 find_program(DOXYGEN_EXECUTABLE doxygen)
 
 if(MKDOCS_EXECUTABLE)
-    add_custom_target(docs
-        COMMAND ${MKDOCS_EXECUTABLE} build
-                --config-file ${CMAKE_SOURCE_DIR}/mkdocs.yml
-                --site-dir ${CMAKE_BINARY_DIR}/site
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    add_custom_target(docs COMMAND ${MKDOCS_EXECUTABLE} build --config-file ${CMAKE_SOURCE_DIR}/mkdocs.yml --site-dir ${CMAKE_BINARY_DIR}/site
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} 
         COMMENT "Building MkDocs documentation → build/site"
         VERBATIM
     )
-    add_custom_target(docs-serve
-        COMMAND ${MKDOCS_EXECUTABLE} serve --livereload
-                --config-file ${CMAKE_SOURCE_DIR}/mkdocs.yml
+    set(MKDOCS_DEV_ADDR "127.0.0.1:8000" CACHE STRING "host:port for mkdocs serve (docs-serve target)")
+    add_custom_target(docs-serve COMMAND ${MKDOCS_EXECUTABLE} serve --livereload
+        --dev-addr ${MKDOCS_DEV_ADDR}
+        --config-file ${CMAKE_SOURCE_DIR}/mkdocs.yml
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Serving MkDocs with live reload (Ctrl-C to stop)"
+        COMMENT "Serving MkDocs with live reload at ${MKDOCS_DEV_ADDR} (Ctrl-C to stop)"
         VERBATIM
     )
 endif()
 
 if(DOXYGEN_EXECUTABLE)
-    add_custom_target(docs-doxygen
-        COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
+    add_custom_target(docs-doxygen COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/doxy
         COMMENT "Building Doxygen API reference → docs/doxygen/html"
         VERBATIM
