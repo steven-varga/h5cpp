@@ -7,9 +7,14 @@
       Use the groups below to navigate overload families."/>
     <tab type="pages"     visible="yes" title="Documents" intro="
       Architecture guides, type-system overview, linalg integration, and workflow notes."/>
-    <tab type="examples"  visible="yes" title="Examples" intro="
-      Ready-to-compile examples. Each subdirectory has a Makefile; refer to the
-      Introduction page for build prerequisites."/>
+    <!-- Examples tab hidden: the per-example READMEs (the "Cook book"
+         page tree under Documents/Related Pages) carry the narrative
+         and link out to the rendered example source pages directly.
+         The auto-generated *_8cpp-example.html pages still exist and
+         remain reachable from those links — only the top-level
+         "Examples" sidebar tab is suppressed to avoid the duplicate
+         landing path. -->
+    <tab type="examples"  visible="no" title=""/>
     <tab type="namespaces" visible="no" title="">
       <tab type="namespacelist"    visible="no" title="" intro=""/>
       <tab type="namespacemembers" visible="no" title="" intro=""/>

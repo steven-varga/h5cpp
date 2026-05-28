@@ -1,4 +1,4 @@
-# Packet Tables — Streaming Append
+@page example_guide_packet_table Packet Tables — Streaming Append
 
 A packet table is a chunk-buffered, append-only view on an HDF5 dataset. You create it like any dataset, then call `h5::append(pt, record)` instead of `h5::write(...)`:
 
@@ -120,3 +120,10 @@ Both gated on `ARMADILLO_FOUND` (`packet-table` additionally on `Eigen3_FOUND`).
 - `examples/datasets/` — full `offset` / `count` / `stride` / `block` vocabulary that packet tables build on top of.
 - `examples/multi-tu/` — same `generated.h` ODR story applied across multiple translation units.
 - `h5cpp/H5Dappend.hpp` — `pt_t::append` overloads + the free-function wrappers.
+
+## Source
+
+- [`generated.h`](generated_8h-example.html) — rendered with syntax highlighting
+- [`packet_batches.cpp`](packet_batches_8cpp-example.html) — rendered with syntax highlighting
+- [`packettable.cpp`](packettable_8cpp-example.html) — rendered with syntax highlighting
+- [`struct.h`](struct_8h-example.html) — rendered with syntax highlighting

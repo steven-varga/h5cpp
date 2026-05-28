@@ -1,0 +1,368 @@
+@page reports_doxygen_alias_support_report H5CPP Doxygen Alias Support Report
+
+Date: 2026-05-14
+
+## Purpose
+
+This report captures the current state of Doxygen-style documentation support in H5CPP, with special attention to custom commands such as `\func_read_hdr`, `\par_file_path`, `\tpar_T`, and `\returns_err`.
+
+The goal is to give another agent enough context to pick up a future implementation issue without rediscovering the same evidence.
+
+## Repository Context
+
+Primary inspected worktree:
+
+```text
+/home/steven/projects/vargalabs-workspace/worktrees/h5cpp/staging
+```
+
+Canonical checkout also inspected briefly:
+
+```text
+/home/steven/projects/h5cpp
+```
+
+The `staging` worktree was clean at inspection time:
+
+```text
+git status --short --branch
+## staging
+```
+
+The canonical checkout was on a separate working branch and dirty, so implementation work should not be done there unless explicitly requested:
+
+```text
+## 178-increase-code-coverage...origin/178-increase-code-coverage
+ M test/H5Eall.cpp
+ M test/H5Zpipeline.cpp
+ M test/H5cout.cpp
+?? build-cov/
+?? build-test/
+?? coverage.full.info
+?? coverage.info
+```
+
+## Current Documentation System
+
+H5CPP currently has operational MkDocs support, not operational H5CPP Doxygen support.
+
+Evidence:
+
+- `mkdocs.yml` defines the documentation site and navigation.
+- `Makefile` has `docs`, `docs-build`, `docs-strict`, `docs-serve`, and `docs-deploy` targets.
+- `.github/workflows/docs.yml` builds MkDocs and deploys `./site` to GitHub Pages.
+- No project-level `Doxyfile`, `Doxyfile.in`, `find_package(Doxygen)`, or Doxygen custom target was found in the H5CPP worktree.
+- The only Doxygen config files found are vendored third-party files under `thirdparty/`, not H5CPP documentation infrastructure.
+
+Commands used:
+
+```bash
+find . -maxdepth 4 \( -iname '*doxy*' -o -iname 'Doxyfile*' \) -print
+rg -n "add_custom_target\(|find_package\(Doxygen|doxygen|mkdocs|pages|documentation" .github CMakeLists.txt Makefile README.md mkdocs.yml docs -S
+```
+
+## Current Custom Doxygen Commands
+
+H5CPP headers already use custom Doxygen-like commands. They are not currently backed by a checked-in Doxygen alias definition.
+
+Observed commands include:
+
+```text
+\func_read_hdr
+\par_file_path
+\par_dataset_path
+\par_ptr
+\par_ref
+\par_ds
+\par_fd
+\par_offset
+\par_stride
+\par_count
+\par_block
+\par_dxpl
+\par_fcrt_flags
+\par_fopn_flags
+\par_fcpl
+\par_fapl
+\tpar_T
+\returns_err
+\returns_fd
+\returns_object
+\hdf5_links
+```
+
+Primary locations:
+
+```text
+h5cpp/H5Dread.hpp
+h5cpp/H5Fcreate.hpp
+h5cpp/H5Fopen.hpp
+h5cpp/H5config.hpp
+```
+
+Evidence commands:
+
+```bash
+rg -n -F "\\func_read_hdr" h5cpp docs examples
+rg -n -F "\\par_file_path" h5cpp docs examples
+rg -n -F "\\returns_err" h5cpp docs examples
+rg -n -F "\\hdf5_links" h5cpp docs examples
+```
+
+Representative result:
+
+```text
+h5cpp/H5Dread.hpp:17: 	/** \func_read_hdr
+h5cpp/H5Dread.hpp:81: 	/** \func_read_hdr
+h5cpp/H5Dread.hpp:101: 	/** \func_read_hdr
+h5cpp/H5Dread.hpp:121: 	/** \func_read_hdr
+h5cpp/H5Dread.hpp:147: 	/** \func_read_hdr
+h5cpp/H5Dread.hpp:166: 	/** \func_read_hdr
+h5cpp/H5Dread.hpp:184: 	/** \func_read_hdr
+h5cpp/H5Dread.hpp:224: 	/** \func_read_hdr
+h5cpp/H5Dread.hpp:292: 	/** \func_read_hdr
+h5cpp/H5Dread.hpp:309: 	/** \func_read_hdr
+```
+
+## Assessment
+
+The custom command idea is good and should be kept, but only if it is formalized as a real Doxygen alias layer.
+
+Why it is a good fit:
+
+- H5CPP has many overload families with repeated argument semantics.
+- The same concepts recur across file-path overloads, opened-file overloads, opened-dataset overloads, raw-pointer reads, reference reads, object-returning reads, and property-list customization.
+- Aliases can prevent documentation drift when repeated concepts such as `h5::offset_t`, `h5::stride_t`, `h5::count_t`, `h5::block_t`, and `h5::dxpl_t` appear across overloads.
+- Aliases can keep generated docs compact while preserving the local documentation style.
+
+Current problem:
+
+- Without `ALIASES` in a project-level Doxygen config, commands such as `\func_read_hdr` are not meaningful to Doxygen.
+- Once Doxygen is run with warnings enabled, these commands will likely become unknown-command warnings.
+- Some alias use is semantically stale. For example, several `h5::read(...)` overload examples say `auto err = h5::read(...)`, but the inspected overloads return `void`. In those cases `\returns_err` is misleading.
+
+Conclusion:
+
+Keep the custom command pattern, but convert it from inert markup into explicit, tested Doxygen aliases.
+
+## HDF5 External Link State
+
+The H5CPP docs and comments still point at the old HDF5 documentation tree:
+
+```text
+https://support.hdfgroup.org/HDF5/doc/...
+```
+
+Current HDF5 documentation root:
+
+```text
+https://support.hdfgroup.org/documentation/hdf5/latest/
+```
+
+The current HDF5 docs are themselves Doxygen-generated. The inspected root page reported:
+
+```text
+HDF5 Last Updated on 2026-05-09
+Generated by doxygen 1.16.1
+```
+
+Old-link count in the staging worktree:
+
+```text
+120 docs/architecture.md
+120 docs/architecture-integration.md
+1 h5cpp/H5config.hpp
+1 h5cpp/H5Iall.hpp
+1 examples/transform/transform.cpp
+```
+
+Evidence command:
+
+```bash
+rg -n -F "https://support.hdfgroup.org/HDF5/doc" docs h5cpp examples | awk -F: '{count[$1]++} END {for (f in count) print count[f], f}' | sort -nr
+```
+
+A representative old URL returned `404` during inspection:
+
+```bash
+curl -I -L --max-time 20 https://support.hdfgroup.org/HDF5/doc/RM/RM_H5P.html#Property-SetTypeConvCb
+```
+
+Current HDF5 page examples:
+
+```text
+https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_i.html
+https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_p.html
+https://support.hdfgroup.org/documentation/hdf5/latest/group___d_x_p_l.html
+https://support.hdfgroup.org/documentation/hdf5/latest/group___o_c_p_l.html
+```
+
+## Recommended Future Issue
+
+Suggested issue title:
+
+```text
+docs, add H5CPP Doxygen alias support and refresh HDF5 links
+```
+
+Suggested branch:
+
+```text
+<issue-number>-add-doxygen-alias-support
+```
+
+Suggested worktree:
+
+```text
+/home/steven/projects/vargalabs-workspace/worktrees/h5cpp/<issue-number>-add-doxygen-alias-support
+```
+
+Base branch should be the current H5CPP staging branch unless Steven says otherwise.
+
+## Recommended Implementation Scope
+
+Keep this as a docs infrastructure slice. Do not refactor C++ APIs.
+
+Minimum useful patch:
+
+1. Add a project-level H5CPP Doxygen config.
+2. Define the existing custom commands as `ALIASES`.
+3. Add a repo-local target or command to generate Doxygen docs.
+4. Run Doxygen with warnings visible.
+5. Clean only the warnings caused by missing or stale aliases.
+6. Refresh the small number of source-comment HDF5 links.
+7. Treat the 240 Markdown architecture links as a separate subtask unless the issue explicitly includes bulk link migration.
+
+Candidate files to add or touch:
+
+```text
+Doxyfile.in or docs/Doxyfile.in
+CMakeLists.txt or Makefile
+h5cpp/H5Dread.hpp
+h5cpp/H5Fcreate.hpp
+h5cpp/H5Fopen.hpp
+h5cpp/H5config.hpp
+h5cpp/H5Iall.hpp
+examples/transform/transform.cpp
+```
+
+Do not touch vendored third-party Doxygen files.
+
+## Alias Design Recommendation
+
+Prefer aliases that expand to standard Doxygen constructs. Avoid aliases that hide too much behavior.
+
+Good alias categories:
+
+```text
+Parameter aliases:
+  \par_file_path
+  \par_dataset_path
+  \par_ptr
+  \par_ref
+  \par_offset
+  \par_stride
+  \par_count
+  \par_block
+  \par_dxpl
+
+Template aliases:
+  \tpar_T
+
+Return aliases:
+  \returns_fd
+  \returns_object
+```
+
+Be careful with:
+
+```text
+\returns_err
+```
+
+Many current overloads return `void`, not an error code. Either redefine this alias to match actual behavior or replace it in those comments.
+
+Also be careful with:
+
+```text
+\func_read_hdr
+```
+
+This can be kept if it expands to a short, generic read-family heading. It should not make claims that are false for string overloads, object-returning overloads, or reference overloads.
+
+Suggested direction:
+
+```text
+\func_read_hdr
+  Expands to a compact "Read dataset data" description only.
+
+\par_* and \tpar_*
+  Expand to actual @param and @tparam entries.
+
+\returns_*
+  Expand to actual @return text only where the function has a non-void return.
+```
+
+## Validation Plan
+
+Initial local validation:
+
+```bash
+doxygen --version
+doxygen Doxyfile
+```
+
+or, if integrated through Make/CMake:
+
+```bash
+make docs-doxygen
+```
+
+or:
+
+```bash
+cmake -S . -B build -DH5CPP_BUILD_DOCS=ON
+cmake --build build --target docs-doxygen
+```
+
+Expected success criteria:
+
+- Doxygen completes.
+- Custom command warnings are gone.
+- Generated docs include H5CPP public groups such as `io-read`, `io-write`, `io-create`, `io-append`, `io-wrap`, and `file-io`.
+- The generated docs do not include vendored third-party API pages unless intentionally configured.
+- `h5cpp/H5Dread.hpp` overload documentation does not claim an error-code return for `void` functions.
+- Source-comment HDF5 links point to the current HDF5 Field Guide URLs.
+
+Optional link validation:
+
+```bash
+rg -n -F "https://support.hdfgroup.org/HDF5/doc" docs h5cpp examples
+```
+
+The command should eventually return no source-comment hits. Bulk Markdown architecture links may be handled in a separate issue.
+
+## Risks And Constraints
+
+- Do not mix this with API cleanup. It is a documentation infrastructure task.
+- Do not reformat the H5CPP headers while adjusting comments.
+- Do not rewrite all architecture docs unless the issue explicitly includes link migration.
+- Do not let Doxygen scan all of `thirdparty/`; it will create noise and may make validation slow.
+- Keep C++17 code untouched unless a comment is directly adjacent to an edited Doxygen block.
+- If `TAGFILES` support is considered, first confirm whether the HDF Group release zip contains a reusable Doxygen tag file. The latest online docs mention downloadable `hdf5-<version>.doxygen.zip` release artifacts, but this report did not verify the contents of those zips.
+
+## Pickup Checklist
+
+- Create GitHub issue using the title above or Steven's chosen wording.
+- Create issue branch and worktree from current `origin/staging`.
+- Read `/home/steven/.agents/skills/coding-style/SKILL.md` and repo instructions before editing.
+- Add minimal Doxygen config and aliases.
+- Run Doxygen once to collect real warnings.
+- Fix only warning-producing stale alias uses.
+- Refresh direct source-comment HDF5 links.
+- Run Doxygen again.
+- Commit with Steven's format:
+
+```text
+[#issue]:svarga:docs, add H5CPP Doxygen alias support
+```

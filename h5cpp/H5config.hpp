@@ -89,19 +89,23 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
 
 /**
 @example attributes.cpp
-@example collective.cpp
-@example independent.cpp
-@example throughput.cpp
-@example tu_01.cpp
-@example tu_02.cpp
-@example optimized.cpp
-
 @example basics.cpp
 @example compound.cpp
 @example compound.c
 @example compound.h
 @example struct.cpp
 @example struct.h
+@example struct.cpp
+@example struct.h
+@example container.cpp
+@example detected.cpp
+@example tiny_containers.hpp
+@example cout.cpp
+@example csv2hdf5.cpp
+@example datasets.cpp
+@example datatypes.cpp
+@example pipeline.cpp
+@example groups.cpp
 @example arma.cpp
 @example blaze.cpp
 @example blitz.cpp
@@ -109,9 +113,36 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
 @example eigen3.cpp
 @example itpp.cpp
 @example ublas.cpp
+@example mdspan.cpp
+@example collective.cpp
+@example independent.cpp
+@example throughput.cpp
+@example file_per_rank.cpp
+@example tu_01.cpp
+@example tu_02.cpp
+@example main.cpp
+@example optimized.cpp
 @example packettable.cpp
+@example packet_batches.cpp
+@example pprint.cpp
 @example raw.cpp
+@example reference.cpp
+@example reflection.cpp
+@example s3.cpp
+@example smart_ptr.cpp
+@example arma.cpp
+@example eigen.cpp
+@example compound.cpp
+@example maps.cpp
+@example nested.cpp
+@example sequences.cpp
+@example sets.cpp
+@example strings.cpp
+@example tuples_pairs.cpp
+@example vector.cpp
+@example string.cpp
 @example transform.cpp
+@example utf.cpp
 */
 
 
@@ -147,19 +178,29 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
  *  \brief dataset APPEND operations for streamed data access with examples
  */
 
-/** @defgroup io-wrap [  handle | type_id ] -s with RAII
- * \brief thin std::unique_ptr like type safe thin wrap-s for CAPI **hid_t**,**herr_t** types which upon destruction, or being passed to 
- * HDF5 CAPI functions will do the right thing. 
- * \hdf5_links
+/** @defgroup attribute-io h5::create / h5::aread / h5::awrite — HDF5 attributes
+ *  \brief Templated attribute I/O on any parent that can carry metadata —
+ *  files, groups, datasets, opaque objects, committed datatypes. Element
+ *  type `T` follows the same dispatch as the dataset API
+ *  (see [Supported Types](@ref link_base_template_types)); attributes do
+ *  not chunk, do not support partial I/O, and use the
+ *  [acpl property list](@ref link_property_lists) family.
+ *  \sa_hdf5
  */
 
-/** @defgroup file-io h5::open | h5::create | h5::mute | h5::unmute
- *  \brief These  h5::open | h5::close | h5::create  operations  are to create/manipulate an hdf5 container. 
- *  In POSIX sense HDF5 container is an entire **image** of a file system and the **dataset** is a document within. Datasets may be manipulated
- *  with h5::create | h5::read | h5::write | h5::append operations. While File IO operations are straight maps from already existing CAPI HDF5 calls, 
- *  they are furnished with [RAII](@ref link_raii_idiom), and type safety to aid productivity. 
- *  How the  returned managed handles may be passed to CAPI calls is [governed by H5CPP conversion policy](@ref link_conversion_policy) 
- *  h5::mute | h5::unmute are miscellaneous thread safe calls for those rare occasions when you need to turn HDF5 CAPI error handler output
- *  **off** and **on**.  Typically used when failure is information: checking existence of [dataset|path] by call-fail pattern, etc...  
- *  \hdf5_links
+/** @defgroup io-wrap `handle` | `type_id` with RAII
+ * \brief thin `std::unique_ptr`-like, type-safe wraps for the CAPI `hid_t` / `herr_t` types which, upon destruction or being passed to
+ * HDF5 CAPI functions, do the right thing.
+ * \sa_hdf5
+ */
+
+/** @defgroup file-io `h5::open` | `h5::create` | `h5::mute` | `h5::unmute`
+ *  \brief These `h5::open` | `h5::close` | `h5::create` operations are to create / manipulate an HDF5 container.
+ *  In POSIX terms an HDF5 container is the entire **image** of a file system and the **dataset** is a document within. Datasets may be manipulated
+ *  with `h5::create` | `h5::read` | `h5::write` | `h5::append` operations. While the File-IO operations are direct maps from existing CAPI HDF5 calls,
+ *  they are furnished with [RAII](@ref link_raii_idiom) and type safety to aid productivity.
+ *  How the returned managed handles may be passed to CAPI calls is [governed by the H5CPP conversion policy](@ref link_conversion_policy).
+ *  `h5::mute` | `h5::unmute` are miscellaneous thread-safe calls for the rare occasions when you need to turn HDF5 CAPI error-handler output
+ *  **off** and **on** — typically used when failure is information (checking existence of a dataset / path by the call-fail pattern, etc.).
+ *  \sa_hdf5
  */

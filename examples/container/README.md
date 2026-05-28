@@ -1,18 +1,12 @@
-## STL like Containers
+@page example_guide_container Supported container shapes
 
-This example shows how h5cpp maps C++ containers to HDF5 datasets. The point is simple:
-
-**h5cpp does not ask “is this a `std::vector`?”  It asks “what can this type do?”**
-
-That distinction matters. The dispatch is based on the **Walter Brown detection idiom**: h5cpp probes a type for capabilities such as `value_type`, `iterator`, `begin/end`, `size`, `data`, `key_type`, and `mapped_type`. From those detected properties it chooses an HDF5 storage layout.
-
-So `std::vector<T>` is not special because it is named `std::vector`. It is special because it has the right shape: contiguous data, known size, and an element type h5cpp knows how to store.
+h5cpp routes C++ containers to HDF5 layouts by capability rather than by name. The dispatch is the Walter Brown detection idiom: at compile time, the type is probed for the expressions that should be valid on it (`value_type`, `iterator`, `begin`/`end`, `size`, `data`, `key_type`, `mapped_type`), and the matching storage representation is selected from the result. `std::vector<T>` writes as a rank-1 dataset because it exposes contiguous data with a known size and an element type the library can serialise — not because it is `std::vector`. Any type with the same surface routes the same way.
 
 ```cpp
 h5::write(fd, "path", container);
 auto x = h5::read<std::vector<int>>(fd, "path");
 h5::append(packet_table, forward_list);
-````
+```
 
 ### Files
 
@@ -61,14 +55,7 @@ has key_type + value_type, no mapped_type
     -> rank-1 HDF5 dataset of keys
 ```
 
-This is the Walter Brown detection idiom in practice: instead of hard-coding every possible container type, h5cpp detects the expressions that are valid for `T` and lets overload resolution pick the right path.
-
-No inheritance.
-No virtual interface.
-No adapter ceremony.
-Just compile-time shape recognition.
-
-Duck typing, but with templates and fewer feathers.
+No inheritance, no virtual interfaces, no adapter layer — only compile-time shape recognition. The library detects the expressions that are valid for `T` and lets overload resolution pick the storage path.
 
 ---
 
@@ -98,11 +85,7 @@ int main() {
 }
 ```
 
-`std::vector<T>` writes directly.
-`std::deque<T>` and `std::list<T>` are staged into a temporary buffer first.
-The on-disk result is still the same: a rank-1 HDF5 dataset of `T`.
-
-Same HDF5 model, different C++ plumbing. Physics remains undefeated.
+`std::vector<T>` writes directly. `std::deque<T>` and `std::list<T>` are staged into a temporary contiguous buffer first. The on-disk result is identical: a rank-1 HDF5 dataset of `T`. The C++ container type does not appear in the file.
 
 ---
 
@@ -177,7 +160,7 @@ Conceptually:
 std::vector<std::array<T,N>> -> rank-2 HDF5 dataset [rows, N]
 ```
 
-This is the clean case: fixed-size rows, no ragged edges, no drama.
+Fixed-size rows, no variable-length machinery — the cleanest of the multi-dimensional paths.
 
 ---
 
@@ -218,7 +201,7 @@ h5::write(fd, "hash_set/unordered_set",
     std::unordered_set<int>(src.begin(), src.end()));
 ```
 
-The file records the observed iteration order, which depends on the hash table. Do not build logic around that order unless you enjoy debugging confetti.
+The file records the observed iteration order, which depends on the hash table's internal state and is not portable across runs, compilers, or library versions. Do not depend on it.
 
 ---
 
@@ -281,7 +264,7 @@ h5::write(fd, "key_value/map", m);
 auto m2 = h5::read<std::map<int, double>>(fd, "key_value/map");
 ```
 
-Sorted maps are written in key order. Unordered maps are written in bucket iteration order. Round-trip reconstruction preserves the container semantics, not some fantasy of universal ordering.
+Sorted maps are written in key order. Unordered maps are written in bucket iteration order. Round-trip reconstruction preserves the source container's semantics; the on-disk order reflects whatever the writer's container produced at the moment of write.
 
 ---
 
@@ -390,7 +373,7 @@ category defines the storage
 storage defines the HDF5 layout
 ```
 
-That is Walter Brown’s detection idiom doing real work, not template metaprogramming theatre.
+The trait outputs are the dispatch's input: valid expressions define the category, the category selects the storage representation, the representation determines the HDF5 layout.
 
 ### Layer 2: Storage Representation
 
@@ -436,10 +419,7 @@ Current asymmetry:
 | Custom set-shape               | Can write structurally; read back through `std::set<T>`    |
 | Custom map-shape               | Can write structurally; read back through `std::map<K,V>`  |
 
-So the write side is broadly structural.
-The read side is partially structural today: contiguous vector-shaped custom containers can round-trip into themselves; iterator-only, set-like, and map-like custom containers currently read back through the matching `std::` counterpart.
-
-That is not a file-format limitation. It is a construction-policy limitation. The HDF5 layout is already clean.
+The write side is structural across all four shapes. The read side is structural for contiguous custom containers (they round-trip into themselves) but currently uses the matching `std::` counterpart for iterator-only, set-like, and map-like custom containers. This is a construction-policy gap in the dispatcher, not a file-format limitation — the HDF5 layout on disk is identical regardless of which C++ container reads it back.
 
 ---
 
@@ -608,7 +588,7 @@ std::cout << "map:    " << m2 << "\n";
 
 Containers can be inserted directly into `std::ostream`. Long containers are truncated according to `H5CPP_CONSOLE_WIDTH`, with a trailing `...`.
 
-Useful for examples, tests, and sanity checks. Not a serialization format. Let us not anger the logging gods.
+Useful for examples, tests, and sanity checks. Not a serialisation format — use `h5::write` for that.
 
 The iterable pretty-printer vetoes types exposing a `Scalar` nested alias, so Eigen / blaze / xtensor matrices keep their own `operator<<` rather than getting hijacked by a generic begin/end print loop. Linalg libraries name their element `Scalar`; STL containers name it `value_type` — clean discriminator.
 
@@ -660,11 +640,10 @@ tiny::set<T>              -> detected as set-like
 tiny::dict<K,V>           -> detected as map-like
 ```
 
-The important point:
+The point of all this: h5cpp stores the data model implied by the container, not the container implementation. The detection idiom makes that possible — types with the same shape route to the same HDF5 layout, regardless of which library they come from. Hand-written overloads aren't needed for each new container type; the structural surface is the contract.
 
-**h5cpp stores the data model, not the C++ container implementation.**
+## Source
 
-The Walter Brown detection idiom is what makes that possible. It lets h5cpp recognize container-shaped types structurally, route them to the correct HDF5 representation, and avoid a brittle zoo of hand-written overloads.
-
-C++ containers are runtime furniture. HDF5 stores the building.
-
+- [`container.cpp`](container_8cpp-example.html) — rendered with syntax highlighting
+- [`detected.cpp`](detected_8cpp-example.html) — rendered with syntax highlighting
+- [`tiny_containers.hpp`](tiny_containers_8hpp-example.html) — rendered with syntax highlighting

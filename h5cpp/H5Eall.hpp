@@ -44,6 +44,11 @@ namespace h5 {
 }
 
 namespace h5::error {
+	/**
+	 * Root exception thrown by every h5cpp call site. Derives from
+	 * `std::runtime_error`; a `catch (const std::exception&)` will catch any
+	 * h5cpp error.
+	 */
 	struct any : public std::runtime_error {
 		any() : std::runtime_error("H5CPP ERROR") {}
 		any(const std::string& msg ) : std::runtime_error( msg ){}
@@ -102,9 +107,16 @@ namespace h5::error {
 	}
 }
 namespace h5::error::io {
+	/**
+	 * Rollback signal for I/O code paths. Separate from `runtime_error`.
+	 */
 	struct rollback : public h5::error::rollback {
 		rollback( const std::string& msg ) : h5::error::rollback( msg ){}
 	};
+	/**
+	 * Catches any h5cpp I/O error (file / dataset / packet_table / attribute
+	 * / group).
+	 */
 	struct any : public h5::error::any {
 		any() : h5::error::any() {}
 		any( const std::string& msg ) : h5::error::any( msg ){}
@@ -112,33 +124,62 @@ namespace h5::error::io {
 }
 
 namespace h5::error::io::file {
+	/**
+	 * Rollback signal for file-level operations.
+	 */
 	struct rollback : public h5::error::io::rollback {
 		rollback( const std::string& msg ) : h5::error::io::rollback( msg ){}
 	};
+	/**
+	 * Catches any file-level I/O error.
+	 */
 	struct any : public h5::error::io::any {
 		any() : h5::error::io::any() {}
 		any( const std::string& msg ) : h5::error::io::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::open(file_path, ...)` fails — file does not exist,
+	 * permission denied, HDF5 magic mismatch, or unsupported on-disk format.
+	 */
 	struct open : public h5::error::io::file::any {
 		open() : h5::error::io::file::any() {}
 		open( const std::string& msg ) : h5::error::io::file::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::fd_t` destruction or explicit `H5Fclose` fails (rare;
+	 * typically a pending operation or resource leak).
+	 */
 	struct close : public h5::error::io::file::any {
 		close() : h5::error::io::file::any() {}
 		close( const std::string& msg ) : h5::error::io::file::any( msg ){}
 	};
+	/**
+	 * Thrown by file-level read paths (metadata block scan, format-version
+	 * probe).
+	 */
 	struct read : public h5::error::io::file::any {
 		read() : h5::error::io::file::any() {}
 		read( const std::string& msg ) : h5::error::io::file::any( msg ){}
 	};
+	/**
+	 * Thrown by file-level write paths (file flush, metadata commit).
+	 */
 	struct write : public h5::error::io::file::any {
 		write() : h5::error::io::file::any() {}
 		write( const std::string& msg ) : h5::error::io::file::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::create(file_path, ...)` fails — path not writable,
+	 * `H5F_ACC_EXCL` conflict, parent directory missing, FAPL invalid.
+	 */
 	struct create : public h5::error::io::file::any {
 		create() : h5::error::io::file::any() {}
 		create( const std::string& msg ) : h5::error::io::file::any( msg ){}
 	};
+	/**
+	 * Thrown for miscellaneous file-level failures (mount, refresh,
+	 * get_info).
+	 */
 	struct misc : public h5::error::io::file::any {
 		misc() : h5::error::io::file::any() {}
 		misc( const std::string& msg ) : h5::error::io::file::any( msg ){}
@@ -146,74 +187,137 @@ namespace h5::error::io::file {
 }
 
 namespace h5::error::io::dataset {
+	/**
+	 * Rollback signal for dataset-level operations.
+	 */
 	struct rollback : public h5::error::io::rollback {
 		rollback( const std::string& msg ) : h5::error::io::rollback( msg ){}
 	};
+	/**
+	 * Catches any dataset-level I/O error.
+	 */
 	struct any : public h5::error::io::any {
 		any() : h5::error::io::any() {}
 		any( const std::string& msg ) : h5::error::io::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::open(fd, path)` fails to locate or open the dataset.
+	 */
 	struct open : public h5::error::io::dataset::any {
 		open() : h5::error::io::dataset::any() {}
 		open( const std::string& msg ) : h5::error::io::dataset::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::ds_t` destruction or explicit `H5Dclose` fails
+	 * (rare).
+	 */
 	struct close : public h5::error::io::dataset::any {
 		close() : h5::error::io::dataset::any() {}
 		close( const std::string& msg ) : h5::error::io::dataset::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::read` fails — selection out of bounds,
+	 * type-conversion error, chunked-read or filter error.
+	 */
 	struct read : public h5::error::io::dataset::any {
 		read() : h5::error::io::dataset::any() {}
 		read( const std::string& msg ) : h5::error::io::dataset::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::write` fails — selection mismatch, extending error,
+	 * filter / compression error, ROS3 read-only attempt.
+	 */
 	struct write : public h5::error::io::dataset::any {
 		write() : h5::error::io::dataset::any() {}
 		write( const std::string& msg ) : h5::error::io::dataset::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::append` fails on an extensible dataset (e.g. missing
+	 * chunk layout).
+	 */
 	struct append : public h5::error::io::dataset::any {
 		append() : h5::error::io::dataset::any() {}
 		append( const std::string& msg ) : h5::error::io::dataset::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::create<T>(...)` fails — parent path missing, chunk
+	 * dims invalid, DCPL conflict.
+	 */
 	struct create : public h5::error::io::dataset::any {
 		create() : h5::error::io::dataset::any() {}
 		create( const std::string& msg ) : h5::error::io::dataset::any( msg ){}
 	};
+	/**
+	 * Thrown for miscellaneous dataset failures (set_extent, refresh,
+	 * get_storage_size).
+	 */
 	struct misc : public h5::error::io::dataset::any {
 		misc() : h5::error::io::dataset::any() {}
 		misc( const std::string& msg ) : h5::error::io::dataset::any( msg ){}
 	};
 }
 namespace h5::error::io::packet_table {
+	/**
+	 * Rollback signal for packet-table operations.
+	 */
 	struct rollback : public h5::error::io::rollback {
 		rollback( const std::string& msg ) : h5::error::io::rollback( msg ){}
 	};
+	/**
+	 * Catches any packet-table I/O error (extensible-dataset append
+	 * interface).
+	 */
 	struct any : public h5::error::io::any {
 		any() : h5::error::io::any() {}
 		any( const std::string& msg ) : h5::error::io::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::pt_t` open fails.
+	 */
 	struct open : public h5::error::io::packet_table::any {
 		open() : h5::error::io::packet_table::any() {}
 		open( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::pt_t` destruction fails.
+	 */
 	struct close : public h5::error::io::packet_table::any {
 		close() : h5::error::io::packet_table::any() {}
 		close( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
 	};
+	/**
+	 * Thrown when a packet-table read fails.
+	 */
 	struct read : public h5::error::io::packet_table::any {
 		read() : h5::error::io::packet_table::any() {}
 		read( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
 	};
+	/**
+	 * Thrown when a packet-table write fails.
+	 */
 	struct write : public h5::error::io::packet_table::any {
 		write() : h5::error::io::packet_table::any() {}
 		write( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::append(pt, …)` fails — buffer overflow, extending
+	 * error, or filter error on the underlying chunked dataset.
+	 */
 	struct append : public h5::error::io::packet_table::any {
 		append() : h5::error::io::packet_table::any() {}
 		append( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
 	};
+	/**
+	 * Thrown when packet-table creation fails — missing chunk layout,
+	 * invalid DCPL.
+	 */
 	struct create : public h5::error::io::packet_table::any {
 		create() : h5::error::io::packet_table::any() {}
 		create( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
 	};
+	/**
+	 * Thrown for miscellaneous packet-table failures.
+	 */
 	struct misc : public h5::error::io::packet_table::any {
 		misc() : h5::error::io::packet_table::any() {}
 		misc( const std::string& msg ) : h5::error::io::packet_table::any( msg ){}
@@ -221,37 +325,70 @@ namespace h5::error::io::packet_table {
 }
 
 namespace h5::error::io::attribute {
+	/**
+	 * Rollback signal for attribute-level operations.
+	 */
 	struct rollback : public h5::error::io::rollback {
 		rollback( const std::string& msg ) : h5::error::io::rollback( msg ){}
 	};
+	/**
+	 * Catches any attribute-level I/O error.
+	 */
 	struct any : public h5::error::io::any {
 		any() : h5::error::io::any() {}
 		any( const std::string& msg ) : h5::error::io::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::aopen` (or attribute-bracket access `ds["name"]`)
+	 * fails to find or open the attribute.
+	 */
 	struct open : public h5::error::io::attribute::any {
 		open() : h5::error::io::attribute::any() {}
 		open( const std::string& msg ) : h5::error::io::attribute::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::at_t` destruction fails (rare).
+	 */
 	struct close : public h5::error::io::attribute::any {
 		close() : h5::error::io::attribute::any() {}
 		close( const std::string& msg ) : h5::error::io::attribute::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::aread<T>` fails — type-mismatch, missing fixed↔VLEN
+	 * conversion, or selection error.
+	 */
 	struct read : public h5::error::io::attribute::any {
 		read() : h5::error::io::attribute::any() {}
 		read( const std::string& msg ) : h5::error::io::attribute::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::awrite` fails — type-mismatch, attribute already
+	 * present with incompatible shape, or invalid parent.
+	 */
 	struct write : public h5::error::io::attribute::any {
 		write() : h5::error::io::attribute::any() {}
 		write( const std::string& msg ) : h5::error::io::attribute::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::acreate` fails — duplicate name, invalid type,
+	 * invalid parent.
+	 */
 	struct create : public h5::error::io::attribute::any {
 		create() : h5::error::io::attribute::any() {}
 		create( const std::string& msg ) : h5::error::io::attribute::any( msg ){}
 	};
+	/**
+	 * Thrown for miscellaneous attribute failures (rename, get_info,
+	 * iterate).
+	 */
 	struct misc : public h5::error::io::attribute::any {
 		misc() : h5::error::io::attribute::any() {}
 		misc( const std::string& msg ) : h5::error::io::attribute::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::adelete` (or `ds.attr_delete("name")`) fails —
+	 * attribute missing, parent immutable.
+	 */
 	struct delete_ : public h5::error::io::attribute::any {
 		delete_() : h5::error::io::attribute::any() {}
 		delete_( const std::string& msg ) : h5::error::io::attribute::any( msg ){}
@@ -259,22 +396,40 @@ namespace h5::error::io::attribute {
 }
 
 namespace h5::error::io::group {
+	/**
+	 * Catches any group-level I/O error.
+	 */
 	struct any : public h5::error::io::any {
 		any() : h5::error::io::any() {}
 		any( const std::string& msg ) : h5::error::io::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::gopen` fails — group path missing, parent not a
+	 * group, permission denied.
+	 */
 	struct open : public h5::error::io::group::any {
 		open() : h5::error::io::group::any() {}
 		open( const std::string& msg ) : h5::error::io::group::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::gr_t` destruction or explicit `H5Gclose` fails
+	 * (rare).
+	 */
 	struct close : public h5::error::io::group::any {
 		close() : h5::error::io::group::any() {}
 		close( const std::string& msg ) : h5::error::io::group::any( msg ){}
 	};
+	/**
+	 * Thrown when `h5::gcreate` fails — parent path missing (without
+	 * `create_intermediates`), duplicate name, invalid LCPL.
+	 */
 	struct create : public h5::error::io::group::any {
 		create() : h5::error::io::group::any() {}
 		create( const std::string& msg ) : h5::error::io::group::any( msg ){}
 	};
+	/**
+	 * Thrown for miscellaneous group failures (get_info, link iteration).
+	 */
 	struct misc : public h5::error::io::group::any {
 		misc() : h5::error::io::group::any() {}
 		misc( const std::string& msg ) : h5::error::io::group::any( msg ){}
@@ -282,17 +437,31 @@ namespace h5::error::io::group {
 }
 
 namespace h5::error::property_list {
+	/**
+	 * Rollback signal for property-list construction.
+	 */
 	struct rollback : public h5::error::rollback {
 		rollback( const std::string& msg ) : h5::error::rollback( msg ){}
 	};
+	/**
+	 * Catches any property-list error (FAPL / FCPL / DAPL / DCPL / DXPL /
+	 * LCPL).
+	 */
 	struct any : public h5::error::any {
 		any() : h5::error::any() {}
 		any( const std::string& msg ) : h5::error::any( msg ){}
 	};
+	/**
+	 * Thrown when a property-list argument is invalid — wrong type,
+	 * out-of-range value, missing required field, or conflicting flags.
+	 */
 	struct argument : public h5::error::property_list::any {
 		argument() : h5::error::property_list::any() {}
 		argument( const std::string& msg ) : h5::error::property_list::any( msg ){}
 	};
+	/**
+	 * Thrown for miscellaneous property-list failures (copy, equal, close).
+	 */
 	struct misc : public h5::error::property_list::any {
 		misc() : h5::error::property_list::any() {}
 		misc( const std::string& msg ) : h5::error::property_list::any( msg ){}

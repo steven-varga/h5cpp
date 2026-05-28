@@ -69,12 +69,29 @@ html {
 }
 
 /* ------------------------------------------------------------------ */
-/* Minor layout tweaks                                                 */
+/* Layout — widen the main content cap                                 */
 /* ------------------------------------------------------------------ */
 
-/* Full-width content area — mirrors MkDocs md-grid max-width: 100%  */
-#MContentWrapper {
-    max-width: 1200px;
+/* The doxygen-awesome theme constrains main content via
+ * --content-maxwidth (1050px by default). The theme's layout uses a
+ * `margin: ... auto ... auto` centering on div.contents, so the
+ * content sits in the middle of the available column with substantial
+ * whitespace at the right edge of wide displays.
+ *
+ * Override ONLY the variable — don't touch widths on #doc-content or
+ * .contents directly: the theme's flex layout (row-reverse on the
+ * .contents wrapper, see doxygen-awesome.css L1005-1015) depends on
+ * those staying as the theme intends. Setting them to 100% causes
+ * outer horizontal scroll (the sidebar adds extra width on top of
+ * #doc-content) and disrupts the flex flow for index pages that have
+ * a flex-reversed aside.
+ *
+ * 1600px is a moderate widening from 1050px: comfortably fits wide
+ * tables and side-by-side code samples on FullHD/4K, doesn't introduce
+ * extreme line lengths on common 1920px+ displays since the sidebar
+ * still consumes ~250px on the left. */
+html {
+    --content-maxwidth: 1600px;
 }
 
 /* Slightly warmer code blocks */
@@ -82,3 +99,36 @@ div.fragment,
 pre.fragment {
     border-left: 3px solid var(--primary-light-color);
 }
+
+/* ------------------------------------------------------------------ */
+/* Compact function-signature rendering                                */
+/* ------------------------------------------------------------------ */
+
+/* Doxygen default: <table class="memname"> lays out a function
+ * signature with one parameter per <tr>, producing a tall vertical
+ * stack that scales poorly for template-heavy h5cpp signatures.
+ * Collapse the inner table to flow inline so the signature reads as a
+ * single C++ declaration and wraps naturally on narrow viewports.
+ *
+ * Only the inner table.memname is touched — the outer table.mlabels
+ * wrapper (which keeps the "inline"/"static"/"virtual" label pinned
+ * to the right) is left alone so it can continue to flex. */
+table.memname,
+table.memname > tbody,
+table.memname > tbody > tr,
+table.memname > tbody > tr > td {
+    display: inline;
+    padding: 0;
+    border: none;
+    background: none;
+}
+table.memname > tbody > tr > td.memname {
+    font-weight: 600;
+    white-space: nowrap;
+}
+table.memname > tbody > tr > td.paramtype {
+    white-space: nowrap;
+}
+/* No margins on paramtype/paramname: Doxygen emits a non-breaking space
+ * (&nbsp;) at the end of each paramtype cell which already acts as the
+ * type/name separator. Adding CSS margin on top doubles that gap. */

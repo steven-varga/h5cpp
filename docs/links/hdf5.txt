@@ -2,18 +2,17 @@
 ## HDF5 C API external links — updated to current HDF Group documentation
 ## Root: https://support.hdfgroup.org/documentation/hdf5/latest/
 ##
+## Part of the H5CPP Doxygen alias vocabulary. See docs/aliases.md for the
+## catalog, standard docstring template, and contribution rules.
+##
+## The previous implementation here used markdown reference-style links
+## ([name][] + [name]: URL on separate lines) joined by \n. Doxygen
+## substitutes \n as <br/> rather than a true newline, so the markdown
+## parser couldn't pair references with their definitions and the @sa
+## block rendered as literal "[name][]" text plus the URL definitions as
+## visible lines. Rewritten to use inline markdown links ([name](url))
+## so no reference resolution is needed — Doxygen renders the labels as
+## proper hyperlinks unconditionally.
+##
 
-ALIASES += lh5capi="[CAPI]: https://support.hdfgroup.org/documentation/hdf5/latest/\n"
-ALIASES += lh5fcreate="[H5Fcreate]: https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html\n"
-ALIASES += lh5fopen="[H5Fopen]: https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html\n"
-ALIASES += lh5fclose="[H5Fclose]: https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html\n"
-ALIASES += lh5dopen="[H5Dopen]: https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html\n"
-ALIASES += lh5dclose="[H5Dclose]: https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html\n"
-ALIASES += lh5gzip="[gzip]: https://support.hdfgroup.org/documentation/hdf5/latest/group___d_a_p_l.html\n"
-ALIASES += lraii="[RAII]: http://en.cppreference.com/w/cpp/language/raii\n"
-ALIASES += lpointers="[pointers]: http://en.cppreference.com/w/cpp/language/pointer\n"
-ALIASES += lruntime_error="[runtime_error]: http://en.cppreference.com/w/cpp/error/runtime_error\n"
-
-ALIASES += hdf5_links="\lh5capi \lh5fcreate \lh5fopen \lh5fclose \lh5dopen \lh5dclose \lh5gzip\n"
-ALIASES += hdf5_text="@sa [H5Fcreate][] [H5Fopen][] [H5Fclose][] [H5Dopen][] [H5Dclose][] [gzip][]\n"
-ALIASES += sa_hdf5="\hdf5_text \hdf5_links\n"
+ALIASES += sa_hdf5="@sa [H5Fcreate](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html) [H5Fopen](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html) [H5Fclose](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html) [H5Dopen](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html) [H5Dclose](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html) [gzip](https://support.hdfgroup.org/documentation/hdf5/latest/group___d_a_p_l.html) [CAPI](https://support.hdfgroup.org/documentation/hdf5/latest/)"

@@ -1,4 +1,4 @@
-# mdspan — Non-Owning N-D Views, C++23 P0009 Round-Trip
+@page example_guide_mdspan mdspan — Non-Owning N-D Views, C++23 P0009 Round-Trip
 
 `std::mdspan` is a non-owning N-D view — `{ pointer, extents, layout, accessor }` — and h5cpp treats it as a contiguous source/sink. The call shape is identical to Armadillo and Eigen, but the type comes from the standard library instead of a vendored linalg dependency. The trait lives in `h5cpp/H5Mmdspan.hpp` and is gated on `__cpp_lib_mdspan >= 202207L`; on stdlibs without `<mdspan>` the header is a no-op and the example prints a skip notice.
 
@@ -112,3 +112,7 @@ Lives in `examples/CMakeLists.txt:473-475`. No library dependencies — pure std
 - **`examples/linalg/`** — Armadillo / Eigen / Blaze / xtensor mappers covering the same `h5::write` / `h5::read` shape with library-owning types.
 - **P0009 / [`std::mdspan` reference](https://en.cppreference.com/w/cpp/container/mdspan)** — the standard's spec and the cppreference summary.
 - **`examples/string/README.md`** "Partial-IO semantics" — the h5cpp `count`/`block` convention that applies to mdspan partial IO too.
+
+## Source
+
+- [`mdspan.cpp`](mdspan_8cpp-example.html) — rendered with syntax highlighting

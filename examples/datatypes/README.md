@@ -1,4 +1,4 @@
-# Custom Datatypes
+@page example_guide_datatypes Custom Datatypes
 
 This example walks the HDF5 datatype-customization surface. The point is simple: HDF5 has more type primitives than the obvious native scalars, and every one of them is reachable through a single macro in h5cpp.
 
@@ -236,3 +236,8 @@ h5::read<std::vector<T>>(fd, path)
 ```
 
 One macro per type. The `H5T*` factory call captures *what* the type is on disk; the body captures *how* HDF5 should treat it. Same shape across all four custom types — only the third and fourth arguments change.
+
+## Source
+
+- [`custom_types.hpp`](custom_types_8hpp-example.html) — rendered with syntax highlighting
+- [`datatypes.cpp`](datatypes_8cpp-example.html) — rendered with syntax highlighting

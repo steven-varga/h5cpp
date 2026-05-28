@@ -1,4 +1,4 @@
-# Linear-Algebra Containers
+@page example_guide_linalg Linear-Algebra Containers
 
 This directory shows how h5cpp talks to the major C++ linear-algebra libraries. The point is simple: write your matrix or tensor with the same `h5::write` / `h5::read` you'd use for `std::vector` — h5cpp picks the right path for each library's memory layout.
 
@@ -149,3 +149,16 @@ In the course of getting these examples to actually run, several real h5cpp bugs
 2. **`itpp.cpp` is orphaned.** Disabled in CMake (`examples/CMakeLists.txt:202-205`) because ITPP v4.3.1 isn't C++17-clean. File still ships for reference.
 3. **Some mapper conventions still differ on shape order.** Dlib + uBLAS use a `{cols, rows}` legacy convention in their `impl::size`; arma + eigen + blitz + blaze use `{rows, cols}`. Explicit `h5::chunk{r, c}` only works when its order matches the mapper's. The linalg examples sidestep this by not passing chunk specs.
 4. **Code duplication across files.** All seven working files share ~70% identical scaffolding. A future cleanup could trim each to ~15 lines and have a single "universal pattern" code block in this README. Not actively harmful.
+
+## Source
+
+- [`arma.cpp`](arma_8cpp-example.html) — rendered with syntax highlighting
+- [`blaze.cpp`](blaze_8cpp-example.html) — rendered with syntax highlighting
+- [`blitz.cpp`](blitz_8cpp-example.html) — rendered with syntax highlighting
+- [`dlib.cpp`](dlib_8cpp-example.html) — rendered with syntax highlighting
+- [`eigen3.cpp`](eigen3_8cpp-example.html) — rendered with syntax highlighting
+- [`itpp.cpp`](itpp_8cpp-example.html) — rendered with syntax highlighting
+- [`ublas.cpp`](ublas_8cpp-example.html) — rendered with syntax highlighting
+- [`valarray.cpp`](valarray_8cpp-example.html) — rendered with syntax highlighting
+- [`xtensor-blas.cpp`](xtensor_blas_8cpp-example.html) — rendered with syntax highlighting
+- [`xtensor.cpp`](xtensor_8cpp-example.html) — rendered with syntax highlighting

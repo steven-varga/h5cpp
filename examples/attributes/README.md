@@ -1,4 +1,4 @@
-# Attributes — Metadata on Groups and Datasets
+@page example_guide_attributes Attributes — Metadata on Groups and Datasets
 
 HDF5 attributes are small metadata values attached to groups, datasets, or named datatypes. They live in the object header, not as standalone datasets — no chunking, no compression, no partial I/O, no streaming. Each attribute is read and written in a single shot.
 
@@ -260,3 +260,10 @@ No `GENERATED` line — `generated.h` is committed alongside `struct.h`. The h5c
 - `tasks/h5cpp-type-system-map.md` — canonical storage-tag names referenced in the tables above.
 - `h5cpp/H5Awrite.hpp` / `h5cpp/H5Aread.hpp` — attribute dispatch implementation.
 - `h5cpp/H5Uall.hpp` — `operator<<` overloads driving section 7's pretty-print readback.
+
+## Source
+
+- [`attributes.cpp`](attributes_8cpp-example.html) — rendered with syntax highlighting
+- [`generated.h`](generated_8h-example.html) — rendered with syntax highlighting
+- [`struct.h`](struct_8h-example.html) — rendered with syntax highlighting
+- [`utils.hpp`](utils_8hpp-example.html) — rendered with syntax highlighting

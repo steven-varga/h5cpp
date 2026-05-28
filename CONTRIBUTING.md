@@ -111,3 +111,21 @@ A pull request should:
 - document user-visible behavior changes
 
 The preferred merge target for active development is `staging`. Release branches are promoted from `staging` after validation.
+
+## Documentation — alias-first docstrings
+
+H5CPP's API surface is built on overload sets (`h5::write` has ~40 overloads, `h5::read` ~30, `h5::create` ~20). Each carries the same `file_path`, `dataset_path`, `offset`, `stride`, `count`, `block`, `dxpl`, template parameter, return type. Without discipline, the same `@param` block ends up duplicated across dozens of docstrings — and a wording change requires dozens of edits.
+
+To keep docstrings DRY, the project uses a controlled vocabulary of Doxygen aliases defined in `docs/links/*.txt`. Each alias is a single-token expansion that produces a fully-formed `@param` / `@tparam` / `@return` / `@see` block.
+
+The full vocabulary catalog, standard docstring template, and workflow for adding new aliases live at [`docs/aliases.md`](docs/aliases.md).
+
+### The rule
+
+When writing or refactoring a docstring:
+
+1. If a `@param` / `@tparam` / `@return` line you're about to write would repeat **≥ 5 times** across the codebase, use an existing alias from `docs/links/h5cpp.txt` — or add a new one there and reference it via `\name`.
+2. The chained-aliases line goes at the **end** of the comment, after any `\code` block. Order: `\par_*` → `\tpar_*` → `\returns_*` → `\sa_*`.
+3. New aliases land in the same commit as their first use. Update `docs/aliases.md` so the catalog stays in sync.
+
+The canonical example is `h5cpp/H5Dread.hpp`. The standard template is in [`docs/aliases.md`](docs/aliases.md).

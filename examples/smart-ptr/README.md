@@ -1,4 +1,4 @@
-# Smart-Pointer Support
+@page example_guide_smart_ptr Smart-Pointer Support
 
 h5cpp accepts `std::unique_ptr<T[]>`, `std::shared_ptr<T[]>`, `std::unique_ptr<T>`, and `std::shared_ptr<T>` anywhere a raw `T*` is accepted today — and also supports a return-style read that allocates the smart pointer for you, sized to the dataset extent.
 
@@ -167,3 +167,7 @@ No external library dependencies.
 - **`h5cpp/H5Mmemory.hpp` / `H5Mmemory_io.hpp`** — implementation.
 - **`examples/raw_memory/`** — the raw-pointer surface this builds on. Same `h5::write` / `h5::read` shape with `T*` instead of `unique_ptr<T[]>`.
 - **`examples/container/`** — the same I/O dispatch surface for STL containers (which carry their own size and don't need an explicit `h5::count`).
+
+## Source
+
+- [`smart_ptr.cpp`](smart_ptr_8cpp-example.html) — rendered with syntax highlighting

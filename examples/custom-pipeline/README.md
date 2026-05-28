@@ -1,4 +1,4 @@
-# Custom Pipelines
+@page example_guide_custom_pipeline Custom Pipelines
 
 This example walks the three pipeline opt-in surfaces h5cpp ships today. The point is simple: how chunks flow from `h5::write` to disk is a policy choice — single-threaded, per-dataset scratch, or worker-pool — and each policy is one property-list flag away.
 
@@ -167,3 +167,7 @@ H5Dwrite_chunk / H5Dread_chunk
 ```
 
 User code chooses the pipeline once via a property-list flag. The dispatch and filter chain stay the same. The differences are *where* the work runs and *what* gets reused across calls.
+
+## Source
+
+- [`pipeline.cpp`](pipeline_8cpp-example.html) — rendered with syntax highlighting

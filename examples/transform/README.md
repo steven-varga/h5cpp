@@ -1,4 +1,4 @@
-# Transform — DXPL Expressions and Type-Conversion Callbacks
+@page example_guide_transform Transform — DXPL Expressions and Type-Conversion Callbacks
 
 HDF5's data transfer property list (DXPL) carries two orthogonal in-flight numeric knobs: an element-wise linear expression on the read/write boundary, and a callback HDF5 invokes when an implicit type conversion would lose information. h5cpp wraps both with the same `|`-composable property idiom used everywhere else:
 
@@ -131,3 +131,7 @@ Lives in `examples/CMakeLists.txt:440-442`. Gated on `ARMADILLO_FOUND` because t
 - **HDF5 DXPL reference** — https://support.hdfgroup.org/documentation/hdf5/latest/group___d_x_p_l.html — the authoritative list of DXPL knobs (`H5Pset_data_transform`, `H5Pset_type_conv_cb`, chunk cache, MPI collective mode, etc.).
 - **`examples/datasets/`** — full `h5::chunk` / `h5::gzip` / `h5::offset` / `h5::count` vocabulary; the same `|` composition that pulls `h5::data_transform` into a DXPL pulls those into a DCPL.
 - **`examples/optimized/`** — DXPL composition for performance tuning (chunk cache, MPI), the closest neighbor to the stage-6 chunked + gzip + transform pattern in this example.
+
+## Source
+
+- [`transform.cpp`](transform_8cpp-example.html) — rendered with syntax highlighting

@@ -45,8 +45,39 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y doxygen
 
-      - name: Build Doxygen API reference
-        run: cd doxy && doxygen Doxyfile
+      - name: Checkout repo (with full history so docs-build.sh can resolve git tags)
+        run: |
+          if ! git rev-parse --git-dir >/dev/null 2>&1; then
+            echo "checkout missing — run actions/checkout@v4 above"
+            exit 1
+          fi
+          # actions/checkout@v4 uses depth=1 by default; fetch tags so the
+          # version-deriving git describe in docs-build.sh sees real releases.
+          git fetch --tags --depth=0 origin || true
+
+      - name: Build Doxygen API reference (version from git tag, post-processed)
+        run: scripts/docs-build.sh
+
+      - name: Summarise Doxygen warnings
+        if: always()
+        run: |
+          log=docs/doxygen/warnings.log
+          if [[ -f $log ]]; then
+            count=$(wc -l < $log)
+            echo "::notice::Doxygen warnings: $count lines (see uploaded artifact 'doxygen-warnings')"
+            head -50 $log || true
+          else
+            echo "::notice::No Doxygen warnings log produced"
+          fi
+
+      - name: Upload Doxygen warnings log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doxygen-warnings
+          path: docs/doxygen/warnings.log
+          if-no-files-found: ignore
+          retention-days: 30
 
       - name: Deploy Doxygen to gh-pages/api
         uses: peaceiris/actions-gh-pages@v4

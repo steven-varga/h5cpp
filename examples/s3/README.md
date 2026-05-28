@@ -1,4 +1,4 @@
-# S3 example — Read-Only S3 VFD (ROS3)
+@page example_guide_s3 S3 example — Read-Only S3 VFD (ROS3)
 
 Opens HDF5 files hosted on AWS S3 (or any S3-compatible object store) read-only through HDF5's ROS3 Virtual File Driver. Same h5cpp call shape as a local file — only the URL and the FAPL change.
 
@@ -115,3 +115,7 @@ For h5cpp users, the right default is **write locally, upload as a separate step
 | `s3` (block 3, STS / session) | ◇ na | Gated out on HDF5 ≤ 1.13 via `H5FD_CURR_ROS3_FAPL_T_VERSION >= 2` — needs HDF5 ≥ 1.14 to even compile in |
 
 Gated on `H5CPP_HAVE_ROS3_VFD` (set by CMake when HDF5's `H5pubconf.h` defines `H5_HAVE_ROS3_VFD`). When ROS3 isn't present the example is skipped at CMake configure time with a clear status message.
+
+## Source
+
+- [`s3.cpp`](s3_8cpp-example.html) — rendered with syntax highlighting

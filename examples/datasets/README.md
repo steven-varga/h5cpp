@@ -1,4 +1,4 @@
-# Datasets
+@page example_guide_datasets Datasets
 
 A dataset is the unit HDF5 stores typed multi-dimensional arrays in. The point of this example is simple: everything you'd reach for the HDF5 C API for — `H5Dcreate`, `H5Dwrite`, `H5Dread`, `H5Sselect_hyperslab`, `H5Pset_chunk`, `H5Pset_deflate`, `H5Pset_fill_value`, `H5Dextend` — has a small composable C++ surface in h5cpp.
 
@@ -276,3 +276,7 @@ type T  +  path  +  dataspace  +  policy   →   managed dataset
 ```
 
 The pieces are orthogonal. Type and path are mandatory. Dataspace is the shape. Policy is the property-list bundle. Hyperslab args are the per-call selection. You compose only what you need; defaults cover the rest.
+
+## Source
+
+- [`datasets.cpp`](datasets_8cpp-example.html) — rendered with syntax highlighting

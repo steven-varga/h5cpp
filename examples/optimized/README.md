@@ -1,4 +1,4 @@
-# Optimized Inner-Loop I/O
+@page example_guide_optimized Optimized Inner-Loop I/O
 
 This example shows two equivalent ways to write a slab into a dataset from inside a tight loop. The point is to make the cost of the h5cpp call shape visible — and to show that the obvious, readable version is already cheap.
 
@@ -81,3 +81,7 @@ Use arma's function-call syntax (`M(r, c) = v`) or `M.fill(v)` when you mean to 
 - **`examples/datasets/`** — full coverage of the `offset` / `count` / `stride` / `block` vocabulary used here.
 - **`examples/linalg/arma.cpp`** — the same arma round-trip without the hoisting concern.
 - **`h5cpp/H5Sall.hpp`** — defines the `impl::array<TAG>` POD that backs every dispatch argument; see `H5CPP_MAX_RANK`.
+
+## Source
+
+- [`optimized.cpp`](optimized_8cpp-example.html) — rendered with syntax highlighting

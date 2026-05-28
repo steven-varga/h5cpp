@@ -1,4 +1,4 @@
-# Multi-Translation-Unit Compound Types
+@page example_guide_multi_tu Multi-Translation-Unit Compound Types
 
 This example proves a single property of h5cpp: **you can include the same `generated.h` (the file that registers your POD structs as HDF5 compound types) in any number of translation units, and the linker will not complain.**
 
@@ -90,3 +90,11 @@ Gated on `ARMADILLO_FOUND` in `examples/CMakeLists.txt:377-388`.
 - **`examples/compound/`** — the single-TU version, same `record_t` types, same `generated.h` style. Start there if you're new to the compound path.
 - **`examples/csv/`** — another example that uses one shared `generated.h` (with a simpler struct).
 - **`h5cpp/H5Tall.hpp`** — `H5CPP_REGISTER_STRUCT` and `register_struct<>` live here; this is where the `inline` lives that makes the multi-TU story work.
+
+## Source
+
+- [`generated.h`](generated_8h-example.html) — rendered with syntax highlighting
+- [`main.cpp`](main_8cpp-example.html) — rendered with syntax highlighting
+- [`struct.h`](struct_8h-example.html) — rendered with syntax highlighting
+- [`tu-01.cpp`](tu_01_8cpp-example.html) — rendered with syntax highlighting
+- [`tu-02.cpp`](tu_02_8cpp-example.html) — rendered with syntax highlighting

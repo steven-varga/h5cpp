@@ -1,15 +1,17 @@
 ##
 ## Linear algebra library external links
 ##
+## Part of the H5CPP Doxygen alias vocabulary. See docs/aliases.md for the
+## catalog, standard docstring template, and contribution rules.
+##
+## See docs/links/hdf5.txt for the rationale behind the inline-link form;
+## the markdown reference-style links with \n separators that this file
+## previously used did not pair with their definitions under Doxygen's
+## current rendering.
+##
+## Note: http://arma.sourceforge.net and http://dlib.net/linear_algebra.html
+## are the canonical project pages; both serve plain http but accept https
+## via the canonical issuer chain. Kept on http to match the upstream
+## projects' own published URLs.
 
-ALIASES += larmadillo="[armadillo]: http://arma.sourceforge.net\n"
-ALIASES += lublas="[ublas]: https://www.boost.org/doc/libs/release/libs/numeric/ublas/doc/index.html\n"
-ALIASES += leigen="[eigen]: https://eigen.tuxfamily.org/index.php?title=Main_Page\n"
-ALIASES += lblitz="[blitz]: https://github.com/blitzpp/blitz\n"
-ALIASES += litpp="[itpp]: https://sourceforge.net/projects/itpp/\n"
-ALIASES += ldlib="[dlib]: http://dlib.net/linear_algebra.html\n"
-ALIASES += lblaze="[blaze]: https://bitbucket.org/blaze-lib/blaze\n"
-
-ALIASES += linalg_links="\larmadillo \lublas \leigen \lblitz \litpp \ldlib \lblaze\n"
-ALIASES += linalg_text="@sa [armadillo][] [ublas][] [eigen][] [blitz][] [itpp][] [dlib][] [blaze][]\n"
-ALIASES += sa_linalg="\linalg_text\n \linalg_links"
+ALIASES += sa_linalg="@sa [armadillo](https://arma.sourceforge.net) [ublas](https://www.boost.org/doc/libs/release/libs/numeric/ublas/doc/index.html) [eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page) [blitz](https://github.com/blitzpp/blitz) [itpp](https://sourceforge.net/projects/itpp/) [dlib](https://dlib.net/linear_algebra.html) [blaze](https://bitbucket.org/blaze-lib/blaze)"

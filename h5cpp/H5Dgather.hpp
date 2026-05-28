@@ -109,10 +109,9 @@ namespace h5 {
      * content. <br/>
      * `h5::gather` is a template mechanism to facilitate the latter process by finding and returning a set of 
      * `element_t` type pointers to the actual content of an object.  
-     * @param ref arbitrary object with non-contiguous content
-     * @param ptr element type pointer with the correct size respect to `ref` object
-     * @return ptr the same `element_t` pointer passed to the call 
-     * @tparam T C++ type of dataset being written into HDF5 container
+     * \par_ref \par_ptr
+     * @return ptr the same `element_t` pointer passed to the call (the in-out parameter is returned unchanged for chaining)
+     * \tpar_T
      */ 
     inline const char** gather( const std::vector<std::string>& ref, std::vector<const char*>& ptrs){
         ptrs.clear();

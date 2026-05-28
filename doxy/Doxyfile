@@ -4,7 +4,12 @@
 
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = H5CPP
-PROJECT_NUMBER         = 1.10.4.6
+# Sourced at build time from the H5CPP_DOXYGEN_VERSION env var which
+# scripts/docs-build.sh derives from the latest git tag (or, as a fallback,
+# from the H5CPP_PROJECT_VERSION constant in the top-level CMakeLists.txt).
+# Doxygen substitutes $(VAR) at parse time; an empty value renders as no
+# number string, which is preferable to a stale literal.
+PROJECT_NUMBER         = $(H5CPP_DOXYGEN_VERSION)
 PROJECT_BRIEF          = "Modern C++ templates for HDF5 serial and parallel I/O"
 PROJECT_LOGO           =
 OUTPUT_DIRECTORY       = ../docs/doxygen
@@ -39,12 +44,21 @@ SHOW_NAMESPACES        = NO
 WARN_FORMAT            = "$file:$line: $text"
 WARN_AS_ERROR          = NO
 WARN_NO_PARAMDOC       = NO
+# Emit warnings into a logfile alongside stderr so CI can upload it as an
+# artifact for coverage-tracking visibility. The file lives in the build dir
+# so it's picked up by the workflow's actions/upload-artifact step.
+WARN_LOGFILE           = ../docs/doxygen/warnings.log
 
-# Input: API headers + README as main page + local Doxygen pages only.
-# Conceptual guides with Material icons/images live in MkDocs; Doxygen
-# complements them with API reference, not duplicates them.
+# Input: API headers + README as main page + local Doxygen pages +
+# the curated reports tree + the alias-vocabulary reference. Conceptual
+# guides with Material icons/images still live in MkDocs; Doxygen
+# carries the API reference and the design/inventory prose that
+# accompanies it.
 INPUT                  = ../h5cpp \
                          ../README.md \
+                         ../docs/reports \
+                         ../docs/aliases.md \
+                         ../examples \
                          .
 
 FILE_PATTERNS          = *.cpp *.hpp *.h *.md *.dox
@@ -59,20 +73,45 @@ EXCLUDE                = ../docs/doxygen \
                          ../docs/icons \
                          ../docs/pix \
                          ../docs/examples
-EXCLUDE_PATTERNS       = */thirdparty/*
+# ../examples/ is added to INPUT only so README.md files become Doxygen
+# pages. Exclude the example *source* files from INPUT scanning — they're
+# already handled as `\example` listings via EXAMPLE_PATH below and shouldn't
+# be parsed as regular API source (that would surface example-internal
+# main() functions and helpers as documented entities, polluting the index).
+EXCLUDE_PATTERNS       = */thirdparty/* \
+                         */examples/*.cpp \
+                         */examples/*.hpp \
+                         */examples/*.h \
+                         */examples/*/*.cpp \
+                         */examples/*/*.hpp \
+                         */examples/*/*.h \
+                         */examples/*/CMakeLists.txt \
+                         */examples/*/Makefile
 
 EXAMPLE_PATH           = ../examples/attributes \
                          ../examples/basics \
                          ../examples/compound \
                          ../examples/container \
+                         ../examples/cout \
+                         ../examples/csv \
+                         ../examples/custom-pipeline \
                          ../examples/datasets \
+                         ../examples/datatypes \
                          ../examples/groups \
+                         ../examples/half-float \
                          ../examples/linalg \
+                         ../examples/mdspan \
                          ../examples/mpi \
                          ../examples/multi-tu \
                          ../examples/optimized \
                          ../examples/packet-table \
+                         ../examples/pprint \
                          ../examples/raw_memory \
+                         ../examples/reference \
+                         ../examples/reflection \
+                         ../examples/s3 \
+                         ../examples/smart-ptr \
+                         ../examples/sparse \
                          ../examples/stl \
                          ../examples/string \
                          ../examples/transform \
@@ -110,7 +149,7 @@ ENUM_VALUES_PER_LINE   = 4
 GENERATE_LATEX         = NO
 
 # Tag files for cross-links
-TAGFILES              += "../docs/tags/cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/"
+TAGFILES              += "../docs/tags/cppreference-doxygen-web.tag.xml=https://en.cppreference.com/"
 
 # Alias includes — each file adds ALIASES lines
 @INCLUDE_PATH          = ../docs/links
@@ -118,3 +157,14 @@ TAGFILES              += "../docs/tags/cppreference-doxygen-web.tag.xml=http://e
 @INCLUDE               = hdf5.txt
 @INCLUDE               = linalg.txt
 @INCLUDE               = stl.txt
+
+# Preprocessor — used so that SFINAE return-type macros collapse to the
+# advertised return type in the rendered signature while the real compile
+# still resolves the std::enable_if_t<...> form. Headers gate the swap on
+# the H5CPP_DOXYGEN sentinel and list the macros that should be expanded
+# inline in signatures via EXPAND_AS_DEFINED.
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED            += H5CPP_DOXYGEN=1
+EXPAND_AS_DEFINED     += H5CPP_ATTR_CREATE_RET

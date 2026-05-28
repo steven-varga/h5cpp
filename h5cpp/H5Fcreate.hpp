@@ -17,7 +17,7 @@ namespace h5{
 	/**  @ingroup file-io
 	 * @brief creates an HDF5 file  with given set of properties and returns a managed h5::fd_t resource handle. Depending on 
 	 * active [conversion policy](@ref link_conversion_policy) h5::fd_t may be passed
-	 * [implicitly,explicitly](http://en.cppreference.com/w/cpp/language/explicit) or not at all to
+	 * [implicitly,explicitly](https://en.cppreference.com/cpp/language/explicit) or not at all to
 	 * HDF5 CAPI calls.  
 	 *   
 	 *

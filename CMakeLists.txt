@@ -16,7 +16,7 @@ endif()
 # embeds it as PROJECT_VERSION rather than a stale hardcoded number.  Falls
 # back to a placeholder when building from a tarball without git history.
 find_package(Git QUIET)
-set(H5CPP_PROJECT_VERSION "1.12.0")
+set(H5CPP_PROJECT_VERSION "1.12.7")
 if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
     execute_process(
         COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --match "v[0-9]*"

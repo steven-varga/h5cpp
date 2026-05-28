@@ -1,4 +1,4 @@
-# Half-Precision Floats — Third-Party Variants
+@page example_guide_half_float Half-Precision Floats — Third-Party Variants
 
 This directory predates C++23's `std::float16_t`. It exists for users on toolchains that don't yet ship `<stdfloat>`.
 
