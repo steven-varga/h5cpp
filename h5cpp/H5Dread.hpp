@@ -16,21 +16,40 @@
 #include <tuple>
 
 namespace h5 {
-	/***************************  REFERENCE *****************************/
- 	/** \func_read_hdr
- 	*  Updates the content of passed **ptr** pointer, which must have enough memory space to receive data.
-	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified for partial IO, 
-	*  to describe the retrieved hyperslab from hdf5 file space. Default case is to select and retrieve all elements from dataset. 
-	*  **h5::dxpl_t** provides control to datatransfer. 
-	* \code
-	* h5::fd_t fd = h5::open("myfile.h5", H5F_ACC_RDWR);
-	* h5::ds_t ds = h5::open(fd,"path/to/dataset");
-	* std::vector<float> myvec(10*10);
-	* auto err = h5::read( fd, "path/to/dataset", myvec.data(), h5::count{10,10}, h5::offset{5,0} );	
-	* \endcode  
-	* \par_file_path \par_dataset_path \par_ptr \par_offset \par_stride \par_count \par_block \par_dxpl  \tpar_T \returns_err
- 	*/ 
-
+ 	/**
+ 	 * \func_read_hdr
+ 	 * @brief Read elements from an open HDF5 dataset into caller-allocated memory.
+ 	 *
+ 	 * Low-level raw-pointer overload — caller owns the memory and must
+ 	 * supply `h5::count{...}` so the dispatch knows how many elements
+ 	 * to materialise. Optional `h5::offset` / `h5::stride` / `h5::block`
+ 	 * select a hyperslab; without them the read covers the whole extent
+ 	 * (provided `count` matches it). For container / value targets use
+ 	 * the `h5::read(ds, T& ref, ...)` overload below, which derives the
+ 	 * element count from the destination object.
+ 	 *
+ 	 * \par_ds
+ 	 * \par_ptr
+ 	 * \par_args
+ 	 * \tpar_T
+ 	 * \returns_err
+ 	 *
+ 	 * @throws h5::error::io::dataset::read   on `H5Dread` failure
+ 	 *         (type-conversion error, rank mismatch, invalid hyperslab).
+ 	 *
+ 	 * <br/><b>example:</b>
+ 	 * @code
+ 	 * h5::ds_t ds = h5::open(fd, "/grid/data");           // 10x10 float dataset
+ 	 * std::vector<float> buf(10*10);
+ 	 * h5::read(ds, buf.data(), h5::count{10,10});         // whole extent
+ 	 * h5::read(ds, buf.data(), h5::count{4,4}, h5::offset{5,0});  // hyperslab
+ 	 * @endcode
+ 	 *
+ 	 * \sa_h5cpp
+ 	 * \sa_hdf5
+ 	 * @sa h5::open h5::write h5::create @ref link_base_template_types
+ 	 *     "Supported Types"
+ 	 */
 	template<class T, class... args_t>
 	inline std::enable_if_t<!std::is_same_v<T,char**>,
 	void> read( const h5::ds_t& ds, T* ptr, args_t&&... args ) try {
@@ -126,19 +145,40 @@ namespace h5 {
 		throw h5::error::io::dataset::read( err.what() );
 	}
 
- 	/** \func_read_hdr
- 	*  Updates the content of passed **ptr** pointer, which must have enough memory space to receive data.
-	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified for partial IO, 
-	*  to describe the retrieved hyperslab from hdf5 file space. Default case is to select and retrieve all elements from dataset. 
-	*  **h5::dxpl_t** provides control to datatransfer.
-	* \code
-	* h5::fd_t fd = h5::open("myfile.h5", H5F_ACC_RDWR);
-	* h5::ds_t ds = h5::open(fd,"path/to/dataset");
-	* std::vector<float> myvec(10*10);
-	* auto err = h5::read( fd, "path/to/dataset", myvec.data(), h5::count{10,10}, h5::offset{5,0} );	
-	* \endcode  
-	* \par_file_path \par_dataset_path \par_ptr \par_offset \par_stride \par_count \par_block \par_dxpl \tpar_T \returns_err
- 	*/ 
+ 	/**
+ 	 * \func_read_hdr
+ 	 * @brief Open a dataset by path and read elements into caller-allocated memory.
+ 	 *
+ 	 * Convenience overload — opens the dataset internally then forwards
+ 	 * to `h5::read(ds, ptr, ...)`. The dataset handle is closed via RAII
+ 	 * before this function returns. Requires an explicit `h5::count{...}`
+ 	 * (SFINAE-gated): a bare `read(fd, path, buf)` without `count` does
+ 	 * NOT match here and is dispatched to the by-reference overload
+ 	 * instead — that path lets `char[N]` reach the fixed-length-string
+ 	 * branch.
+ 	 *
+ 	 * \par_fd
+ 	 * \par_dataset_path
+ 	 * \par_ptr
+ 	 * \par_args
+ 	 * \tpar_T
+ 	 * \returns_err
+ 	 *
+ 	 * @throws h5::error::io::dataset::open   if the dataset is not present.
+ 	 * @throws h5::error::io::dataset::read   on `H5Dread` failure.
+ 	 *
+ 	 * <br/><b>example:</b>
+ 	 * @code
+ 	 * h5::fd_t fd = h5::open("myfile.h5", H5F_ACC_RDWR);
+ 	 * std::vector<float> buf(10*10);
+ 	 * h5::read(fd, "/path/to/dataset", buf.data(),
+ 	 *          h5::count{10,10}, h5::offset{5,0});
+ 	 * @endcode
+ 	 *
+ 	 * \sa_h5cpp
+ 	 * \sa_hdf5
+ 	 * @sa h5::open h5::write h5::create
+ 	 */
 	// SFINAE-gate the pointer overload on h5::count_t presence so a bare
 	// `read(fd, path, buf)` with no count is NOT matched here (where it would
 	// hit a hard static_assert) but instead routes to the by-reference path,
@@ -152,18 +192,29 @@ namespace h5 {
 	}
 
 
- 	/** \func_read_hdr
- 	*  Updates the content of passed **ptr** pointer, which must have enough memory space to receive data.
-	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified for partial IO,
-	*  to describe the retrieved hyperslab from hdf5 file space. Default case is to select and retrieve all elements from dataset. 
-	* \code
-	* h5::fd_t fd = h5::open("myfile.h5", H5F_ACC_RDWR);
-	* h5::ds_t ds = h5::open(fd,"path/to/dataset");
-	* std::vector<float> myvec(10*10);
-	* auto err = h5::read( fd, "path/to/dataset", myvec.data(), h5::count{10,10}, h5::offset{5,0} );	
-	* \endcode  
-	* \par_file_path \par_dataset_path \par_ptr \par_offset \par_stride \par_count \par_block \tpar_T \returns_err
- 	*/ 
+ 	/**
+ 	 * \func_read_hdr
+ 	 * @brief Open a file and dataset by path then read into caller-allocated memory.
+ 	 *
+ 	 * Convenience overload — opens the file in `H5F_ACC_RDWR` mode and
+ 	 * forwards to `h5::read(fd, dataset_path, ptr, ...)`. Both the file
+ 	 * and dataset handles close via RAII before this function returns.
+ 	 *
+ 	 * \par_file_path
+ 	 * \par_dataset_path
+ 	 * \par_ptr
+ 	 * \par_args
+ 	 * \tpar_T
+ 	 * \returns_err
+ 	 *
+ 	 * @throws h5::error::io::file::open      if the file cannot be opened.
+ 	 * @throws h5::error::io::dataset::open   if the dataset is not present.
+ 	 * @throws h5::error::io::dataset::read   on `H5Dread` failure.
+ 	 *
+ 	 * \sa_h5cpp
+ 	 * \sa_hdf5
+ 	 * @sa h5::open h5::write
+ 	 */
 	template<class T, class... args_t>
 	inline void read( const std::string& file_path, const std::string& dataset_path,T* ptr, args_t&&... args ){
 		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR );
@@ -172,18 +223,53 @@ namespace h5 {
 
 
 	/***************************  REFERENCE *****************************/
- 	/** \func_read_hdr
- 	*  Updates the content of passed **ref** reference, which must have enough memory space to receive data.
-	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified for partial IO,
-	*  to describe the retrieved hyperslab from hdf5 file space. Default case is to select and retrieve all elements from dataset. 
-	* \code
-	* h5::fd_t fd = h5::open("myfile.h5", H5F_ACC_RDWR);
-	* h5::ds_t ds = h5::open(fd,"path/to/dataset");
-	* std::vector<float> myvec(10*10);
-	* auto err = h5::read( fd, "path/to/dataset", myvec, h5::offset{5,0} );	
-	* \endcode  
-	* \par_ds \par_ref \par_offset \par_stride  \par_block \tpar_T \returns_err
- 	*/ 
+ 	/**
+ 	 * \func_read_hdr
+ 	 * @brief Read into a caller-allocated container or value of type `T`.
+ 	 *
+ 	 * Primary by-reference overload — `T` is anything the dispatch
+ 	 * accepts (see @ref link_base_template_types "Supported Types"):
+ 	 * elementary scalar, registered compound POD, fixed or
+ 	 * variable-length string, STL container, linear-algebra container,
+ 	 * `std::tuple` / `std::pair` / `std::complex`. Element count is
+ 	 * derived from `ref` via `access_traits_t<T>::size`; passing
+ 	 * `h5::count{...}` here is a compile-time error.
+ 	 *
+ 	 * Optional `h5::offset` / `h5::stride` / `h5::block` arguments select
+ 	 * a hyperslab from the file space; omitting them reads the whole
+ 	 * extent. The on-disk type must be compatible with `T` — HDF5 has
+ 	 * no fixed-length / VLEN string conversion, so a fixed-length
+ 	 * string dataset reads into `char[N]` / `std::array<char,N>` but
+ 	 * not into `std::string` (and vice versa).
+ 	 *
+ 	 * \par_ds
+ 	 * \par_ref
+ 	 * \par_args
+ 	 * \tpar_T
+ 	 * \returns_err
+ 	 *
+ 	 * @throws h5::error::io::dataset::read   on `H5Dread` failure
+ 	 *         (type-conversion error, rank mismatch, etc.).
+ 	 *
+ 	 * <br/><b>example:</b>
+ 	 * @code
+ 	 * h5::ds_t ds = h5::open(fd, "/grid/data");
+ 	 *
+ 	 * std::vector<float> v(100);
+ 	 * h5::read(ds, v);                                   // whole extent
+ 	 *
+ 	 * arma::Mat<double> mat(10, 10);
+ 	 * h5::read(ds, mat, h5::offset{5,0});                // hyperslab
+ 	 *
+ 	 * std::string label;
+ 	 * h5::read(ds, label);                               // VLEN string
+ 	 * @endcode
+ 	 *
+ 	 * \sa_h5cpp
+ 	 * \sa_hdf5
+ 	 * @sa h5::open h5::write h5::create @ref link_base_template_types
+ 	 *     "Supported Types"
+ 	 */
 	template<class T, class... args_t>
 	inline void read(const h5::ds_t& ds, T& ref, args_t&&... args) try {
 		using tcount  = typename arg::tpos<const h5::count_t&, const args_t&...>;
@@ -519,17 +605,29 @@ namespace h5 {
 	} catch (const std::exception& err) {
 		throw h5::error::io::dataset::read(err.what());
 	}
- 	/** \func_read_hdr
- 	*  Updates the content of passed **ref** reference, which must have enough memory space to receive data.
-	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified for partial IO, 
-	*  to describe the retrieved hyperslab from hdf5 file space. Default case is to select and retrieve all elements from dataset. 
-	* \code
-	* std::vector<float> myvec(10*10);
-	* h5::fd_t fd = h5::open("myfile.h5", H5F_ACC_RDWR);
-	* auto err = h5::read( fd, "path/to/dataset", myvec, h5::offset{5,0} );	
-	* \endcode  
-	* \par_fd \par_dataset_path \par_ref \par_offset \par_stride  \par_block \tpar_T \returns_err
- 	*/ 
+ 	/**
+ 	 * \func_read_hdr
+ 	 * @brief Open a dataset by path and read into a caller-allocated container or value.
+ 	 *
+ 	 * Convenience overload — opens the dataset then forwards to
+ 	 * `h5::read(ds, ref, ...)`. For scatter-decomposed types (compiler-
+ 	 * emitted via `H5CPP_REGISTER_STRUCT` with deep nesting) routes
+ 	 * through the generated `h5::gather<T>` specialization instead.
+ 	 *
+ 	 * \par_fd
+ 	 * \par_dataset_path
+ 	 * \par_ref
+ 	 * \par_args
+ 	 * \tpar_T
+ 	 * \returns_err
+ 	 *
+ 	 * @throws h5::error::io::dataset::open   if the dataset is not present.
+ 	 * @throws h5::error::io::dataset::read   on `H5Dread` failure.
+ 	 *
+ 	 * \sa_h5cpp
+ 	 * \sa_hdf5
+ 	 * @sa h5::open h5::write
+ 	 */
 	template<class T,  class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>> // dispatch to above
 		void read( const h5::fd_t& fd,  const std::string& dataset_path, T& ref, args_t&&... args ){
@@ -552,16 +650,28 @@ namespace h5 {
 		}
 	}
 
- 	/** \func_read_hdr
- 	*  Updates the content of passed **ref** reference, which must have enough memory space to receive data.
-	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified for partial IO,
-	*  to describe the retrieved hyperslab from  hdf5 file space. Default case is to select and retrieve all elements from dataset. 
-	* \code
-	* std::vector<float> myvec(10*10);
-	* auto err = h5::read( "path/to/file.h5", "path/to/dataset", myvec, h5::offset{5,0} );	
-	* \endcode  
-	* \par_file_path \par_dataset_path \par_ref \par_offset \par_stride \par_block \tpar_T \returns_err
- 	*/ 
+ 	/**
+ 	 * \func_read_hdr
+ 	 * @brief Open a file and dataset by path then read into a caller-allocated container.
+ 	 *
+ 	 * Convenience overload — opens the file in `H5F_ACC_RDWR` mode and
+ 	 * forwards to `h5::read(fd, dataset_path, ref, ...)`.
+ 	 *
+ 	 * \par_file_path
+ 	 * \par_dataset_path
+ 	 * \par_ref
+ 	 * \par_args
+ 	 * \tpar_T
+ 	 * \returns_err
+ 	 *
+ 	 * @throws h5::error::io::file::open      if the file cannot be opened.
+ 	 * @throws h5::error::io::dataset::open   if the dataset is not present.
+ 	 * @throws h5::error::io::dataset::read   on `H5Dread` failure.
+ 	 *
+ 	 * \sa_h5cpp
+ 	 * \sa_hdf5
+ 	 * @sa h5::open h5::write
+ 	 */
 	template<class T, class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>> // dispatch to above
 	void read( const std::string& file_path, const std::string& dataset_path, T& ref, args_t&&... args ){
@@ -571,16 +681,40 @@ namespace h5 {
 	}
 
 	/***************************  OBJECT *****************************/
- 	/** \func_read_hdr
- 	*  Direct read from an opened dataset descriptor that returns the entire data space wrapped into the object specified. 
-	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified for partial IO, 
-	*  to describe the retrieved hyperslab from hdf5 file space. Default case is to select and retrieve all elements from dataset. 
-	* \code
-	* h5::fd_t fd = h5::open("myfile.h5", H5F_ACC_RDWR);
-	* auto vec = h5::read<std::vector<float>>( fd, "path/to/dataset",	h5::count{10,10}, h5::offset{5,0} );	
-	* \endcode  
-	* \par_ds \par_offset \par_stride \par_count \par_block \tpar_T \returns_object 
- 	*/
+ 	/**
+ 	 * \func_read_hdr
+ 	 * @brief Return-by-value read — materialise the dataset as a fresh `T`.
+ 	 *
+ 	 * The most convenient form — `T` is constructed in-place from the
+ 	 * dataset's shape and populated in one call. Use this when you don't
+ 	 * already have a target container; use the by-reference overload
+ 	 * (`h5::read(ds, T& ref, ...)`) when you do.
+ 	 *
+ 	 * Optional `h5::offset` / `h5::stride` / `h5::count` / `h5::block`
+ 	 * select a hyperslab; omitting them returns the whole extent.
+ 	 *
+ 	 * \par_ds
+ 	 * \par_args
+ 	 * \tpar_T
+ 	 * \returns_object
+ 	 *
+ 	 * @throws h5::error::io::dataset::read   on `H5Dread` failure.
+ 	 *
+ 	 * <br/><b>example:</b>
+ 	 * @code
+ 	 * h5::ds_t ds = h5::open(fd, "/grid/data");
+ 	 *
+ 	 * auto v   = h5::read<std::vector<float>>(ds);                          // full extent
+ 	 * auto mat = h5::read<arma::Mat<double>>(fd, "/grid/data",              // hyperslab
+ 	 *                  h5::count{10,10}, h5::offset{5,0});
+ 	 * auto lbl = h5::read<std::string>(ds);                                  // VLEN string
+ 	 * @endcode
+ 	 *
+ 	 * \sa_h5cpp
+ 	 * \sa_hdf5
+ 	 * @sa h5::open h5::write h5::create @ref link_base_template_types
+ 	 *     "Supported Types"
+ 	 */
 	template<class T, class... args_t>
 	inline T read(const h5::ds_t& ds, args_t&&... args) {
 		using tcount  = typename arg::tpos<const h5::count_t&, const args_t&...>;
@@ -928,16 +1062,27 @@ namespace h5 {
 	}
 
 
- 	/** \func_read_hdr
- 	*  Direct read from an opened file descriptor and dataset path that returns the entire data space wrapped into the object specified. 
-	*  Optional arguments **args:= h5::offset | h5::stride | h5::count | h5::block** may be specified in any order for partial IO, 
-	*  to describe the retrieved hyperslab from hdf5 file space. Default case is to select and retrieve all elements from dataset. 
-	* \code
-	* h5::fd_t fd = h5::open("myfile.h5", H5F_ACC_RDWR);
-	* auto vec = h5::read<std::vector<float>>( fd, "path/to/dataset",	h5::count{10,10}, h5::offset{5,0} );	
-	* \endcode  
-	* \par_fd \par_dataset_path \par_offset \par_stride \par_count \par_block \tpar_T \returns_object 
- 	*/
+ 	/**
+ 	 * \func_read_hdr
+ 	 * @brief Open a dataset by path and return its contents as a fresh `T`.
+ 	 *
+ 	 * Convenience overload — opens the dataset then forwards to
+ 	 * `h5::read<T>(ds, ...)`. Most concise form when both the file and
+ 	 * a one-shot read are needed in a single line.
+ 	 *
+ 	 * \par_fd
+ 	 * \par_dataset_path
+ 	 * \par_args
+ 	 * \tpar_T
+ 	 * \returns_object
+ 	 *
+ 	 * @throws h5::error::io::dataset::open   if the dataset is not present.
+ 	 * @throws h5::error::io::dataset::read   on `H5Dread` failure.
+ 	 *
+ 	 * \sa_h5cpp
+ 	 * \sa_hdf5
+ 	 * @sa h5::open h5::write
+ 	 */
 	template<class T, class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>>
 	inline T read( hid_t fd, const std::string& dataset_path, args_t&&... args ){
@@ -946,15 +1091,35 @@ namespace h5 {
 		h5::ds_t ds = h5::open(fd, dataset_path, dapl );
 		return ::h5::read<T>(ds, args...);
 	}
- 	/** \func_read_hdr
- 	*  Direct read from file and dataset path that returns the entire data space wrapped into the object specified.
-	*  Optional arguments **args:= h5::offset | h5:stride | h5::count | h5::block** may be specified for partial IO, to describe
-	 *  the retrieved hyperslab from  hdf5 file space. Default case is to select and retrieve all elements from dataset.
-	* \code
-	* auto vec = h5::read<std::vector<float>>( "myfile.h5","path/to/dataset", h5::count{10,10}, h5::offset{5,0} );	
-	* \endcode  
-	* \par_file_path \par_dataset_path \par_offset \par_stride  \par_count \par_block \tpar_T \returns_object 
- 	*/
+ 	/**
+ 	 * \func_read_hdr
+ 	 * @brief Open a file + dataset by path and return contents as a fresh `T`.
+ 	 *
+ 	 * Most concise convenience form — opens the file in `H5F_ACC_RDWR`
+ 	 * mode, opens the dataset, performs the read, and returns the value
+ 	 * all in one line. All intermediate handles close via RAII.
+ 	 *
+ 	 * \par_file_path
+ 	 * \par_dataset_path
+ 	 * \par_args
+ 	 * \tpar_T
+ 	 * \returns_object
+ 	 *
+ 	 * @throws h5::error::io::file::open      if the file cannot be opened.
+ 	 * @throws h5::error::io::dataset::open   if the dataset is not present.
+ 	 * @throws h5::error::io::dataset::read   on `H5Dread` failure.
+ 	 *
+ 	 * <br/><b>example:</b>
+ 	 * @code
+ 	 * auto v = h5::read<std::vector<float>>("myfile.h5", "/path/to/dataset");
+ 	 * auto m = h5::read<arma::Mat<double>>("myfile.h5", "/path/to/dataset",
+ 	 *              h5::count{10,10}, h5::offset{5,0});
+ 	 * @endcode
+ 	 *
+ 	 * \sa_h5cpp
+ 	 * \sa_hdf5
+ 	 * @sa h5::open h5::write
+ 	 */
 	template<class T, class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>> // dispatch to above
 	inline T read(const std::string& file_path, const std::string& dataset_path, args_t&&... args ){

@@ -82,16 +82,23 @@ ALIASES += returns_ref="@return `h5::reference_t` handle (rule-of-five RAII; thr
 ALIASES += returns_paths="@return `std::vector<std::string>` of object paths relative to the start node"
 
 ############ FUNCTION GROUP HEADERS
-ALIASES += func_create_hdr="\ingroup io-create"
+# All dataset-side overloads land in the single `datasets` group (HDF5
+# datasets) — mirrors how `attribute-io` carries the full attribute
+# surface. The per-operation aliases (\func_read_hdr, \func_write_hdr,
+# etc.) are kept as semantic markers in source so a reader can tell at
+# a glance which surface a function belongs to; the @ingroup target is
+# uniform on the rendered side.
+ALIASES += func_create_hdr="\ingroup datasets"
 ALIASES += func_create_links="\sa_h5cpp \sa_hdf5 \sa_stl \sa_linalg"
 
-ALIASES += func_write_hdr="\ingroup io-write"
+ALIASES += func_write_hdr="\ingroup datasets"
 ALIASES += func_write_desc="Write an object into an HDF5 dataset. The dataset must exist or be created first with `h5::create`."
 
-ALIASES += func_read_hdr="\ingroup io-read"
+ALIASES += func_read_hdr="\ingroup datasets"
 ALIASES += func_read_desc="Read data from an HDF5 dataset into memory. Optional offset/stride/count/block arguments select a hyperslab; omitting them reads the entire dataset."
 
+ALIASES += func_append_hdr="\ingroup datasets"
 ALIASES += func_attr_hdr="\ingroup attribute-io"
-ALIASES += func_sparse_hdr="\ingroup sparse-io"
+ALIASES += func_sparse_hdr="\ingroup datasets"
 ALIASES += func_async_hdr="\ingroup async-io"
 ALIASES += func_traversal_hdr="\ingroup traversal"

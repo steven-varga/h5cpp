@@ -139,11 +139,12 @@ Conventions:
 
 | Alias | Expands to | Use on |
 |---|---|---|
-| `\func_read_hdr` | `@ingroup io-read` | every `h5::read` overload |
-| `\func_write_hdr` | `@ingroup io-write` | every `h5::write` overload |
-| `\func_create_hdr` | `@ingroup io-create` | every `h5::create` overload |
+| `\func_read_hdr` | `@ingroup datasets` | every `h5::read` overload |
+| `\func_write_hdr` | `@ingroup datasets` | every `h5::write` overload |
+| `\func_create_hdr` | `@ingroup datasets` | every `h5::create` overload |
+| `\func_append_hdr` | `@ingroup datasets` | `h5::append` / `h5::flush` / `h5::reset` (packet table) |
 | `\func_attr_hdr` | `@ingroup attribute-io` | every `h5::aread` / `h5::awrite` |
-| `\func_sparse_hdr` | `@ingroup sparse-io` | sparse read/write overloads |
+| `\func_sparse_hdr` | `@ingroup datasets` | sparse read/write overloads |
 | `\func_async_hdr` | `@ingroup async-io` | `h5::async::*` factories |
 | `\func_traversal_hdr` | `@ingroup traversal` | `h5::ls` / `h5::dfs` / `h5::bfs` |
 | `\func_read_desc` | one-line read description | combine with `func_read_hdr` |

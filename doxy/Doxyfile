@@ -133,7 +133,8 @@ HTML_FILE_EXTENSION    = .html
 HTML_HEADER            = header.html
 HTML_FOOTER            = footer.html
 HTML_EXTRA_STYLESHEET  = doxygen-awesome.css customdoxygen.css
-HTML_EXTRA_FILES       = doxygen-awesome-darkmode-toggle.js
+HTML_EXTRA_FILES       = doxygen-awesome-darkmode-toggle.js \
+                         doxygen-overload-collapse.js
 HTML_COLORSTYLE_HUE    = 28
 HTML_COLORSTYLE_SAT    = 150
 HTML_COLORSTYLE_GAMMA  = 80
@@ -168,3 +169,7 @@ MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = YES
 PREDEFINED            += H5CPP_DOXYGEN=1
 EXPAND_AS_DEFINED     += H5CPP_ATTR_CREATE_RET
+EXPAND_AS_DEFINED     += H5CPP_ATTR_OPEN_RET
+EXPAND_AS_DEFINED     += H5CPP_ATTR_DELETE_RET
+EXPAND_AS_DEFINED     += H5CPP_ATTR_READ_RET
+EXPAND_AS_DEFINED     += H5CPP_ATTR_WRITE_RET

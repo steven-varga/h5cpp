@@ -9,16 +9,45 @@
 #include <stdexcept>
 #include <type_traits>
 #include <initializer_list>
+
+// Return-type macro for h5::awrite<T>(parent, name, ref, acpl) and the
+// initializer_list overload. See H5Acreate.hpp for the rationale.
+#ifdef H5CPP_DOXYGEN
+#  define H5CPP_ATTR_WRITE_RET(hid_t) h5::at_t
+#else
+#  define H5CPP_ATTR_WRITE_RET(hid_t) h5::impl::attr_parent_t<hid_t>
+#endif
+
 namespace h5 {
-	// --- low-level attribute writers (leaf operations used by simple branches) ---
-	// Generic template — handles all element pointer types. Used by both the
-	// initializer_list overload and the iter-staging / object / contiguous
-	// branches of the high-level awrite below.
+	/**
+	 * \func_attr_hdr
+	 * @brief Low-level attribute write — copies elements from `ptr` into an already-open `h5::at_t`.
+	 *
+	 * Used internally by the dispatched `h5::awrite(parent, name, ref, ...)`
+	 * overloads when they need to write through a pre-built attribute
+	 * handle (composite, contiguous, iter-staging branches). The HDF5
+	 * datatype is deduced from `T` via `h5::dt_t<T>`.
+	 *
+	 * Callers typically use the high-level dispatched overload below
+	 * rather than calling this directly.
+	 *
+	 * @param attr  open `h5::at_t` handle obtained from `h5::create` or
+	 *              `h5::open`; must be valid for write.
+	 * @param ptr   pointer to a memory region holding at least the
+	 *              attribute's element count of values of type `T`.
+	 *
+	 * \tpar_T
+	 *
+	 * @return void — failures are reported by throwing `h5::error::io::attribute::write`.
+	 *
+	 * @throws h5::error::io::attribute::write  on `H5Awrite` failure
+	 *         (handle invalid, type-conversion error, etc.).
+	 */
 	template <class T>
 	inline void awrite( const h5::at_t& attr, const T* ptr ){
 		using element_t = typename meta::decay<T>::type;
 		h5::dt_t<element_t> type;
-		H5CPP_CHECK_NZ( H5Awrite( static_cast<hid_t>(attr), static_cast<hid_t>( type ), ptr ),
+		H5CPP_CHECK_NZ( H5Awrite( static_cast<::hid_t>(attr), static_cast<::hid_t>( type ), ptr ),
 				h5::error::io::attribute::write, "couldn't write attribute.");
 	}
 	// Note: a previously-present non-template `awrite(at_t, const char*)` overload
@@ -36,11 +65,11 @@ namespace h5 {
 		// where the standard h5::create<T> path (which uses dt_t<T>) cannot supply the
 		// non-trivial HDF5 type — the caller builds the type explicitly.
 		inline h5::at_t open_or_create_attr(
-			hid_t parent, const std::string& name, hid_t type, hid_t space, hid_t acpl)
+			::hid_t parent, const std::string& name, ::hid_t type, ::hid_t space, ::hid_t acpl)
 		{
 			if (H5Aexists(parent, name.c_str()) > 0)
 				return h5::open(parent, name, h5::default_acpl);
-			hid_t id = H5I_UNINIT;
+			::hid_t id = H5I_UNINIT;
 			H5CPP_CHECK_NZ((id = H5Acreate2(parent, name.c_str(), type, space, acpl, H5P_DEFAULT)),
 				h5::error::io::attribute::create, "couldn't create attribute.");
 			return h5::at_t{id};
@@ -48,9 +77,60 @@ namespace h5 {
 	}
 
 	// --- high-level dispatched awrite: kind × storage matrix, mirrors H5Dwrite ---
-	template <class T, class P, class... args_t>
-	inline std::enable_if_t<h5::impl::is_valid_attr<P>::value,
-	h5::at_t> awrite( const P& parent, const std::string& name, const T& ref, const h5::acpl_t& acpl = h5::default_acpl ) try {
+	/**
+	 * \func_attr_hdr
+	 * @brief Write an object as an attribute on a parent HDF5 object.
+	 *
+	 * Creates the attribute if it does not exist, opens it if it does,
+	 * then writes `ref` into it. Element type `T` follows the same
+	 * dispatch as the dataset API (see @ref link_base_template_types
+	 * "Supported Types"): scalar, registered compound, string (fixed or
+	 * VLEN), STL container, linear-algebra container, tuple, pair,
+	 * complex, etc.
+	 *
+	 * Attributes do not chunk and do not support partial I/O; the
+	 * attribute's shape is derived from `ref` via `access_traits_t<T>::size`.
+	 *
+	 * @param parent  open parent handle: raw `::hid_t`, `h5::gr_t`, `h5::ds_t`, `h5::ob_t`, or `h5::dt_t<T>` — enforced at compile
+	 *                time via `h5::impl::is_valid_attr`. Typed `h5::fd_t` is **not** accepted directly; pass `static_cast<::hid_t>(fd)`.
+	 * @param name    attribute name (UTF-8); resolved relative to `parent`.
+	 * @param ref     value to write; type `T` determines on-disk layout.
+	 * @param acpl    attribute creation property list (`h5::acpl_t`); defaults to `h5::default_acpl`.
+	 *
+	 * \tpar_T
+	 * @tparam hid_t  deduced from the `parent` argument; must satisfy `h5::impl::is_valid_attr<hid_t>::value`.
+	 * @return `h5::at_t` RAII handle owning the (now-populated) attribute id.
+	 *
+	 * @throws h5::error::io::attribute::write   on `H5Awrite` failure.
+	 * @throws h5::error::io::attribute::create  if the attribute didn't
+	 *         exist and creation failed.
+	 *
+	 * <br/><b>example:</b> create-on-demand round-trip. Each `awrite` call
+	 * here creates the attribute if it doesn't exist, then writes the value
+	 * (shape derived from the value's `access_traits_t::size`).
+	 * @code
+	 * h5::fd_t fd = h5::open("file.h5", H5F_ACC_RDWR);
+	 * h5::ds_t ds = h5::open(fd, "/grid/data");
+	 *
+	 * // Three attributes of distinct kinds — scalar, vector, string.
+	 * h5::awrite(ds, "schema_version", 1.4);                            // double scalar
+	 * h5::awrite(ds, "spacing", std::vector<float>{0.5f, 0.5f, 1.0f});  // rank-1, 3 floats
+	 * h5::awrite(ds, "label", std::string{"u32"});                      // VLEN string
+	 *
+	 * // Bracket-syntax sugar over the same dispatch — see h5::ds_t::operator[].
+	 * ds["axes"] = {1, 2, 3};                                           // 3 ints
+	 *
+	 * // Read these back with h5::aread<T>(ds, "name").
+	 * @endcode
+	 *
+	 * \sa_h5cpp
+	 * \sa_hdf5
+	 * @sa h5::create h5::open h5::aread @ref link_handle_reference
+	 *     "Handles, Descriptors, and Property Lists"
+	 */
+	template <class T, class hid_t, class... args_t>
+	inline H5CPP_ATTR_WRITE_RET(hid_t)
+	awrite( const hid_t& parent, const std::string& name, const T& ref, const h5::acpl_t& acpl = h5::default_acpl ) try {
 		using traits    = h5::meta::access_traits_t<T>;
 		using sr_t      = h5::meta::storage_representation_t;
 		using element_t = typename impl::decay<T>::type;
@@ -86,24 +166,24 @@ namespace h5 {
 			h5::meta::resolved_type_t<T> mem_type;
 			h5::sp_t space{H5Screate(H5S_SCALAR)};
 			h5::at_t attr = detail::open_or_create_attr(
-				static_cast<hid_t>(parent), name,
-				static_cast<hid_t>(mem_type), static_cast<hid_t>(space),
-				static_cast<hid_t>(acpl));
+				static_cast<::hid_t>(parent), name,
+				static_cast<::hid_t>(mem_type), static_cast<::hid_t>(space),
+				static_cast<::hid_t>(acpl));
 			H5CPP_CHECK_NZ(
-				H5Awrite(static_cast<hid_t>(attr), static_cast<hid_t>(mem_type), buf.data()),
+				H5Awrite(static_cast<::hid_t>(attr), static_cast<::hid_t>(mem_type), buf.data()),
 				h5::error::io::attribute::write, "couldn't write composite attribute.");
 			return attr;
 		} else if constexpr (kind == h5::meta::access_t::text
 			&& storage == sr_t::fixed_length_string) {
 			// char[N] / std::array<char,N> — H5T_C_S1 + H5Tset_size(N), scalar.
-			hid_t fls_type = H5Tcopy(H5T_C_S1);
+			::hid_t fls_type = H5Tcopy(H5T_C_S1);
 			H5Tset_size(fls_type, traits::fixed_length);
 			h5::sp_t space{H5Screate(H5S_SCALAR)};
 			h5::at_t attr = detail::open_or_create_attr(
-				static_cast<hid_t>(parent), name,
-				fls_type, static_cast<hid_t>(space), static_cast<hid_t>(acpl));
+				static_cast<::hid_t>(parent), name,
+				fls_type, static_cast<::hid_t>(space), static_cast<::hid_t>(acpl));
 			H5CPP_CHECK_NZ(
-				H5Awrite(static_cast<hid_t>(attr), fls_type, traits::data(ref)),
+				H5Awrite(static_cast<::hid_t>(attr), fls_type, traits::data(ref)),
 				h5::error::io::attribute::write, "couldn't write fixed-length string attribute.");
 			H5Tclose(fls_type);
 			return attr;
@@ -112,12 +192,12 @@ namespace h5 {
 			h5::dt_t<char*> vlen_str;
 			h5::sp_t space{H5Screate(H5S_SCALAR)};
 			h5::at_t attr = detail::open_or_create_attr(
-				static_cast<hid_t>(parent), name,
-				static_cast<hid_t>(vlen_str), static_cast<hid_t>(space),
-				static_cast<hid_t>(acpl));
+				static_cast<::hid_t>(parent), name,
+				static_cast<::hid_t>(vlen_str), static_cast<::hid_t>(space),
+				static_cast<::hid_t>(acpl));
 			const char* ptr = traits::data(ref);
 			H5CPP_CHECK_NZ(
-				H5Awrite(static_cast<hid_t>(attr), static_cast<hid_t>(vlen_str), &ptr),
+				H5Awrite(static_cast<::hid_t>(attr), static_cast<::hid_t>(vlen_str), &ptr),
 				h5::error::io::attribute::write, "couldn't write text attribute.");
 			return attr;
 		} else if constexpr (storage == sr_t::array_element) {
@@ -127,14 +207,14 @@ namespace h5 {
 			hsize_t array_dims[H5CPP_MAX_RANK];
 			for (std::size_t i = 0; i < dims.size(); ++i) array_dims[i] = dims[i];
 			h5::meta::resolved_type_t<element_t_loc> base_type;
-			hid_t array_type = H5Tarray_create(static_cast<hid_t>(base_type),
+			::hid_t array_type = H5Tarray_create(static_cast<::hid_t>(base_type),
 				static_cast<unsigned>(dims.size()), array_dims);
 			h5::sp_t space{H5Screate(H5S_SCALAR)};
 			h5::at_t attr = detail::open_or_create_attr(
-				static_cast<hid_t>(parent), name,
-				array_type, static_cast<hid_t>(space), static_cast<hid_t>(acpl));
+				static_cast<::hid_t>(parent), name,
+				array_type, static_cast<::hid_t>(space), static_cast<::hid_t>(acpl));
 			H5CPP_CHECK_NZ(
-				H5Awrite(static_cast<hid_t>(attr), array_type, traits::data(ref)),
+				H5Awrite(static_cast<::hid_t>(attr), array_type, traits::data(ref)),
 				h5::error::io::attribute::write, "couldn't write array_element attribute.");
 			H5Tclose(array_type);
 			return attr;
@@ -145,14 +225,14 @@ namespace h5 {
 			constexpr std::size_t N_inner = std::tuple_size<inner_t>::value;
 			hsize_t array_dims[1] = { static_cast<hsize_t>(N_inner) };
 			h5::meta::resolved_type_t<elem_scalar> base_type;
-			hid_t array_type = H5Tarray_create(static_cast<hid_t>(base_type), 1, array_dims);
+			::hid_t array_type = H5Tarray_create(static_cast<::hid_t>(base_type), 1, array_dims);
 			hsize_t outer = static_cast<hsize_t>(ref.size());
 			h5::sp_t space{H5Screate_simple(1, &outer, nullptr)};
 			h5::at_t attr = detail::open_or_create_attr(
-				static_cast<hid_t>(parent), name,
-				array_type, static_cast<hid_t>(space), static_cast<hid_t>(acpl));
+				static_cast<::hid_t>(parent), name,
+				array_type, static_cast<::hid_t>(space), static_cast<::hid_t>(acpl));
 			H5CPP_CHECK_NZ(
-				H5Awrite(static_cast<hid_t>(attr), array_type,
+				H5Awrite(static_cast<::hid_t>(attr), array_type,
 					ref.empty() ? nullptr : ref.front().data()),
 				h5::error::io::attribute::write, "couldn't write array_dataset attribute.");
 			H5Tclose(array_type);
@@ -161,15 +241,15 @@ namespace h5 {
 			// std::vector<std::array<char,N>> — rank-1 of H5T_C_S1+set_size(N).
 			using inner_t = std::remove_cv_t<typename std::remove_reference_t<T>::value_type>;
 			constexpr std::size_t N_inner = std::tuple_size<inner_t>::value;
-			hid_t fls_type = H5Tcopy(H5T_C_S1);
+			::hid_t fls_type = H5Tcopy(H5T_C_S1);
 			H5Tset_size(fls_type, N_inner);
 			hsize_t outer = static_cast<hsize_t>(ref.size());
 			h5::sp_t space{H5Screate_simple(1, &outer, nullptr)};
 			h5::at_t attr = detail::open_or_create_attr(
-				static_cast<hid_t>(parent), name,
-				fls_type, static_cast<hid_t>(space), static_cast<hid_t>(acpl));
+				static_cast<::hid_t>(parent), name,
+				fls_type, static_cast<::hid_t>(space), static_cast<::hid_t>(acpl));
 			H5CPP_CHECK_NZ(
-				H5Awrite(static_cast<hid_t>(attr), fls_type,
+				H5Awrite(static_cast<::hid_t>(attr), fls_type,
 					ref.empty() ? nullptr : ref.front().data()),
 				h5::error::io::attribute::write, "couldn't write fls_dataset attribute.");
 			H5Tclose(fls_type);
@@ -179,7 +259,7 @@ namespace h5 {
 			// arithmetic / pair / complex / std::vector<T> / std::array<T,N> / registered aggregate
 			h5::current_dims_t current_dims = traits::size(ref);
 			using attr_element_t = typename traits::element_t;
-			h5::at_t attr = ( H5Aexists(static_cast<hid_t>(parent), name.c_str() ) > 0 ) ?
+			h5::at_t attr = ( H5Aexists(static_cast<::hid_t>(parent), name.c_str() ) > 0 ) ?
 				h5::open(parent, name, h5::default_acpl) :
 				h5::create<attr_element_t>(parent, name, current_dims);
 			h5::awrite(attr, traits::data(ref));
@@ -196,11 +276,11 @@ namespace h5 {
 				hsize_t n = ref.size();
 				h5::sp_t space{H5Screate_simple(1, &n, nullptr)};
 				h5::at_t attr = detail::open_or_create_attr(
-					static_cast<hid_t>(parent), name,
-					static_cast<hid_t>(vlen_str), static_cast<hid_t>(space),
-					static_cast<hid_t>(acpl));
+					static_cast<::hid_t>(parent), name,
+					static_cast<::hid_t>(vlen_str), static_cast<::hid_t>(space),
+					static_cast<::hid_t>(acpl));
 				H5CPP_CHECK_NZ(
-					H5Awrite(static_cast<hid_t>(attr), static_cast<hid_t>(vlen_str), relay.data()),
+					H5Awrite(static_cast<::hid_t>(attr), static_cast<::hid_t>(vlen_str), relay.data()),
 					h5::error::io::attribute::write, "couldn't write vlen_text attribute.");
 				return attr;
 			} else if constexpr (storage == sr_t::ragged_vlen_dataset) {
@@ -213,14 +293,14 @@ namespace h5 {
 					relay[i].p   = const_cast<void*>(static_cast<const void*>(ref[i].data()));
 				}
 				h5::meta::resolved_type_t<elem_t> base_type;
-				hid_t vlen_type = H5Tvlen_create(static_cast<hid_t>(base_type));
+				::hid_t vlen_type = H5Tvlen_create(static_cast<::hid_t>(base_type));
 				hsize_t n = ref.size();
 				h5::sp_t space{H5Screate_simple(1, &n, nullptr)};
 				h5::at_t attr = detail::open_or_create_attr(
-					static_cast<hid_t>(parent), name, vlen_type,
-					static_cast<hid_t>(space), static_cast<hid_t>(acpl));
+					static_cast<::hid_t>(parent), name, vlen_type,
+					static_cast<::hid_t>(space), static_cast<::hid_t>(acpl));
 				H5CPP_CHECK_NZ(
-					H5Awrite(static_cast<hid_t>(attr), vlen_type, relay.data()),
+					H5Awrite(static_cast<::hid_t>(attr), vlen_type, relay.data()),
 					h5::error::io::attribute::write, "couldn't write ragged_vlen attribute.");
 				H5Tclose(vlen_type);
 				return attr;
@@ -236,11 +316,11 @@ namespace h5 {
 				hsize_t hn = n;
 				h5::sp_t space{H5Screate_simple(1, &hn, nullptr)};
 				h5::at_t attr = detail::open_or_create_attr(
-					static_cast<hid_t>(parent), name,
-					static_cast<hid_t>(mem_type), static_cast<hid_t>(space),
-					static_cast<hid_t>(acpl));
+					static_cast<::hid_t>(parent), name,
+					static_cast<::hid_t>(mem_type), static_cast<::hid_t>(space),
+					static_cast<::hid_t>(acpl));
 				H5CPP_CHECK_NZ(
-					H5Awrite(static_cast<hid_t>(attr), static_cast<hid_t>(mem_type), buf.data()),
+					H5Awrite(static_cast<::hid_t>(attr), static_cast<::hid_t>(mem_type), buf.data()),
 					h5::error::io::attribute::write, "couldn't write composite-element attribute.");
 				return attr;
 			} else {
@@ -261,9 +341,9 @@ namespace h5 {
 				struct kv_t { key_t key; value_t value; };
 				h5::meta::resolved_type_t<key_t>   kt;
 				h5::meta::resolved_type_t<value_t> vt;
-				hid_t compound = H5Tcreate(H5T_COMPOUND, sizeof(kv_t));
-				H5Tinsert(compound, "key",   offsetof(kv_t, key),   static_cast<hid_t>(kt));
-				H5Tinsert(compound, "value", offsetof(kv_t, value), static_cast<hid_t>(vt));
+				::hid_t compound = H5Tcreate(H5T_COMPOUND, sizeof(kv_t));
+				H5Tinsert(compound, "key",   offsetof(kv_t, key),   static_cast<::hid_t>(kt));
+				H5Tinsert(compound, "value", offsetof(kv_t, value), static_cast<::hid_t>(vt));
 				std::vector<kv_t> buffer;
 				buffer.reserve(ref.size());
 				for (const auto& [k, v] : ref)
@@ -271,10 +351,10 @@ namespace h5 {
 				hsize_t n = ref.size();
 				h5::sp_t space{H5Screate_simple(1, &n, nullptr)};
 				h5::at_t attr = detail::open_or_create_attr(
-					static_cast<hid_t>(parent), name, compound,
-					static_cast<hid_t>(space), static_cast<hid_t>(acpl));
+					static_cast<::hid_t>(parent), name, compound,
+					static_cast<::hid_t>(space), static_cast<::hid_t>(acpl));
 				H5CPP_CHECK_NZ(
-					H5Awrite(static_cast<hid_t>(attr), compound, buffer.data()),
+					H5Awrite(static_cast<::hid_t>(attr), compound, buffer.data()),
 					h5::error::io::attribute::write, "couldn't write key_value attribute.");
 				H5Tclose(compound);
 				return attr;
@@ -293,11 +373,11 @@ namespace h5 {
 				hsize_t hn = n;
 				h5::sp_t space{H5Screate_simple(1, &hn, nullptr)};
 				h5::at_t attr = detail::open_or_create_attr(
-					static_cast<hid_t>(parent), name,
-					static_cast<hid_t>(mem_type), static_cast<hid_t>(space),
-					static_cast<hid_t>(acpl));
+					static_cast<::hid_t>(parent), name,
+					static_cast<::hid_t>(mem_type), static_cast<::hid_t>(space),
+					static_cast<::hid_t>(acpl));
 				H5CPP_CHECK_NZ(
-					H5Awrite(static_cast<hid_t>(attr), static_cast<hid_t>(mem_type), buf.data()),
+					H5Awrite(static_cast<::hid_t>(attr), static_cast<::hid_t>(mem_type), buf.data()),
 					h5::error::io::attribute::write, "couldn't write iter-composite attribute.");
 				return attr;
 			} else {
@@ -311,7 +391,7 @@ namespace h5 {
 				buffer.reserve(traits::size(ref)[0]);
 				for (const auto& elem : ref) buffer.push_back(elem);
 				h5::current_dims_t current_dims = traits::size(ref);
-				h5::at_t attr = ( H5Aexists(static_cast<hid_t>(parent), name.c_str() ) > 0 ) ?
+				h5::at_t attr = ( H5Aexists(static_cast<::hid_t>(parent), name.c_str() ) > 0 ) ?
 					h5::open(parent, name, h5::default_acpl) :
 					h5::create<iter_elem_t>(parent, name, current_dims);
 				h5::awrite(attr, buffer.data());
@@ -325,14 +405,44 @@ namespace h5 {
 		throw h5::error::io::attribute::write( err.what() );
 	}
 
-	// std::initializer_list<T> overload preserved verbatim (specialized form)
-	template<class T, class P>
-	inline std::enable_if_t<h5::impl::is_valid_attr<P>::value,
-    h5::at_t> awrite( const P& parent, const std::string& name, const std::initializer_list<T> ref, const h5::acpl_t& acpl = h5::default_acpl ) try {
+	/**
+	 * \func_attr_hdr
+	 * @brief Write a brace-initialised list as an attribute.
+	 *
+	 * Convenience overload for the brace-list form `h5::awrite(parent, "x", {1, 2, 3})`.
+	 * The list is materialised internally and written through the standard
+	 * dispatched path; on-disk shape is rank-1 of the list's element type.
+	 *
+	 * @param parent  open parent handle: raw `::hid_t`, `h5::gr_t`, `h5::ds_t`, `h5::ob_t`, or `h5::dt_t<T>` — enforced at compile
+	 *                time via `h5::impl::is_valid_attr`.
+	 * @param name    attribute name (UTF-8); resolved relative to `parent`.
+	 * @param ref     `std::initializer_list<T>` to write.
+	 * @param acpl    attribute creation property list (`h5::acpl_t`); defaults to `h5::default_acpl`.
+	 *
+	 * \tpar_T
+	 * @tparam hid_t  deduced from the `parent` argument; must satisfy `h5::impl::is_valid_attr<hid_t>::value`.
+	 * @return `h5::at_t` RAII handle owning the (now-populated) attribute id.
+	 *
+	 * @throws h5::error::io::attribute::write   on `H5Awrite` failure.
+	 * @throws h5::error::io::attribute::create  if the attribute didn't
+	 *         exist and creation failed.
+	 *
+	 * <br/><b>example:</b>
+	 * @code
+	 * h5::ds_t ds = h5::open(fd, "/grid/data");
+	 * h5::awrite(ds, "axes", {1, 2, 3});       // int  attribute, rank-1, length 3
+	 * h5::awrite(ds, "spacing", {0.5f, 1.0f}); // float attribute, rank-1, length 2
+	 * @endcode
+	 *
+	 * \sa_h5cpp
+	 */
+	template<class T, class hid_t>
+	inline H5CPP_ATTR_WRITE_RET(hid_t)
+    awrite( const hid_t& parent, const std::string& name, const std::initializer_list<T> ref, const h5::acpl_t& acpl = h5::default_acpl ) try {
 		h5::current_dims_t current_dims = impl::size( ref );
 		using element_t = typename impl::decay<std::initializer_list<T>>::type;
 
-		h5::at_t attr = ( H5Aexists(static_cast<hid_t>(parent), name.c_str() ) > 0 ) ?
+		h5::at_t attr = ( H5Aexists(static_cast<::hid_t>(parent), name.c_str() ) > 0 ) ?
 			h5::open(parent, name, h5::default_acpl) : h5::create<element_t>(parent, name, current_dims);
 		h5::awrite<element_t>(attr, impl::data( ref ) );
 		return attr;
@@ -345,12 +455,32 @@ template<> inline
 h5::at_t h5::ds_t::operator[]( const char name[] ){
 	//we don't have the object parameters yet available the only thing to do is
 	//mark it H5I_UNINIT and in the second phase create the attribute
-	h5::at_t attr = ( H5Aexists(static_cast<hid_t>(*this), name ) > 0 ) ?
-			h5::open(static_cast<hid_t>( *this ), name, h5::default_acpl) : h5::at_t{H5I_UNINIT};
-	attr.ds   = static_cast<hid_t>(*this);
+	h5::at_t attr = ( H5Aexists(static_cast<::hid_t>(*this), name ) > 0 ) ?
+			h5::open(static_cast<::hid_t>( *this ), name, h5::default_acpl) : h5::at_t{H5I_UNINIT};
+	attr.ds   = static_cast<::hid_t>(*this);
 	attr.name = std::string(name);
 	return attr;
 }
+
+// Same pattern for gr_t and ob_t: `parent["attr"] = v` writes, `T v = parent["attr"]` reads.
+template<> inline
+h5::at_t h5::gr_t::operator[]( const char name[] ){
+	h5::at_t attr = ( H5Aexists(static_cast<::hid_t>(*this), name ) > 0 ) ?
+			h5::open(static_cast<::hid_t>( *this ), name, h5::default_acpl) : h5::at_t{H5I_UNINIT};
+	attr.ds   = static_cast<::hid_t>(*this);
+	attr.name = std::string(name);
+	return attr;
+}
+
+template<> inline
+h5::at_t h5::ob_t::operator[]( const char name[] ){
+	h5::at_t attr = ( H5Aexists(static_cast<::hid_t>(*this), name ) > 0 ) ?
+			h5::open(static_cast<::hid_t>( *this ), name, h5::default_acpl) : h5::at_t{H5I_UNINIT};
+	attr.ds   = static_cast<::hid_t>(*this);
+	attr.name = std::string(name);
+	return attr;
+}
+
 template<> template< class V> inline
 h5::at_t h5::at_t::operator=( V arg ){
 	if( !H5Iis_valid(this->ds) )

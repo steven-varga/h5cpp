@@ -101,6 +101,75 @@ pre.fragment {
 }
 
 /* ------------------------------------------------------------------ */
+/* Overload collapse (doxygen-overload-collapse.js)                    */
+/* ------------------------------------------------------------------ */
+
+/* Compact navigator strip placed under the primary heading of a
+ * multi-overload run. Lists "[1/N] [2/N] ..." as anchor links so the
+ * reader sees one entry per function name but can still jump to a
+ * specific overload signature. */
+.overload-jump-strip {
+    margin: 0.3em 0 1em 0;
+    padding: 0.2em 0.6em;
+    font-size: 0.9em;
+    color: var(--page-secondary-foreground-color);
+    border-left: 3px solid var(--primary-light-color);
+    background: var(--code-background);
+    border-radius: var(--border-radius-small);
+}
+.overload-jump-strip .overload-jump-label {
+    font-style: italic;
+    margin-right: 0.4em;
+}
+.overload-jump-strip .overload-jump-link {
+    display: inline-block;
+    margin: 0 0.15em;
+    padding: 0 0.35em;
+    border-radius: var(--border-radius-small);
+    color: var(--primary-color);
+    text-decoration: none;
+}
+.overload-jump-strip .overload-jump-link:hover {
+    background: var(--primary-color);
+    color: var(--on-primary-color);
+}
+
+/* Folded [2..N] overloads — render the summary like a slimmer memtitle
+ * so the visual rhythm stays consistent with the unfolded [1/N] header
+ * above it. */
+details.overload-fold {
+    margin: 0.6em 0;
+}
+details.overload-fold > summary.overload-summary {
+    cursor: pointer;
+    padding: 0.4em 0.8em;
+    background: var(--code-background);
+    border-left: 3px solid var(--primary-light-color);
+    border-radius: var(--border-radius-small);
+    font-weight: 600;
+    list-style: none;             /* hide default ▶ marker, we draw one below */
+}
+details.overload-fold > summary.overload-summary::-webkit-details-marker {
+    display: none;
+}
+details.overload-fold > summary.overload-summary::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 0.5em;
+    color: var(--primary-color);
+    font-size: 0.8em;
+    transition: transform 0.15s ease;
+}
+details.overload-fold[open] > summary.overload-summary::before {
+    transform: rotate(90deg);
+}
+details.overload-fold > summary.overload-summary .overload {
+    color: var(--page-secondary-foreground-color);
+    font-weight: 400;
+    margin-left: 0.4em;
+}
+
+/* ------------------------------------------------------------------ */
 /* Compact function-signature rendering                                */
 /* ------------------------------------------------------------------ */
 

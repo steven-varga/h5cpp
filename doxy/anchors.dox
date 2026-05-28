@@ -554,6 +554,41 @@
  *   <tr><td>`h5::dt_t<T>` (template)</td><td>`H5Tclose`</td><td>datatype for `T`</td>      <td>default-constructed: `h5::dt_t<int>{}` looks up the cached HDF5 type for `T`</td></tr>
  * </table>
  *
+ * @subsection handle_ref_indexer Attribute bracket syntax
+ *
+ * `h5::ds_t`, `h5::gr_t`, and `h5::ob_t` expose an `operator[](const char*)`
+ * that returns a transient `h5::at_t` carrying the parent handle and the
+ * attribute name. Combined with `at_t::operator=(V)` and the templated
+ * `at_t::operator V() const`, this gives a symmetric Python-dict-like API
+ * for attribute I/O without leaving expression syntax:
+ *
+ * @code
+ * h5::gr_t gr = h5::gopen(fd, "/grid");
+ *
+ * // write
+ * gr["title"]   = std::string{"hello"};
+ * gr["count"]   = 42;
+ * gr["values"]  = std::vector<double>{1.0, 2.0, 3.0};
+ *
+ * // read — implicit conversion picks T from the left-hand side
+ * std::string title  = gr["title"];
+ * int         count  = gr["count"];
+ * @endcode
+ *
+ * The bracket form is sugar over the free-function surface; both write the
+ * same on-disk bytes as `h5::awrite(gr, "title", ...)` and read the same
+ * value as `h5::aread<T>(gr, "title")`. Type `V` follows the same dispatch
+ * matrix as the rest of the I/O API (see @ref link_base_template_types
+ * "Supported Types"). The conversion excludes `::hid_t` so plain
+ * `static_cast<::hid_t>(at_t)` still resolves to the inherited handle accessor.
+ *
+ * Caveats:
+ *   - `auto v = gr["x"]` deduces `at_t`, **not** the attribute value; the
+ *     implicit conversion needs a concrete LHS type to fire.
+ *   - The transient `at_t` only carries `ds` + `name`; if the parent handle
+ *     is closed before the conversion runs, the read throws
+ *     `h5::error::io::attribute::read`.
+ *
  * @section handle_ref_async Async-mode handles
  *
  * Specialisations with both conversion directions deleted at the type

@@ -146,39 +146,19 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
 */
 
 
-/** @defgroup io-create template <T> ds_t create( file, path, space [,lcpl] [,dcpl] [,acpl] );
- * \brief **fd** - open file descriptor or path to hdf5 file,   **path** - how you reach dataset within file, 
- * **space** -- describes the current and maximum dimensions of dataset, 
- * [h5::lcpl | h5::dcpl h5::dapl](@ref link_property_lists) are to fine tune link,dataset properties.
+/** @defgroup datasets HDF5 datasets
+ *  \brief Templated dataset I/O — `h5::create`, `h5::open`,
+ *  `h5::read`, `h5::write`, packet-table streaming (`h5::append`
+ *  / `h5::flush` / `h5::reset`), and the sparse-matrix CSC group
+ *  form. Element type `T` follows the
+ *  [Supported Types](@ref link_base_template_types) dispatch
+ *  matrix; offset / stride / count / block select hyperslabs;
+ *  chunking, compression, and access tuning go through the
+ *  [property-list family](@ref link_property_lists).
+ *  \sa_hdf5
  */
 
-/** @defgroup io-read h5::read<T>( ds | path [,offset] [,stride] [,count] [,dxpl] ); 
- * \brief Templated full or partial IO READ operations that help you to have access to [dataset]s by either returning 
- * [supported linear algebra](@ref link_linalg_template_types) and [STL containers](@ref link_stl_template_types) 
- * or updating the content of already existing objects by passing reference or pointer 
- * to them.  The provided implementations rely on compile time constexpr evaluations, SFINEA pattern matching as 
- * well as static_assert compile time error handling where ever was permitted. Optional [runtime error mechanism](@ref link_error_handler)
- * added with HDF5 error stack unwinding otherwise. 
- * Starting from the  most convenient implementation, where you only have to point at a dataset and the right size object is returned, you find 
- * calls which operate on pre-allocated objects. In case the objects are unsupported there is efficient implementation for raw pointers.
- * When objects are passed then the number of elements are computed from the size of the object, therefore specifying **h5::count** is 
- * compile time error. On the other hand when working with classes and  raw pointers, **h5::count** is the only way to tell how much data you're to retrieve,
- * hence it is required.   
- * The first group of function arguments are mandatory whereas the optional arguments may be specified in any order, 
- * or omitted entirely.
- *
- * [dataset]: https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_dataset.html
- */
-
-/** @defgroup io-write herr_t h5::write<T>( ds | path, object<T> [,offset] [ ,stride ] [,count] [,dxpl] );
- *  \brief Templated WRITE operations object:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> | raw_ptr 
- */
-
-/** @defgroup io-append h5::append<T>( pt , T object);
- *  \brief dataset APPEND operations for streamed data access with examples
- */
-
-/** @defgroup attribute-io h5::create / h5::aread / h5::awrite — HDF5 attributes
+/** @defgroup attribute-io HDF5 attributes
  *  \brief Templated attribute I/O on any parent that can carry metadata —
  *  files, groups, datasets, opaque objects, committed datatypes. Element
  *  type `T` follows the same dispatch as the dataset API
@@ -188,17 +168,20 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
  *  \sa_hdf5
  */
 
-/** @defgroup io-wrap `handle` | `type_id` with RAII
- * \brief thin `std::unique_ptr`-like, type-safe wraps for the CAPI `hid_t` / `herr_t` types which, upon destruction or being passed to
- * HDF5 CAPI functions, do the right thing.
- * \sa_hdf5
+/** @defgroup io-wrap RAII handles
+ *  \brief Thin, `std::unique_ptr`-like type-safe wrappers for the CAPI
+ *  `hid_t` / `herr_t` types. Closes the underlying CAPI handle on
+ *  destruction or when passed to the corresponding HDF5 CAPI function.
+ *  \sa_hdf5
  */
 
-/** @defgroup file-io `h5::open` | `h5::create` | `h5::mute` | `h5::unmute`
- *  \brief These `h5::open` | `h5::close` | `h5::create` operations are to create / manipulate an HDF5 container.
- *  In POSIX terms an HDF5 container is the entire **image** of a file system and the **dataset** is a document within. Datasets may be manipulated
- *  with `h5::create` | `h5::read` | `h5::write` | `h5::append` operations. While the File-IO operations are direct maps from existing CAPI HDF5 calls,
- *  they are furnished with [RAII](@ref link_raii_idiom) and type safety to aid productivity.
+/** @defgroup file-io HDF5 files
+ *  \brief Create, open, and close an HDF5 container.
+ *  In POSIX terms an HDF5 container is the entire **image** of a file
+ *  system and the **dataset** is a document within. Datasets are
+ *  manipulated via `h5::create` / `h5::read` / `h5::write` /
+ *  `h5::append`. File operations map directly onto HDF5 CAPI calls
+ *  but are furnished with [RAII](@ref link_raii_idiom) and type safety.
  *  How the returned managed handles may be passed to CAPI calls is [governed by the H5CPP conversion policy](@ref link_conversion_policy).
  *  `h5::mute` | `h5::unmute` are miscellaneous thread-safe calls for the rare occasions when you need to turn HDF5 CAPI error-handler output
  *  **off** and **on** — typically used when failure is information (checking existence of a dataset / path by the call-fail pattern, etc.).

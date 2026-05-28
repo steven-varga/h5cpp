@@ -122,7 +122,61 @@ namespace impl::sparse {
 
 } // namespace impl::sparse
 
-    // -------- write -----------------------------------------------------
+    /**
+     * \func_sparse_hdr
+     * @brief Write a sparse matrix or vector as a CSC group.
+     *
+     * Emits the canonical Compressed Sparse Column layout (see
+     * @ref link_linalg_template_types "Supported Linear Algebra Types"
+     * § Sparse storage layout) — a group containing four datasets
+     * (`data`, `indices`, `indptr`, `shape`) plus `@format = "csc"`
+     * and `@axis = "column"` self-describing attributes. The on-disk
+     * file is byte-compatible with `scipy.sparse.csc_matrix`, Julia
+     * `HDF5.jl`, and the 10x Genomics / Loompy convention.
+     *
+     * Index width is fixed `uint32` on disk regardless of the
+     * upstream library's index type; values exceeding `2^32 - 1`
+     * throw `h5::error::io::dataset::write` at the call site.
+     *
+     * SFINAE-gated on `is_sparse_v<T>` so this overload activates
+     * only for sparse types; the dense `h5::write(fd, path, ref)`
+     * path excludes them.
+     *
+     * **Preconditions** (the call does not enforce these
+     * implicitly — would require a mutable `const &`):
+     *   - `arma::SpMat`: `SpMat::sync()` must have completed.
+     *   - `Eigen::SparseMatrix`: `makeCompressed()` must have been
+     *     called, and the matrix must be `ColMajor` (RowMajor
+     *     triggers a compile-time `static_assert`).
+     *
+     * @param parent  open parent handle: `h5::fd_t`, `h5::gr_t`, or any
+     *                handle satisfying `is_valid_group_parent<LOC>`.
+     * @param path    POSIX-style group path; the group is created.
+     * @param src     sparse source — `arma::SpMat` / `SpRow` / `SpCol`
+     *                or `Eigen::SparseMatrix` / `SparseVector` (ColMajor).
+     *
+     * \tpar_T
+     * @tparam LOC    deduced from the `parent` argument.
+     * @return `h5::gr_t` RAII handle owning the newly created CSC group.
+     *
+     * @throws h5::error::io::dataset::write  on `H5Dwrite` failure or
+     *         when `nnz` / `n_rows` / `n_cols` exceeds `2^32 - 1`.
+     *
+     * <br/><b>example:</b>
+     * @code
+     * arma::SpMat<double> A(100, 100);
+     * // ... populate A ...
+     * A.sync();   // precondition for the direct-access traits
+     *
+     * h5::fd_t fd = h5::create("sparse.h5", H5F_ACC_TRUNC);
+     * h5::write(fd, "/A", A);   // CSC group at /A
+     * @endcode
+     *
+     * \sa_h5cpp
+     * \sa_hdf5
+     * @sa h5::read @ref link_linalg_template_types
+     *     "Supported Linear Algebra Types"
+     */
     // SFINAE: this overload activates only for sparse T; the dense
     // h5::write(fd, path, ref) overload excludes is_sparse_v<T>.
     template <class T, class LOC,
@@ -175,7 +229,47 @@ namespace impl::sparse {
         throw h5::error::io::dataset::write(err.what());
     }
 
-    // -------- read ------------------------------------------------------
+    /**
+     * \func_sparse_hdr
+     * @brief Read a CSC group back into a sparse matrix or vector of type `T`.
+     *
+     * Counterpart to `h5::write(parent, path, sparse_src)`. Validates
+     * `@format = "csc"` on the group, reads `data` / `indices` /
+     * `indptr` / `shape`, and reconstructs `T` via its
+     * `sparse_traits<T>::construct` factory.
+     *
+     * Sparse vectors are stored as `Nx1` / `1xN` CSC matrices on
+     * disk; reading into `arma::SpCol` / `SpRow` /
+     * `Eigen::SparseVector` materialises the single-column form
+     * directly. Reading into `arma::SpMat` / `Eigen::SparseMatrix`
+     * always works because every sparse value is a matrix on disk.
+     *
+     * SFINAE-gated on `is_sparse_v<T>` so this overload activates
+     * only for sparse types.
+     *
+     * @param parent  open parent handle holding the CSC group.
+     * @param path    POSIX-style path to the CSC group.
+     *
+     * \tpar_T
+     * @tparam LOC    deduced from the `parent` argument.
+     * @return fully constructed sparse object of type `T`.
+     *
+     * @throws h5::error::io::dataset::read  on `H5Dread` / `H5Aread`
+     *         failure, wrong `@format`, or shape mismatch.
+     *
+     * <br/><b>example:</b>
+     * @code
+     * h5::fd_t fd = h5::open("sparse.h5", H5F_ACC_RDONLY);
+     * auto A = h5::read<arma::SpMat<double>>(fd, "/A");
+     * // also valid: Eigen::SparseMatrix<double> equivalents,
+     * // and SpRow / SpCol from the same N x 1 / 1 x N storage.
+     * @endcode
+     *
+     * \sa_h5cpp
+     * \sa_hdf5
+     * @sa h5::write @ref link_linalg_template_types
+     *     "Supported Linear Algebra Types"
+     */
     // SFINAE: activates only for sparse T; the dense h5::read<T>(loc, path)
     // overload excludes is_sparse_v<T>.
     template <class T, class LOC,
