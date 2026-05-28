@@ -27,15 +27,15 @@ static_assert(h5::meta::rank<double[2][2][2][2][2]>::value    == 5, "rank-5 mism
 static_assert(h5::meta::rank<double[2][2][2][2][2][2]>::value == 6, "rank-6 mismatch");
 static_assert(h5::meta::rank<double[2][2][2][2][2][2][2]>::value == 7, "rank-7 mismatch");
 
-// storage_representation must classify ranks 4–7 as c_array
+// storage_representation must classify ranks 4–7 as array_element
 static_assert(h5::meta::storage_representation_v<double[2][2][2][2]>
-              == h5::meta::storage_representation_t::c_array, "rank-4 not c_array");
+              == h5::meta::storage_representation_t::array_element, "rank-4 not array_element");
 static_assert(h5::meta::storage_representation_v<double[2][2][2][2][2]>
-              == h5::meta::storage_representation_t::c_array, "rank-5 not c_array");
+              == h5::meta::storage_representation_t::array_element, "rank-5 not array_element");
 static_assert(h5::meta::storage_representation_v<double[2][2][2][2][2][2]>
-              == h5::meta::storage_representation_t::c_array, "rank-6 not c_array");
+              == h5::meta::storage_representation_t::array_element, "rank-6 not array_element");
 static_assert(h5::meta::storage_representation_v<double[2][2][2][2][2][2][2]>
-              == h5::meta::storage_representation_t::c_array, "rank-7 not c_array");
+              == h5::meta::storage_representation_t::array_element, "rank-7 not array_element");
 
 // ---------------------------------------------------------------------------
 // Helper: temp file with RAII cleanup

@@ -266,17 +266,35 @@ if(H5CPP_BUILD_BENCH AND EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/bench/CMakeLists.txt
 endif()
 
 # ─── Install Rules ────────────────────────────────────────────────────────────────
+#
+# Install destinations are RELATIVE to CMAKE_INSTALL_PREFIX (or, when packaging,
+# to CPACK_PACKAGING_INSTALL_PREFIX). This is what CPack's productbuild driver
+# expects on macOS — absolute destinations bypass CPack's staging entirely and
+# the .pkg build fails trying to write to /usr/local/include literally
+# (see https://gitlab.kitware.com/cmake/cmake/-/issues/14642). DEB/RPM on Linux
+# use DESTDIR-style staging, so they tolerate either form, but keeping a single
+# relative scheme across all generators is cleaner.
+#
+# productbuild on macOS always builds per-component sub-packages, and NSIS
+# on Windows derives an internal variable name from the component name
+# (rejecting '-' chars). Set a single short, alpha-only component name
+# ("h5cpp") for every install() rule. CPACK_COMPONENTS_ALL below tells
+# productbuild to actually pack it; DEB/RPM/NSIS treat the component name
+# as cosmetic and produce the same monolithic output. The user-visible
+# package name (CPACK_PACKAGE_NAME = "h5cpp-dev") and DEB/RPM/Brew names
+# are unchanged.
+set(CMAKE_INSTALL_DEFAULT_COMPONENT_NAME "h5cpp")
 if(WIN32)
-    set(INSTALL_DIR_CMAKE    "${CMAKE_INSTALL_PREFIX}/share/h5cpp/cmake")
-    set(INSTALL_DIR_INCLUDE  "${CMAKE_INSTALL_PREFIX}/include")
-    set(INSTALL_DIR_EXAMPLES "${CMAKE_INSTALL_PREFIX}/examples")
+    set(INSTALL_DIR_CMAKE    "share/h5cpp/cmake")
+    set(INSTALL_DIR_INCLUDE  "include")
+    set(INSTALL_DIR_EXAMPLES "examples")
 elseif(UNIX)
-    set(INSTALL_DIR_CMAKE    "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/cmake/h5cpp")
-    set(INSTALL_DIR_INCLUDE  "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}")
-    set(INSTALL_DIR_EXAMPLES "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/h5cpp")
+    set(INSTALL_DIR_CMAKE    "${CMAKE_INSTALL_LIBDIR}/cmake/h5cpp")
+    set(INSTALL_DIR_INCLUDE  "${CMAKE_INSTALL_INCLUDEDIR}")
+    set(INSTALL_DIR_EXAMPLES "${CMAKE_INSTALL_DATADIR}/h5cpp")
 endif()
 
-message(STATUS "Install directory: ${INSTALL_DIR_INCLUDE}")
+message(STATUS "Install directory: ${CMAKE_INSTALL_PREFIX}/${INSTALL_DIR_INCLUDE}")
 
 # Generate single-header amalgamation during build
 set(H5CPP_AMALGAMATED_HEADER ${CMAKE_BINARY_DIR}/h5cpp.hpp)
@@ -308,7 +326,15 @@ endif()
 # Install examples
 install(DIRECTORY examples/attributes   DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/basics       DESTINATION "${INSTALL_DIR_EXAMPLES}")
-install(DIRECTORY thirdparty/           DESTINATION "${INSTALL_DIR_EXAMPLES}/thirdparty")
+install(DIRECTORY thirdparty/           DESTINATION "${INSTALL_DIR_EXAMPLES}/thirdparty"
+    # blitz/v*/config/ and m4/ hold autotools-era symlinks (compile,
+    # config.guess, ltmain.sh, libtool.m4 …) pointing into /usr/share/
+    # automake-1.16/.  On Windows git checks them out as broken symlinks
+    # which CPack -G NSIS aborts on ("File: failed opening file …
+    # blitz/v1.0.2/config/compile"). h5cpp examples are CMake-only so
+    # these autotools artifacts are dead weight everywhere — drop them
+    # from the install entirely.
+    REGEX "blitz/v[0-9.]+/(config|m4)/" EXCLUDE)
 install(DIRECTORY examples/compound     DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/csv          DESTINATION "${INSTALL_DIR_EXAMPLES}")
 install(DIRECTORY examples/datasets     DESTINATION "${INSTALL_DIR_EXAMPLES}")
@@ -364,11 +390,38 @@ set(CPACK_PACKAGE_VERSION             "${H5CPP_VERSION}")
 set(CPACK_PACKAGE_VERSION_MAJOR       "${PROJECT_VERSION_MAJOR}")
 set(CPACK_PACKAGE_VERSION_MINOR       "${PROJECT_VERSION_MINOR}")
 set(CPACK_PACKAGE_VERSION_PATCH       "${PROJECT_VERSION_PATCH}")
-set(CPACK_RESOURCE_FILE_LICENSE       "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+# productbuild on macOS rejects license files without a .rtf/.rtfd/.html/.txt
+# extension. The canonical LICENSE in the source tree is extensionless, so
+# stage a LICENSE.txt copy in the build dir and point CPack at it. Other
+# generators (DEB/RPM/NSIS) accept .txt fine.
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
+    "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt"
+    COPYONLY)
+set(CPACK_RESOURCE_FILE_LICENSE       "${CMAKE_CURRENT_BINARY_DIR}/LICENSE.txt")
 set(CPACK_STRIP_FILES                 OFF)
 
-# DEB — headers land at /usr/include/h5cpp/ (ambient, no -I flag needed)
-set(CPACK_PACKAGING_INSTALL_PREFIX    "/usr")
+# productbuild iterates CPACK_COMPONENTS_ALL to decide which component
+# sub-packages to build and pack. Without this set explicitly, the install
+# step shows up as `Install project: libh5cpp-dev []` (empty components
+# list) and the resulting .pkg is metadata-only at ~2.3 KB. Listing the
+# one component our install rules use (via CMAKE_INSTALL_DEFAULT_COMPONENT_NAME
+# above) is enough — CPack will pack that component's files.
+# DEB/RPM/NSIS ignore CPACK_COMPONENTS_ALL when no per-component packaging
+# is configured, so this is a no-op for them.
+set(CPACK_COMPONENTS_ALL              "h5cpp")
+
+# Headers land at <prefix>/include/h5cpp/ — ambient, no -I flag needed by
+# consumers. The prefix differs per platform convention:
+#   * Linux DEB/RPM      → /usr        (already what apt/yum users expect)
+#   * macOS productbuild → /usr/local  (Homebrew / Apple convention)
+#   * Windows NSIS does not honour CPACK_PACKAGING_INSTALL_PREFIX; the
+#     installer lets the user pick a target dir (defaulting to Program Files).
+if(APPLE)
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/usr/local")
+else()
+    set(CPACK_PACKAGING_INSTALL_PREFIX "/usr")
+endif()
 set(CPACK_DEBIAN_PACKAGE_NAME         "h5cpp-dev")
 set(CPACK_DEBIAN_PACKAGE_SECTION      "libdevel")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS      "libhdf5-dev")

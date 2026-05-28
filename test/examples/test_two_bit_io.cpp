@@ -9,7 +9,10 @@
 #include <filesystem>
 #include <vector>
 
-#include "examples/datatypes/two-bit.hpp"
+// custom_types.hpp is the current path — the legacy two-bit.hpp filename was
+// folded into the broader custom_types.hpp header when the datatypes example
+// was consolidated.
+#include "examples/datatypes/custom_types.hpp"
 
 TEST_CASE("[example] custom two-bit type round-trip") {
     const char* filename = "test_two_bit_io.h5";
