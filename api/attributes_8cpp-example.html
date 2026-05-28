@@ -104,146 +104,257 @@ $(document).ready(function(){initNavTree('attributes_8cpp-example.html',''); ini
   <div class="headertitle"><div class="title">attributes.cpp</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada</span></div>
-<div class="line"><span class="comment"> * Author: Varga, Steven &lt;steven@vargaconsulting.ca&gt;</span></div>
-<div class="line"><span class="comment"> */</span></div>
+<div class="fragment"><div class="line"><span class="comment">// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// HDF5 attribute showcase — one TU exercises every kind of attribute the</span></div>
+<div class="line"><span class="comment">// dispatch supports.  Each value is written through both surfaces in turn:</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">//   * operator[]  sugar:    ds[&quot;name&quot;] = value;</span></div>
+<div class="line"><span class="comment">//   * explicit API:         h5::awrite(ds, &quot;name&quot;, value);</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Read-backs use h5::aread&lt;T&gt;(parent, name) and are compared element-by-</span></div>
+<div class="line"><span class="comment">// element with the project&#39;s ✔ / ✘ symbol convention.  Container readbacks</span></div>
+<div class="line"><span class="comment">// are printed via h5cpp&#39;s STL pretty-printer (operator&lt;&lt; from H5Uall.hpp).</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Coverage groups:</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">//   1. Linear-algebra backends (7): Armadillo, Eigen3, Blitz++, dlib, uBLAS,</span></div>
+<div class="line"><span class="comment">//      std::valarray, xtensor.  Blaze is intentionally excluded — its LAPACK</span></div>
+<div class="line"><span class="comment">//      Fortran prototypes clash with Armadillo&#39;s in the same TU; the Blaze</span></div>
+<div class="line"><span class="comment">//      surface is exercised in `examples/linalg/blaze.cpp` instead.</span></div>
+<div class="line"><span class="comment">//   2. Canonical fixed-extent (Winston model): char[N], std::array&lt;char,N&gt;,</span></div>
+<div class="line"><span class="comment">//      std::array&lt;T,N&gt;, std::vector&lt;std::array&lt;T,N&gt;&gt;, std::vector&lt;std::array&lt;char,N&gt;&gt;.</span></div>
+<div class="line"><span class="comment">//   3. Scalar object kinds: std::complex&lt;T&gt;, std::pair&lt;K,V&gt;, std::tuple&lt;...&gt;.</span></div>
+<div class="line"><span class="comment">//   4. Compound POD: sn::example::record_t — single + vector.</span></div>
+<div class="line"><span class="comment">//   5. STL strings / containers: std::string, vector&lt;string&gt;, ragged</span></div>
+<div class="line"><span class="comment">//      vector&lt;vector&gt;, list, set, map, vector&lt;tuple&gt;.</span></div>
+<div class="line"><span class="comment">//   6. Rewrite (same type/shape OK) + deliberate type-mismatch (must throw).</span></div>
+<div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;armadillo&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;cstdint&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;Eigen/Dense&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;blitz/array.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;dlib/matrix.h&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;boost/numeric/ublas/matrix.hpp&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;xtensor/xarray.hpp&gt;</span></div>
+<div class="line"> </div>
+<div class="line"><span class="preprocessor">#include &lt;array&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;complex&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;cstring&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;list&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;map&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;set&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;string&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;tuple&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;utility&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;valarray&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &quot;struct.h&quot;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;h5cpp/core&gt;</span></div>
-<div class="line">    <span class="comment">// generated file must be sandwiched between core and io </span></div>
-<div class="line">    <span class="comment">// to satisfy template dependencies in &lt;h5cpp/io&gt;  </span></div>
-<div class="line"><span class="preprocessor">    #include &quot;generated.h&quot;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;h5cpp/io&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;cstddef&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;h5cpp/all&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &quot;generated.h&quot;</span> </div>
 <div class="line"><span class="preprocessor">#include &quot;utils.hpp&quot;</span></div>
 <div class="line"> </div>
-<div class="line"><span class="keywordtype">int</span> main(){</div>
-<div class="line">    arma::mat M = arma::zeros(5,6);</div>
 <div class="line"> </div>
-<div class="line">    arma::mat matrix = arma::zeros(3,4); <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;matrix.n_elem; i++ ) matrix[i] = i;</div>
-<div class="line">    <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;sn::example::Record&gt;</a> vector = h5::utils::get_test_data&lt;sn::example::Record&gt;(40);</div>
-<div class="line">    sn::example::Record&amp; record = vector[3];</div>
-<div class="line">    <span class="comment">// set to use the latest file format version to able to use large size attributes</span></div>
-<div class="line">    h5::fd_t fd = h5::create(<span class="stringliteral">&quot;001.h5&quot;</span>, H5F_ACC_TRUNC, h5::default_fcpl,</div>
-<div class="line">        h5::libver_bounds({H5F_LIBVER_V18, H5F_LIBVER_V18}) );</div>
-<div class="line">    h5::ds_t ds = <a id="a1" name="a1"></a><a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd,<span class="stringliteral">&quot;directory/dataset&quot;</span>, M);</div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    <span class="comment">// H5F_LIBVER_V18 enables the v2 object header, lifting the default 64 KB</span></div>
+<div class="line">    <span class="comment">// attribute ceiling — required because this demo packs ~25 attributes</span></div>
+<div class="line">    <span class="comment">// (matrices, compounds, containers) onto a single dataset.  Without it,</span></div>
+<div class="line">    <span class="comment">// the cumulative attribute size overflows the v1 header.</span></div>
+<div class="line">    h5::fd_t fd = h5::create(<span class="stringliteral">&quot;attributes.h5&quot;</span>, H5F_ACC_TRUNC, h5::default_fcpl,</div>
+<div class="line">        h5::libver_bounds({H5F_LIBVER_V18, H5F_LIBVER_V18}));</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// Host dataset for ds[&quot;...&quot;] sugar; group for the explicit h5::awrite path.</span></div>
+<div class="line">    <span class="keyword">constexpr</span> <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> rows = 3, cols = 4;</div>
+<div class="line">    arma::mat host(rows, cols);</div>
+<div class="line">    <span class="keywordflow">for</span> (<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> r = 0; r &lt; rows; ++r)</div>
+<div class="line">        <span class="keywordflow">for</span> (<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> c = 0; c &lt; cols; ++c) host(r, c) = double(r * cols + c);</div>
+<div class="line">    h5::ds_t ds = h5::write(fd, <span class="stringliteral">&quot;/dataset&quot;</span>, host);</div>
+<div class="line">    h5::gr_t gr = <a id="a1" name="a1"></a><a class="code hl_function" href="namespaceh5.html#a7a1d02a18ffc6a0738e3e3b95a2f2306">h5::gcreate</a>(fd, <span class="stringliteral">&quot;/group&quot;</span>);</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ── 1. Linear-algebra backends ─────────────────────────────────────────</span></div>
+<div class="line">    <a id="_a2" name="_a2"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\n=== linear-algebra attributes ===\n&quot;</span>;</div>
+<div class="line">    Eigen::MatrixXd eigen_m(rows, cols); eigen_m &lt;&lt; 0,1,2,3, 4,5,6,7, 8,9,10,11;</div>
+<div class="line">    blitz::Array&lt;double, 2&gt; blitz_m(rows, cols); blitz_m = blitz::tensor::i * <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(cols) + blitz::tensor::j;</div>
+<div class="line">    dlib::matrix&lt;double&gt; dlib_m(rows, cols);</div>
+<div class="line">        <span class="keywordflow">for</span> (<span class="keywordtype">long</span> r = 0; r &lt; (long)rows; ++r)</div>
+<div class="line">            <span class="keywordflow">for</span> (<span class="keywordtype">long</span> c = 0; c &lt; (long)cols; ++c) dlib_m(r, c) = double(r * cols + c);</div>
+<div class="line">    boost::numeric::ublas::matrix&lt;double&gt; ublas_m(rows, cols);</div>
+<div class="line">        <span class="keywordflow">for</span> (<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> r = 0; r &lt; rows; ++r)</div>
+<div class="line">            <span class="keywordflow">for</span> (<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> c = 0; c &lt; cols; ++c) ublas_m(r, c) = double(r * cols + c);</div>
+<div class="line">    xt::xarray&lt;double&gt; xt_m = {{0., 1., 2., 3.}, {4., 5., 6., 7.}, {8., 9., 10., 11.}};</div>
+<div class="line">    <a id="_a3" name="_a3"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/numeric/valarray.html">std::valarray&lt;double&gt;</a> va = {0.5, 1.5, 2.5, 3.5, 4.5};</div>
+<div class="line"> </div>
+<div class="line">    ds[<span class="stringliteral">&quot;arma&quot;</span>] = host;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;eigen&quot;</span>] = eigen_m;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;blitz&quot;</span>] = blitz_m;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;dlib&quot;</span>] = dlib_m;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;ublas&quot;</span>] = ublas_m;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;xtensor&quot;</span>] = xt_m;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;valarray&quot;</span>] = va;</div>
+<div class="line"> </div>
+<div class="line">    check(<span class="stringliteral">&quot;arma::mat(3x4)               attribute&quot;</span>, same(host, h5::aread&lt;arma::mat&gt;(ds, <span class="stringliteral">&quot;arma&quot;</span>)));</div>
+<div class="line">    check(<span class="stringliteral">&quot;Eigen::MatrixXd(3x4)         attribute&quot;</span>, same(eigen_m, h5::aread&lt;Eigen::MatrixXd&gt;(ds, <span class="stringliteral">&quot;eigen&quot;</span>)));</div>
+<div class="line">    check(<span class="stringliteral">&quot;blitz::Array&lt;double,2&gt;(3x4)  attribute&quot;</span>, same(blitz_m, h5::aread&lt;blitz::Array&lt;double, 2&gt;&gt;(ds, <span class="stringliteral">&quot;blitz&quot;</span>)));</div>
+<div class="line">    check(<span class="stringliteral">&quot;dlib::matrix&lt;double&gt;(3x4)    attribute&quot;</span>, same(dlib_m, h5::aread&lt;dlib::matrix&lt;double&gt;&gt;(ds, <span class="stringliteral">&quot;dlib&quot;</span>)));</div>
+<div class="line">    check(<span class="stringliteral">&quot;ublas::matrix&lt;double&gt;(3x4)   attribute&quot;</span>, same(ublas_m, h5::aread&lt;boost::numeric::ublas::matrix&lt;double&gt;&gt;(ds, <span class="stringliteral">&quot;ublas&quot;</span>)));</div>
+<div class="line">    check(<span class="stringliteral">&quot;xt::xarray&lt;double&gt;(3x4)      attribute&quot;</span>, same(xt_m, h5::aread&lt;xt::xarray&lt;double&gt;&gt;(ds, <span class="stringliteral">&quot;xtensor&quot;</span>)));</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::valarray&lt;double&gt;(5)     attribute&quot;</span>, same(va, h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/numeric/valarray.html">std::valarray&lt;double&gt;</a>&gt;(ds, <span class="stringliteral">&quot;valarray&quot;</span>)));</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// char[N] / std::array&lt;char,N&gt;  → H5T_C_S1 + H5Tset_size(N), scalar</span></div>
+<div class="line">    <span class="comment">// std::array&lt;T,N&gt; (non-char)    → H5T_ARRAY[N] dt_t&lt;T&gt;,     scalar</span></div>
+<div class="line">    <span class="comment">// vector&lt;std::array&lt;T,N&gt;&gt;       → H5T_ARRAY[N] dt_t&lt;T&gt;,     rank-1</span></div>
+<div class="line">    <span class="comment">// vector&lt;std::array&lt;char,N&gt;&gt;    → H5T_C_S1 + size(N),       rank-1</span></div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\n=== canonical fixed-extent attributes ===\n&quot;</span>;</div>
+<div class="line"> </div>
+<div class="line">    <span class="keywordtype">char</span> c_str[16] = <span class="stringliteral">&quot;char[N]&quot;</span>;</div>
+<div class="line">    <a id="_a4" name="_a4"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/array.html">std::array&lt;char, 16&gt;</a> ac{<span class="stringliteral">&quot;array&lt;char,N&gt;&quot;</span>};</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/array.html">std::array&lt;int, 5&gt;</a> ai = {10, 20, 30, 40, 50};</div>
+<div class="line">    <a id="_a5" name="_a5"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::array&lt;int, 3&gt;</a>&gt; v_ai = {{{1, 2, 3}}, {{4, 5, 6}}, {{7, 8, 9}}};</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::array&lt;char, 8&gt;</a>&gt; v_ac{{<span class="stringliteral">&quot;alpha&quot;</span>},{<span class="stringliteral">&quot;beta&quot;</span>}};</div>
+<div class="line"> </div>
+<div class="line">    h5::awrite(ds, <span class="stringliteral">&quot;char_arr&quot;</span>, c_str);</div>
+<div class="line">    h5::awrite(ds, <span class="stringliteral">&quot;array_char&quot;</span>, ac);</div>
+<div class="line">    ds[<span class="stringliteral">&quot;array_int&quot;</span>] = ai;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;vec_arr_int&quot;</span>] = v_ai;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;vec_arr_char&quot;</span>] = v_ac;</div>
+<div class="line"> </div>
 <div class="line">    {</div>
-<div class="line">        <span class="comment">/*</span></div>
-<div class="line"><span class="comment">        (gr_t | ds_t | dt_t = fd[&quot;/root/some/path&quot;]) = some object;</span></div>
-<div class="line"><span class="comment">        ds_t ds = ... ;</span></div>
-<div class="line"><span class="comment"></span> </div>
-<div class="line"><span class="comment">        gr[&quot;data set&quot;] = some object;</span></div>
-<div class="line"><span class="comment">        ds[&quot;attribute&quot;] = some attribute;</span></div>
-<div class="line"><span class="comment">        h5::ds_t obj = fd[&quot;/some/path&quot;][&quot;attribute&quot;];</span></div>
-<div class="line"><span class="comment">        //h5::gr_t obj = fd[&quot;/some/path&quot;];*/</span></div>
+<div class="line">        <span class="keyword">auto</span> back = h5::aread&lt;std::array&lt;char, 16&gt;&gt;(ds, <span class="stringliteral">&quot;char_arr&quot;</span>);</div>
+<div class="line">        check(<span class="stringliteral">&quot;char[16]                     attribute (FLS)&quot;</span>,</div>
+<div class="line">              <a id="a6" name="a6"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/string/byte/strncmp.html">std::strncmp</a>(back.data(), c_str, 16) == 0);</div>
 <div class="line">    }</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::array&lt;char,16&gt;          attribute (FLS)&quot;</span>,        h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/array.html">std::array&lt;char, 16&gt;</a>&gt;(ds, <span class="stringliteral">&quot;array_char&quot;</span>) == ac);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::array&lt;int,5&gt;            attribute (H5T_ARRAY)&quot;</span>,  h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/array.html">std::array&lt;int, 5&gt;</a>&gt;(ds, <span class="stringliteral">&quot;array_int&quot;</span>) == ai);</div>
 <div class="line"> </div>
-<div class="line">    {</div>
-<div class="line">        ds[<span class="stringliteral">&quot;att_01&quot;</span>] = 42 ;</div>
-<div class="line">        ds[<span class="stringliteral">&quot;att_02&quot;</span>] = {1.,2.,3.,4.};</div>
-<div class="line">        ds[<span class="stringliteral">&quot;att_03&quot;</span>] = {<span class="charliteral">&#39;1&#39;</span>,<span class="charliteral">&#39;2&#39;</span>,<span class="charliteral">&#39;3&#39;</span>,<span class="charliteral">&#39;4&#39;</span>};</div>
-<div class="line">        ds[<span class="stringliteral">&quot;att_04&quot;</span>] = {<span class="stringliteral">&quot;alpha&quot;</span>, <span class="stringliteral">&quot;beta&quot;</span>,<span class="stringliteral">&quot;gamma&quot;</span>,<span class="stringliteral">&quot;...&quot;</span>};</div>
+<div class="line">    <span class="keyword">auto</span> v_ai_back = h5::aread&lt;std::vector&lt;std::array&lt;int, 3&gt;&gt;&gt;(ds, <span class="stringliteral">&quot;vec_arr_int&quot;</span>);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::vector&lt;std::array&lt;int,3&gt;&gt;(3) attribute (rank-1 of H5T_ARRAY)&quot;</span>,  v_ai_back == v_ai);</div>
+<div class="line">    <span class="keyword">auto</span> v_ac_back = h5::aread&lt;std::vector&lt;std::array&lt;char, 8&gt;&gt;&gt;(ds, <span class="stringliteral">&quot;vec_arr_char&quot;</span>);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::vector&lt;std::array&lt;char,8&gt;&gt;(2) attribute (rank-1 of FLS)&quot;</span>, v_ac_back == v_ac);</div>
 <div class="line"> </div>
-<div class="line">        ds[<span class="stringliteral">&quot;att_05&quot;</span>] = <span class="stringliteral">&quot;const char[N]&quot;</span>;</div>
-<div class="line">        ds[<span class="stringliteral">&quot;att_06&quot;</span>] = u8<span class="stringliteral">&quot;const char[N]áééé&quot;</span>;</div>
-<div class="line">        ds[<span class="stringliteral">&quot;att_07&quot;</span>] = <a id="_a2" name="_a2"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>( <span class="stringliteral">&quot;std::string&quot;</span>);</div>
+<div class="line">    <span class="comment">// ── 3. Scalar object kinds ─────────────────────────────────────────────</span></div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\n=== scalar object kinds ===\n&quot;</span>;</div>
 <div class="line"> </div>
-<div class="line">        ds[<span class="stringliteral">&quot;att_08&quot;</span>] = record; <span class="comment">// pod/compound datatype</span></div>
-<div class="line">        ds[<span class="stringliteral">&quot;att_09&quot;</span>] = vector; <span class="comment">// vector of pod/compound type</span></div>
-<div class="line">        ds[<span class="stringliteral">&quot;att_10&quot;</span>] = matrix; <span class="comment">// linear algebra object</span></div>
+<div class="line">    <a id="_a7" name="_a7"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/numeric/complex.html">std::complex&lt;double&gt;</a> cx{1.5, -2.25};</div>
+<div class="line">    <a id="_a8" name="_a8"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair&lt;int, double&gt;</a> pr{42, 3.14};</div>
+<div class="line">    <a id="_a9" name="_a9"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/utility/tuple.html">std::tuple&lt;int, double, char&gt;</a> tup{42, 3.14, <span class="charliteral">&#39;x&#39;</span>};</div>
+<div class="line"> </div>
+<div class="line">    ds[<span class="stringliteral">&quot;complex&quot;</span>] = cx;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;pair&quot;</span>] = pr;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;tuple&quot;</span>] = tup;</div>
+<div class="line"> </div>
+<div class="line">    check(<span class="stringliteral">&quot;std::complex&lt;double&gt;         scalar attribute&quot;</span>,             h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/numeric/complex.html">std::complex&lt;double&gt;</a>&gt;(ds, <span class="stringliteral">&quot;complex&quot;</span>) == cx);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::pair&lt;int,double&gt;        scalar attribute&quot;</span>,             h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair&lt;int, double&gt;</a>&gt;(ds, <span class="stringliteral">&quot;pair&quot;</span>) == pr);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::tuple&lt;int,double,char&gt;  scalar attribute (composite)&quot;</span>, h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/utility/tuple.html">std::tuple&lt;int, double, char&gt;</a>&gt;(ds, <span class="stringliteral">&quot;tuple&quot;</span>) == tup);</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ── 4. Compound POD (compiler-assisted reflection) ─────────────────────</span></div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\n=== compound POD ===\n&quot;</span>;</div>
+<div class="line"> </div>
+<div class="line">    sn::example::record_t rec = *<a id="_a10" name="_a10"></a><a class="code hl_struct" href="structh5_1_1pod.html">h5::pod&lt;sn::example::record_t&gt;</a>{};</div>
+<div class="line">    rec.idx = 7;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;sn::example::record_t&gt;</a> records = <a class="code hl_struct" href="structh5_1_1pod.html">h5::pod&lt;sn::example::record_t&gt;</a>{} | h5::take(8);</div>
+<div class="line">    <span class="keywordflow">for</span> (<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> i = 0; i &lt; records.<a id="a11" name="a11"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/size.html">size</a>(); ++i) records[i].idx = i + 100;</div>
+<div class="line"> </div>
+<div class="line">    ds[<span class="stringliteral">&quot;pod&quot;</span>]  = rec;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;pods&quot;</span>] = records;</div>
+<div class="line">    check(<span class="stringliteral">&quot;sn::example::record_t        scalar attribute (idx field)&quot;</span>, h5::aread&lt;sn::example::record_t&gt;(ds, <span class="stringliteral">&quot;pod&quot;</span>).idx == rec.idx);</div>
+<div class="line"> </div>
+<div class="line">    <span class="keyword">auto</span> pods_back = h5::aread&lt;std::vector&lt;sn::example::record_t&gt;&gt;(ds, <span class="stringliteral">&quot;pods&quot;</span>);</div>
+<div class="line">    <span class="keywordtype">bool</span> pods_ok = pods_back.size() == records.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/size.html">size</a>();</div>
+<div class="line">    <span class="keywordflow">for</span> (<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> i = 0; pods_ok &amp;&amp; i &lt; records.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/size.html">size</a>(); ++i)</div>
+<div class="line">        pods_ok = (pods_back[i].idx == records[i].idx);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::vector&lt;record_t&gt;(8)     attribute (idx field)&quot;</span>, pods_ok);</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ── 5. STL strings / containers ────────────────────────────────────────</span></div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\n=== STL containers ===\n&quot;</span>;</div>
+<div class="line"> </div>
+<div class="line">    <a id="_a12" name="_a12"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> str = <span class="stringliteral">&quot;std::string attribute&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::string&gt;</a> vec_s = {<span class="stringliteral">&quot;alpha&quot;</span>, <span class="stringliteral">&quot;beta&quot;</span>, <span class="stringliteral">&quot;gamma&quot;</span>, <span class="stringliteral">&quot;delta&quot;</span>};</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::vector&lt;double&gt;</a>&gt; ragged = {{1.0}, {2.0, 3.0}, {4.0, 5.0, 6.0}};</div>
+<div class="line">    <a id="_a13" name="_a13"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/list.html">std::list&lt;int&gt;</a> list_i = {10, 20, 30, 40};</div>
+<div class="line">    <a id="_a14" name="_a14"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/set.html">std::set&lt;int&gt;</a> set_i = {5, 1, 4, 2, 3};</div>
+<div class="line">    <a id="_a15" name="_a15"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/map.html">std::map&lt;int, double&gt;</a> map_id = {{1, 1.1}, {2, 2.2}, {3, 3.3}};</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::tuple&lt;int, float&gt;</a>&gt; v_tup = {{1, 1.1f}, {2, 2.2f}, {3, 3.3f}};</div>
+<div class="line"> </div>
+<div class="line">    ds[<span class="stringliteral">&quot;str&quot;</span>]    = str;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;vec_s&quot;</span>]  = vec_s;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;ragged&quot;</span>] = ragged;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;list&quot;</span>]   = list_i;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;set&quot;</span>]    = set_i;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;map&quot;</span>]    = map_id;</div>
+<div class="line">    ds[<span class="stringliteral">&quot;vtups&quot;</span>]  = v_tup;</div>
+<div class="line"> </div>
+<div class="line">    check(<span class="stringliteral">&quot;std::string                  scalar attribute (vlen)&quot;</span>,          h5::aread&lt;std::string&gt;(ds, <span class="stringliteral">&quot;str&quot;</span>) == str);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::vector&lt;std::string&gt;(4)  attribute (vlen-text dataset)&quot;</span>,    h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;std::string&gt;</a>&gt;(ds, <span class="stringliteral">&quot;vec_s&quot;</span>) == vec_s);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::vector&lt;std::vector&lt;d&gt;&gt;  attribute (ragged_vlen)&quot;</span>,          h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a>&gt;&gt;(ds, <span class="stringliteral">&quot;ragged&quot;</span>) == ragged);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::list&lt;int&gt;(4)            attribute (iterators)&quot;</span>,            h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/list.html">std::list&lt;int&gt;</a>&gt;(ds, <span class="stringliteral">&quot;list&quot;</span>) == list_i);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::set&lt;int&gt;(5)             attribute (iterators)&quot;</span>,            h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/set.html">std::set&lt;int&gt;</a>&gt;(ds, <span class="stringliteral">&quot;set&quot;</span>) == set_i);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::map&lt;int,double&gt;(3)      attribute (key_value)&quot;</span>,            h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/map.html">std::map&lt;int, double&gt;</a>&gt;(ds, <span class="stringliteral">&quot;map&quot;</span>) == map_id);</div>
+<div class="line">    check(<span class="stringliteral">&quot;std::vector&lt;std::tuple&lt;i,f&gt;&gt; attribute (composite element)&quot;</span>,    h5::aread&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt;<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/utility/tuple.html">std::tuple&lt;int, float&gt;</a>&gt;&gt;(ds, <span class="stringliteral">&quot;vtups&quot;</span>) == v_tup);</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ── 6. Explicit h5::awrite surface (group as target) ───────────────────</span></div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\n=== explicit h5::awrite (target: /group) ===\n&quot;</span>;</div>
+<div class="line"> </div>
+<div class="line">    h5::awrite(gr, <span class="stringliteral">&quot;int&quot;</span>,    42);</div>
+<div class="line">    h5::awrite(gr, <span class="stringliteral">&quot;double&quot;</span>, 3.14);</div>
+<div class="line">    h5::awrite(gr, <span class="stringliteral">&quot;str&quot;</span>,    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>(<span class="stringliteral">&quot;via h5::awrite&quot;</span>));</div>
+<div class="line">    h5::awrite(gr, <span class="stringliteral">&quot;arma&quot;</span>,   host);</div>
+<div class="line"> </div>
+<div class="line">    check(<span class="stringliteral">&quot;int / double / std::string / arma::mat via h5::awrite on group&quot;</span>,</div>
+<div class="line">          h5::aread&lt;int&gt;(gr, <span class="stringliteral">&quot;int&quot;</span>) == 42</div>
+<div class="line">       &amp;&amp; h5::aread&lt;double&gt;(gr, <span class="stringliteral">&quot;double&quot;</span>) == 3.14</div>
+<div class="line">       &amp;&amp; h5::aread&lt;std::string&gt;(gr, <span class="stringliteral">&quot;str&quot;</span>) == <span class="stringliteral">&quot;via h5::awrite&quot;</span></div>
+<div class="line">       &amp;&amp; same(host, h5::aread&lt;arma::mat&gt;(gr, <span class="stringliteral">&quot;arma&quot;</span>)));</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ── 7. Pretty-print readback (h5cpp STL operator&lt;&lt;) ────────────────────</span></div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\n=== pretty-print readback ===\n&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;  vec_s    = &quot;</span> &lt;&lt; h5::aread&lt;std::vector&lt;std::string&gt;&gt;(ds, <span class="stringliteral">&quot;vec_s&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;  ragged   = &quot;</span> &lt;&lt; h5::aread&lt;std::vector&lt;std::vector&lt;double&gt;&gt;&gt;(ds, <span class="stringliteral">&quot;ragged&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;  list     = &quot;</span> &lt;&lt; h5::aread&lt;std::list&lt;int&gt;&gt;(ds, <span class="stringliteral">&quot;list&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;  set      = &quot;</span> &lt;&lt; h5::aread&lt;std::set&lt;int&gt;&gt;(ds, <span class="stringliteral">&quot;set&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;  map      = &quot;</span> &lt;&lt; h5::aread&lt;std::map&lt;int, double&gt;&gt;(ds, <span class="stringliteral">&quot;map&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;  vtups    = &quot;</span> &lt;&lt; h5::aread&lt;std::vector&lt;std::tuple&lt;int, float&gt;&gt;&gt;(ds, <span class="stringliteral">&quot;vtups&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;  tuple    = &quot;</span> &lt;&lt; h5::aread&lt;std::tuple&lt;int, double, char&gt;&gt;(ds, <span class="stringliteral">&quot;tuple&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;  pair     = &quot;</span> &lt;&lt; h5::aread&lt;std::pair&lt;int, double&gt;&gt;(ds, <span class="stringliteral">&quot;pair&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;  ai       = &quot;</span> &lt;&lt; h5::aread&lt;std::array&lt;int, 5&gt;&gt;(ds, <span class="stringliteral">&quot;array_int&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;  v_ai     = &quot;</span> &lt;&lt; v_ai_back &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ── 8. Rewrite + deliberate type-mismatch ──────────────────────────────</span></div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\n=== rewrite + type-mismatch error ===\n&quot;</span>;</div>
+<div class="line"> </div>
+<div class="line">    ds[<span class="stringliteral">&quot;scalar_int&quot;</span>] = 42;       <span class="comment">// create</span></div>
+<div class="line">    ds[<span class="stringliteral">&quot;scalar_int&quot;</span>] = 99;       <span class="comment">// rewrite, same type — OK</span></div>
+<div class="line">    check(<span class="stringliteral">&quot;rewrite ds[\&quot;scalar_int\&quot;] same type&quot;</span>, h5::aread&lt;int&gt;(ds, <span class="stringliteral">&quot;scalar_int&quot;</span>) == 99);</div>
+<div class="line"> </div>
+<div class="line">    <span class="keywordtype">bool</span> threw = <span class="keyword">false</span>;</div>
+<div class="line">    <a id="a16" name="a16"></a><a class="code hl_function" href="group__file-io.html#ga62435704c4ac64279706bdf3ac1b87a2">h5::mute</a>();</div>
+<div class="line">    <span class="keywordflow">try</span> {</div>
+<div class="line">        h5::awrite(ds, <span class="stringliteral">&quot;scalar_int&quot;</span>, <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>(<span class="stringliteral">&quot;not an int&quot;</span>));</div>
+<div class="line">    } <span class="keywordflow">catch</span> (<span class="keyword">const</span> h5::error::io::attribute::any&amp;) {</div>
+<div class="line">        threw = <span class="keyword">true</span>;</div>
 <div class="line">    }</div>
+<div class="line">    <a id="a17" name="a17"></a><a class="code hl_function" href="group__file-io.html#ga458e8a5c14eb562a349fb27704f92fda">h5::unmute</a>();</div>
+<div class="line">    check(<span class="stringliteral">&quot;rewrite type mismatch → throws h5::error::io::attribute::any&quot;</span>, threw);</div>
 <div class="line"> </div>
-<div class="line">    <span class="comment">/* supported types:</span></div>
-<div class="line"><span class="comment">     * T := integral | std::string | const char[] | POD struct*</span></div>
-<div class="line"><span class="comment">     * accept := T | std::vector&lt;T&gt; | linalg </span></div>
-<div class="line"><span class="comment">     * * pod struct requires h5cpp compiler or manual labour</span></div>
-<div class="line"><span class="comment">     */</span></div>
-<div class="line">    { <span class="comment">// create + write</span></div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_21&quot;</span>, 42 );</div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_22&quot;</span>, {1.,3.,4.,5.} );</div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_23&quot;</span>, {<span class="charliteral">&#39;1&#39;</span>,<span class="charliteral">&#39;3&#39;</span>,<span class="charliteral">&#39;4&#39;</span>,<span class="charliteral">&#39;5&#39;</span>} );</div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_24&quot;</span>, {<span class="stringliteral">&quot;alpha&quot;</span>, <span class="stringliteral">&quot;beta&quot;</span>,<span class="stringliteral">&quot;gamma&quot;</span>,<span class="stringliteral">&quot;...&quot;</span>} );</div>
-<div class="line"> </div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_25&quot;</span>, <span class="stringliteral">&quot;const char[N]&quot;</span>);</div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_26&quot;</span>, u8<span class="stringliteral">&quot;const char[N]áééé&quot;</span>);</div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_27&quot;</span>, <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>( <span class="stringliteral">&quot;std::string&quot;</span>) );</div>
-<div class="line"> </div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_28&quot;</span>, record ); <span class="comment">// pod/compound datatype</span></div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_29&quot;</span>, vector ); <span class="comment">// vector of pod/compound type</span></div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_30&quot;</span>, matrix ); <span class="comment">// linear algebra object</span></div>
-<div class="line">    }</div>
-<div class="line">    {<span class="comment">//directory</span></div>
-<div class="line">        h5::gr_t gr{H5Gopen(fd,<span class="stringliteral">&quot;/directory&quot;</span>, H5P_DEFAULT)};</div>
-<div class="line">        h5::awrite(gr,<span class="stringliteral">&quot;att_21&quot;</span>, 42 );</div>
-<div class="line">        h5::awrite(gr,<span class="stringliteral">&quot;att_22&quot;</span>, {1.,3.,4.,5.} );</div>
-<div class="line">        h5::awrite(gr,<span class="stringliteral">&quot;att_23&quot;</span>, {<span class="charliteral">&#39;1&#39;</span>,<span class="charliteral">&#39;3&#39;</span>,<span class="charliteral">&#39;4&#39;</span>,<span class="charliteral">&#39;5&#39;</span>} );</div>
-<div class="line">        h5::awrite(gr,<span class="stringliteral">&quot;att_24&quot;</span>, {<span class="stringliteral">&quot;alpha&quot;</span>, <span class="stringliteral">&quot;beta&quot;</span>,<span class="stringliteral">&quot;gamma&quot;</span>,<span class="stringliteral">&quot;...&quot;</span>} );</div>
-<div class="line"> </div>
-<div class="line">        h5::awrite(gr,<span class="stringliteral">&quot;att_25&quot;</span>, <span class="stringliteral">&quot;const char[N]&quot;</span>);</div>
-<div class="line">        h5::awrite(gr,<span class="stringliteral">&quot;att_26&quot;</span>, u8<span class="stringliteral">&quot;const char[N]áééé&quot;</span>);</div>
-<div class="line">        h5::awrite(gr,<span class="stringliteral">&quot;att_27&quot;</span>, <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>( <span class="stringliteral">&quot;std::string&quot;</span>) );</div>
-<div class="line"> </div>
-<div class="line">        h5::awrite(gr,<span class="stringliteral">&quot;att_28&quot;</span>, record ); <span class="comment">// pod/compound datatype</span></div>
-<div class="line">        h5::awrite(gr,<span class="stringliteral">&quot;att_29&quot;</span>, vector ); <span class="comment">// vector of pod/compound type</span></div>
-<div class="line">        h5::awrite(gr,<span class="stringliteral">&quot;att_30&quot;</span>, matrix ); <span class="comment">// linear algebra object</span></div>
-<div class="line">    }</div>
-<div class="line">    { <span class="comment">// open + write -&gt; attribute size must not change</span></div>
-<div class="line">        arma::mat att_01 = arma::ones(3,4);</div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_01&quot;</span>, att_01 );</div>
-<div class="line">        <span class="comment">//TODO: attribute with different dimension</span></div>
-<div class="line">        <span class="comment">// 1.) remove previous attribute</span></div>
-<div class="line">        <span class="comment">// 2.) create new attribute</span></div>
-<div class="line">        <span class="comment">// 3.) write attribute</span></div>
-<div class="line">        h5::awrite(ds,<span class="stringliteral">&quot;att_02&quot;</span>, {1.,2.,3.,4.,5.,6.} );</div>
-<div class="line">        <span class="comment">// trigger runtime error and then handle it</span></div>
-<div class="line">        <a id="a3" name="a3"></a><a class="code hl_function" href="group__file-io.html#ga62435704c4ac64279706bdf3ac1b87a2">h5::mute</a>();</div>
-<div class="line">        <span class="keywordflow">try</span>{</div>
-<div class="line">            h5::awrite(ds,<span class="stringliteral">&quot;att_02&quot;</span>, {<span class="stringliteral">&quot;one&quot;</span>,<span class="stringliteral">&quot;two&quot;</span>,<span class="stringliteral">&quot;...&quot;</span>} );</div>
-<div class="line">        } <span class="keywordflow">catch</span> ( <span class="keyword">const</span> h5::error::io::attribute::any&amp; err ){</div>
-<div class="line">            <a id="_a4" name="_a4"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cerr</a> &lt;&lt;<span class="stringliteral">&quot;INTENTIONAL ERROR: &quot;</span> &lt;&lt;err.what() &lt;&lt; <a id="a5" name="a5"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>;</div>
-<div class="line">        }</div>
-<div class="line">        <a id="a6" name="a6"></a><a class="code hl_function" href="group__file-io.html#ga458e8a5c14eb562a349fb27704f92fda">h5::unmute</a>();</div>
-<div class="line">    }</div>
-<div class="line">    { <span class="comment">// reading back attribute is always single shot, no partial IO </span></div>
-<div class="line">        <span class="keywordtype">int</span> a = h5::aread&lt;int&gt;(ds,<span class="stringliteral">&quot;att_01&quot;</span>);</div>
-<div class="line">        arma::mat att_10 = h5::aread&lt;arma::mat&gt;(ds,<span class="stringliteral">&quot;att_10&quot;</span>);</div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cerr</a> &lt;&lt; att_10 &lt;&lt;<span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">    }</div>
-<div class="line">    { <span class="comment">// reading back attribute is always single shot, no partial IO </span></div>
-<div class="line">        <span class="comment">// vector of ints</span></div>
-<div class="line">        <a id="_a7" name="_a7"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;att_01 : &quot;</span>; <span class="keywordtype">int</span> att_01 = h5::aread&lt;int&gt;(ds,<span class="stringliteral">&quot;att_01&quot;</span>); <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; att_01 &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">        <span class="comment">// vector of doubles</span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;att_02 : &quot;</span>; <span class="keyword">auto</span> att_02 = h5::aread&lt;std::vector&lt;double&gt;&gt;(ds,<span class="stringliteral">&quot;att_02&quot;</span>);</div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; att_02 &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">        <span class="comment">// vector of ints</span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;att_03 : &quot;</span>; <span class="keyword">auto</span> att_03 = h5::aread&lt;std::vector&lt;int&gt;&gt;(ds,<span class="stringliteral">&quot;att_03&quot;</span>);</div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; att_03 &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">        <span class="comment">// vector of strings, NOTE: charaters or initializer lists are not yet supported</span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;att_04 : &quot;</span>; <span class="keyword">auto</span> att_04 = h5::aread&lt;std::vector&lt;std::string&gt;&gt;(ds,<span class="stringliteral">&quot;att_04&quot;</span>);</div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a>&lt;&lt; att_04 &lt;&lt;<span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">        <span class="comment">// std::string </span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;att_07 : &quot;</span>; <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> att_07 = h5::aread&lt;std::string&gt;(ds,<span class="stringliteral">&quot;att_07&quot;</span>);</div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; att_07  &lt;&lt;<span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">        <span class="comment">// POD type rank 0</span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;att_08 : &quot;</span>; sn::example::Record att_08 = h5::aread&lt;sn::example::Record&gt;(ds,<span class="stringliteral">&quot;att_08&quot;</span>);</div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a>&lt;&lt; att_08.idx &lt;&lt;<span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">        <span class="comment">// POD type rank 1</span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;att_09 : &quot;</span>; <span class="keyword">auto</span> att_09 = h5::aread&lt;std::vector&lt;sn::example::Record&gt;&gt;(ds,<span class="stringliteral">&quot;att_09&quot;</span>);</div>
-<div class="line">        <span class="keywordflow">for</span>(<span class="keyword">auto</span> v: att_09) <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; v.idx &lt;&lt;<span class="stringliteral">&quot;,&quot;</span>; <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt;<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>;</div>
-<div class="line">        <span class="comment">// linear algebra object</span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;att_10 : &quot;</span>; <span class="keyword">auto</span> att_10 = h5::aread&lt;arma::mat&gt;(ds,<span class="stringliteral">&quot;att_10&quot;</span>); <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; att_10 &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line">    }</div>
+<div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="line"> </div>
-<div class="ttc" id="abasic_ostream_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cerr</a></div></div>
+<div class="ttc" id="aarray_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/array.html">std::array</a></div></div>
+<div class="ttc" id="abasic_ostream_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a></div></div>
 <div class="ttc" id="abasic_string_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a></div></div>
-<div class="ttc" id="aendl_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a></div><div class="ttdeci">T endl(T... args)</div></div>
+<div class="ttc" id="acomplex_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/numeric/complex.html">std::complex</a></div></div>
 <div class="ttc" id="agroup__file-io_html_ga458e8a5c14eb562a349fb27704f92fda"><div class="ttname"><a href="group__file-io.html#ga458e8a5c14eb562a349fb27704f92fda">h5::unmute</a></div><div class="ttdeci">void unmute()</div><div class="ttdoc">restores previously saved error handler with h5::mute Read on Error Handling/Exceptions</div><div class="ttdef"><b>Definition</b> H5Eall.hpp:41</div></div>
 <div class="ttc" id="agroup__file-io_html_ga62435704c4ac64279706bdf3ac1b87a2"><div class="ttname"><a href="group__file-io.html#ga62435704c4ac64279706bdf3ac1b87a2">h5::mute</a></div><div class="ttdeci">void mute()</div><div class="ttdoc">removes default error handler preventing diagnostic error messages printed for direct CAPI calls....</div><div class="ttdef"><b>Definition</b> H5Eall.hpp:28</div></div>
-<div class="ttc" id="agroup__io-write_html_gaeedb492b2edeecb66043852ed8b59552"><div class="ttname"><a href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a></div><div class="ttdeci">void write(const h5::ds_t &amp;ds, const h5::sp_t &amp;mem_space, const h5::sp_t &amp;file_space, const h5::dxpl_t &amp;dxpl, const T *ptr)</div><div class="ttdoc">write the memory content of const T* ptr with given mem_space into file_space of the dataset</div><div class="ttdef"><b>Definition</b> H5Dwrite.hpp:23</div></div>
+<div class="ttc" id="alist_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/list.html">std::list</a></div></div>
+<div class="ttc" id="amap_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/map.html">std::map</a></div></div>
+<div class="ttc" id="anamespaceh5_html_a7a1d02a18ffc6a0738e3e3b95a2f2306"><div class="ttname"><a href="namespaceh5.html#a7a1d02a18ffc6a0738e3e3b95a2f2306">h5::gcreate</a></div><div class="ttdeci">std::enable_if_t&lt; h5::impl::is_valid_group_parent&lt; HID_T &gt;::value, h5::gr_t &gt; gcreate(const HID_T &amp;parent, const std::string &amp;path, const h5::lcpl_t &amp;lcpl=h5::default_lcpl)</div><div class="ttdoc">Creates an HDF5 group and returns a managed h5::gr_t handle.</div><div class="ttdef"><b>Definition</b> H5Gcreate.hpp:32</div></div>
+<div class="ttc" id="apair_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/utility/pair.html">std::pair</a></div></div>
+<div class="ttc" id="aset_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/set.html">std::set</a></div></div>
+<div class="ttc" id="asize_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/size.html">std::vector::size</a></div><div class="ttdeci">T size(T... args)</div></div>
+<div class="ttc" id="asize_t_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a></div></div>
+<div class="ttc" id="astrncmp_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/string/byte/strncmp.html">std::strncmp</a></div><div class="ttdeci">T strncmp(T... args)</div></div>
+<div class="ttc" id="astructh5_1_1pod_html"><div class="ttname"><a href="structh5_1_1pod.html">h5::pod</a></div><div class="ttdef"><b>Definition</b> H5Uall.hpp:158</div></div>
+<div class="ttc" id="atuple_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/utility/tuple.html">std::tuple</a></div></div>
+<div class="ttc" id="avalarray_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/numeric/valarray.html">std::valarray</a></div></div>
 <div class="ttc" id="avector_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a></div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->

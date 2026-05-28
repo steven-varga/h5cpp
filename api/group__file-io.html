@@ -105,7 +105,7 @@ $(document).ready(function(){initNavTree('group__file-io.html',''); initResizabl
 </div><!--header-->
 <div class="contents">
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<p>These h5::open | h5::close | h5::create operations are to create/manipulate an hdf5 container. In POSIX sense HDF5 container is an entire <b>image</b> of a file system and the <b>dataset</b> is a document within. Datasets may be manipulated with h5::create | <a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a> | <a class="el" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552" title="write the memory content of const T* ptr with given mem_space into file_space of the dataset">h5::write</a> | h5::append operations. While File IO operations are straight maps from already existing CAPI HDF5 calls, they are furnished with <a class="el" href="link_raii_idiom.html">RAII</a>, and type safety to aid productivity. How the returned managed handles may be passed to CAPI calls is <a class="el" href="link_conversion_policy.html">governed by H5CPP conversion policy</a> <a class="el" href="group__file-io.html#ga62435704c4ac64279706bdf3ac1b87a2" title="removes default error handler preventing diagnostic error messages printed for direct CAPI calls....">h5::mute</a> | <a class="el" href="group__file-io.html#ga458e8a5c14eb562a349fb27704f92fda" title="restores previously saved error handler with h5::mute Read on Error Handling/Exceptions">h5::unmute</a> are miscellaneous thread safe calls for those rare occasions when you need to turn HDF5 CAPI error handler output <b>off</b> and <b>on</b>. Typically used when failure is information: checking existence of [dataset|path] by call-fail pattern, etc... <br  />
+<p>These h5::open | h5::close | h5::create operations are to create/manipulate an hdf5 container. In POSIX sense HDF5 container is an entire <b>image</b> of a file system and the <b>dataset</b> is a document within. Datasets may be manipulated with h5::create | <a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a> | h5::write | h5::append operations. While File IO operations are straight maps from already existing CAPI HDF5 calls, they are furnished with <a class="el" href="link_raii_idiom.html">RAII</a>, and type safety to aid productivity. How the returned managed handles may be passed to CAPI calls is <a class="el" href="link_conversion_policy.html">governed by H5CPP conversion policy</a> <a class="el" href="group__file-io.html#ga62435704c4ac64279706bdf3ac1b87a2" title="removes default error handler preventing diagnostic error messages printed for direct CAPI calls....">h5::mute</a> | <a class="el" href="group__file-io.html#ga458e8a5c14eb562a349fb27704f92fda" title="restores previously saved error handler with h5::mute Read on Error Handling/Exceptions">h5::unmute</a> are miscellaneous thread safe calls for those rare occasions when you need to turn HDF5 CAPI error handler output <b>off</b> and <b>on</b>. Typically used when failure is information: checking existence of [dataset|path] by call-fail pattern, etc... <br  />
  [CAPI]: <a href="https://support.hdfgroup.org/documentation/hdf5/latest/">https://support.hdfgroup.org/documentation/hdf5/latest/</a><br  />
  [H5Fcreate]: <a href="https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html">https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html</a><br  />
  [H5Fopen]: <a href="https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html">https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html</a><br  />
@@ -164,7 +164,7 @@ $(document).ready(function(){initNavTree('group__file-io.html',''); initResizabl
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>open <code>h5::fd_t</code> file descriptor; throws <code>h5::error</code> on failure </dd></dl>
-<dl class="section see"><dt>See also</dt><dd>h5::open <a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a> <a class="el" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552" title="write the memory content of const T* ptr with given mem_space into file_space of the dataset">h5::write</a> h5::fd_t h5::ds_t h5::err_t </dd>
+<dl class="section see"><dt>See also</dt><dd>h5::open <a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a> h5::write h5::fd_t h5::ds_t h5::err_t </dd>
 <dd>
 [H5Fcreate][] [H5Fopen][] [H5Fclose][] [H5Dopen][] [H5Dclose][] [gzip][]<br  />
  [CAPI]: <a href="https://support.hdfgroup.org/documentation/hdf5/latest/">https://support.hdfgroup.org/documentation/hdf5/latest/</a><br  />
@@ -217,7 +217,7 @@ $(document).ready(function(){initNavTree('group__file-io.html',''); initResizabl
 </div><div class="memdoc">
 
 <p>removes default error handler preventing diagnostic error messages printed for direct CAPI calls. This is a thread safe implementation. <a class="el" href="link_error_handler.html">Read on Error Handling/Exceptions</a> </p>
-<dl class="section see"><dt>See also</dt><dd>h5::open <a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a> <a class="el" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552" title="write the memory content of const T* ptr with given mem_space into file_space of the dataset">h5::write</a> h5::fd_t h5::ds_t h5::err_t </dd>
+<dl class="section see"><dt>See also</dt><dd>h5::open <a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a> h5::write h5::fd_t h5::ds_t h5::err_t </dd>
 <dd>
 [H5Fcreate][] [H5Fopen][] [H5Fclose][] [H5Dopen][] [H5Dclose][] [gzip][]<br  />
  [CAPI]: <a href="https://support.hdfgroup.org/documentation/hdf5/latest/">https://support.hdfgroup.org/documentation/hdf5/latest/</a><br  />
@@ -243,7 +243,7 @@ $(document).ready(function(){initNavTree('group__file-io.html',''); initResizabl
 <div class="ttc" id="agroup__file-io_html_ga458e8a5c14eb562a349fb27704f92fda"><div class="ttname"><a href="group__file-io.html#ga458e8a5c14eb562a349fb27704f92fda">h5::unmute</a></div><div class="ttdeci">void unmute()</div><div class="ttdoc">restores previously saved error handler with h5::mute Read on Error Handling/Exceptions</div><div class="ttdef"><b>Definition</b> H5Eall.hpp:41</div></div>
 <div class="ttc" id="agroup__file-io_html_ga62435704c4ac64279706bdf3ac1b87a2"><div class="ttname"><a href="group__file-io.html#ga62435704c4ac64279706bdf3ac1b87a2">h5::mute</a></div><div class="ttdeci">void mute()</div><div class="ttdoc">removes default error handler preventing diagnostic error messages printed for direct CAPI calls....</div><div class="ttdef"><b>Definition</b> H5Eall.hpp:28</div></div>
 </div><!-- fragment --> </dd></dl>
-<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="attributes_8cpp-example.html#a3">attributes.cpp</a>, and <a class="el" href="basics_8cpp-example.html#a3">basics.cpp</a>.</dd>
+<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="attributes_8cpp-example.html#a16">attributes.cpp</a>, and <a class="el" href="basics_8cpp-example.html#a3">basics.cpp</a>.</dd>
 </dl>
 
 </div>
@@ -276,7 +276,7 @@ $(document).ready(function(){initNavTree('group__file-io.html',''); initResizabl
 <div class="line"><a class="code hl_function" href="group__file-io.html#ga62435704c4ac64279706bdf3ac1b87a2">h5::mute</a>();             <span class="comment">// mute  error handling</span></div>
 <div class="line">   ... H5?xxx calls ... <span class="comment">// do your capi calls which output annoying error messages</span></div>
 <div class="line"><a class="code hl_function" href="group__file-io.html#ga458e8a5c14eb562a349fb27704f92fda">h5::unmute</a>();           <span class="comment">// restore previously saved handler</span></div>
-</div><!-- fragment --> <dl class="section examples"><dt>Examples</dt><dd><a class="el" href="attributes_8cpp-example.html#a6">attributes.cpp</a>, and <a class="el" href="basics_8cpp-example.html#a5">basics.cpp</a>.</dd>
+</div><!-- fragment --> <dl class="section examples"><dt>Examples</dt><dd><a class="el" href="attributes_8cpp-example.html#a17">attributes.cpp</a>, and <a class="el" href="basics_8cpp-example.html#a5">basics.cpp</a>.</dd>
 </dl>
 
 </div>
@@ -339,7 +339,7 @@ $(document).ready(function(){initNavTree('group__file-io.html',''); initResizabl
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>open <code>h5::fd_t</code> file descriptor; throws <code>h5::error</code> on failure </dd></dl>
-<dl class="section see"><dt>See also</dt><dd>h5::open <a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a> <a class="el" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552" title="write the memory content of const T* ptr with given mem_space into file_space of the dataset">h5::write</a> h5::fd_t h5::ds_t h5::err_t </dd>
+<dl class="section see"><dt>See also</dt><dd>h5::open <a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a> h5::write h5::fd_t h5::ds_t h5::err_t </dd>
 <dd>
 [H5Fcreate][] [H5Fopen][] [H5Fclose][] [H5Dopen][] [H5Dclose][] [gzip][]<br  />
  [CAPI]: <a href="https://support.hdfgroup.org/documentation/hdf5/latest/">https://support.hdfgroup.org/documentation/hdf5/latest/</a><br  />
@@ -432,7 +432,7 @@ $(document).ready(function(){initNavTree('group__file-io.html',''); initResizabl
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>open <code>h5::fd_t</code> file descriptor; throws <code>h5::error</code> on failure </dd></dl>
-<dl class="section see"><dt>See also</dt><dd>h5::open <a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a> <a class="el" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552" title="write the memory content of const T* ptr with given mem_space into file_space of the dataset">h5::write</a> h5::fd_t h5::ds_t h5::err_t </dd>
+<dl class="section see"><dt>See also</dt><dd>h5::open <a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a> h5::write h5::fd_t h5::ds_t h5::err_t </dd>
 <dd>
 [H5Fcreate][] [H5Fopen][] [H5Fclose][] [H5Dopen][] [H5Dclose][] [gzip][]<br  />
  [CAPI]: <a href="https://support.hdfgroup.org/documentation/hdf5/latest/">https://support.hdfgroup.org/documentation/hdf5/latest/</a><br  />

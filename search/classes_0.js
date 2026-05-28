@@ -1,0 +1,20 @@
+var searchData=
+[
+  ['add_5fconst_0',['add_const',['https://en.cppreference.com/cpp/types/add_cv',1,'std']]],
+  ['add_5fcv_1',['add_cv',['https://en.cppreference.com/cpp/types/add_cv',1,'std']]],
+  ['add_5flvalue_5freference_2',['add_lvalue_reference',['https://en.cppreference.com/cpp/types/add_reference',1,'std']]],
+  ['add_5fpointer_3',['add_pointer',['https://en.cppreference.com/cpp/types/add_pointer',1,'std']]],
+  ['add_5frvalue_5freference_4',['add_rvalue_reference',['https://en.cppreference.com/cpp/types/add_reference',1,'std']]],
+  ['add_5fvolatile_5',['add_volatile',['https://en.cppreference.com/cpp/types/add_cv',1,'std']]],
+  ['adopt_5flock_5ft_6',['adopt_lock_t',['https://en.cppreference.com/cpp/thread/lock_tag_t',1,'std']]],
+  ['aligned_5fstorage_7',['aligned_storage',['https://en.cppreference.com/cpp/types/aligned_storage',1,'std']]],
+  ['aligned_5funion_8',['aligned_union',['https://en.cppreference.com/cpp/types/aligned_union',1,'std']]],
+  ['alignment_5fof_9',['alignment_of',['https://en.cppreference.com/cpp/types/alignment_of',1,'std']]],
+  ['allocator_10',['allocator',['https://en.cppreference.com/cpp/memory/allocator',1,'std']]],
+  ['allocator_5farg_5ft_11',['allocator_arg_t',['https://en.cppreference.com/cpp/memory/allocator_arg_t',1,'std']]],
+  ['allocator_5ftraits_12',['allocator_traits',['https://en.cppreference.com/cpp/memory/allocator_traits',1,'std']]],
+  ['array_13',['array',['https://en.cppreference.com/cpp/container/array',1,'std']]],
+  ['atomic_14',['atomic',['https://en.cppreference.com/cpp/atomic/atomic',1,'std']]],
+  ['atomic_5fflag_15',['atomic_flag',['https://en.cppreference.com/cpp/atomic/atomic_flag',1,'std']]],
+  ['auto_5fptr_16',['auto_ptr',['https://en.cppreference.com/cpp/memory/auto_ptr',1,'std']]]
+];

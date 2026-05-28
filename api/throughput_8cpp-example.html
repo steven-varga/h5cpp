@@ -104,114 +104,112 @@ $(document).ready(function(){initNavTree('throughput_8cpp-example.html',''); ini
   <div class="headertitle"><div class="title">throughput.cpp</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada</span></div>
-<div class="line"><span class="comment"> * Author: Varga, Steven &lt;steven@vargaconsulting.ca&gt;</span></div>
-<div class="line"><span class="comment"> */</span></div>
+<div class="fragment"><div class="line"><span class="comment">// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Parallel HDF5 — write/read throughput benchmark across MPI ranks.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Each rank writes (default) 80 MB to its own row of a (world_size × nrows)</span></div>
+<div class="line"><span class="comment">// chunked dataset, then reads it back.  Aggregate MB/s is gathered on rank</span></div>
+<div class="line"><span class="comment">// 0 via MPI_Gather and printed.  Use this as the &quot;what&#39;s my actual disk</span></div>
+<div class="line"><span class="comment">// bandwidth across N processes&quot; sanity check before profiling real code.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// REQUIRES: HDF5 built with --enable-parallel (HDF5_IS_PARALLEL=ON).  On a</span></div>
+<div class="line"><span class="comment">// node-local filesystem the achievable throughput plateaus at the disk&#39;s</span></div>
+<div class="line"><span class="comment">// sequential write limit divided by world_size; on Lustre/GPFS it scales</span></div>
+<div class="line"><span class="comment">// with the number of OSTs/stripes.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// RUN: mpirun -n &lt;N&gt; ./examples-mpi-throughput</span></div>
 <div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;mpi.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;h5cpp/all&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;chrono&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;numeric&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"> </div>
-<div class="line"><span class="preprocessor">#pragma GCC diagnostic ignored &quot;-Wnarrowing&quot;</span></div>
-<div class="line"><span class="comment">// armadillo</span></div>
-<div class="line"><span class="comment">//./configure -DCMAKE_INSTALL_PREFIX=/usr/local -DDETECT_HDF5=OFF</span></div>
 <div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
-<div class="line">    <span class="keywordtype">int</span> size, rank, name_len;</div>
-<div class="line">    <span class="keywordtype">char</span> processor_name[MPI_MAX_PROCESSOR_NAME];</div>
-<div class="line">    MPI_Init(NULL, NULL);</div>
-<div class="line">    MPI_Info info;</div>
-<div class="line">    MPI_Comm comm  = MPI_COMM_WORLD;</div>
+<div class="line">    MPI_Init(&amp;argc, &amp;argv);</div>
+<div class="line">    <span class="keywordtype">int</span> rank = 0, world_size = 0;</div>
+<div class="line">    MPI_Comm comm = MPI_COMM_WORLD;</div>
+<div class="line">    MPI_Comm_rank(comm, &amp;rank);</div>
+<div class="line">    MPI_Comm_size(comm, &amp;world_size);</div>
 <div class="line"> </div>
-<div class="line">    MPI_Comm_size(MPI_COMM_WORLD, &amp;size);</div>
-<div class="line">    MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);</div>
-<div class="line">    MPI_Get_processor_name(processor_name, &amp;name_len);</div>
+<div class="line">    <span class="comment">// 80 MB per rank — adjust nchunk if the test should run smaller.</span></div>
+<div class="line">    <span class="comment">// The chunk_size matches nrows to keep each rank&#39;s slab a single chunk.</span></div>
+<div class="line">    <span class="keyword">constexpr</span> <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> nchunk = 1024 * 1024;</div>
+<div class="line">    <span class="keyword">constexpr</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> nrows  = 10 * nchunk;</div>
+<div class="line">    <span class="keyword">const</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> vbytes = nrows * <span class="keyword">sizeof</span>(double);</div>
 <div class="line"> </div>
-<div class="line">    MPI_Info_create(&amp;info);</div>
-<div class="line">    <span class="comment">//MPI_Info_set(info, &quot;fs_pvfs2_stripe_size&quot;, &quot;6&quot;);</span></div>
-<div class="line">    <span class="comment">//MPI_Info_set(info, &quot;fs_pvfs2_stripe_width&quot;, &quot;1024&quot;);</span></div>
+<div class="line">    <span class="comment">// ── WRITE ──────────────────────────────────────────────────────────────</span></div>
+<div class="line">    {</div>
+<div class="line">        <a id="_a1" name="_a1"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> v(nrows, <span class="keywordtype">double</span>(rank + 2));</div>
+<div class="line">        <span class="keyword">auto</span> fd = h5::create(<span class="stringliteral">&quot;throughput.h5&quot;</span>, H5F_ACC_TRUNC, h5::default_fcpl,</div>
+<div class="line">            h5::mpiio({comm, MPI_INFO_NULL}));</div>
+<div class="line">        <span class="comment">// alloc_time_early forces space allocation at create-time so the</span></div>
+<div class="line">        <span class="comment">// write benchmark below measures pure I/O, not metadata + alloc.</span></div>
+<div class="line">        h5::ds_t ds = h5::create&lt;double&gt;(fd, <span class="stringliteral">&quot;dataset&quot;</span>,</div>
+<div class="line">            h5::max_dims{<span class="keyword">static_cast&lt;</span>hsize_t<span class="keyword">&gt;</span>(world_size), nrows},</div>
+<div class="line">            h5::chunk{1, nchunk} | h5::alloc_time_early);</div>
 <div class="line"> </div>
+<div class="line">        <span class="keyword">auto</span> t0 = <a id="a2" name="a2"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/chrono/steady_clock/now.html">std::chrono::steady_clock::now</a>();</div>
+<div class="line">        h5::write(ds, v,</div>
+<div class="line">            h5::current_dims{<span class="keyword">static_cast&lt;</span>hsize_t<span class="keyword">&gt;</span>(world_size), nrows},</div>
+<div class="line">            h5::offset{<span class="keyword">static_cast&lt;</span>hsize_t<span class="keyword">&gt;</span>(rank), 0},</div>
+<div class="line">            h5::count{1, nrows},</div>
+<div class="line">            h5::collective);</div>
+<div class="line">        <span class="keyword">auto</span> t1 = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/chrono/steady_clock/now.html">std::chrono::steady_clock::now</a>();</div>
 <div class="line"> </div>
-<div class="line">        <span class="keywordtype">int</span> nchunk = 1024*1024;</div>
-<div class="line">    <span class="keywordtype">int</span> nrows  = 10*nchunk; <span class="comment">// 800MB per rank!!</span></div>
+<div class="line">        <span class="keyword">const</span> <span class="keywordtype">double</span> seconds = <a id="_a3" name="_a3"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/chrono/duration.html">std::chrono::duration&lt;double&gt;</a>(t1 - t0).<a id="a4" name="a4"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/chrono/duration/count.html">count</a>();</div>
+<div class="line">        <span class="keyword">const</span> <span class="keywordtype">double</span> MB_per_s = (double(vbytes) / 1e6) / seconds;</div>
 <div class="line"> </div>
-<div class="line">    { <span class="comment">// CREATE - WRITE</span></div>
-<div class="line">        <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> v(nrows);</div>
-<div class="line">        <a id="a1" name="a1"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">std::fill</a>(<a id="a2" name="a2"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/begin.html">std::begin</a>(v), <a id="a3" name="a3"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/end.html">std::end</a>(v), rank + 2 );</div>
-<div class="line">        <span class="keywordtype">size_t</span> vsize =v.<a id="a4" name="a4"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/size.html">size</a>() * <span class="keyword">sizeof</span>(double);</div>
-<div class="line"> </div>
-<div class="line">        <span class="keyword">auto</span> fd = h5::create(<span class="stringliteral">&quot;collective.h5&quot;</span>, H5F_ACC_TRUNC,</div>
-<div class="line">                h5::fcpl, </div>
-<div class="line">                h5::mpiio({MPI_COMM_WORLD, info}) <span class="comment">// pass the communicator and hints as usual</span></div>
-<div class="line">        );</div>
-<div class="line">        h5::ds_t ds = h5::create&lt;double&gt;(fd,<span class="stringliteral">&quot;dataset&quot;</span></div>
-<div class="line">                ,h5::max_dims{size,nrows}, h5::chunk{1,nchunk} | h5::alloc_time_early );</div>
-<div class="line"> </div>
-<div class="line">        <span class="comment">// make a copy of dxpl, so we can query if collective IO was successful</span></div>
-<div class="line">        h5::dxpl_t dxpl = h5::collective;</div>
-<div class="line"> </div>
-<div class="line">        <span class="comment">// ACTUAL WRITE MEASUREMENT</span></div>
-<div class="line">        std::chrono::system_clock::time_point start = <a id="a5" name="a5"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/chrono/system_clock/now.html">std::chrono::system_clock::now</a>();</div>
-<div class="line">            <a id="a6" name="a6"></a><a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>( ds, v, h5::current_dims{nrows,size},</div>
-<div class="line">                h5::offset{rank,0}, h5::count{1,nrows}, dxpl );</div>
-<div class="line">        std::chrono::system_clock::time_point stop = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/chrono/system_clock/now.html">std::chrono::system_clock::now</a>();</div>
-<div class="line">        <span class="keywordtype">double</span> running_time = 1e-6 * std::chrono::duration_cast&lt;std::chrono::microseconds&gt;(stop - start).count();</div>
-<div class="line">        <span class="keywordtype">double</span> MB_sec =  (vsize / 1e6) / running_time;</div>
-<div class="line"> </div>
-<div class="line">        <span class="comment">// COLLECTING RESULTS: </span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> throughput(size);</div>
-<div class="line">        MPI_Gather(&amp;MB_sec, 1, MPI_DOUBLE, throughput.<a id="a7" name="a7"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(), 1, MPI_DOUBLE, 0, comm);</div>
-<div class="line">        <span class="keywordflow">if</span>( rank == 0)</div>
-<div class="line">            <a id="_a8" name="_a8"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\nWRITE: &quot;</span> &lt;&lt;</div>
-<div class="line">                <a id="a9" name="a9"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/accumulate.html">std::accumulate</a>(throughput.<a id="a10" name="a10"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/begin.html">begin</a>(), throughput.<a id="a11" name="a11"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/end.html">end</a>(), 0) &lt;&lt;<span class="stringliteral">&quot; MB/s&quot;</span> &lt;&lt;<a id="a12" name="a12"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>;</div>
-<div class="line"> </div>
-<div class="line">        <span class="comment">// query collective io state:</span></div>
-<div class="line">        <span class="comment">//std::cout &lt;&lt; dxpl &lt;&lt;&quot;\n&quot;;</span></div>
+<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> rates(world_size);</div>
+<div class="line">        MPI_Gather(&amp;MB_per_s, 1, MPI_DOUBLE, rates.<a id="a5" name="a5"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(), 1, MPI_DOUBLE, 0, comm);</div>
+<div class="line">        <span class="keywordflow">if</span> (rank == 0) {</div>
+<div class="line">            <span class="keywordtype">double</span> total = <a id="a6" name="a6"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/accumulate.html">std::accumulate</a>(rates.<a id="a7" name="a7"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/begin.html">begin</a>(), rates.<a id="a8" name="a8"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/end.html">end</a>(), 0.0);</div>
+<div class="line">            <a id="_a9" name="_a9"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;WRITE: &quot;</span> &lt;&lt; total &lt;&lt; <span class="stringliteral">&quot; MB/s aggregate (&quot;</span></div>
+<div class="line">                      &lt;&lt; world_size &lt;&lt; <span class="stringliteral">&quot; ranks)\n&quot;</span>;</div>
+<div class="line">        }</div>
 <div class="line">    }</div>
-<div class="line">    { <span class="comment">// READ</span></div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ── READ ───────────────────────────────────────────────────────────────</span></div>
+<div class="line">    {</div>
 <div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> v(nrows);</div>
-<div class="line">        <span class="keywordtype">size_t</span> vsize =v.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/size.html">size</a>() * <span class="keyword">sizeof</span>(double);</div>
-<div class="line">        <span class="keyword">auto</span> fd = h5::open(<span class="stringliteral">&quot;collective.h5&quot;</span>, H5F_ACC_RDWR,  h5::mpiio({MPI_COMM_WORLD, info}));</div>
+<div class="line">        <span class="keyword">auto</span> fd = h5::open(<span class="stringliteral">&quot;throughput.h5&quot;</span>, H5F_ACC_RDWR,</div>
+<div class="line">            h5::mpiio({comm, MPI_INFO_NULL}));</div>
 <div class="line">        <span class="keyword">auto</span> ds = h5::open(fd, <span class="stringliteral">&quot;/dataset&quot;</span>);</div>
 <div class="line"> </div>
-<div class="line">        <span class="comment">// make a copy of dxpl, so we can query if collective IO was successful</span></div>
-<div class="line">        h5::dxpl_t dxpl = h5::collective;</div>
+<div class="line">        <span class="keyword">auto</span> t0 = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/chrono/steady_clock/now.html">std::chrono::steady_clock::now</a>();</div>
+<div class="line">        <a id="a10" name="a10"></a><a class="code hl_function" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a>(ds, v.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(),</div>
+<div class="line">            h5::offset{static_cast&lt;hsize_t&gt;(rank), 0},</div>
+<div class="line">            h5::count{1, nrows},</div>
+<div class="line">            h5::collective);</div>
+<div class="line">        <span class="keyword">auto</span> t1 = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/chrono/steady_clock/now.html">std::chrono::steady_clock::now</a>();</div>
 <div class="line"> </div>
-<div class="line">        <span class="comment">// ACTUAL WRITE MEASUREMENT</span></div>
-<div class="line">        std::chrono::system_clock::time_point start = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/chrono/system_clock/now.html">std::chrono::system_clock::now</a>();</div>
-<div class="line">            <a id="a13" name="a13"></a><a class="code hl_function" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a>(ds, v.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(),  h5::offset{rank,0}, h5::count{1,nrows}, dxpl);</div>
-<div class="line">        std::chrono::system_clock::time_point stop = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/chrono/system_clock/now.html">std::chrono::system_clock::now</a>();</div>
+<div class="line">        <span class="keyword">const</span> <span class="keywordtype">double</span> seconds = <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/chrono/duration.html">std::chrono::duration&lt;double&gt;</a>(t1 - t0).<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/chrono/duration/count.html">count</a>();</div>
+<div class="line">        <span class="keyword">const</span> <span class="keywordtype">double</span> MB_per_s = (double(vbytes) / 1e6) / seconds;</div>
 <div class="line"> </div>
-<div class="line">        <span class="keywordtype">double</span> running_time = 1e-6 * std::chrono::duration_cast&lt;std::chrono::microseconds&gt;(stop - start).count();</div>
-<div class="line">        <span class="keywordtype">double</span> MB_sec =  (vsize / 1e6) / running_time;</div>
-<div class="line"> </div>
-<div class="line">        <span class="comment">// COLLECTING RESULTS: </span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> throughput(size);</div>
-<div class="line">        MPI_Gather(&amp;MB_sec, 1, MPI_DOUBLE, throughput.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(), 1, MPI_DOUBLE, 0, comm);</div>
-<div class="line">        <span class="keywordflow">if</span>( rank == 0)</div>
-<div class="line">            <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\nREAD: &quot;</span> &lt;&lt;</div>
-<div class="line">                <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/accumulate.html">std::accumulate</a>(throughput.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/begin.html">begin</a>(), throughput.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/end.html">end</a>(), 0) &lt;&lt;<span class="stringliteral">&quot; MB/s&quot;</span> &lt;&lt;<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>;</div>
-<div class="line">        <span class="comment">// query collective io state:</span></div>
-<div class="line">        <span class="comment">//std::cout &lt;&lt; dxpl &lt;&lt;&quot;\n&quot;;</span></div>
+<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> rates(world_size);</div>
+<div class="line">        MPI_Gather(&amp;MB_per_s, 1, MPI_DOUBLE, rates.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/data.html">data</a>(), 1, MPI_DOUBLE, 0, comm);</div>
+<div class="line">        <span class="keywordflow">if</span> (rank == 0) {</div>
+<div class="line">            <span class="keywordtype">double</span> total = <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/accumulate.html">std::accumulate</a>(rates.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/begin.html">begin</a>(), rates.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/end.html">end</a>(), 0.0);</div>
+<div class="line">            <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;READ:  &quot;</span> &lt;&lt; total &lt;&lt; <span class="stringliteral">&quot; MB/s aggregate (&quot;</span></div>
+<div class="line">                      &lt;&lt; world_size &lt;&lt; <span class="stringliteral">&quot; ranks)\n&quot;</span>;</div>
+<div class="line">        }</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    MPI_Barrier(MPI_COMM_WORLD);</div>
-<div class="line">    MPI_Info_free(&amp;info);</div>
+<div class="line">    MPI_Barrier(comm);</div>
 <div class="line">    MPI_Finalize();</div>
+<div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 <div class="ttc" id="aaccumulate_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/algorithm/accumulate.html">std::accumulate</a></div><div class="ttdeci">T accumulate(T... args)</div></div>
 <div class="ttc" id="abasic_ostream_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a></div></div>
-<div class="ttc" id="abegin_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/iterator/begin.html">std::begin</a></div><div class="ttdeci">T begin(T... args)</div></div>
+<div class="ttc" id="abegin_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/begin.html">std::vector::begin</a></div><div class="ttdeci">T begin(T... args)</div></div>
+<div class="ttc" id="acount_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/chrono/duration/count.html">std::chrono::duration::count</a></div><div class="ttdeci">T count(T... args)</div></div>
 <div class="ttc" id="adata_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/data.html">std::vector::data</a></div><div class="ttdeci">T data(T... args)</div></div>
-<div class="ttc" id="aend_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/iterator/end.html">std::end</a></div><div class="ttdeci">T end(T... args)</div></div>
-<div class="ttc" id="aendl_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a></div><div class="ttdeci">T endl(T... args)</div></div>
-<div class="ttc" id="afill_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/algorithm/fill.html">std::fill</a></div><div class="ttdeci">T fill(T... args)</div></div>
-<div class="ttc" id="agroup__io-read_html_ga344b644b6bdcfdfd5fd3c397cc0e2e7f"><div class="ttname"><a href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a></div><div class="ttdeci">std::enable_if_t&lt;!std::is_same_v&lt; T, char ** &gt;, void &gt; read(const h5::ds_t &amp;ds, T *ptr, args_t &amp;&amp;... args)</div><div class="ttdef"><b>Definition</b> H5Dread.hpp:35</div></div>
-<div class="ttc" id="agroup__io-write_html_gaeedb492b2edeecb66043852ed8b59552"><div class="ttname"><a href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a></div><div class="ttdeci">void write(const h5::ds_t &amp;ds, const h5::sp_t &amp;mem_space, const h5::sp_t &amp;file_space, const h5::dxpl_t &amp;dxpl, const T *ptr)</div><div class="ttdoc">write the memory content of const T* ptr with given mem_space into file_space of the dataset</div><div class="ttdef"><b>Definition</b> H5Dwrite.hpp:23</div></div>
-<div class="ttc" id="anow_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/chrono/system_clock/now.html">std::chrono::system_clock::now</a></div><div class="ttdeci">T now(T... args)</div></div>
-<div class="ttc" id="asize_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/size.html">std::vector::size</a></div><div class="ttdeci">T size(T... args)</div></div>
+<div class="ttc" id="aduration_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/chrono/duration.html">std::chrono::duration</a></div></div>
+<div class="ttc" id="aend_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/end.html">std::vector::end</a></div><div class="ttdeci">T end(T... args)</div></div>
+<div class="ttc" id="agroup__io-read_html_ga344b644b6bdcfdfd5fd3c397cc0e2e7f"><div class="ttname"><a href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a></div><div class="ttdeci">std::enable_if_t&lt;!std::is_same_v&lt; T, char ** &gt;, void &gt; read(const h5::ds_t &amp;ds, T *ptr, args_t &amp;&amp;... args)</div><div class="ttdef"><b>Definition</b> H5Dread.hpp:36</div></div>
+<div class="ttc" id="anow_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/chrono/steady_clock/now.html">std::chrono::steady_clock::now</a></div><div class="ttdeci">T now(T... args)</div></div>
+<div class="ttc" id="asize_t_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a></div></div>
 <div class="ttc" id="avector_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a></div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->

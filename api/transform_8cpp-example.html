@@ -105,39 +105,187 @@ $(document).ready(function(){initNavTree('transform_8cpp-example.html',''); init
 </div><!--header-->
 <div class="contents">
 <div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada</span></div>
+<div class="line"><span class="comment"> * Copyright (c) 2018-2026 Steven Varga, Toronto,ON Canada</span></div>
 <div class="line"><span class="comment"> * Author: Varga, Steven &lt;steven@vargaconsulting.ca&gt;</span></div>
 <div class="line"><span class="comment"> */</span></div>
 <div class="line"><span class="preprocessor">#include &lt;armadillo&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;h5cpp/all&gt;</span></div>
 <div class="line"> </div>
+<div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;string&gt;</span></div>
 <div class="line"> </div>
-<div class="line"><span class="comment">// see: https://support.hdfgroup.org/documentation/hdf5/latest/group___d_x_p_l.html</span></div>
-<div class="line">H5T_conv_ret_t handler( H5T_conv_except_t except_type, hid_t src_id, hid_t dst_id, <span class="keywordtype">void</span> *src_buf, <span class="keywordtype">void</span> *dst_buf, <span class="keywordtype">void</span> *op_data){</div>
-<div class="line">    <span class="keywordflow">return</span> H5T_CONV_HANDLED;</div>
+<div class="line"><span class="comment">// =========================================================================</span></div>
+<div class="line"><span class="comment">// h5cpp data-transform &amp; type-conversion-callback demo.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// HDF5 carries two orthogonal in-flight numeric features on the DXPL</span></div>
+<div class="line"><span class="comment">// (data transfer property list):</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">//   h5::data_transform{&quot;expr&quot;}   element-wise linear expression in x,</span></div>
+<div class="line"><span class="comment">//                                applied by HDF5 during H5Dread/H5Dwrite.</span></div>
+<div class="line"><span class="comment">//                                Operators: + - * /  and parentheses.</span></div>
+<div class="line"><span class="comment">//                                Same expression, mirror semantics:</span></div>
+<div class="line"><span class="comment">//                                   - on write: stored = expr(memory)</span></div>
+<div class="line"><span class="comment">//                                   - on read:  memory = expr(stored)</span></div>
+<div class="line"><span class="comment">//                                Spec: see H5Pset_data_transform docs.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">//   h5::type_conv_cb{ {fn, ud} } callback HDF5 invokes when an implicit</span></div>
+<div class="line"><span class="comment">//                                type conversion would lose information</span></div>
+<div class="line"><span class="comment">//                                (overflow, underflow, truncate, NaN/INF).</span></div>
+<div class="line"><span class="comment">//                                The callback chooses one of:</span></div>
+<div class="line"><span class="comment">//                                   H5T_CONV_ABORT      → propagate error</span></div>
+<div class="line"><span class="comment">//                                   H5T_CONV_HANDLED    → continue, value</span></div>
+<div class="line"><span class="comment">//                                                          left as written</span></div>
+<div class="line"><span class="comment">//                                                          by the callback</span></div>
+<div class="line"><span class="comment">//                                   H5T_CONV_UNHANDLED  → HDF5 default</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Both knobs pass through the dxpl, so they can be combined with any</span></div>
+<div class="line"><span class="comment">// other DXPL option (chunk cache size, MPI collective mode, etc.) via the</span></div>
+<div class="line"><span class="comment">// same | composition the rest of h5cpp uses.</span></div>
+<div class="line"><span class="comment">// =========================================================================</span></div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">namespace </span>{</div>
+<div class="line">    <span class="keywordtype">int</span> errors = 0;</div>
+<div class="line"> </div>
+<div class="line">    <span class="keyword">template</span> &lt;<span class="keyword">class</span> A, <span class="keyword">class</span> B&gt;</div>
+<div class="line">    <span class="keywordtype">void</span> check(<span class="keyword">const</span> <span class="keywordtype">char</span>* tag, <span class="keyword">const</span> A&amp; expected, <span class="keyword">const</span> B&amp; got, <span class="keywordtype">double</span> tol = 1e-12) {</div>
+<div class="line">        <span class="keyword">const</span> <span class="keywordtype">double</span> err = std::abs(<span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(expected - got));</div>
+<div class="line">        <span class="keyword">const</span> <span class="keywordtype">bool</span> ok = (err &lt;= tol);</div>
+<div class="line">        <span class="keywordflow">if</span> (!ok) ++errors;</div>
+<div class="line">        <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; (ok ? <span class="stringliteral">&quot;✔ ok      &quot;</span> : <span class="stringliteral">&quot;✘ failed  &quot;</span>)</div>
+<div class="line">                  &lt;&lt; tag &lt;&lt; <span class="stringliteral">&quot;  (expected=&quot;</span> &lt;&lt; expected</div>
+<div class="line">                  &lt;&lt; <span class="stringliteral">&quot;  got=&quot;</span> &lt;&lt; got &lt;&lt; <span class="stringliteral">&quot;)\n&quot;</span>;</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// Type-conversion exception callback. HDF5 calls this once per element</span></div>
+<div class="line">    <span class="comment">// whose conversion would lose information; here we clamp instead of</span></div>
+<div class="line">    <span class="comment">// abort. dst_buf is the in-memory destination element (sized to the</span></div>
+<div class="line">    <span class="comment">// dst_id native type) — we cast and overwrite, then return HANDLED.</span></div>
+<div class="line">    H5T_conv_ret_t clamp_to_int16(H5T_conv_except_t except_type,</div>
+<div class="line">                                  hid_t <span class="comment">/*src_id*/</span>, hid_t <span class="comment">/*dst_id*/</span>,</div>
+<div class="line">                                  <span class="keywordtype">void</span>* <span class="comment">/*src_buf*/</span>, <span class="keywordtype">void</span>* dst_buf,</div>
+<div class="line">                                  <span class="keywordtype">void</span>* <span class="comment">/*op_data*/</span>) {</div>
+<div class="line">        <span class="keyword">auto</span>* dst = <span class="keyword">static_cast&lt;</span><a id="_a1" name="_a1"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int16_t</a>*<span class="keyword">&gt;</span>(dst_buf);</div>
+<div class="line">        <span class="keywordflow">switch</span> (except_type) {</div>
+<div class="line">            <span class="keywordflow">case</span> H5T_CONV_EXCEPT_RANGE_HI:  *dst = <a id="a2" name="a2"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/types/numeric_limits/max.html">std::numeric_limits&lt;std::int16_t&gt;::max</a>(); <span class="keywordflow">return</span> H5T_CONV_HANDLED;</div>
+<div class="line">            <span class="keywordflow">case</span> H5T_CONV_EXCEPT_RANGE_LOW: *dst = <a id="a3" name="a3"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/types/numeric_limits/min.html">std::numeric_limits&lt;std::int16_t&gt;::min</a>(); <span class="keywordflow">return</span> H5T_CONV_HANDLED;</div>
+<div class="line">            <span class="keywordflow">case</span> H5T_CONV_EXCEPT_TRUNCATE:  <span class="keywordflow">return</span> H5T_CONV_UNHANDLED;  <span class="comment">// let HDF5 do its default truncation</span></div>
+<div class="line">            <span class="keywordflow">default</span>:                        <span class="keywordflow">return</span> H5T_CONV_UNHANDLED;</div>
+<div class="line">        }</div>
+<div class="line">    }</div>
 <div class="line">}</div>
 <div class="line"> </div>
-<div class="line"><span class="keywordtype">int</span> main(){</div>
-<div class="line">    { <span class="comment">// CREATE - WRITE</span></div>
-<div class="line">        h5::fd_t fd = h5::create(<span class="stringliteral">&quot;arma.h5&quot;</span>,H5F_ACC_TRUNC);</div>
-<div class="line">        arma::mat M(4,7); M.ones();             <span class="comment">// create a matrix</span></div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    h5::fd_t fd = h5::create(<span class="stringliteral">&quot;transform.h5&quot;</span>, H5F_ACC_TRUNC);</div>
 <div class="line"> </div>
-<div class="line">        <a id="a0" name="a0"></a><a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd,<span class="stringliteral">&quot;transform&quot;</span>,  M,</div>
-<div class="line">        <span class="comment">// data transform provides linear transformation from character descriptions</span></div>
-<div class="line">        <span class="comment">// linear operators {*,/,+,-} allowed on x variable: </span></div>
-<div class="line">                h5::data_transform{<span class="stringliteral">&quot;2*x+5&quot;</span>} );</div>
-<div class="line">    }</div>
-<div class="line">    { <span class="comment">// READ back, pass conversion handler -- if internal conversion fails, and a </span></div>
-<div class="line">      <span class="comment">// data transform expression  </span></div>
-<div class="line">        <span class="keyword">auto</span> m = h5::read&lt;arma::fmat&gt;(<span class="stringliteral">&quot;arma.h5&quot;</span>,<span class="stringliteral">&quot;transform&quot;</span>, </div>
-<div class="line">             h5::type_conv_cb{ {handler, <span class="keyword">nullptr</span>} } | h5::data_transform{<span class="stringliteral">&quot;x/2 + 1&quot;</span>});</div>
-<div class="line">        m.print();</div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    <span class="comment">// 1. Write-side transform.</span></div>
+<div class="line">    <span class="comment">//    Memory: 1.0 everywhere.  Expression: 2*x + 5.</span></div>
+<div class="line">    <span class="comment">//    On disk: every element should be 7.0.</span></div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    {</div>
+<div class="line">        arma::mat M(4, 7); M.ones();           <span class="comment">// memory = 1.0</span></div>
+<div class="line">        h5::write(fd, <span class="stringliteral">&quot;/scale_offset/write&quot;</span>, M,</div>
+<div class="line">                  h5::data_transform{<span class="stringliteral">&quot;2*x + 5&quot;</span>});</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Read with no transform — we should see the on-disk values.</span></div>
+<div class="line">        <span class="keyword">auto</span> back = h5::read&lt;arma::mat&gt;(fd, <span class="stringliteral">&quot;/scale_offset/write&quot;</span>);</div>
+<div class="line">        check(<span class="stringliteral">&quot;write transform 2*x+5 stored as 7&quot;</span>, 7.0, back(0, 0));</div>
 <div class="line">    }</div>
 <div class="line"> </div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    <span class="comment">// 2. Read-side transform.</span></div>
+<div class="line">    <span class="comment">//    Apply x/2 - 1 on read; on-disk 7 → memory 7/2 - 1 = 2.5.</span></div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    {</div>
+<div class="line">        <span class="keyword">auto</span> m = h5::read&lt;arma::mat&gt;(fd, <span class="stringliteral">&quot;/scale_offset/write&quot;</span>,</div>
+<div class="line">                                     h5::data_transform{<span class="stringliteral">&quot;x/2 - 1&quot;</span>});</div>
+<div class="line">        check(<span class="stringliteral">&quot;read transform x/2-1 of stored 7&quot;</span>, 2.5, m(0, 0));</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    <span class="comment">// 3. Round-trip identity via composed write + read transforms.</span></div>
+<div class="line">    <span class="comment">//    Pre-shift memory M=10. Write with `(x-10)*0` would zero everything,</span></div>
+<div class="line">    <span class="comment">//    so we use an actual invertible pair: write x*3+2, read (x-2)/3.</span></div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    {</div>
+<div class="line">        arma::mat M(3, 3); M.fill(10.0);</div>
+<div class="line">        h5::write(fd, <span class="stringliteral">&quot;/roundtrip/encoded&quot;</span>, M,</div>
+<div class="line">                  h5::data_transform{<span class="stringliteral">&quot;x*3 + 2&quot;</span>});             <span class="comment">// disk = 32</span></div>
+<div class="line">        <span class="keyword">auto</span> decoded = h5::read&lt;arma::mat&gt;(fd, <span class="stringliteral">&quot;/roundtrip/encoded&quot;</span>,</div>
+<div class="line">                                          h5::data_transform{<span class="stringliteral">&quot;(x-2)/3&quot;</span>}); <span class="comment">// memory = 10</span></div>
+<div class="line">        check(<span class="stringliteral">&quot;round-trip via (3x+2 write) ∘ ((x-2)/3 read) → identity&quot;</span>,</div>
+<div class="line">              10.0, decoded(0, 0));</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    <span class="comment">// 4. Unit conversion idiom — Celsius ↔ Kelvin on the IO boundary.</span></div>
+<div class="line">    <span class="comment">//    Application code stays in Celsius; on-disk file is in Kelvin.</span></div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    {</div>
+<div class="line">        arma::mat celsius(2, 3);</div>
+<div class="line">        celsius &lt;&lt; 0.0  &lt;&lt; 25.0 &lt;&lt; 100.0 &lt;&lt; arma::endr</div>
+<div class="line">                &lt;&lt; -40.0 &lt;&lt; 37.0 &lt;&lt; -273.15 &lt;&lt; arma::endr;</div>
+<div class="line">        h5::write(fd, <span class="stringliteral">&quot;/temperature/kelvin&quot;</span>, celsius,</div>
+<div class="line">                  h5::data_transform{<span class="stringliteral">&quot;x + 273.15&quot;</span>});</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Verify the on-disk values are in Kelvin (no read transform).</span></div>
+<div class="line">        <span class="keyword">auto</span> kelvin = h5::read&lt;arma::mat&gt;(fd, <span class="stringliteral">&quot;/temperature/kelvin&quot;</span>);</div>
+<div class="line">        check(<span class="stringliteral">&quot;Celsius 0 → Kelvin 273.15 on disk&quot;</span>, 273.15,    kelvin(0, 0));</div>
+<div class="line">        check(<span class="stringliteral">&quot;Celsius 100 → Kelvin 373.15 on disk&quot;</span>, 373.15,  kelvin(0, 2));</div>
+<div class="line">        check(<span class="stringliteral">&quot;Celsius -273.15 → Kelvin 0 on disk&quot;</span>, 0.0,      kelvin(1, 2));</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Read back into Celsius with the inverse transform.</span></div>
+<div class="line">        <span class="keyword">auto</span> round_trip = h5::read&lt;arma::mat&gt;(fd, <span class="stringliteral">&quot;/temperature/kelvin&quot;</span>,</div>
+<div class="line">                                              h5::data_transform{<span class="stringliteral">&quot;x - 273.15&quot;</span>});</div>
+<div class="line">        check(<span class="stringliteral">&quot;Kelvin → Celsius round-trip&quot;</span>,  25.0, round_trip(0, 1));</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    <span class="comment">// 5. Type-conversion callback — narrow double-on-disk to int16 in mem,</span></div>
+<div class="line">    <span class="comment">//    callback clamps the overflow at int16&#39;s positive/negative limits.</span></div>
+<div class="line">    <span class="comment">//    Without the callback, HDF5 would raise an overflow error.</span></div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    {</div>
+<div class="line">        arma::mat wide(1, 4);</div>
+<div class="line">        wide &lt;&lt; 0.0 &lt;&lt; 100.0 &lt;&lt; 50&#39;000.0 &lt;&lt; -50&#39;000.0 &lt;&lt; arma::endr;</div>
+<div class="line">        h5::write(fd, <span class="stringliteral">&quot;/narrow/source&quot;</span>, wide);</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Read as int16 — values 50000 / -50000 overflow int16 (±32767).</span></div>
+<div class="line">        <span class="comment">// Without the callback this throws; with it, we clamp.</span></div>
+<div class="line">        <span class="keyword">auto</span> narrowed = h5::read&lt;arma::Mat&lt;std::int16_t&gt;&gt;(fd, <span class="stringliteral">&quot;/narrow/source&quot;</span>,</div>
+<div class="line">            h5::type_conv_cb{{clamp_to_int16, <span class="keyword">nullptr</span>}});</div>
+<div class="line">        check(<span class="stringliteral">&quot;int16 in-range value 0&quot;</span>,          <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int16_t</a>(0),     narrowed(0, 0));</div>
+<div class="line">        check(<span class="stringliteral">&quot;int16 in-range value 100&quot;</span>,        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int16_t</a>(100),   narrowed(0, 1));</div>
+<div class="line">        check(<span class="stringliteral">&quot;int16 overflow clamped to INT16_MAX&quot;</span>,  <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int16_t</a>(32767),  narrowed(0, 2));</div>
+<div class="line">        check(<span class="stringliteral">&quot;int16 underflow clamped to INT16_MIN&quot;</span>, <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int16_t</a>(-32768), narrowed(0, 3));</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    <span class="comment">// 6. DXPL composition — chunked, gzip-compressed dataset with a</span></div>
+<div class="line">    <span class="comment">//    data-transform on write. Demonstrates that h5::data_transform</span></div>
+<div class="line">    <span class="comment">//    composes with the rest of the dxpl/dcpl knob set via the same</span></div>
+<div class="line">    <span class="comment">//    `|` operator the other examples use.</span></div>
+<div class="line">    <span class="comment">// ---------------------------------------------------------------------</span></div>
+<div class="line">    {</div>
+<div class="line">        arma::mat M(8, 16); M.fill(2.5);</div>
+<div class="line">        h5::write(fd, <span class="stringliteral">&quot;/composed/chunked_gzip&quot;</span>, M,</div>
+<div class="line">                  h5::chunk{4, 8} | h5::gzip{6},</div>
+<div class="line">                  h5::data_transform{<span class="stringliteral">&quot;x * 4&quot;</span>});                 <span class="comment">// disk = 10.0</span></div>
+<div class="line">        <span class="keyword">auto</span> back = h5::read&lt;arma::mat&gt;(fd, <span class="stringliteral">&quot;/composed/chunked_gzip&quot;</span>);</div>
+<div class="line">        check(<span class="stringliteral">&quot;transform composed with chunk + gzip on write&quot;</span>, 10.0, back(3, 5));</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span></div>
+<div class="line">              &lt;&lt; (errors == 0 ? <span class="stringliteral">&quot;✔ all checks passed&quot;</span></div>
+<div class="line">                              : <span class="stringliteral">&quot;✘ some checks failed&quot;</span>)</div>
+<div class="line">              &lt;&lt; <span class="stringliteral">&quot;, errors=&quot;</span> &lt;&lt; errors &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    <span class="keywordflow">return</span> errors;</div>
 <div class="line">}</div>
-<div class="line"> </div>
-<div class="line"> </div>
-<div class="ttc" id="agroup__io-write_html_gaeedb492b2edeecb66043852ed8b59552"><div class="ttname"><a href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a></div><div class="ttdeci">void write(const h5::ds_t &amp;ds, const h5::sp_t &amp;mem_space, const h5::sp_t &amp;file_space, const h5::dxpl_t &amp;dxpl, const T *ptr)</div><div class="ttdoc">write the memory content of const T* ptr with given mem_space into file_space of the dataset</div><div class="ttdef"><b>Definition</b> H5Dwrite.hpp:23</div></div>
+<div class="ttc" id="abasic_ostream_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a></div></div>
+<div class="ttc" id="ainteger_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/integer.html">std::int16_t</a></div></div>
+<div class="ttc" id="amax_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/numeric_limits/max.html">std::numeric_limits::max</a></div><div class="ttdeci">T max(T... args)</div></div>
+<div class="ttc" id="amin_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/numeric_limits/min.html">std::numeric_limits::min</a></div><div class="ttdeci">T min(T... args)</div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- HTML footer for doxygen 1.9.x — H5CPP -->

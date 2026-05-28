@@ -119,144 +119,299 @@ $(document).ready(function(){initNavTree('H5Aread_8hpp_source.html',''); initRes
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span><span class="preprocessor">#include &lt;array&gt;</span></div>
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;type_traits&gt;</span></div>
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespaceh5.html">h5</a> {</div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span> </div>
-<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>    <span class="comment">// STD::ARRAY&lt;T,N&gt; — fixed-size array of arithmetic elements.</span></div>
-<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>    <span class="comment">// The generic arithmetic branch decays std::array&lt;T,N&gt; to its element type T and</span></div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span>    <span class="comment">// then calls impl::data(object) which returns the array-as-POD pointer (T[N]*)</span></div>
-<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>    <span class="comment">// rather than T*, causing an invalid const_cast.  This explicit enable_if overload</span></div>
-<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span>    <span class="comment">// intercepts all std::array instantiations and reads directly into .data().</span></div>
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>    <span class="keyword">template</span> &lt;<span class="keyword">class </span>A, <span class="keyword">class </span>T = <span class="keyword">typename</span> A::value_type,</div>
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span>              <span class="keyword">class </span>= std::enable_if_t&lt;meta::is_array&lt;A&gt;::value &amp;&amp; !meta::is_text_like&lt;A&gt;::value&gt;&gt; <span class="keyword">inline</span></div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    A aread( <span class="keyword">const</span> h5::ds_t&amp; ds, <span class="keyword">const</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; name,</div>
-<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>            <span class="keyword">const</span> h5::acpl_t&amp; acpl = h5::default_acpl ){</div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>        h5::at_t attr = h5::open(ds, name, h5::default_acpl);</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>        A <span class="keywordtype">object</span>{};</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>        h5::dt_t&lt;T&gt; type;</div>
-<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>        H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), <span class="keywordtype">object</span>.data() ),</div>
-<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>               h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read array attribute ...&quot;</span>);</div>
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        <span class="keywordflow">return</span> object;</div>
-<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>    }</div>
-<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span> </div>
-<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>    <span class="comment">//ARITHMETIC ELEMENT TYPES — excludes std::array&lt;T,N&gt; (handled by explicit overload above)</span></div>
-<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span>    template &lt;class T, class D=typename impl::decay&lt;T&gt;::type, <span class="keyword">class</span>... args_t&gt; <span class="keyword">inline</span></div>
-<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>    std::enable_if_t&lt; (std::is_integral_v&lt;D&gt; || std::is_floating_point_v&lt;D&gt;) &amp;&amp; !meta::is_array&lt;T&gt;::value,</div>
-<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>    T&gt; aread( <span class="keyword">const</span> h5::ds_t&amp; ds, <span class="keyword">const</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; name, <span class="keyword">const</span> h5::acpl_t&amp; acpl = h5::default_acpl ){</div>
-<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span> </div>
-<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        h5::at_t attr = h5::open(ds, name, h5::default_acpl);</div>
-<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>        hid_t id;</div>
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>        H5CPP_CHECK_NZ( (<span class="keywordtype">id</span> = H5Aget_space( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr) )),</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>               h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t get space...&quot;</span>);</div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span>        h5::sp_t file_space{<span class="keywordtype">id</span>};</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>        h5::current_dims_t current_dims;</div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        <span class="keywordtype">int</span> rank = get_simple_extent_dims(file_space, current_dims );</div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>        <span class="keyword">using </span>element_t = <span class="keyword">typename</span> impl::decay&lt;T&gt;::type;</div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>        h5::dt_t&lt;element_t&gt; type;</div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>        T <span class="keywordtype">object</span> = impl::get&lt;T&gt;::ctor( current_dims );</div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>        element_t *ptr = <span class="keyword">const_cast&lt;</span>element_t*<span class="keyword">&gt;</span>( impl::data( <span class="keywordtype">object</span> ));</div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>        H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), ptr ),</div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>               h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read dataset ...&quot;</span>);</div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        <span class="keywordflow">return</span> object;</div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>    }</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span> </div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>    <span class="comment">//POD ELEMENT TYPES: Rank 0 and rank &gt; 0</span></div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>    template &lt;class T, class D=typename impl::decay&lt;T&gt;::type, <span class="keyword">class</span>... args_t&gt; <span class="keyword">inline</span></div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>    <span class="keyword">typename</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/enable_if.html">std::enable_if&lt; !std::is_arithmetic&lt;D&gt;::value</a> &amp;&amp; (std::is_standard_layout_v&lt;D&gt; &amp;&amp; std::is_trivial_v&lt;D&gt;) &amp;&amp; !<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/is_same.html">std::is_same&lt;T,std::string&gt;::value</a>,</div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>    T&gt;::type aread( <span class="keyword">const</span> h5::ds_t&amp; ds, <span class="keyword">const</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; name, <span class="keyword">const</span> h5::acpl_t&amp; acpl = h5::default_acpl ){</div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>        h5::at_t attr = h5::open(ds, name, h5::default_acpl);</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        hid_t id;</div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        H5CPP_CHECK_NZ( (<span class="keywordtype">id</span> = H5Aget_space( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr) )),</div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>               h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t get space...&quot;</span>);</div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>        h5::sp_t file_space{<span class="keywordtype">id</span>};</div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        h5::current_dims_t current_dims;</div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span> </div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        <span class="keywordtype">int</span> rank = get_simple_extent_dims(file_space, current_dims );</div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>        <span class="keyword">using </span>element_t = <span class="keyword">typename</span> impl::decay&lt;T&gt;::type;</div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>        h5::dt_t&lt;element_t&gt; type;</div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>        <span class="keywordflow">if</span>( !rank ){ <span class="comment">// FIXME: write impl::get&lt;pod_type&gt;(...)</span></div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>            T object;</div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>                H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), &amp;<span class="keywordtype">object</span> ),</div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>                   h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read dataset ...&quot;</span>);</div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>            <span class="keywordflow">return</span> object;</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>        }<span class="keywordflow">else</span>{</div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>            T <span class="keywordtype">object</span> = impl::get&lt;T&gt;::ctor( current_dims );</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>            element_t *ptr = <span class="keyword">const_cast&lt;</span>element_t*<span class="keyword">&gt;</span>( impl::data( <span class="keywordtype">object</span> ));</div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>            H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), ptr ),</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>                   h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read dataset ...&quot;</span>);</div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>            <span class="keywordflow">return</span> object;</div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        }</div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    }</div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <span class="comment">// COMPLEX ELEMENT TYPES: std::complex&lt;float|double|long double&gt;</span></div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>    template &lt;class T, class D=typename impl::decay&lt;T&gt;::type, <span class="keyword">class</span>... args_t&gt; <span class="keyword">inline</span></div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    std::enable_if_t&lt;</div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        std::is_same_v&lt;D, std::complex&lt;float&gt;&gt;  ||</div>
-<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>        std::is_same_v&lt;D, std::complex&lt;double&gt;&gt; ||</div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>        std::is_same_v&lt;D, std::complex&lt;long double&gt;&gt;,</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>    T&gt; aread( <span class="keyword">const</span> h5::ds_t&amp; ds, <span class="keyword">const</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; name, <span class="keyword">const</span> h5::acpl_t&amp; acpl = h5::default_acpl ){</div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>        h5::at_t attr = h5::open(ds, name, h5::default_acpl);</div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>        hid_t id;</div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>        H5CPP_CHECK_NZ( (<span class="keywordtype">id</span> = H5Aget_space( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr) )),</div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>               h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t get space...&quot;</span>);</div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>        h5::sp_t file_space{<span class="keywordtype">id</span>};</div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>        h5::current_dims_t current_dims;</div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <span class="keywordtype">int</span> rank = get_simple_extent_dims(file_space, current_dims );</div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        h5::dt_t&lt;D&gt; type;</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        <span class="keywordflow">if</span>( !rank ){</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>            T object;</div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>            H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), &amp;<span class="keywordtype">object</span> ),</div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>                   h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read attribute ...&quot;</span>);</div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>            <span class="keywordflow">return</span> object;</div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>            T <span class="keywordtype">object</span> = impl::get&lt;T&gt;::ctor( current_dims );</div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>            D* ptr = <span class="keyword">const_cast&lt;</span>D*<span class="keyword">&gt;</span>( impl::data( <span class="keywordtype">object</span> ));</div>
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>            H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), ptr ),</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>                   h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read attribute ...&quot;</span>);</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>            <span class="keywordflow">return</span> object;</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>        }</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>    }</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span> </div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>    <span class="comment">// STD::STRING</span></div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>    template &lt;class T, class D=typename impl::decay&lt;T&gt;::type, <span class="keyword">class</span>... args_t&gt; <span class="keyword">inline</span></div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>    std::enable_if_t&lt;std::is_same_v&lt;D,std::string&gt; || std::is_same_v&lt;T,std::string&gt;, <span class="comment">//TODO: add char**</span></div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>    T&gt; aread( <span class="keyword">const</span> h5::ds_t&amp; ds, <span class="keyword">const</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; name, <span class="keyword">const</span> h5::acpl_t&amp; acpl = h5::default_acpl ){</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>        h5::at_t attr = h5::open(ds, name, h5::default_acpl);</div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>        hid_t id;</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>        H5CPP_CHECK_NZ( (<span class="keywordtype">id</span> = H5Aget_space( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr) )),</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>               h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t get space...&quot;</span>);</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        h5::sp_t file_space{<span class="keywordtype">id</span>};</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        h5::current_dims_t current_dims;</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>        <span class="keywordtype">int</span> rank = get_simple_extent_dims(file_space, current_dims );</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>        h5::dt_t&lt;char*&gt; type;</div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>        T <span class="keywordtype">object</span> = impl::get&lt;T&gt;::ctor( current_dims );</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        <span class="keywordtype">size_t</span> nelem = impl::nelements(current_dims);</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        <span class="keywordtype">char</span>** ptr = <span class="keyword">static_cast&lt;</span><span class="keywordtype">char</span>**<span class="keyword">&gt;</span>( <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/memory/c/malloc.html">malloc</a> ( nelem * <span class="keyword">sizeof</span> (<span class="keywordtype">char</span> *)));</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), ptr ),</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>               h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read dataset ...&quot;</span>);</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>        <span class="keywordflow">if</span> <span class="keyword">constexpr</span> ( std::is_same_v&lt;std::string,T&gt; ){</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>            <span class="keywordtype">object</span> = <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>(*ptr);</div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>            <span class="keywordflow">for</span>( <span class="keywordtype">size_t</span> i=0; i&lt;nelem; i++)</div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>                <span class="keywordflow">if</span>( ptr[i] != <span class="keyword">nullptr</span> ) <span class="keywordtype">object</span>[i] = <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>( ptr[i] );</div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>        }</div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>        <span class="comment">// HDF5 allocates per-element vlen buffers during H5Aread conversion; reclaim them</span></div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>        <span class="comment">// before freeing the pointer array, otherwise each string leaks under ASan.</span></div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>        <span class="comment">// H5Treclaim replaces H5Dvlen_reclaim in HDF5 1.12; H5Dvlen_reclaim was removed in 2.0.</span></div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="preprocessor">#if H5_VERSION_GE(1,12,0)</span></div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>        H5Treclaim(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(file_space), H5P_DEFAULT, ptr);</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span><span class="preprocessor">#else</span></div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>        H5Dvlen_reclaim(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(file_space), H5P_DEFAULT, ptr);</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="preprocessor">#endif</span></div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>        <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/memory/c/free.html">free</a>(ptr);</div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>        <span class="keywordflow">return</span> object;</div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    }</div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>}</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span>    <span class="keyword">namespace </span>detail {</div>
+<div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span>        <span class="comment">// Cross-version helper: H5Treclaim (HDF5 &gt;= 1.12) vs H5Dvlen_reclaim (older).</span></div>
+<div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span>        <span class="keyword">inline</span> herr_t attr_vlen_reclaim(hid_t type, hid_t space, <span class="keywordtype">void</span>* buf) {</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno">   14</span><span class="preprocessor">#if H5_VERSION_GE(1,12,0)</span></div>
+<div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span>            <span class="keywordflow">return</span> H5Treclaim(type, space, H5P_DEFAULT, buf);</div>
+<div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="preprocessor">#else</span></div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span>            <span class="keywordflow">return</span> H5Dvlen_reclaim(type, space, H5P_DEFAULT, buf);</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>        }</div>
+<div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span>    }</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span> </div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    <span class="keyword">template</span> &lt;<span class="keyword">class</span> T, <span class="keyword">class</span> P&gt;</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    std::enable_if_t&lt;h5::impl::is_valid_attr&lt;P&gt;::value, T&gt;</div>
+<div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span>    aread( <span class="keyword">const</span> P&amp; ds, <span class="keyword">const</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; name, <span class="keyword">const</span> h5::acpl_t&amp; acpl = h5::default_acpl ){</div>
+<div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>        <span class="keyword">using </span>traits    = h5::meta::access_traits_t&lt;T&gt;;</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>        <span class="keyword">using </span>sr_t      = h5::meta::storage_representation_t;</div>
+<div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span>        <span class="keyword">using </span>element_t = <span class="keyword">typename</span> impl::decay&lt;T&gt;::type;</div>
+<div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>        <span class="keyword">constexpr</span> <span class="keyword">auto</span> kind    = traits::kind;</div>
+<div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span>        <span class="keyword">constexpr</span> <span class="keyword">auto</span> storage = h5::meta::storage_representation_v&lt;T&gt;;</div>
+<div class="line"><a id="l00030" name="l00030"></a><span class="lineno">   30</span> </div>
+<div class="line"><a id="l00031" name="l00031"></a><span class="lineno">   31</span>        <span class="comment">// Stopper: unsupported storage usually means an unregistered POD aggregate, a</span></div>
+<div class="line"><a id="l00032" name="l00032"></a><span class="lineno">   32</span>        <span class="comment">// deeply-nested container, or std::vector&lt;bool&gt;. Bootstrap-aware (see H5Dwrite).</span></div>
+<div class="line"><a id="l00033" name="l00033"></a><span class="lineno">   33</span><span class="preprocessor">#ifndef H5CPP_BUILDING_TYPE_INFO</span></div>
+<div class="line"><a id="l00034" name="l00034"></a><span class="lineno">   34</span>        <span class="keyword">static_assert</span>(storage != sr_t::unsupported,</div>
+<div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span>            <span class="stringliteral">&quot;h5::aread: storage_representation_v&lt;T&gt; resolved to &#39;unsupported&#39;. &quot;</span></div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno">   36</span>            <span class="stringliteral">&quot;Check: unregistered POD aggregate (use H5CPP_REGISTER_STRUCT), &quot;</span></div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>            <span class="stringliteral">&quot;std::vector&lt;bool&gt;, or container nesting beyond vector&lt;vector&lt;T&gt;&gt;/vector&lt;string&gt;.&quot;</span>);</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span> </div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>        <span class="comment">// Stopper: containers of containers must route via VLEN storage.</span></div>
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span>        <span class="keyword">static_assert</span>(</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>            !h5::meta::is_stl_like&lt;element_t&gt;::value ||</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span>            storage == sr_t::ragged_vlen_dataset ||</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span>            storage == sr_t::vlen_text_dataset ||</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span>            storage == sr_t::array_dataset ||</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>            storage == sr_t::array_element ||</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span>            storage == sr_t::fls_dataset ||</div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>            storage == sr_t::fixed_inner_extent_dataset,</div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>            <span class="stringliteral">&quot;h5::aread: containers of containers are only supported for vector&lt;string&gt; &quot;</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>            <span class="stringliteral">&quot;(vlen_text_dataset) or vector&lt;vector&lt;T&gt;&gt; (ragged_vlen_dataset).&quot;</span>);</div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span> </div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>        h5::at_t attr = h5::open(ds, name, h5::default_acpl);</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>        hid_t sid;</div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        H5CPP_CHECK_NZ( (sid = H5Aget_space( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr) )),</div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>            h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t get space...&quot;</span>);</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>        h5::sp_t file_space{sid};</div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        h5::current_dims_t current_dims;</div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span>        get_simple_extent_dims(file_space, current_dims);</div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span> </div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span>        <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (kind == h5::meta::access_t::composite) {</div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span>            <span class="comment">// scalar composite (std::tuple&lt;Ts...&gt;): H5Aread into pack buffer, unpack into ref.</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>            <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;char&gt;</a> buf(traits::bytes());</div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>            h5::meta::resolved_type_t&lt;T&gt; mem_type;</div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span>            H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(mem_type), buf.data() ),</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>                h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read composite attribute.&quot;</span>);</div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>            T <span class="keywordtype">object</span>{};</div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>            traits::unpack(<span class="keywordtype">object</span>, buf.data());</div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>            <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (storage == sr_t::array_element) {</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>            <span class="comment">// std::array&lt;T,N&gt; / T[N] — scalar dataspace, H5T_ARRAY element.</span></div>
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>            <span class="comment">// Use the file&#39;s stored type via H5Aget_type for an exact match.</span></div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>            T <span class="keywordtype">object</span>{};</div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>            hid_t mem_type = H5Aget_type(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr));</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>            H5CPP_CHECK_NZ(H5Aread(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), mem_type, traits::data(<span class="keywordtype">object</span>)),</div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>                h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read array_element attribute.&quot;</span>);</div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>            H5Tclose(mem_type);</div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>            <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (storage == sr_t::array_dataset) {</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>            <span class="keyword">using </span>inner_t = std::remove_cv_t&lt;typename T::value_type&gt;;</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>            <span class="keyword">using </span>elem_scalar = <span class="keyword">typename</span> inner_t::value_type;</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>            <span class="keyword">constexpr</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> N_inner = std::tuple_size&lt;inner_t&gt;::value;</div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>            hsize_t array_dims[1] = { <span class="keyword">static_cast&lt;</span>hsize_t<span class="keyword">&gt;</span>(N_inner) };</div>
+<div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>            h5::meta::resolved_type_t&lt;elem_scalar&gt; base_type;</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>            hid_t array_type = H5Tarray_create(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(base_type), 1, array_dims);</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>            <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> outer = impl::nelements(current_dims);</div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>            T object; <span class="keywordtype">object</span>.resize(outer);</div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>            H5CPP_CHECK_NZ(H5Aread(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), array_type,</div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>                <span class="keywordtype">object</span>.empty() ? <span class="keyword">nullptr</span> : object.front().data()),</div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>                <a class="code hl_namespace" href="namespaceh5.html">h5</a>::error::io::attribute::<a class="code hl_function" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">read</a>, <span class="stringliteral">&quot;couldn&#39;t read array_dataset attribute.&quot;</span>);</div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span>            H5Tclose(array_type);</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>            <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (storage == sr_t::fls_dataset) {</div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>            <span class="keyword">using </span>inner_t = std::remove_cv_t&lt;typename T::value_type&gt;;</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>            <span class="keyword">constexpr</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> N_inner = std::tuple_size&lt;inner_t&gt;::value;</div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>            hid_t fls_type = H5Tcopy(H5T_C_S1);</div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>            H5Tset_size(fls_type, N_inner);</div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>            <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> outer = impl::nelements(current_dims);</div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span>            T object; <span class="keywordtype">object</span>.resize(outer);</div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span>            H5CPP_CHECK_NZ(H5Aread(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), fls_type,</div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>                <span class="keywordtype">object</span>.empty() ? <span class="keyword">nullptr</span> : object.front().data()),</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>                <a class="code hl_namespace" href="namespaceh5.html">h5</a>::error::io::attribute::<a class="code hl_function" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">read</a>, <span class="stringliteral">&quot;couldn&#39;t read fls_dataset attribute.&quot;</span>);</div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>            H5Tclose(fls_type);</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>            <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (kind == h5::meta::access_t::text</div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>            &amp;&amp; storage == sr_t::fixed_length_string) {</div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>            <span class="comment">// char[N] / std::array&lt;char,N&gt; — H5T_C_S1 + H5Tset_size(N).</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>            T <span class="keywordtype">object</span>{};</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span>            hid_t fls_type = H5Tcopy(H5T_C_S1);</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>            H5Tset_size(fls_type, traits::fixed_length);</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>            H5CPP_CHECK_NZ(H5Aread(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), fls_type, traits::data(<span class="keywordtype">object</span>)),</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>                h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read fixed-length string attribute.&quot;</span>);</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>            H5Tclose(fls_type);</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>            <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (kind == h5::meta::access_t::text ||</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>                             (kind == h5::meta::access_t::pointers &amp;&amp;</div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>                              h5::meta::is_text_like&lt;element_t&gt;::value)) {</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>            <span class="comment">// Scalar std::string / std::vector&lt;std::string&gt;. The on-disk</span></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>            <span class="comment">// attribute might be either VLEN (h5::awrite(ds, &quot;x&quot;, std::string{...}))</span></div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>            <span class="comment">// or fixed-length (h5::awrite(ds, &quot;x&quot;, &quot;literal&quot;) — the literal</span></div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>            <span class="comment">// has type `char[N]` and routes to H5Awrite.hpp&#39;s fixed_length</span></div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>            <span class="comment">// branch). HDF5 has no fixed↔VLEN conversion path, so we must</span></div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>            <span class="comment">// match the source type on read; pick the mem_type based on the</span></div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>            <span class="comment">// attribute&#39;s stored datatype rather than always using VLEN.</span></div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>            ::hid_t atype = H5Aget_type(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr));</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>            htri_t is_vlen = (H5Tget_class(atype) == H5T_STRING)</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>                ? H5Tis_variable_str(atype) : htri_t{-1};</div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>            <span class="keywordflow">if</span> (is_vlen == 0 &amp;&amp; std::is_same_v&lt;std::string, T&gt;) {</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>                <span class="comment">// Fixed-length string on disk: read N raw bytes into a buffer</span></div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>                <span class="comment">// and construct std::string trimming NULLTERM padding.</span></div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>                <span class="keywordtype">size_t</span> asize = H5Tget_size(atype);</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;char&gt;</a> buf(asize, <span class="charliteral">&#39;\0&#39;</span>);</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>                ::hid_t fls_type = H5Tcopy(H5T_C_S1);</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>                H5Tset_size(fls_type, asize);</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>                H5CPP_CHECK_NZ( H5Aread(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), fls_type, buf.data()),</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>                    h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read fixed-length string attribute.&quot;</span>);</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>                H5Tclose(fls_type);</div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>                H5Tclose(atype);</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>                <span class="keywordtype">size_t</span> len = 0; <span class="keywordflow">while</span> (len &lt; asize &amp;&amp; buf[len] != <span class="charliteral">&#39;\0&#39;</span>) ++len;</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>                <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;std::string, T&gt;) {</div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>                    <span class="keywordflow">return</span> T(buf.data(), len);</div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>                } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>                    <span class="keywordflow">return</span> T{};  <span class="comment">// unreachable (guarded by is_same_v above)</span></div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>                }</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>            }</div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>            H5Tclose(atype);</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>            <span class="comment">// VLEN path</span></div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>            h5::dt_t&lt;char*&gt; type;</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>            T <span class="keywordtype">object</span> = impl::get&lt;T&gt;::ctor(current_dims);</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>            <span class="keywordtype">size_t</span> nelem = impl::nelements(current_dims);</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>            <span class="keywordtype">char</span>** ptr = <span class="keyword">static_cast&lt;</span><span class="keywordtype">char</span>**<span class="keyword">&gt;</span>(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/memory/c/malloc.html">malloc</a>(nelem * <span class="keyword">sizeof</span>(<span class="keywordtype">char</span>*)));</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>            H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), ptr ),</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>                h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read attribute...&quot;</span>);</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>            <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;std::string, T&gt;) {</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>                <span class="keywordtype">object</span> = <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>(*ptr);</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>            } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>                <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nelem; i++)</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>                    <span class="keywordflow">if</span> (ptr[i] != <span class="keyword">nullptr</span>) <span class="keywordtype">object</span>[i] = <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>(ptr[i]);</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>            }</div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span>            detail::attr_vlen_reclaim(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(file_space), ptr);</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>            <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/memory/c/free.html">free</a>(ptr);</div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>            <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (kind == h5::meta::access_t::object) {</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>            <span class="comment">// Scalar path: arithmetic, POD aggregates, complex&lt;T&gt;, pair&lt;K,V&gt;</span></div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>            h5::dt_t&lt;element_t&gt; type;</div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span>            T <span class="keywordtype">object</span>{};</div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span>            H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), &amp;<span class="keywordtype">object</span> ),</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>                h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read attribute...&quot;</span>);</div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span>            <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (kind == h5::meta::access_t::pointers) {</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>            <span class="comment">// Nested: traits::element_t only referenced inside this block, where</span></div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>            <span class="comment">// the pointers access_traits_t spec guarantees it exists.</span></div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span>            <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (storage == sr_t::ragged_vlen_dataset) {</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>                <span class="comment">// vector&lt;vector&lt;T&gt;&gt;: hvl_t relay + reclaim.</span></div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>                <span class="keyword">using </span>inner_t = <span class="keyword">typename</span> traits::element_t;</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>                <span class="keyword">using </span>elem_t  = <span class="keyword">typename</span> inner_t::value_type;</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> n = impl::nelements(current_dims);</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>                T object; <span class="keywordtype">object</span>.resize(n);</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;hvl_t&gt;</a> relay(n);</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>                h5::meta::resolved_type_t&lt;elem_t&gt; base_type;</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>                hid_t vlen_type = H5Tvlen_create(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(base_type));</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>                H5CPP_CHECK_NZ( H5Aread(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), vlen_type, relay.data()),</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>                    h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read ragged_vlen attribute.&quot;</span>);</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>                <span class="keywordflow">for</span> (<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> i = 0; i &lt; n; ++i) {</div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>                    <span class="keyword">const</span> elem_t* src = <span class="keyword">static_cast&lt;</span><span class="keyword">const </span>elem_t*<span class="keyword">&gt;</span>(relay[i].p);</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>                    <span class="keywordtype">object</span>[i].assign(src, src + relay[i].len);</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>                }</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>                detail::attr_vlen_reclaim(vlen_type, <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(file_space), relay.data());</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>                H5Tclose(vlen_type);</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>                <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (h5::meta::access_kind_v&lt;typename traits::element_t&gt; == h5::meta::access_t::composite) {</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>                <span class="comment">// vector&lt;tuple&lt;Ts...&gt;&gt;: H5Aread into pack buffer, unpack each.</span></div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>                <span class="keyword">using </span>elem_t = <span class="keyword">typename</span> traits::element_t;</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>                <span class="keyword">using </span>elem_traits = h5::meta::access_traits_t&lt;elem_t&gt;;</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> n = impl::nelements(current_dims);</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>                T object; <span class="keywordtype">object</span>.resize(n);</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;char&gt;</a> buf(n * elem_traits::bytes());</div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>                h5::meta::resolved_type_t&lt;elem_t&gt; mem_type;</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>                H5CPP_CHECK_NZ( H5Aread(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(mem_type), buf.data()),</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>                    h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read composite-element attribute.&quot;</span>);</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>                <span class="keywordflow">for</span> (<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> i = 0; i &lt; n; ++i)</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>                    elem_traits::unpack(<span class="keywordtype">object</span>[i], buf.data() + i * elem_traits::bytes());</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>                <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>            } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>                <span class="keyword">static_assert</span>(storage == sr_t::ragged_vlen_dataset, <span class="stringliteral">&quot;h5::aread: unsupported pointers storage class.&quot;</span>);</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>                <span class="keywordflow">return</span> T{};</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>            }</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (kind == h5::meta::access_t::iterators) {</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>            <span class="comment">// Nested for the same reason as the pointers block above.</span></div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>            <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (storage == sr_t::key_value_dataset) {</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>                <span class="comment">// map&lt;K,V&gt;: flat kv_t compound buffer, insert into map.</span></div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>                <span class="keyword">using </span>map_elem_t = <span class="keyword">typename</span> traits::element_t;</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>                <span class="keyword">using </span>key_t   = std::remove_const_t&lt;typename map_elem_t::first_type&gt;;</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>                <span class="keyword">using </span>value_t = <span class="keyword">typename</span> map_elem_t::second_type;</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>                <span class="keyword">struct </span>kv_t { key_t key; value_t value; };</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>                h5::meta::resolved_type_t&lt;key_t&gt;   kt;</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>                h5::meta::resolved_type_t&lt;value_t&gt; vt;</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>                hid_t compound = H5Tcreate(H5T_COMPOUND, <span class="keyword">sizeof</span>(kv_t));</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>                H5Tinsert(compound, <span class="stringliteral">&quot;key&quot;</span>,   offsetof(kv_t, key),   <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(kt));</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>                H5Tinsert(compound, <span class="stringliteral">&quot;value&quot;</span>, offsetof(kv_t, value), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(vt));</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> n = impl::nelements(current_dims);</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;kv_t&gt;</a> buffer(n);</div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>                H5CPP_CHECK_NZ( H5Aread(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), compound, buffer.data()),</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>                    h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read key_value attribute.&quot;</span>);</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>                T object;</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>                <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; kv : buffer)</div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>                    object.insert({kv.key, kv.value});</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>                H5Tclose(compound);</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>                <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>            } <span class="keywordflow">else</span> <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (h5::meta::access_kind_v&lt;typename traits::element_t&gt; == h5::meta::access_t::composite) {</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>                <span class="comment">// list&lt;tuple&gt;, set&lt;tuple&gt;, deque&lt;tuple&gt;: read pack buffer, unpack into container.</span></div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>                <span class="keyword">using </span>elem_t = <span class="keyword">typename</span> traits::element_t;</div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>                <span class="keyword">using </span>elem_traits = h5::meta::access_traits_t&lt;elem_t&gt;;</div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> n = impl::nelements(current_dims);</div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;char&gt;</a> buf(n * elem_traits::bytes());</div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span>                h5::meta::resolved_type_t&lt;elem_t&gt; mem_type;</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span>                H5CPP_CHECK_NZ( H5Aread(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(mem_type), buf.data()),</div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span>                    h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read iter-composite attribute.&quot;</span>);</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;elem_t&gt;</a> staging(n);</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>                <span class="keywordflow">for</span> (<a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> i = 0; i &lt; n; ++i)</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>                    elem_traits::unpack(staging[i], buf.data() + i * elem_traits::bytes());</div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>                T object;</div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span>                <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;T, std::forward_list&lt;elem_t&gt;&gt;) {</div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span>                    <span class="keywordtype">object</span>.assign(staging.begin(), staging.end());</div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>                } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>                    <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/copy.html">std::copy</a>(staging.begin(), staging.end(), <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/inserter.html">std::inserter</a>(<span class="keywordtype">object</span>, <span class="keywordtype">object</span>.end()));</div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>                }</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>                <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>            } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>                <span class="comment">// list&lt;T&gt;, set&lt;T&gt;, deque&lt;T&gt; with non-composite, std-layout element_t.</span></div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>                <span class="keyword">using </span>iter_elem_t = <span class="keyword">typename</span> impl::decay&lt;typename traits::element_t&gt;::type;</div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>                <span class="keyword">static_assert</span>(std::is_standard_layout_v&lt;iter_elem_t&gt;,</div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>                    <span class="stringliteral">&quot;h5::aread: iterator-staging path requires standard-layout element_t.&quot;</span>);</div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> n = impl::nelements(current_dims);</div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>                <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;iter_elem_t&gt;</a> staging(n);</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>                h5::dt_t&lt;iter_elem_t&gt; type;</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>                H5CPP_CHECK_NZ( H5Aread(<span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), staging.data()),</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>                    h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read iter attribute.&quot;</span>);</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>                T object;</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>                <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (std::is_same_v&lt;T, std::forward_list&lt;iter_elem_t&gt;&gt;) {</div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>                    <span class="keywordtype">object</span>.assign(staging.begin(), staging.end());</div>
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span>                } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>                    <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/copy.html">std::copy</a>(staging.begin(), staging.end(), <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/inserter.html">std::inserter</a>(<span class="keywordtype">object</span>, <span class="keywordtype">object</span>.end()));</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>                }</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>                <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>            }</div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>            <span class="comment">// Array/container path: std::array&lt;T,N&gt;, std::vector&lt;T&gt;, std::vector&lt;std::complex&lt;T&gt;&gt;,</span></div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>            <span class="comment">// armadillo / Eigen / Blaze / Blitz / xtensor linalg mapper types.</span></div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>            <span class="comment">//</span></div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>            <span class="comment">// Use impl::data (not traits::data) to get a writable pointer — the linalg</span></div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>            <span class="comment">// mapper access_traits_t specs only provide a const-qualified data() overload,</span></div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>            <span class="comment">// and H5Aread needs void* (no implicit conversion from const T*).</span></div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>            <span class="comment">//</span></div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>            <span class="comment">// Direct-initialise via impl::get&lt;T&gt;::ctor for rank &gt; 0 (mirrors H5Dread&#39;s</span></div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>            <span class="comment">// array fallback at ~line 580). Default-construct + assign doesn&#39;t work for</span></div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>            <span class="comment">// every container — blitz::Array, in particular, ends up unallocated after</span></div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>            <span class="comment">// `T{}; obj = ctor(...)` because its operator= treats LHS shape as authoritative.</span></div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>            h5::dt_t&lt;element_t&gt; type;</div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span>            <span class="keywordflow">if</span> <span class="keyword">constexpr</span> (impl::rank&lt;T&gt;::value &gt; 0) {</div>
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>                T <span class="keywordtype">object</span> = impl::get&lt;T&gt;::ctor(current_dims);</div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>                <span class="keyword">auto</span>* ptr = impl::data(<span class="keywordtype">object</span>);</div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>                H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), ptr ),</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>                    h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read attribute...&quot;</span>);</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span>                <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>            } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>                T <span class="keywordtype">object</span>{};</div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>                <span class="keyword">auto</span>* ptr = impl::data(<span class="keywordtype">object</span>);</div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>                H5CPP_CHECK_NZ( H5Aread( <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(attr), <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>(type), ptr ),</div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>                    h5::error::io::attribute::read, <span class="stringliteral">&quot;couldn&#39;t read attribute...&quot;</span>);</div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span>                <span class="keywordflow">return</span> object;</div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span>            }</div>
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>        }</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>    }</div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>}</div>
 <div class="ttc" id="abasic_string_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a></div></div>
-<div class="ttc" id="aenable_if_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/enable_if.html">std::enable_if</a></div></div>
+<div class="ttc" id="acopy_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/algorithm/copy.html">std::copy</a></div><div class="ttdeci">T copy(T... args)</div></div>
 <div class="ttc" id="afree_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/memory/c/free.html">std::free</a></div><div class="ttdeci">T free(T... args)</div></div>
-<div class="ttc" id="ais_same_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/is_same.html">std::is_same</a></div></div>
+<div class="ttc" id="agroup__io-read_html_ga344b644b6bdcfdfd5fd3c397cc0e2e7f"><div class="ttname"><a href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a></div><div class="ttdeci">std::enable_if_t&lt;!std::is_same_v&lt; T, char ** &gt;, void &gt; read(const h5::ds_t &amp;ds, T *ptr, args_t &amp;&amp;... args)</div><div class="ttdef"><b>Definition</b> H5Dread.hpp:36</div></div>
+<div class="ttc" id="ainserter_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/iterator/inserter.html">std::inserter</a></div><div class="ttdeci">T inserter(T... args)</div></div>
 <div class="ttc" id="amalloc_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/memory/c/malloc.html">std::malloc</a></div><div class="ttdeci">T malloc(T... args)</div></div>
 <div class="ttc" id="anamespaceh5_html"><div class="ttname"><a href="namespaceh5.html">h5</a></div><div class="ttdoc">public namespace</div><div class="ttdef"><b>Definition</b> compat.hpp:11</div></div>
+<div class="ttc" id="asize_t_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a></div></div>
+<div class="ttc" id="avector_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 <!-- HTML footer for doxygen 1.9.x — H5CPP -->

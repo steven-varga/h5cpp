@@ -22,6 +22,5 @@ var examples =
     [ "ublas.cpp", "ublas_8cpp-example.html", null ],
     [ "packettable.cpp", "packettable_8cpp-example.html", null ],
     [ "raw.cpp", "raw_8cpp-example.html", null ],
-    [ "transform.cpp", "transform_8cpp-example.html", null ],
-    [ "kita.cpp", "kita_8cpp-example.html", null ]
+    [ "transform.cpp", "transform_8cpp-example.html", null ]
 ];

@@ -122,7 +122,7 @@ Collaboration diagram for h5::has_scatter&lt; T &gt;:</div>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><div class="compoundTemplParams">template&lt;typename T&gt;<br />
 struct h5::has_scatter&lt; T &gt;</div><p>Compile-time trait to determine if a type uses scatter/gather I/O. </p>
-<p>The h5cpp-compiler emits specializations of <a class="el" href="namespaceh5.html#a9ec5f372f2becfd6aed971f7cdfdfd6c" title="Generic scatter (write) template for tier-2+ types.">h5::scatter&lt;T&gt;</a> and h5::gather&lt;T&gt; for user-defined structs with heap-indirection fields (<a class="elRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>, <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>, etc.). The H5CPP_REGISTER_SCATTER(T) macro sets this trait to true_type.</p>
+<p>The h5cpp-compiler emits specializations of h5::scatter&lt;T&gt; and h5::gather&lt;T&gt; for user-defined structs with heap-indirection fields (<a class="elRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>, <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>, etc.). The H5CPP_REGISTER_SCATTER(T) macro sets this trait to true_type.</p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">T</td><td>C++ type being queried </td></tr>

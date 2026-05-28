@@ -1,909 +1,319 @@
-
-
-<!doctype html>
-<html lang="en" class="no-js">
-  <head>
-    
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      
-        <meta name="description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5">
-      
-      
-        <meta name="author" content="Steven Varga">
-      
-      
-        <link rel="canonical" href="https://vargalabs.github.io/h5cpp/">
-      
-      
-      
-        <link rel="next" href="stl/">
-      
-      
-        
-      
-      
-      <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
-    
-    
-      
-        <title>VargaLABS</title>
-      
-    
-    
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
-      
-        
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
-      
-      
-
-
-    
-    
-      
-    
-    
-      
-        
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
-      
-    
-    
-      <link rel="stylesheet" href="styles/asciinema-player.css">
-    
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
-    
-      <link rel="stylesheet" href="styles/custom.css">
-    
-      <link rel="stylesheet" href="styles/mobile.css">
-    
-      <link rel="stylesheet" href="styles/socials.css">
-    
-      <link rel="stylesheet" href="styles/background.css">
-    
-      <link rel="stylesheet" href="styles/blog.css">
-    
-      <link rel="stylesheet" href="styles/asciinema.css">
-    
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
-    
-      
-  
-
-
-    
-    
-
-    <meta property="og:type" content="article" />
-    <meta property="og:site_name" content="VargaLABS" />
-    <meta property="og:title" content="VargaLABS" />
-    <meta property="og:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
-    <meta property="og:url" content="https://vargalabs.github.io/h5cpp/" />
-    <meta property="og:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="" />
-    <meta name="twitter:title" content="VargaLABS" />
-    <meta name="twitter:description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
-    <meta name="twitter:image" content="https://vargalabs.github.io/h5cpp//assets/social/og-default.png" />
-
-    <!-- SEO -->
-    <link rel="canonical" href="https://vargalabs.github.io/h5cpp/" />
-    <meta name="description" content="H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5" />
-    <script type="application/ld+json">
-    {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    "headline": "VargaLABS",
-    "description": "H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5",
-    "url": "https://vargalabs.github.io/h5cpp/",
-    "datePublished": "2010-01-01",
-    "author": {
-        "@type": "Person",
-        "name": "Steven Varga"
-    },
-    "publisher": {
-        "@type": "Organization",
-        "name": "VargaLABS",
-        "logo": {
-        "@type": "ImageObject",
-        "url": "https://vargalabs.github.io/h5cpp//assets/logo.png"
-        }
-    },
-    "image": "https://vargalabs.github.io/h5cpp//assets/social/og-default.png"
-    }
-    </script>    
-
-<link rel="alternate" type="application/rss+xml" title="VargaLABS RSS Feed" href="./rss.xml" />
-<link rel="alternate" type="application/feed+json" title="VargaLABS JSON Feed" href="./feed.json" />
-
-
-
-  </head>
-  
-  
-    
-    
-      
-    
-    
-    
-    
-    <body dir="ltr" data-md-color-scheme="solarized" data-md-color-primary="orange" data-md-color-accent="indigo">
-  
-    
-    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
-    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      
-    </div>
-    <div data-md-component="announce">
-      
-    </div>
-    
-    
-      
-
-  
-
-<header class="md-header md-header--shadow" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="https://steven-varga.ca/" title="VargaLABS" class="md-header__button md-logo" aria-label="VargaLABS" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
-
-    </a>
-    <label class="md-header__button md-icon" for="__drawer">
-      
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
-    </label>
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis"> H5CPP — Easy-to-Use Modern C++ Templates for Serial and Parallel HDF5 </span>
-        </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            
-              Overview
-            
-          </span>
-        </div>
-      </div>
-    </div>
-    
-      
-        <form class="md-header__option" data-md-component="palette">
-  
-    <div class="md-social-inline">
-      
-      
-        
-        
-        
-        
-          
-          
-        
-        <a href="https://wa.me/16475611829" target="_blank" rel="noopener" title="wa.me" class="md-header__button md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m.01 1.67c2.2 0 4.26.86 5.82 2.42a8.23 8.23 0 0 1 2.41 5.83c0 4.54-3.7 8.23-8.24 8.23-1.48 0-2.93-.39-4.19-1.15l-.3-.17-3.12.82.83-3.04-.2-.32a8.2 8.2 0 0 1-1.26-4.38c.01-4.54 3.7-8.24 8.25-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.87.86-.87 2.07 0 1.22.89 2.39 1 2.56.14.17 1.76 2.67 4.25 3.73.59.27 1.05.42 1.41.53.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18s.21-1.07.15-1.18c-.07-.1-.23-.16-.48-.27-.25-.14-1.47-.74-1.69-.82-.23-.08-.37-.12-.56.12-.16.25-.64.81-.78.97-.15.17-.29.19-.53.07-.26-.13-1.06-.39-2-1.23-.74-.66-1.23-1.47-1.38-1.72-.12-.24-.01-.39.11-.5.11-.11.27-.29.37-.44.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.11-.56-1.35-.77-1.84-.2-.48-.4-.42-.56-.43-.14 0-.3-.01-.47-.01"/></svg>
-        </a>
-      
-        
-        
-        
-        
-        <a href="mailto:steven@vargaconsulting.ca" target="_blank" rel="noopener" title="" class="md-header__button md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22 5.5H9c-1.1 0-2 .9-2 2v9a2 2 0 0 0 2 2h13c1.11 0 2-.89 2-2v-9a2 2 0 0 0-2-2m0 3.67-6.5 3.33L9 9.17V7.5l6.5 3.31L22 7.5zM5 16.5c0 .17.03.33.05.5H1c-.552 0-1-.45-1-1s.448-1 1-1h4zM3 7h2.05c-.02.17-.05.33-.05.5V9H3c-.55 0-1-.45-1-1s.45-1 1-1m-2 5c0-.55.45-1 1-1h3v2H2c-.55 0-1-.45-1-1"/></svg>
-        </a>
-      
-        
-        
-        
-        
-          
-          
-        
-        <a href="https://x.com/vargaconsulting" target="_blank" rel="noopener" title="x.com" class="md-header__button md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.2 4.2 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.52 8.52 0 0 1-5.33 1.84q-.51 0-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23"/></svg>
-        </a>
-      
-        
-        
-        
-        
-          
-          
-        
-        <a href="https://www.linkedin.com/in/steven-varga-04224a19/" target="_blank" rel="noopener" title="www.linkedin.com" class="md-header__button md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93zM6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37z"/></svg>
-        </a>
-      
-        
-        
-        
-        
-          
-          
-        
-        <a href="https://github.com/vargaconsulting" target="_blank" rel="noopener" title="github.com" class="md-header__button md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33s1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2"/></svg>
-        </a>
-      
-
-      
-      <span class="md-header__button md-icon" style="pointer-events: none; opacity: 0.4;">|</span>  
-    </div>
-  
-
-  
-  
-    
-    
-    
-
-    <input class="md-option"
-           data-md-color-media=""
-           data-md-color-scheme="solarized"
-           data-md-color-primary="orange"
-           data-md-color-accent="indigo"
-            aria-label="Switch to dark mode"
-           
-           type="radio" name="__palette" id="__palette_0">
-
-    
-      <label class="md-header__button md-icon"
-             title="Switch to dark mode"
-             for="__palette_1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon-icon lucide-moon"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg>
-      </label>
-    
-  
-    
-    
-    
-
-    <input class="md-option"
-           data-md-color-media=""
-           data-md-color-scheme="slate"
-           data-md-color-primary="orange"
-           data-md-color-accent="indigo"
-            aria-label="Switch to light mode"
-           
-           type="radio" name="__palette" id="__palette_1">
-
-    
-      <label class="md-header__button md-icon"
-             title="Switch to light mode"
-             for="__palette_0">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-icon lucide-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
-      </label>
-    
-  
-</form>
-      
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
-    
-    
-<!-- -->
-
-<!-- -->
-    
-  </nav>
-  
-</header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
-        
-          
-        
-      
-      <main class="md-main" data-md-component="main">
-        <div class="md-main__inner md-grid">
-          
-            
-              
-                
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-
-
-<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
-  <label class="md-nav__title" for="__drawer">
-    <a href="https://steven-varga.ca/" title="VargaLABS" class="md-nav__button md-logo" aria-label="VargaLABS" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
-
-    </a>
-    VargaLABS
-  </label>
-  
-  <ul class="md-nav__list" data-md-scrollfix>
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="." class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Overview
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
-        
-          
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Getting Started
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Getting Started
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="stl/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Supported Types
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="compiler/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Compiler Tool
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="examples/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Examples
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
-        
-          
-          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Architecture
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_3">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Architecture
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="design/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Design Philosophy
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="architecture-core/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    HDF5 Concepts
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="architecture-io/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    I/O Operations
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="architecture-types/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Type System
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="architecture-integration/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Linalg & STL
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="architecture-parallelism/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Parallel I/O
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-  </ul>
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-            
-              
-                
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" hidden>
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-          
-          
-            <div class="md-content" data-md-component="content">
-              
-              <article class="md-content__inner md-typeset">
-                
-                  
-  
-
-
-
-
-  <h1>Overview</h1>
-
-<p><strong>H5CPP</strong> is a modern C++ interface to HDF5 for persisting vectors, matrices, tensors, strings, and structs with concise template-based code, while preserving full interoperability with the native HDF5 C API. In practice, it removes much of the needless plumbing that direct HDF5 use in C and C++ so often entails. From research and simulation to market data and production, storage lies on the critical path of many quantitative systems. With LLVM-based compiler-assisted reflection, even complex structs can often be handled with a one-line expression. Direct HDF5 use in C and C++ often means:</p>
-<p><strong>H5CPP began from a practical requirement:</strong> efficient storage for large numerical datasets with both indexed block access and sequential streaming. Existing serialization systems handled streams reasonably well, but not the kind of partial, multidimensional, file-backed access needed in numerical computing and financial engineering. HDF5 already had most of the right storage primitives: partial I/O, extendable datasets, compression, and broad interoperability across operating systems and scientific environments. What was missing was a modern C++ interface.</p>
-<p>The earliest implementation began as a collection of templates. Later, contact with The HDF Group helped shape the first H5CPP11 project, followed in time by the C++17 version. I am especially thankful to Gerd Heber for his sustained guidance and generosity over the years; to Elena Pourmal and David Pareah for their encouragement, support, and influence on the project’s direction; and, from Fermilab, to Mark Paterno and Chris for their thoughtful input. Many of the stronger ideas in H5CPP were sharpened through those discussions; any mistakes, omissions, or rough edges are entirely my own.</p>
-<div class="flex gap-4 w-full">
-<div class="w-1/2 border border-solid border-gray-300 rounded-lg shadow-lg overflow-hidden flex flex-col">
-<div class="bg-gray-400 text-white px-4 h-9 rounded-t flex items-center">
-<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 12h8v2H8zm2 8H6V4h7v5h5v3.1l2-2V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4zm-2-2h4.1l.9-.9V16H8zm12.2-5c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg></span> What You End Up Writing by Hand</p>
+<!-- HTML header for doxygen 1.9.x — H5CPP with doxygen-awesome + dark-mode toggle -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=9"/>
+<meta name="generator" content="Doxygen 1.9.8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>H5CPP: H5CPP — Modern C++ for HDF5</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="dynsections.js"></script>
+<link href="navtree.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="resize.js"></script>
+<script type="text/javascript" src="navtreedata.js"></script>
+<script type="text/javascript" src="navtree.js"></script>
+<link href="search/search.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="search/searchdata.js"></script>
+<script type="text/javascript" src="search/search.js"></script>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="customdoxygen.css" rel="stylesheet" type="text/css"/>
+<script type="text/javascript" src="doxygen-awesome-darkmode-toggle.js"></script>
+<script type="text/javascript">
+  DoxygenAwesomeDarkModeToggle.init()
+</script>
+<script type="text/javascript" src="doxygen-overload-collapse.js"></script>
+</head>
+<body>
+<div id="top"><!-- do not remove this div, it is closed by doxygen! -->
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectalign" style="padding-left: 0.5em;">
+   <div id="projectname">H5CPP
+   &#160;<span id="projectnumber">v1.14.0</span>
+   </div>
+   <div id="projectbrief">Modern C++ templates for HDF5 serial and parallel I/O</div>
+  </td>
+  <td style="padding-right: 1em; vertical-align: middle;">
+   <doxygen-awesome-dark-mode-toggle title="Toggle dark/light mode"></doxygen-awesome-dark-mode-toggle>
+  </td>
+ </tr>
+ </tbody>
+</table>
 </div>
-<div class="p-4 flex-1">
-<ul>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2 2h6v2h8V2h6v6h-2v8h2v6h-6v-2H8v2H2v-6h2V8H2zm14 6V6H8v2H6v8h2v2h8v-2h2V8zM4 4v2h2V4zm14 0v2h2V4zM4 18v2h2v-2zm14 0v2h2v-2z"/></svg></span> manual datatype and dataspace construction</li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 5v16h6v-1.5H7V18h2v-1.5H5V15h4v-1.5H7V12h2v-1.5H5V9h4V5h1.5v4H12V7h1.5v2H15V5h1.5v4H18V7h1.5v2H21V3H5a2 2 0 0 0-2 2m3 2a1 1 0 0 1-1-1 1 1 0 0 1 1-1 1 1 0 0 1 1 1 1 1 0 0 1-1 1"/></svg></span> repetitive shape bookkeeping</li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8 3a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2H3v2h1a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h2v-2H8v-5a2 2 0 0 0-2-2 2 2 0 0 0 2-2V5h2V3m6 0a2 2 0 0 1 2 2v4a2 2 0 0 0 2 2h1v2h-1a2 2 0 0 0-2 2v4a2 2 0 0 1-2 2h-2v-2h2v-5a2 2 0 0 1 2-2 2 2 0 0 1-2-2V5h-2V3z"/></svg></span> verbose read/write setup</li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19.79 15.41c.95-2.17.95-4.66 0-6.82l-2.74 1.24c.6 1.38.6 2.95.01 4.34zm-4.37-11.2a8.54 8.54 0 0 0-6.83 0l1.24 2.73c1.39-.59 2.96-.59 4.35.01zM4.21 8.58a8.56 8.56 0 0 0 0 6.84l2.74-1.25c-.6-1.38-.6-2.96 0-4.35zm4.38 11.21a8.5 8.5 0 0 0 6.83-.01l-1.24-2.73a5.5 5.5 0 0 1-4.34.01zM12 2a10 10 0 0 1 10 10 10 10 0 0 1-10 10A10 10 0 0 1 2 12 10 10 0 0 1 12 2m0 6a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4"/></svg></span> resource lifetime management</li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14 4 2.29 2.29-2.88 2.88 1.42 1.42 2.88-2.88L20 10V4M10 4H4v6l2.29-2.29 4.71 4.7V20h2v-8.41l-5.29-5.3"/></svg></span> impedance mismatch with modern C++ container types</li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 1c-1.11 0-2 .89-2 2v4c0 1.11.89 2 2 2H1v2h12V9h-3c1.11 0 2-.89 2-2V3c0-1.11-.89-2-2-2zm0 2h6v4H4zM3 13v7h7v-2H5v-5zm11 0c-1.11 0-2 .89-2 2v4c0 1.11.89 2 2 2h-3v2h12v-2h-3c1.11 0 2-.89 2-2v-4c0-1.11-.89-2-2-2zm0 2h6v4h-6z"/></svg></span> added complexity when moving to MPI-enabled parallel I/O
-  </li>
-</ul>
-</div>
-</div>
-<div class="w-1/2 border border-solid border-gray-300 rounded-lg shadow-lg overflow-hidden flex flex-col">
-<div class="bg-gray-400 text-white px-4 h-9 rounded-t flex items-center">
-<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm1-5C6.47 2 2 6.5 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2m0 18a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8"/></svg></span> Where That Complexity Shows Up</p>
-</div>
-<div class="p-4 flex-1">
-<ul>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.11.89 2 2 2h12c1.11 0 2-.89 2-2V8zm4 18H6V4h7v5h5zm-8.46-4.35 2.09 2.09L10.35 19 7 15.65l3.35-3.35 1.28 1.26zm7.46 0L13.65 19l-1.27-1.26 2.09-2.09-2.09-2.09 1.27-1.26z"/></svg></span> structured event data such as trades, quotes, fills, and order updates</li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 4v4h4V4zm6 0v4h4V4zm0 6v4h4v-4zm0 6v4h4v-4zm-2 4v-4h-4v4zm-6 0v-4H4v4zm0-6v-4H4v4zm0-6V4H4v4zm2 6h4v-4h-4zM4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4c-1.08 0-2-.9-2-2V4a2 2 0 0 1 2-2"/></svg></span> dense numerical datasets such as returns, features, factors, and signal matrices</li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m16 11.78 4.24-7.33 1.73 1-5.23 9.05-6.51-3.75L5.46 19H22v2H2V3h2v14.54L9.5 8z"/></svg></span> simulation, backtesting, and numerical research code</li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 21H4V10h2v9h12v-9h2zM3 3h18v6H3zm6.5 8h5c.28 0 .5.22.5.5V13H9v-1.5c0-.28.22-.5.5-.5M5 5v2h14V5z"/></svg></span> shared datasets reused across research, replay, and production workflows
-  </li>
-</ul>
-</div>
-</div>
-</div>
-<div class="mt-4 w-full border border-solid border-gray-300 rounded-lg shadow-lg overflow-hidden flex flex-col">
-<div class="bg-green-700 text-white px-4 h-9 rounded-t flex items-center">
-<p><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 1h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1m0 8h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1m0 8h16a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1M9 5h1V3H9zm0 8h1v-2H9zm0 8h1v-2H9zM5 3v2h2V3zm0 8v2h2v-2zm0 8v2h2v-2z"/></svg></span> What You Get with H5CPP</p>
-</div>
-<div class="flex w-full">
-<div class="w-1/2 p-0">
-<ul>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 15H6l7-14v8h5l-7 14z"/></svg></span> <strong>fast to integrate</strong></li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m10.5 15.97.41 2.44c-.26.14-.68.27-1.24.39-.57.13-1.24.2-2.01.2-2.21-.04-3.87-.7-4.98-1.96Q1 15.135 1 12.21c.05-2.31.72-4.08 2-5.32C4.32 5.64 5.96 5 7.94 5c.75 0 1.4.07 1.94.19s.94.25 1.2.4l-.58 2.49-1.06-.34c-.4-.1-.86-.15-1.39-.15-1.16-.01-2.12.36-2.87 1.1-.76.73-1.15 1.85-1.18 3.34 0 1.36.37 2.42 1.08 3.2.71.77 1.71 1.17 2.99 1.18l1.33-.12c.43-.08.79-.19 1.1-.32M11 11h2V9h2v2h2v2h-2v2h-2v-2h-2zm7 0h2V9h2v2h2v2h-2v2h-2v-2h-2z"/></svg></span> <strong>natural in modern C++</strong></li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m10 17-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9m-6-8L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5z"/></svg></span> <strong>safer through RAII</strong></li>
-</ul>
-</div>
-<div class="w-1/2 p-0">
-<ul>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 3h6v4H3zm12 7h6v4h-6zm0 7h6v4h-6zm-2-4H7v5h6v2H5V9h2v2h6z"/></svg></span> <strong>well suited to structured records</strong></li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v15a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m0 4v3h4V7zm6 0v3h4V7zm10 3V7h-4v3zM4 12v3h4v-3zm0 8h4v-3H4zm6-8v3h4v-3zm0 8h4v-3h-4zm10 0v-3h-4v3zm0-8h-4v3h4z"/></svg></span> <strong>well suited to dense numerical arrays</strong></li>
-<li><span class="twemoji icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 1c-1.11 0-2 .89-2 2v4c0 1.11.89 2 2 2H1v2h12V9h-3c1.11 0 2-.89 2-2V3c0-1.11-.89-2-2-2zm0 2h6v4H4zM3 13v7h7v-2H5v-5zm11 0c-1.11 0-2 .89-2 2v4c0 1.11.89 2 2 2h-3v2h12v-2h-3c1.11 0 2-.89 2-2v-4c0-1.11-.89-2-2-2zm0 2h6v4h-6z"/></svg></span> <strong>ready to scale from local workflows to parallel I/O</strong></li>
-</ul>
-</div>
-</div>
-</div>
-<p>H5CPP <a href="https://steven-varga.ca/site/talks/">has been presented</a> in HDF5 and C++ community venues over multiple years, including HUG sessions, HDF Group events, C++ community talks, and ISC-related material. Topics include compiler-assisted reflection, POD introspection, MPI/parallel I/O, throughput/latency trade-offs, and practical HDF5 workflows.</p>
-
-
-
-
-
-
-
-  
-  
-
-
-
-  
-
-
-  
-
-
-
-                
-              </article>
-            </div>
-          
-          
-  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
-
-<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
-        </div>
-        
-      </main>
-      
-        <footer class="md-footer">
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright custom-footer">
-        <div class="custom-footer-left">
-          Blockchain, cryptographic protocols, HPC, or trading systems in C++, Rust, Julia, Python, R and CUDA
-        </div>
-        <div class="custom-footer-right">
-          © 2017–2025 VargaLABS, Toronto, ON, Canada 🇨🇦
-        </div>
-      </div>
+<!-- end header part -->
+<!-- Generated by Doxygen 1.9.8 -->
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+var searchBox = new SearchBox("searchBox", "search/",'.html');
+/* @license-end */
+</script>
+<script type="text/javascript" src="menudata.js"></script>
+<script type="text/javascript" src="menu.js"></script>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(function() {
+  initMenu('',true,false,'search.php','Search');
+  $(document).ready(function() { init_search(); });
+});
+/* @license-end */
+</script>
+<div id="main-nav"></div>
+</div><!-- top -->
+<div id="side-nav" class="ui-resizable side-nav-resizable">
+  <div id="nav-tree">
+    <div id="nav-tree-contents">
+      <div id="nav-sync" class="sync"></div>
     </div>
   </div>
-</footer>
-      
-    </div>
-    <div class="md-dialog" data-md-component="dialog">
-      <div class="md-dialog__inner md-typeset"></div>
-    </div>
-    
-    
-    
-      
-      
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["search.suggest", "content.code.copy", "content.tooltips", "content.tabs.link"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
-    
-    
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
-      
-        <script src="javascripts/mathjax.js"></script>
-      
-        <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-      
-        <script src="https://cdn.tailwindcss.com"></script>
-      
-        <script src="javascripts/tw-config.js"></script>
-      
-        <script src="javascripts/asciinema-player.min.js"></script>
-      
-        <script src="https://unpkg.com/alpinejs@3.14.9/dist/cdn.min.js"></script>
-      
-        <script src="https://unpkg.com/@popperjs/core@2"></script>
-      
-        <script src="https://unpkg.com/tippy.js@6"></script>
-      
-    
-  </body>
+  <div id="splitbar" style="-moz-user-select:none;" 
+       class="ui-resizable-handle">
+  </div>
+</div>
+<script type="text/javascript">
+/* @license magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&amp;dn=expat.txt MIT */
+$(document).ready(function(){initNavTree('index.html',''); initResizable(); });
+/* @license-end */
+</script>
+<div id="doc-content">
+<!-- window showing the filter options -->
+<div id="MSearchSelectWindow"
+     onmouseover="return searchBox.OnSearchSelectShow()"
+     onmouseout="return searchBox.OnSearchSelectHide()"
+     onkeydown="return searchBox.OnSearchSelectKey(event)">
+</div>
+
+<!-- iframe showing the search results (closed by default) -->
+<div id="MSearchResultsWindow">
+<div id="MSearchResults">
+<div class="SRPage">
+<div id="SRIndex">
+<div id="SRResults"></div>
+<div class="SRStatus" id="Loading">Loading...</div>
+<div class="SRStatus" id="Searching">Searching...</div>
+<div class="SRStatus" id="NoMatches">No Matches</div>
+</div>
+</div>
+</div>
+</div>
+
+<div><div class="header">
+  <div class="headertitle"><div class="title">H5CPP — Modern C++ for HDF5 </div></div>
+</div><!--header-->
+<div class="contents">
+<div class="textblock"><blockquote class="doxtable">
+<p>&zwj;<b>Read and write any STL type, linear-algebra container, registered POD, or <code>std::tuple</code> to HDF5 in one line of C++.</b> &#160; &#160; <em>No manual <code>H5Tcreate</code>, no offset arithmetic, no error-code dance.</em> </p>
+</blockquote>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;h5cpp/all&gt;</span></div>
+<div class="line"> </div>
+<div class="line"><a class="code hl_function" href="group__attribute-io.html#ga7986986d558b0ae23902b6b917e5dce7">h5::fd_t</a> fd = <a class="code hl_function" href="group__attribute-io.html#ga0a36c3a49938b8ca475300f3c797035a">h5::create</a>(<span class="stringliteral">&quot;data.h5&quot;</span>, H5F_ACC_TRUNC);</div>
+<div class="line"> </div>
+<div class="line"><a class="code hl_function" href="group__datasets.html#gaae4dd5b46e71f16235ef55078f71cb0e">h5::write</a>(fd, <span class="stringliteral">&quot;/grid/values&quot;</span>, arma::Mat&lt;double&gt;(1024, 1024, arma::fill::randu));</div>
+<div class="line"><a class="code hl_function" href="group__datasets.html#gaae4dd5b46e71f16235ef55078f71cb0e">h5::write</a>(fd, <span class="stringliteral">&quot;/labels&quot;</span>,      <a class="code hl_classRef" href="https://en.cppreference.com/cpp/container/vector">std::vector&lt;std::string&gt;</a>{<span class="stringliteral">&quot;alpha&quot;</span>,<span class="stringliteral">&quot;beta&quot;</span>,<span class="stringliteral">&quot;gamma&quot;</span>});</div>
+<div class="line"><a class="code hl_function" href="group__datasets.html#gaae4dd5b46e71f16235ef55078f71cb0e">h5::write</a>(fd, <span class="stringliteral">&quot;/metadata&quot;</span>,    <a class="code hl_classRef" href="https://en.cppreference.com/cpp/container/map">std::map&lt;std::string,double&gt;</a>{{<span class="stringliteral">&quot;version&quot;</span>, 1.4}});</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">auto</span> M = <a class="code hl_function" href="group__attribute-io.html#ga7986986d558b0ae23902b6b917e5dce7">h5::read&lt;arma::Mat&lt;double&gt;</a>&gt;(fd, <span class="stringliteral">&quot;/grid/values&quot;</span>);</div>
+<div class="line"><span class="keyword">auto</span> v = <a class="code hl_function" href="group__attribute-io.html#ga7986986d558b0ae23902b6b917e5dce7">h5::read&lt;std::vector&lt;std::string&gt;</a>&gt;(fd, <span class="stringliteral">&quot;/labels&quot;</span>);</div>
+<div class="line"><span class="keyword">auto</span> m = <a class="code hl_function" href="group__attribute-io.html#ga7986986d558b0ae23902b6b917e5dce7">h5::read&lt;std::map&lt;std::string,double&gt;</a>&gt;(fd, <span class="stringliteral">&quot;/metadata&quot;</span>);</div>
+<div class="ttc" id="agroup__attribute-io_html_ga0a36c3a49938b8ca475300f3c797035a"><div class="ttname"><a href="group__attribute-io.html#ga0a36c3a49938b8ca475300f3c797035a">h5::create</a></div><div class="ttdeci">h5::at_t create(const hid_t &amp;parent, const std::string &amp;path, args_t &amp;&amp;... args)</div><div class="ttdoc">Create a new attribute of element type T on a parent HDF5 object.</div><div class="ttdef"><b>Definition</b> H5Acreate.hpp:100</div></div>
+<div class="ttc" id="agroup__attribute-io_html_ga7986986d558b0ae23902b6b917e5dce7"><div class="ttname"><a href="group__attribute-io.html#ga7986986d558b0ae23902b6b917e5dce7">h5::aread</a></div><div class="ttdeci">T aread(const hid_t &amp;ds, const std::string &amp;name, const h5::acpl_t &amp;acpl=h5::default_acpl)</div><div class="ttdoc">Read an attribute by name and return its value as type T.</div><div class="ttdef"><b>Definition</b> H5Aread.hpp:76</div></div>
+<div class="ttc" id="agroup__datasets_html_gaae4dd5b46e71f16235ef55078f71cb0e"><div class="ttname"><a href="group__datasets.html#gaae4dd5b46e71f16235ef55078f71cb0e">h5::write</a></div><div class="ttdeci">h5::gr_t write(const LOC &amp;parent, const std::string &amp;path, const T &amp;src)</div><div class="ttdoc">Write a sparse matrix or vector as a CSC group.</div><div class="ttdef"><b>Definition</b> H5Dsparse.hpp:185</div></div>
+<div class="ttc" id="amap_html"><div class="ttname"><a href="https://en.cppreference.com/cpp/container/map">std::map</a></div></div>
+<div class="ttc" id="avector_html"><div class="ttname"><a href="https://en.cppreference.com/cpp/container/vector">std::vector</a></div></div>
+</div><!-- fragment --><p>RAII handles close on scope exit. The on-disk format is canonical HDF5 — readable by Python, R, MATLAB, Julia, Fortran, or any other HDF5-capable tool — and for sparse matrices it's byte-compatible with <code>scipy.sparse.csc_matrix</code>, Julia <code>HDF5.jl</code>, and the 10x Genomics / Loompy convention out of the box.</p>
+<hr  />
+<h1>Why H5CPP exists</h1>
+<p>H5CPP began from a practical requirement: <b>efficient storage for large numerical datasets with both indexed block access and sequential streaming</b>. Existing serialisation systems handled streams reasonably well, but not the kind of partial, multidimensional, file-backed access needed in numerical computing and financial engineering. HDF5 already had most of the right storage primitives — partial I/O, extendable datasets, compression, broad interoperability across operating systems and scientific environments. <b>What was missing was a modern C++ interface.</b></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadLeft"></th><th class="markdownTableHeadLeft">Direct HDF5 in C/C++   </th><th class="markdownTableHeadLeft">H5CPP    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Datatype + dataspace</b>   </td><td class="markdownTableBodyLeft">Manual <code>H5Tcreate</code> / <code>H5Screate_simple</code> per type   </td><td class="markdownTableBodyLeft"><code>h5::write(fd, "x", value)</code> — type deduced from <code>T</code>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>Shape bookkeeping</b>   </td><td class="markdownTableBodyLeft">Hand-tracked <code>hsize_t[]</code> arrays   </td><td class="markdownTableBodyLeft">Derived from the value's <code>access_traits_t::size</code>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Resource lifetime</b>   </td><td class="markdownTableBodyLeft">Paired <code>H5Fopen</code> / <code>H5Fclose</code>, error-prone on early return   </td><td class="markdownTableBodyLeft"><code>h5::fd_t</code> — RAII close on scope exit    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>Container interop</b>   </td><td class="markdownTableBodyLeft">Memcpy into intermediate buffers   </td><td class="markdownTableBodyLeft">Direct on <code>std::vector</code>, <code>arma::Mat</code>, <code>Eigen::SparseMatrix</code>, …    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Error handling</b>   </td><td class="markdownTableBodyLeft">Negative return codes + global error stack   </td><td class="markdownTableBodyLeft">48-leaf typed exception hierarchy with HDF5 stack folded in    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>Parallel I/O</b>   </td><td class="markdownTableBodyLeft">Separate FAPL setup; raw MPI driver calls   </td><td class="markdownTableBodyLeft"><code>h5::fapl{ h5::driver::mpi{comm, info} }</code> — same call shape    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>User structs</b>   </td><td class="markdownTableBodyLeft">Hand-written <code>H5T_COMPOUND</code> per field   </td><td class="markdownTableBodyLeft"><code>H5CPP_REGISTER_STRUCT(T)</code> (POD) or h5cpp-compiler (non-POD); C++26 reflection on the roadmap   </td></tr>
+</table>
+<hr  />
+<h1>Where to start</h1>
+<p>This documentation site is organised along three axes plus a project scorecard. Pick the one that matches what you're trying to do:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadLeft">Axis   </th><th class="markdownTableHeadLeft">Answers   </th><th class="markdownTableHeadLeft">Start here    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b><a class="el" href="curated_io_api.html">I/O</a></b>   </td><td class="markdownTableBodyLeft">"I have a `FILE` / `DATASET` / `ATTRIBUTE` / `GROUP` — what API do I call?"   </td><td class="markdownTableBodyLeft">API reference organised by HDF5 object kind    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b><a class="el" href="curated_topics.html">TOPICS</a></b>   </td><td class="markdownTableBodyLeft">"What does h5cpp *support*, and how does it work under the hood?"   </td><td class="markdownTableBodyLeft">Capability reference: properties, linalg, STL, reflection, filters, MPI, error handling, type system, CDash, reports    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b><a class="el" href="examples_guides_index.html">COOKBOOK</a></b>   </td><td class="markdownTableBodyLeft">"Just show me a runnable example."   </td><td class="markdownTableBodyLeft">28 worked examples — basics, datasets, attributes, groups, compound, linalg, sparse, mdspan, transform, optimised, packet table, custom pipeline, references, smart pointers, reflection, multi-TU, half-float, CSV, S3, MPI, …    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b><a class="el" href="reports_usability_evaluation.html">USABILITY</a></b>   </td><td class="markdownTableBodyLeft">"What's actually supported in v1.14.0?"   </td><td class="markdownTableBodyLeft">Per-category feature scorecard (✔ / ◇ / ✘) — core I/O, type coverage, linalg, advanced HDF5, parallel &amp; async, sparse, error handling, STL, type system, reflection, build &amp; CI   </td></tr>
+</table>
+<hr  />
+<h1>What you can do</h1>
+<p>A few of the differentiators worth knowing about up front:</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadLeft">Capability   </th><th class="markdownTableHeadLeft">One-liner   </th><th class="markdownTableHeadLeft">Reference    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Linear algebra</b>   </td><td class="markdownTableBodyLeft">Armadillo, Eigen, Blaze, Blitz++, dlib, IT++, Boost uBLAS, xtensor — same <code>h5::write</code> / <code>h5::read</code> on every library   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_topics_linalg.html">LINEAR ALGEBRA</a>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>STL</b> (sequence + associative + ragged)   </td><td class="markdownTableBodyLeft"><code>std::vector</code>, <code>std::map</code>, <code>std::list</code>, <code>std::vector&lt;std::vector&lt;T&gt;&gt;</code>, <code>std::vector&lt;std::string&gt;</code> — all routed via the unified dispatch   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_topics_stl.html">STL</a>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Sparse matrices</b>   </td><td class="markdownTableBodyLeft"><code>arma::SpMat</code> and <code>Eigen::SparseMatrix&lt;T, ColMajor&gt;</code> round-trip through canonical CSC group layout (scipy / Julia / 10x / Loompy interop)   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_topics_linalg.html">LINEAR ALGEBRA</a>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>Streaming I/O (C++20 ranges)</b>   </td><td class="markdownTableBodyLeft"><code>for (auto v : h5::view&lt;float&gt;(ds)) …</code> — iterate multi-GB datasets one chunk at a time, no materialisation   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_io_api_dataset.html#curated_io_api_dataset_view">curated_io_api_dataset_view</a>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Compiler-assisted reflection</b>   </td><td class="markdownTableBodyLeft">Pre-build Clang tool emits compound descriptors + scatter/gather for <em>any</em> non-POD struct — no intrusive macros. C++26 reflection on the roadmap.   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_topics_reflection.html">REFLECTION</a>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>Walter Brown feature detection</b>   </td><td class="markdownTableBodyLeft">The dispatch asks structural questions about <code>T</code> (does it have <code>data()</code>? <code>value_type</code>? <code>tuple_size</code>?) — third-party container libraries (Abseil, Folly, EASTL, Boost.Container) work via the same path   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_topics_stl.html">STL</a>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Filters</b>   </td><td class="markdownTableBodyLeft">gzip, shuffle, fletcher32, nbit, <b>Gorilla</b> (Facebook time-series codec), custom plugins — composed via the <code>\|</code> operator   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_topics_filters.html">FILTERS</a>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>Parallel I/O</b>   </td><td class="markdownTableBodyLeft">MPI-IO collective and independent transfer; works without a parallel filesystem (laptop testing, NFS-backed cluster)   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_topics_mpi.html">MPI</a>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Async mode</b>   </td><td class="markdownTableBodyLeft"><code>h5::async::create</code> returns type-level-discriminated descriptors — <code>operator hid_t() = delete</code>'d so raw-CAPI escape fails at compile time   </td><td class="markdownTableBodyLeft"><a class="el" href="link_handle_reference.html#handle_ref_async">Async-mode handles</a>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>Context-sensitive exceptions</b>   </td><td class="markdownTableBodyLeft">48 typed leaves — <code>catch(h5::error::io::attribute::open&amp;)</code> distinguishes from <code>catch(h5::error::io::dataset::read&amp;)</code>   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_topics_error.html">ERROR</a>   </td></tr>
+</table>
+<hr  />
+<h1>Install</h1>
+<p>Pre-built packages for <b>v1.14.0</b>, one row per platform — the <b>H5CPP</b> column is the header-only library (required); the <b>COMPILER</b> column is the optional Clang LibTooling-based reflection toolchain (needed only for non-POD struct persistence — see <a class="el" href="curated_topics_reflection.html">REFLECTION</a>).</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadLeft">Platform   </th><th class="markdownTableHeadLeft">Arch   </th><th class="markdownTableHeadLeft">Format   </th><th class="markdownTableHeadLeft">H5CPP (lib)   </th><th class="markdownTableHeadLeft">COMPILER (optional)    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Ubuntu / Debian</b>   </td><td class="markdownTableBodyLeft">x86_64 / amd64   </td><td class="markdownTableBodyLeft"><code>.deb</code>   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp/releases/download/v1.14.0/h5cpp-dev-v1.14.0-linux-x86_64.deb">download</a> (22 MB)   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp-compiler/releases/download/v1.12.6/h5cpp-compiler-1.12.6-Linux-amd64.deb">download</a> (17 MB)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>Ubuntu / Debian</b>   </td><td class="markdownTableBodyLeft">aarch64 / arm64   </td><td class="markdownTableBodyLeft"><code>.deb</code>   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp/releases/download/v1.14.0/h5cpp-dev-v1.14.0-linux-aarch64.deb">download</a> (22 MB)   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp-compiler/releases/download/v1.12.6/h5cpp-compiler-1.12.6-Linux-arm64.deb">download</a> (17 MB)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>RHEL / Fedora / openSUSE</b>   </td><td class="markdownTableBodyLeft">x86_64   </td><td class="markdownTableBodyLeft"><code>.rpm</code>   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp/releases/download/v1.14.0/h5cpp-dev-v1.14.0-linux-x86_64.rpm">download</a> (22 MB)   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp-compiler/releases/download/v1.12.6/h5cpp-compiler-1.12.6-Linux-x86_64.rpm">download</a> (17 MB)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>RHEL / Fedora / openSUSE</b>   </td><td class="markdownTableBodyLeft">aarch64   </td><td class="markdownTableBodyLeft"><code>.rpm</code>   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp/releases/download/v1.14.0/h5cpp-dev-v1.14.0-linux-aarch64.rpm">download</a> (22 MB)   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp-compiler/releases/download/v1.12.6/h5cpp-compiler-1.12.6-Linux-aarch64.rpm">download</a> (17 MB)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Linux</b> (musl, distro-agnostic)   </td><td class="markdownTableBodyLeft">x86_64   </td><td class="markdownTableBodyLeft"><code>.tar.gz</code>   </td><td class="markdownTableBodyLeft">—   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp-compiler/releases/download/v1.12.6/h5cpp-compiler-1.12.6-Linux-musl-x86_64.tar.gz">download</a> (33 MB)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>macOS</b>   </td><td class="markdownTableBodyLeft">Apple Silicon (arm64)   </td><td class="markdownTableBodyLeft"><code>.pkg</code>   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp/releases/download/v1.14.0/h5cpp-dev-v1.14.0-darwin-arm64.pkg">download</a> (23 MB)   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp-compiler/releases/download/v1.12.6/h5cpp-compiler-1.12.6-Darwin.pkg">download</a> (2 KB ⚠)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Windows</b>   </td><td class="markdownTableBodyLeft">x64   </td><td class="markdownTableBodyLeft"><code>.exe</code>   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp/releases/download/v1.14.0/h5cpp-dev-v1.14.0-windows-amd64.exe">download</a> (25 MB)   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp-compiler/releases/download/v1.12.6/h5cpp-compiler-1.12.6-win64.exe">download</a> (9 MB)   </td></tr>
+</table>
+<blockquote class="doxtable">
+<p>&zwj;⚠ The macOS COMPILER <code>.pkg</code> is currently a 2 KB stub — full macOS package in the works. Build from source via the <a href="https://github.com/vargalabs/h5cpp-compiler">h5cpp-compiler repo</a> if you need it on Apple Silicon today. </p>
+</blockquote>
+<p>SHA-256 checksums on each release page: <a href="https://github.com/vargalabs/h5cpp/releases/tag/v1.14.0">h5cpp v1.14.0</a> · <a href="https://github.com/vargalabs/h5cpp-compiler/releases/tag/v1.14.0">h5cpp-compiler v1.12.6</a> &middot; browse <a href="https://github.com/vargalabs/h5cpp/releases">all h5cpp releases</a> / <a href="https://github.com/vargalabs/h5cpp-compiler/releases">all compiler releases</a> for older versions and pre-release builds.</p>
+<div class="fragment"><div class="line"># H5CPP — install once downloaded:</div>
+<div class="line">sudo apt install ./h5cpp-dev-v1.14.0-linux-x86_64.deb        # Ubuntu / Debian</div>
+<div class="line">sudo dnf install ./h5cpp-dev-v1.14.0-linux-x86_64.rpm        # RHEL / Fedora</div>
+<div class="line">sudo installer -pkg h5cpp-dev-v1.14.0-darwin-arm64.pkg \</div>
+<div class="line">                -target /                                      # macOS arm64</div>
+<div class="line"># Windows: double-click the .exe — NSIS installer with Start menu entries</div>
+<div class="line"> </div>
+<div class="line"># COMPILER — same commands, h5cpp-compiler-1.12.6-* package name.</div>
+</div><!-- fragment --><h2>From source</h2>
+<div class="fragment"><div class="line">git clone https://github.com/vargalabs/h5cpp.git &amp;&amp; cd h5cpp</div>
+<div class="line">cmake -B build -DCMAKE_BUILD_TYPE=Release &amp;&amp; cmake --install build</div>
+</div><!-- fragment --><h2>Use from your CMake project</h2>
+<div class="fragment"><div class="line">find_package(h5cpp REQUIRED)</div>
+<div class="line">target_link_libraries(my_app PRIVATE h5cpp::h5cpp)</div>
+</div><!-- fragment --><p><b>Write your first program</b> — see the snippet at the top of this page.</p>
+<hr  />
+<h1>Project status</h1>
+<p>CI matrix, ASan / UBSan / TSan, code coverage, and the public CDash dashboard:</p>
+<p><a href="https://github.com/vargalabs/h5cpp/actions/workflows/ci.yml"><img src="https://github.com/vargalabs/h5cpp/actions/workflows/ci.yml/badge.svg" alt="CI" style="pointer-events: none;" class="inline"/></a> <a href="https://github.com/vargalabs/h5cpp/actions/workflows/ci.yml"><img src="badges/asan.svg" alt="ASan" style="pointer-events: none;" class="inline"/></a> <a href="https://github.com/vargalabs/h5cpp/actions/workflows/ci.yml"><img src="badges/ubsan.svg" alt="UBSan" style="pointer-events: none;" class="inline"/></a> <a href="https://github.com/vargalabs/h5cpp/actions/workflows/ci.yml"><img src="badges/tsan.svg" alt="TSan" style="pointer-events: none;" class="inline"/></a> <a href="https://app.codecov.io/gh/vargalabs/h5cpp/tree/release"><img src="https://codecov.io/gh/vargalabs/h5cpp/branch/release/graph/badge.svg" alt="codecov" style="pointer-events: none;" class="inline"/></a> <a href="https://doi.org/10.5281/zenodo.20123216"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.20123216.svg" alt="DOI" style="pointer-events: none;" class="inline"/></a></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadLeft">OS / Compiler   </th><th class="markdownTableHeadCenter">GCC 13   </th><th class="markdownTableHeadCenter">GCC 14   </th><th class="markdownTableHeadCenter">Clang 17–20   </th><th class="markdownTableHeadCenter">Apple Clang   </th><th class="markdownTableHeadCenter">MSVC    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">Ubuntu 22.04 / 24.04   </td><td class="markdownTableBodyCenter">✔   </td><td class="markdownTableBodyCenter">✔   </td><td class="markdownTableBodyCenter">✔   </td><td class="markdownTableBodyCenter">∅   </td><td class="markdownTableBodyCenter">∅    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft">macOS 15 arm64   </td><td class="markdownTableBodyCenter">∅   </td><td class="markdownTableBodyCenter">∅   </td><td class="markdownTableBodyCenter">∅   </td><td class="markdownTableBodyCenter">✔   </td><td class="markdownTableBodyCenter">∅    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft">Windows   </td><td class="markdownTableBodyCenter">∅   </td><td class="markdownTableBodyCenter">∅   </td><td class="markdownTableBodyCenter">∅   </td><td class="markdownTableBodyCenter">∅   </td><td class="markdownTableBodyCenter">✔   </td></tr>
+</table>
+<ul>
+<li><b>Live test dashboard</b> → <a href="https://my.cdash.org/index.php?project=h5cpp">https://my.cdash.org/index.php?project=h5cpp</a></li>
+<li><b>Coverage</b> → <a href="https://app.codecov.io/gh/vargalabs/h5cpp/tree/release">https://app.codecov.io/gh/vargalabs/h5cpp/tree/release</a></li>
+<li><b>HDF5 version matrix</b> — tested against 1.10.x / 1.12.x / 1.14.x</li>
+<li><b>C++ standard</b> — C++20 default, C++23 features used (<code>std::mdspan</code>); C++26 reflection on the roadmap</li>
+</ul>
+<hr  />
+<h1>What's in v1.14.0</h1>
+<p>The <a class="el" href="reports_usability_evaluation.html">v1.14.0 usability scorecard</a> has the full picture — highlights since the earlier evaluation:</p>
+<ul>
+<li><b>STL non-contiguous unblocked</b> — <code>std::map</code>, <code>std::list</code>, <code>std::set</code>, ragged <code>vector&lt;vector&lt;T&gt;&gt;</code> all routed through the unified Walter Brown trait-based dispatch</li>
+<li><b>Eigen sparse landed</b> — joins Armadillo on the canonical CSC group layout</li>
+<li><b>Async mode (Phase II)</b> — separate <code>h5::async::*</code> descriptor types with <code>operator hid_t() = delete</code> so the type system prevents raw-CAPI escape paths</li>
+<li><b>Streaming <code>h5::view&lt;T&gt;</code></b> — C++20 ranges view over rank-1 chunked datasets, decompressed through the filter pipeline</li>
+<li><b>h5cpp-compiler</b> multi-backend roadmap — one AST walker, many artifacts (HDF5 + Protobuf + JSON Schema + SQL + Avro + CBOR + BSON + MessagePack + RLP)</li>
+<li><b>macOS packaging</b> — signed <code>.pkg</code> for Apple Silicon</li>
+<li><b>Public CDash dashboard</b> — community submissions welcomed</li>
+<li><b>Documentation overhaul</b> — this site, with three parallel nav axes and 28 cookbook examples</li>
+</ul>
+<hr  />
+<h1>Reading by background</h1>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadLeft">Coming from…   </th><th class="markdownTableHeadLeft">Start at   </th><th class="markdownTableHeadLeft">Why    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>HDF5 CAPI</b>   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_io_api.html">IO API</a>   </td><td class="markdownTableBodyLeft">One-to-one mapping from HDF5 verbs (<code>H5Fcreate</code>, <code>H5Dwrite</code>, <code>H5Aopen</code>) to h5cpp's typed equivalents    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>h5py</b> (Python)   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_io_api.html">IO API</a>   </td><td class="markdownTableBodyLeft">Side-by-side syntax comparison    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Boost.Serialization / Cereal / nlohmann::json</b>   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_topics_reflection.html">REFLECTION</a>   </td><td class="markdownTableBodyLeft">How h5cpp's compiler-assisted reflection avoids intrusive macros    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>HighFive</b>   </td><td class="markdownTableBodyLeft">the <code>bench/</code> suite   </td><td class="markdownTableBodyLeft">Methodology used to compare h5cpp against HighFive and raw CAPI    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>A new C++ project</b>   </td><td class="markdownTableBodyLeft">The quickstart above + <a class="el" href="example_guide_basics.html">Basic H5CPP Operations</a>   </td><td class="markdownTableBodyLeft">60 seconds to a working <code>h5::write</code> / <code>h5::read</code> round-trip    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>A linear-algebra-heavy codebase</b>   </td><td class="markdownTableBodyLeft"><a class="el" href="curated_topics_linalg.html">LINEAR ALGEBRA</a>   </td><td class="markdownTableBodyLeft">Per-library mapper headers and storage-order rules    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>An LLM-tooling pipeline</b> (RPC schemas, JSON Schema)   </td><td class="markdownTableBodyLeft"><a class="el" href="reports_compiler_multi_backend_architecture.html">h5cpp-compiler Multi-Backend Architecture</a>   </td><td class="markdownTableBodyLeft">One struct → HDF5 + Protobuf + JSON Schema + SQL + Avro from a single source of truth   </td></tr>
+</table>
+<hr  />
+<h1>Acknowledgements</h1>
+<p>H5CPP began as a small collection of templates. Early contact with The HDF Group helped shape the first H5CPP11 project, and later informed the C++17 version. I am especially grateful to Gerd Heber for his sustained guidance, generosity, and friendship over the years; to Elena Pourmal and David Pareah for their encouragement, support on the project’s direction; and to Mark Paterno and Chris at Fermilab for their thoughtful input. Many of H5CPP’s stronger ideas were sharpened through those discussions. Any mistakes, omissions, or rough edges remain entirely my own.</p>
+<p>H5CPP <a href="https://steven-varga.ca/site/talks/">has been presented</a> in HDF5 and C++ community venues over multiple years, including HUG sessions, HDF Group events, C++ community talks, and ISC-related material. Topics covered include compiler-assisted reflection, POD introspection, MPI/parallel I/O, throughput/latency trade-offs, and practical HDF5 workflows.</p>
+<hr  />
+<h1>Project info</h1>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadLeft"></th><th class="markdownTableHeadLeft"></th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Source</b>   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp">https://github.com/vargalabs/h5cpp</a>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>h5cpp-compiler</b>   </td><td class="markdownTableBodyLeft"><a href="https://github.com/vargalabs/h5cpp-compiler">https://github.com/vargalabs/h5cpp-compiler</a>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>License</b>   </td><td class="markdownTableBodyLeft">MIT    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyLeft"><b>Citation</b>   </td><td class="markdownTableBodyLeft"><a href="https://doi.org/10.5281/zenodo.20123216">Zenodo DOI 10.5281/zenodo.20123216</a>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyLeft"><b>Contact</b>   </td><td class="markdownTableBodyLeft">Steven Varga &middot; <a href="#" onclick="location.href='mai'+'lto:'+'ste'+'ve'+'n@v'+'ar'+'gal'+'ab'+'s.c'+'om'; return false;">steve<span class="obfuscator">.nosp@m.</span>n@va<span class="obfuscator">.nosp@m.</span>rgala<span class="obfuscator">.nosp@m.</span>bs.c<span class="obfuscator">.nosp@m.</span>om</a> &middot; <a href="https://steven-varga.ca/">https://steven-varga.ca/</a>   </td></tr>
+</table>
+<hr  />
+<p><small>Documentation built with Doxygen + the <a href="https://github.com/jothepro/doxygen-awesome-css">doxygen-awesome-css</a> theme.</small> </p>
+</div></div><!-- PageDoc -->
+</div><!-- contents -->
+</div><!-- doc-content -->
+<!-- HTML footer for doxygen 1.9.x — H5CPP -->
+<!-- start footer part -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+  <ul>
+    <li class="footer">
+      &copy; 2018&#8211;2026 Steven Varga
+    </li>
+  </ul>
+</div>
+</body>
 </html>

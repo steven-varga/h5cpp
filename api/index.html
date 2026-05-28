@@ -127,12 +127,11 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <div class="line">    <span class="keyword">auto</span> fd = h5::create(<span class="stringliteral">&quot;example.h5&quot;</span>, H5F_ACC_TRUNC);</div>
 <div class="line"> </div>
 <div class="line">    <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;float&gt;</a> data = {1.f, 2.f, 3.f, 4.f, 5.f};</div>
-<div class="line">    <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd, <span class="stringliteral">&quot;sensor/readings&quot;</span>, data);</div>
+<div class="line">    h5::write(fd, <span class="stringliteral">&quot;sensor/readings&quot;</span>, data);</div>
 <div class="line"> </div>
 <div class="line">    <span class="keyword">auto</span> result = h5::read&lt;std::vector&lt;float&gt;&gt;(fd, <span class="stringliteral">&quot;sensor/readings&quot;</span>);</div>
 <div class="line">    <span class="comment">// result == {1.f, 2.f, 3.f, 4.f, 5.f}</span></div>
 <div class="line">}</div>
-<div class="ttc" id="agroup__io-write_html_gaeedb492b2edeecb66043852ed8b59552"><div class="ttname"><a href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a></div><div class="ttdeci">void write(const h5::ds_t &amp;ds, const h5::sp_t &amp;mem_space, const h5::sp_t &amp;file_space, const h5::dxpl_t &amp;dxpl, const T *ptr)</div><div class="ttdoc">write the memory content of const T* ptr with given mem_space into file_space of the dataset</div><div class="ttdef"><b>Definition</b> H5Dwrite.hpp:23</div></div>
 <div class="ttc" id="avector_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a></div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">find_package(HDF5 REQUIRED)</div>
 <div class="line">find_package(h5cpp REQUIRED)</div>

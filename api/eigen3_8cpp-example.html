@@ -104,76 +104,63 @@ $(document).ready(function(){initNavTree('eigen3_8cpp-example.html',''); initRes
   <div class="headertitle"><div class="title">eigen3.cpp</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada</span></div>
-<div class="line"><span class="comment"> * Author: Varga, Steven &lt;steven@vargaconsulting.ca&gt;</span></div>
-<div class="line"><span class="comment"> */</span></div>
+<div class="fragment"><div class="line"><span class="comment">// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Eigen3 round-trip with shape + element verification.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Only dynamic Eigen types round-trip; fixed-size matrices live on the stack</span></div>
+<div class="line"><span class="comment">// and bypass the data() access path. Column vectors are written as Matrix&lt;T&gt;{n,1}.</span></div>
+<div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;Eigen/Dense&gt;</span> <span class="comment">// must include Eigen before &lt;h5cpp/core&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;Eigen/Dense&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;h5cpp/all&gt;</span></div>
 <div class="line"> </div>
-<div class="line"><span class="keyword">using namespace </span><a class="code hl_namespaceRef" href="http://en.cppreference.com/w/namespacestd.html">std</a>;</div>
-<div class="line"><span class="comment">// EIGEN3 templates are unusually complex, let&#39;s use our template definitions</span></div>
-<div class="line"><span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt; <span class="keyword">using </span>Matrix   = Eigen::Matrix&lt;T, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor&gt;;</div>
-<div class="line"><span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt; <span class="keyword">using </span>Colvec   = Eigen::Matrix&lt;T, Eigen::Dynamic, 1, Eigen::ColMajor&gt;;</div>
+<div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; <span class="keyword">using </span>Matrix = Eigen::Matrix&lt;T, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor&gt;;</div>
+<div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; <span class="keyword">using </span>Array  = Eigen::Array &lt;T, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor&gt;;</div>
 <div class="line"> </div>
-<div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; <span class="keyword">using </span>ArrayX1D = Eigen::Array&lt;T, Eigen::Dynamic, 1, Eigen::ColMajor&gt;;</div>
-<div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; <span class="keyword">using </span>ArrayX3D = Eigen::Array&lt;T, Eigen::Dynamic, 3, Eigen::RowMajor&gt;;</div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    <span class="keyword">auto</span> fd = h5::create(<span class="stringliteral">&quot;eigen3.h5&quot;</span>, H5F_ACC_TRUNC);</div>
 <div class="line"> </div>
+<div class="line">    <span class="keyword">auto</span> check = [](<span class="keyword">const</span> <span class="keywordtype">char</span>* label, <span class="keywordtype">bool</span> ok) {</div>
+<div class="line">        <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; (ok ? <span class="stringliteral">&quot;✔ ok    &quot;</span> : <span class="stringliteral">&quot;✘ failed&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;  &quot;</span> &lt;&lt; label &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    };</div>
 <div class="line"> </div>
-<div class="line"> </div>
-<div class="line"><span class="comment">// only EIGEN::DYNAMIC [ARRAY|MATRIX|VECTOR] are supported</span></div>
-<div class="line"><span class="comment">// in other words Eigen::Matrix&lt;T,S,S&gt;  where S \in unsigned will not work, rather cast static allocation  into Dynamic (heap memory) structure</span></div>
-<div class="line"> </div>
-<div class="line"><span class="keywordtype">int</span> main(){</div>
-<div class="line">    { <span class="comment">// CREATE - WRITE</span></div>
-<div class="line">        Matrix&lt;short&gt; M(2,3);                                       <span class="comment">// create a matrix</span></div>
-<div class="line">        h5::fd_t fd = h5::create(<span class="stringliteral">&quot;linalg.h5&quot;</span>,H5F_ACC_TRUNC);    <span class="comment">// and a file</span></div>
-<div class="line">        h5::ds_t ds = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;create then write&quot;</span></div>
-<div class="line">                ,h5::current_dims{10,20}</div>
-<div class="line">                ,h5::max_dims{10,H5S_UNLIMITED}</div>
-<div class="line">                ,h5::chunk{2,3} | h5::fill_value&lt;short&gt;{3} |  h5::gzip{9}</div>
-<div class="line">        );</div>
-<div class="line">        <a id="a0" name="a0"></a><a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>( ds,  M, h5::offset{2,2}, h5::stride{1,3}  );</div>
-<div class="line">    }</div>
-<div class="line"> </div>
+<div class="line">    <span class="comment">// matrix ────────────────────────────────────────────────────────────────</span></div>
 <div class="line">    {</div>
-<div class="line">        Colvec&lt;float&gt; V(8);                               <span class="comment">// create a vector</span></div>
-<div class="line">        <span class="comment">// simple one shot write that computes current dimensions and saves matrix</span></div>
-<div class="line">        <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>( <span class="stringliteral">&quot;linalg.h5&quot;</span>, <span class="stringliteral">&quot;one shot create write&quot;</span>,  V);</div>
-<div class="line">        <span class="comment">// what if you want to position a matrix inside a higher dimension with some added complexity?  </span></div>
-<div class="line">        <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>( <span class="stringliteral">&quot;linalg.h5&quot;</span>, <span class="stringliteral">&quot;arma vec inside matrix&quot;</span>,  V <span class="comment">// object contains &#39;count&#39; and rank being written</span></div>
-<div class="line">            ,h5::current_dims{40,50}  <span class="comment">// control file_space directly where you want to place vector</span></div>
-<div class="line">            ,h5::offset{5,0}            <span class="comment">// when no explicit current dimension given current dimension := offset .+ object_dim .* stride (hadamard product)  </span></div>
-<div class="line">            ,h5::count{1,1}, h5::stride{4,4}, h5::block{3,3}</div>
-<div class="line">            ,h5::max_dims{40,H5S_UNLIMITED}  <span class="comment">// wouldn&#39;t it be nice to have unlimited dimension? if no explicit chunk is set, then the object dimension </span></div>
-<div class="line">                             <span class="comment">// is used as unit chunk</span></div>
-<div class="line">        );</div>
+<div class="line">        Matrix&lt;double&gt; M = Matrix&lt;double&gt;::Random(3, 4);</div>
+<div class="line">        h5::write(fd, <span class="stringliteral">&quot;/eigen/mat&quot;</span>, M);</div>
+<div class="line">        <span class="keyword">auto</span> back = h5::read&lt;Matrix&lt;double&gt;&gt;(fd, <span class="stringliteral">&quot;/eigen/mat&quot;</span>);</div>
+<div class="line">        <span class="keywordtype">bool</span> shape  = (back.rows() == M.rows()) &amp;&amp; (back.cols() == M.cols());</div>
+<div class="line">        <span class="keywordtype">bool</span> values = shape &amp;&amp; M.isApprox(back, 0.0);</div>
+<div class="line">        check(<span class="stringliteral">&quot;Eigen::Matrix&lt;double&gt;(3x4)   shape + values&quot;</span>, shape &amp;&amp; values);</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    { <span class="comment">// CREATE - READ: we&#39;re reading back the dataset created in the very first step</span></div>
-<div class="line">      <span class="comment">// note that data is only data, can be reshaped, cast to any format and content be modified through filtering </span></div>
-<div class="line">        <span class="keyword">auto</span> fd = h5::open(<span class="stringliteral">&quot;linalg.h5&quot;</span>, H5F_ACC_RDWR,           <span class="comment">// you can have multiple fd open with H5F_ACC_RDONLY, but single write</span></div>
-<div class="line">                h5::fclose_degree_strong | h5::sec2);          <span class="comment">// and able to set various properties  </span></div>
+<div class="line">    <span class="comment">// array ─────────────────────────────────────────────────────────────────</span></div>
+<div class="line">    {</div>
+<div class="line">        Array&lt;float&gt; A(2, 5);</div>
+<div class="line">        <span class="keywordflow">for</span> (Eigen::Index r = 0; r &lt; A.rows(); ++r)</div>
+<div class="line">            <span class="keywordflow">for</span> (Eigen::Index c = 0; c &lt; A.cols(); ++c)</div>
+<div class="line">                A(r, c) = float(r * A.cols() + c);</div>
+<div class="line">        h5::write(fd, <span class="stringliteral">&quot;/eigen/array&quot;</span>, A);</div>
+<div class="line">        <span class="keyword">auto</span> back = h5::read&lt;Array&lt;float&gt;&gt;(fd, <span class="stringliteral">&quot;/eigen/array&quot;</span>);</div>
+<div class="line">        <span class="keywordtype">bool</span> shape  = (back.rows() == A.rows()) &amp;&amp; (back.cols() == A.cols());</div>
+<div class="line">        <span class="keywordtype">bool</span> values = shape &amp;&amp; ((A == back).all());</div>
+<div class="line">        check(<span class="stringliteral">&quot;Eigen::Array&lt;float&gt;(2x5)     shape + values&quot;</span>, shape &amp;&amp; values);</div>
 <div class="line">    }</div>
-<div class="line">    { <span class="comment">// READ: </span></div>
-<div class="line">        Matrix&lt;short&gt; M = h5::read&lt;Matrix&lt;short&gt;&gt;(<span class="stringliteral">&quot;linalg.h5&quot;</span>,<span class="stringliteral">&quot;create then write&quot;</span>); <span class="comment">// read entire dataset back with a single read</span></div>
-<div class="line">        <a id="_a1" name="_a1"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; M &lt;&lt; <a id="a2" name="a2"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>;</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// column-vector via Matrix(n, 1) ─────────────────────────────────────────</span></div>
+<div class="line">    {</div>
+<div class="line">        Matrix&lt;double&gt; v(8, 1);</div>
+<div class="line">        <span class="keywordflow">for</span> (Eigen::Index i = 0; i &lt; v.rows(); ++i) v(i, 0) = i + 1.0;</div>
+<div class="line">        h5::write(fd, <span class="stringliteral">&quot;/eigen/colvec&quot;</span>, v);</div>
+<div class="line">        <span class="keyword">auto</span> back = h5::read&lt;Matrix&lt;double&gt;&gt;(fd, <span class="stringliteral">&quot;/eigen/colvec&quot;</span>);</div>
+<div class="line">        <span class="keywordtype">bool</span> shape  = (back.rows() == v.rows()) &amp;&amp; (back.cols() == v.cols());</div>
+<div class="line">        <span class="keywordtype">bool</span> values = shape &amp;&amp; v.isApprox(back, 0.0);</div>
+<div class="line">        check(<span class="stringliteral">&quot;Eigen column-vec(8x1)        shape + values&quot;</span>, shape &amp;&amp; values);</div>
 <div class="line">    }</div>
-<div class="line">    </div>
-<div class="line">    { <span class="comment">// fixed/compile time  length arrays/matrices upto size 4 </span></div>
-<div class="line">        <span class="keyword">auto</span> fd = h5::open(<span class="stringliteral">&quot;linalg.h5&quot;</span>, H5F_ACC_RDWR);</div>
-<div class="line">        ArrayX1D&lt;double&gt; x1d = ArrayX1D&lt;double&gt;::Zero(10);</div>
-<div class="line">        <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd, <span class="stringliteral">&quot;/x1d &quot;</span>,  x1d);</div>
-<div class="line">        ArrayX3D&lt;float&gt; x3d = ArrayX3D&lt;float&gt;::Zero(10,3); <span class="comment">// first dimension is fixed size</span></div>
-<div class="line">        <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd, <span class="stringliteral">&quot;/x3d&quot;</span>,  x3d);</div>
-<div class="line">    }</div>
+<div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="line"> </div>
 <div class="ttc" id="abasic_ostream_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a></div></div>
-<div class="ttc" id="aendl_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a></div><div class="ttdeci">T endl(T... args)</div></div>
-<div class="ttc" id="agroup__io-write_html_gaeedb492b2edeecb66043852ed8b59552"><div class="ttname"><a href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a></div><div class="ttdeci">void write(const h5::ds_t &amp;ds, const h5::sp_t &amp;mem_space, const h5::sp_t &amp;file_space, const h5::dxpl_t &amp;dxpl, const T *ptr)</div><div class="ttdoc">write the memory content of const T* ptr with given mem_space into file_space of the dataset</div><div class="ttdef"><b>Definition</b> H5Dwrite.hpp:23</div></div>
-<div class="ttc" id="anamespacestd_html"><div class="ttname"><a href="http://en.cppreference.com/w/namespacestd.html">std</a></div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- HTML footer for doxygen 1.9.x — H5CPP -->

@@ -16,7 +16,6 @@ var NAVTREEINDEX0 =
 "independent_8cpp-example.html":[8,2],
 "index.html":[],
 "itpp_8cpp-example.html":[8,18],
-"kita_8cpp-example.html":[8,23],
 "link_base_template_types.html":[7],
 "link_conversion_policy.html":[2],
 "link_error_handler.html":[1],

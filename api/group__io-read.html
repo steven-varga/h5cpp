@@ -153,7 +153,7 @@ template&lt;class T , class... args_t&gt; </div>
 <div class="line">h5::ds_t ds = h5::open(fd,<span class="stringliteral">&quot;path/to/dataset&quot;</span>);</div>
 <div class="line"><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;float&gt;</a> myvec(10*10);</div>
 <div class="line"><span class="keyword">auto</span> err = <a class="code hl_function" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a>( fd, <span class="stringliteral">&quot;path/to/dataset&quot;</span>, myvec.data(), h5::count{10,10}, h5::offset{5,0} );  </div>
-<div class="ttc" id="agroup__io-read_html_ga344b644b6bdcfdfd5fd3c397cc0e2e7f"><div class="ttname"><a href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a></div><div class="ttdeci">std::enable_if_t&lt;!std::is_same_v&lt; T, char ** &gt;, void &gt; read(const h5::ds_t &amp;ds, T *ptr, args_t &amp;&amp;... args)</div><div class="ttdef"><b>Definition</b> H5Dread.hpp:35</div></div>
+<div class="ttc" id="agroup__io-read_html_ga344b644b6bdcfdfd5fd3c397cc0e2e7f"><div class="ttname"><a href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a></div><div class="ttdeci">std::enable_if_t&lt;!std::is_same_v&lt; T, char ** &gt;, void &gt; read(const h5::ds_t &amp;ds, T *ptr, args_t &amp;&amp;... args)</div><div class="ttdef"><b>Definition</b> H5Dread.hpp:36</div></div>
 <div class="ttc" id="avector_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a></div></div>
 </div><!-- fragment --> <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -175,18 +175,18 @@ template&lt;class T , class... args_t&gt; </div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>void — errors are reported by throwing <code>h5::error</code> derived exceptions </dd></dl>
-<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="collective_8cpp-example.html#a6">collective.cpp</a>, <a class="el" href="independent_8cpp-example.html#a6">independent.cpp</a>, <a class="el" href="optimized_8cpp-example.html#a0">optimized.cpp</a>, and <a class="el" href="throughput_8cpp-example.html#a13">throughput.cpp</a>.</dd>
+<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="collective_8cpp-example.html#a2">collective.cpp</a>, <a class="el" href="independent_8cpp-example.html#a2">independent.cpp</a>, and <a class="el" href="throughput_8cpp-example.html#a10">throughput.cpp</a>.</dd>
 </dl>
 
 </div>
 </div>
-<a id="gab77406c926f6f73453dc96ea3f21719c" name="gab77406c926f6f73453dc96ea3f21719c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gab77406c926f6f73453dc96ea3f21719c">&#9670;&#160;</a></span>read() <span class="overload">[2/9]</span></h2>
+<a id="ga1fff208b02f8e8ad5a1993f9175eb874" name="ga1fff208b02f8e8ad5a1993f9175eb874"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga1fff208b02f8e8ad5a1993f9175eb874">&#9670;&#160;</a></span>read() <span class="overload">[2/9]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class T , class... args_t&gt; </div>
+template&lt;class T , class... args_t, class  = std::enable_if_t&lt;arg::tpos&lt;const h5::count_t&amp;, const args_t&amp;...&gt;::present&gt;&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -392,13 +392,13 @@ template&lt;class T , class... args_t&gt; </div>
 
 </div>
 </div>
-<a id="gad87746fcc40b8cd9aa66a5a14ad4fe7d" name="gad87746fcc40b8cd9aa66a5a14ad4fe7d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gad87746fcc40b8cd9aa66a5a14ad4fe7d">&#9670;&#160;</a></span>read() <span class="overload">[5/9]</span></h2>
+<a id="ga73b7a86951dfc30509b98ea4b18048b4" name="ga73b7a86951dfc30509b98ea4b18048b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga73b7a86951dfc30509b98ea4b18048b4">&#9670;&#160;</a></span>read() <span class="overload">[5/9]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class T , class... args_t&gt; </div>
+template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!h5::meta::is_sparse_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">void h5::read </td>
@@ -455,13 +455,13 @@ template&lt;class T , class... args_t&gt; </div>
 
 </div>
 </div>
-<a id="ga77589727d7b1fa25926ddfca311a2d3b" name="ga77589727d7b1fa25926ddfca311a2d3b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga77589727d7b1fa25926ddfca311a2d3b">&#9670;&#160;</a></span>read() <span class="overload">[6/9]</span></h2>
+<a id="gab2643be4500e952b7d98479666ecd458" name="gab2643be4500e952b7d98479666ecd458"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gab2643be4500e952b7d98479666ecd458">&#9670;&#160;</a></span>read() <span class="overload">[6/9]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class T , class... args_t&gt; </div>
+template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!h5::meta::is_sparse_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">void h5::read </td>
@@ -517,19 +517,19 @@ template&lt;class T , class... args_t&gt; </div>
 
 </div>
 </div>
-<a id="ga517b0cc601e051121c3a35a821cb84d3" name="ga517b0cc601e051121c3a35a821cb84d3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga517b0cc601e051121c3a35a821cb84d3">&#9670;&#160;</a></span>read() <span class="overload">[7/9]</span></h2>
+<a id="ga8f2d3389183d67664a49c8a72a08b7e4" name="ga8f2d3389183d67664a49c8a72a08b7e4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga8f2d3389183d67664a49c8a72a08b7e4">&#9670;&#160;</a></span>read() <span class="overload">[7/9]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class T , class D  = typename impl::decay&lt;T&gt;::type, class... args_t&gt; </div>
+template&lt;class T , class... args_t&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::enable_if_t&lt;!std::is_same_v&lt; D, <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &gt;, T &gt; h5::read </td>
+          <td class="memname">T h5::read </td>
           <td>(</td>
           <td class="paramtype">const h5::ds_t &amp;&#160;</td>
           <td class="paramname"><em>ds</em>, </td>
@@ -574,13 +574,13 @@ template&lt;class T , class D  = typename impl::decay&lt;T&gt;::type, class... a
 
 </div>
 </div>
-<a id="ga7178294054fa34c013ea111c43570a69" name="ga7178294054fa34c013ea111c43570a69"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga7178294054fa34c013ea111c43570a69">&#9670;&#160;</a></span>read() <span class="overload">[8/9]</span></h2>
+<a id="gaa8c1205da4ec11aca2168a83b8e990d8" name="gaa8c1205da4ec11aca2168a83b8e990d8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gaa8c1205da4ec11aca2168a83b8e990d8">&#9670;&#160;</a></span>read() <span class="overload">[8/9]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class T , class... args_t&gt; </div>
+template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!h5::meta::is_sparse_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -638,13 +638,13 @@ template&lt;class T , class... args_t&gt; </div>
 
 </div>
 </div>
-<a id="ga3262eb4aab2431d432ce5c19dcfc50d1" name="ga3262eb4aab2431d432ce5c19dcfc50d1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga3262eb4aab2431d432ce5c19dcfc50d1">&#9670;&#160;</a></span>read() <span class="overload">[9/9]</span></h2>
+<a id="gad92358502d3214230d14a5b367ba8dbf" name="gad92358502d3214230d14a5b367ba8dbf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#gad92358502d3214230d14a5b367ba8dbf">&#9670;&#160;</a></span>read() <span class="overload">[9/9]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class T , class... args_t&gt; </div>
+template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!h5::meta::is_sparse_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">

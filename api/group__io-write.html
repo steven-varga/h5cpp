@@ -178,8 +178,6 @@ template&lt;class T &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="arma_8cpp-example.html#a0">arma.cpp</a>, <a class="el" href="attributes_8cpp-example.html#a1">attributes.cpp</a>, <a class="el" href="blaze_8cpp-example.html#a0">blaze.cpp</a>, <a class="el" href="blitz_8cpp-example.html#a0">blitz.cpp</a>, <a class="el" href="collective_8cpp-example.html#a4">collective.cpp</a>, <a class="el" href="dlib_8cpp-example.html#a0">dlib.cpp</a>, <a class="el" href="eigen3_8cpp-example.html#a0">eigen3.cpp</a>, <a class="el" href="independent_8cpp-example.html#a4">independent.cpp</a>, <a class="el" href="itpp_8cpp-example.html#a0">itpp.cpp</a>, <a class="el" href="optimized_8cpp-example.html#a1">optimized.cpp</a>, <a class="el" href="struct_8cpp-example.html#a0">struct.cpp</a>, <a class="el" href="throughput_8cpp-example.html#a6">throughput.cpp</a>, <a class="el" href="transform_8cpp-example.html#a0">transform.cpp</a>, and <a class="el" href="ublas_8cpp-example.html#a0">ublas.cpp</a>.</dd>
-</dl>
 
 </div>
 </div>
@@ -259,13 +257,12 @@ The following arguments are context sensitive, may be passed in arbitrary order 
 <b>example:</b> </p><div class="fragment"><div class="line"><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;int&gt;</a> data = ...</div>
 <div class="line"><span class="comment">//creates an extendable, chunked dataset, with initial size matching of the vector</span></div>
 <div class="line">h5::fd_t fd = h5::open(<span class="stringliteral">&quot;example.h5&quot;</span>, H5F_ACC_RDWR);</div>
-<div class="line">h5::ds_t ds = <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd, <span class="stringliteral">&quot;path/chunked layout dataset&quot;</span>, data,</div>
+<div class="line">h5::ds_t ds = h5::write(fd, <span class="stringliteral">&quot;path/chunked layout dataset&quot;</span>, data,</div>
 <div class="line">        h5::max_dims{H5S_UNLIMITED}, h5::chunk{1024} | h5::gzip{9});</div>
 <div class="line"><span class="comment">//creates a contiguous layout dataset, with size matching `data` </span></div>
-<div class="line">h5::ds_t ds = <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd, <span class="stringliteral">&quot;path/contiguous layout dataset&quot;</span>, data);</div>
+<div class="line">h5::ds_t ds = h5::write(fd, <span class="stringliteral">&quot;path/contiguous layout dataset&quot;</span>, data);</div>
 <div class="line"><span class="comment">//interop with HDF5 CAPI: will flush dataset `ds` by directly calling libhdf5 function</span></div>
 <div class="line">H5Dflush(ds); </div>
-<div class="ttc" id="agroup__io-write_html_gaeedb492b2edeecb66043852ed8b59552"><div class="ttname"><a href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a></div><div class="ttdeci">void write(const h5::ds_t &amp;ds, const h5::sp_t &amp;mem_space, const h5::sp_t &amp;file_space, const h5::dxpl_t &amp;dxpl, const T *ptr)</div><div class="ttdoc">write the memory content of const T* ptr with given mem_space into file_space of the dataset</div><div class="ttdef"><b>Definition</b> H5Dwrite.hpp:23</div></div>
 <div class="ttc" id="avector_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a></div></div>
 </div><!-- fragment --> 
 </div>
@@ -276,7 +273,7 @@ The following arguments are context sensitive, may be passed in arbitrary order 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!std::is_pointer_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </div>
+template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!std::is_pointer_v&lt;std::decay_t&lt;T&gt;&gt; || std::is_array_v&lt;T&gt;&gt;&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -313,7 +310,7 @@ template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!std::is_poi
 </div><div class="memdoc">
 
 <p>writes data within an HDF5 container specified with <code>h5::fd_t</code> descriptor By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block <br  />
- This template specialization acts as a switchboard between objects with <b>contiguous</b> content, such as <code><a class="elRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt;int&gt;</code> and objects where the actual content maybe scattered in memory. In the altter case with the help of <code>h5::gather</code> operator, and O(n) complexity this template builds a vector of pointers to actual content, and delegates it to <code><a class="el" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552" title="write the memory content of const T* ptr with given mem_space into file_space of the dataset">h5::write</a>&lt;element_t*&gt;(.., ptr**)</code> call. </p>
+ This template specialization acts as a switchboard between objects with <b>contiguous</b> content, such as <code><a class="elRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt;int&gt;</code> and objects where the actual content maybe scattered in memory. In the altter case with the help of <code>h5::gather</code> operator, and O(n) complexity this template builds a vector of pointers to actual content, and delegates it to <code>h5::write&lt;element_t*&gt;(.., ptr**)</code> call. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">ds</td><td>valid h5::ds_t descriptor </td></tr>
@@ -356,22 +353,22 @@ The following arguments are context sensitive, may be passed in arbitrary order 
 <b>example:</b> </p><div class="fragment"><div class="line"><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;int&gt;</a> data = ...</div>
 <div class="line"><span class="comment">//creates an extendable, chunked dataset, with initial size matching of the vector</span></div>
 <div class="line">h5::fd_t fd = h5::open(<span class="stringliteral">&quot;example.h5&quot;</span>, H5F_ACC_RDWR);</div>
-<div class="line">h5::ds_t ds = <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd, <span class="stringliteral">&quot;path/chunked layout dataset&quot;</span>, data,</div>
+<div class="line">h5::ds_t ds = h5::write(fd, <span class="stringliteral">&quot;path/chunked layout dataset&quot;</span>, data,</div>
 <div class="line">        h5::max_dims{H5S_UNLIMITED}, h5::chunk{1024} | h5::gzip{9});</div>
 <div class="line"><span class="comment">//creates a contiguous layout dataset, with size matching `data` </span></div>
-<div class="line">h5::ds_t ds = <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd, <span class="stringliteral">&quot;path/contiguous layout dataset&quot;</span>, data);</div>
+<div class="line">h5::ds_t ds = h5::write(fd, <span class="stringliteral">&quot;path/contiguous layout dataset&quot;</span>, data);</div>
 <div class="line"><span class="comment">//interop with HDF5 CAPI: will flush dataset `ds` by directly calling libhdf5 function</span></div>
 <div class="line">H5Dflush(ds); </div>
 </div><!-- fragment --> 
 </div>
 </div>
-<a id="gaf88f87d3ec00918118b8f5492735dcb3" name="gaf88f87d3ec00918118b8f5492735dcb3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#gaf88f87d3ec00918118b8f5492735dcb3">&#9670;&#160;</a></span>write() <span class="overload">[4/6]</span></h2>
+<a id="ga7d649fabf505b2787069b8f7766b18ae" name="ga7d649fabf505b2787069b8f7766b18ae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ga7d649fabf505b2787069b8f7766b18ae">&#9670;&#160;</a></span>write() <span class="overload">[4/6]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class T , class... args_t&gt; </div>
+template&lt;<a class="elRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> N, class... args_t&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -391,8 +388,8 @@ template&lt;class T , class... args_t&gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const T *&#160;</td>
-          <td class="paramname"><em>ptr</em>, </td>
+          <td class="paramtype">const char(&amp;)&#160;</td>
+          <td class="paramname"><em>ref</em>[N], </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -452,7 +449,7 @@ The following arguments are context sensitive, may be passed in arbitrary order 
 <b>example:</b> </p><div class="fragment"><div class="line"><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;int&gt;</a> vec(10&#39;000);</div>
 <div class="line">h5::fd_t fd = h5::open(<span class="stringliteral">&quot;example.h5&quot;</span>, H5F_ACC_RDWR);</div>
 <div class="line"><span class="comment">// dataset will be created with the dimensions specified</span></div>
-<div class="line">h5::ds_t ds = <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd, <span class="stringliteral">&quot;path/dataset from direct memory&quot;</span>, <span class="keywordtype">object</span>.data(),</div>
+<div class="line">h5::ds_t ds = h5::write(fd, <span class="stringliteral">&quot;path/dataset from direct memory&quot;</span>, <span class="keywordtype">object</span>.data(),</div>
 <div class="line">    h5::current_dims{vec.length()}, h5::max_dims{H5S_UNLIMITED}, h5::chunk{1024} | h5::gzip{9});</div>
 </div><!-- fragment --> 
 </div>
@@ -463,7 +460,7 @@ The following arguments are context sensitive, may be passed in arbitrary order 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!std::is_pointer_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </div>
+template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!std::is_pointer_v&lt;std::decay_t&lt;T&gt;&gt;			                      &amp;&amp; !h5::meta::is_sparse_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -544,7 +541,7 @@ The following arguments are context sensitive, may be passed in arbitrary order 
 <b>example:</b> </p><div class="fragment"><div class="line"><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;int&gt;</a> vec(10&#39;000);</div>
 <div class="line">h5::fd_t fd = h5::open(<span class="stringliteral">&quot;example.h5&quot;</span>, H5F_ACC_RDWR);</div>
 <div class="line"><span class="comment">// dataset will be created with the dimensions specified</span></div>
-<div class="line">h5::ds_t ds = <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(fd, <span class="stringliteral">&quot;path/dataset from direct memory&quot;</span>, <span class="keywordtype">object</span>.data(),</div>
+<div class="line">h5::ds_t ds = h5::write(fd, <span class="stringliteral">&quot;path/dataset from direct memory&quot;</span>, <span class="keywordtype">object</span>.data(),</div>
 <div class="line">    h5::current_dims{vec.length()}, h5::max_dims{H5S_UNLIMITED}, h5::chunk{1024} | h5::gzip{9});</div>
 </div><!-- fragment --> 
 </div>
@@ -628,10 +625,10 @@ The following arguments are context sensitive, may be passed in arbitrary order 
     <tr><td class="paramname">h5::lcpl_t</td><td>link control property list, controls how path is created when applicabl <br  />
 <b>example:</b> <div class="fragment"><div class="line"><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;int&gt;</a> data = ...</div>
 <div class="line"><span class="comment">//creates an extendable, chunked dataset, with initial size matching of the vector</span></div>
-<div class="line">h5::ds_t ds = <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(<span class="stringliteral">&quot;example.h5&quot;</span>, <span class="stringliteral">&quot;path/chunked layout dataset&quot;</span>, data,</div>
+<div class="line">h5::ds_t ds = h5::write(<span class="stringliteral">&quot;example.h5&quot;</span>, <span class="stringliteral">&quot;path/chunked layout dataset&quot;</span>, data,</div>
 <div class="line">        h5::max_dims{H5S_UNLIMITED}, h5::chunk{1024} | h5::gzip{9});</div>
 <div class="line"><span class="comment">//creates a contiguous layout dataset, with size matching `data` </span></div>
-<div class="line">h5::ds_t ds = <a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>(<span class="stringliteral">&quot;example.h5&quot;</span>, <span class="stringliteral">&quot;path/contiguous layout dataset&quot;</span>, data);</div>
+<div class="line">h5::ds_t ds = h5::write(<span class="stringliteral">&quot;example.h5&quot;</span>, <span class="stringliteral">&quot;path/contiguous layout dataset&quot;</span>, data);</div>
 <div class="line"><span class="comment">//interop with HDF5 CAPI: will flush dataset `ds` by directly calling libhdf5 function</span></div>
 <div class="line">H5Dflush(ds); </div>
 </div><!-- fragment --> </td></tr>

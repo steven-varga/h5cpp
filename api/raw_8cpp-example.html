@@ -104,61 +104,134 @@ $(document).ready(function(){initNavTree('raw_8cpp-example.html',''); initResiza
   <div class="headertitle"><div class="title">raw.cpp</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada</span></div>
-<div class="line"><span class="comment"> * Author: Varga, Steven &lt;steven@vargaconsulting.ca&gt;</span></div>
-<div class="line"><span class="comment"> */</span></div>
+<div class="fragment"><div class="line"><span class="comment">// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Raw-pointer read/write surface.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Most h5cpp examples pass containers (arma::mat, std::vector, ...) so the</span></div>
+<div class="line"><span class="comment">// library can deduce shape, element type, and storage from the access traits.</span></div>
+<div class="line"><span class="comment">// When you only have a bare pointer and a length, you opt out of that</span></div>
+<div class="line"><span class="comment">// machinery and supply the dataspace yourself via h5::count / h5::offset.</span></div>
+<div class="line"><span class="comment">// That&#39;s what this example demonstrates.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Two distinct stories are layered here:</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">//   1. Dataset creation with the full positional argument set:</span></div>
+<div class="line"><span class="comment">//      h5::create&lt;T&gt;(fd, &quot;...&quot;, current_dims, max_dims, lcpl, dcpl, dapl).</span></div>
+<div class="line"><span class="comment">//      Showing the optional argument vocabulary as a single block.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">//   2. h5::write&lt;T&gt;(fd, &quot;...&quot;, ptr, h5::count{...}, [h5::offset{...}])</span></div>
+<div class="line"><span class="comment">//      and the symmetric h5::read.  No container — the raw pointer plus the</span></div>
+<div class="line"><span class="comment">//      count/offset describe what to move.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// All reads are verified with the ✔/✘ symbol convention.</span></div>
+<div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;h5cpp/all&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cstddef&gt;</span></div>
-<div class="line"><span class="preprocessor">#define values 0,1,2,3,4,5,6,7,8,9</span></div>
+<div class="line"><span class="preprocessor">#include &lt;cstdint&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;memory&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"> </div>
-<div class="line"><span class="keywordtype">int</span> main(){</div>
-<div class="line">    h5::fd_t fd = h5::create(<span class="stringliteral">&quot;raw.h5&quot;</span>,H5F_ACC_TRUNC);</div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    h5::fd_t fd = h5::create(<span class="stringliteral">&quot;raw.h5&quot;</span>, H5F_ACC_TRUNC);</div>
 <div class="line"> </div>
-<div class="line">    <span class="keywordtype">double</span> ad[] = {values};</div>
-<div class="line">    <span class="keywordtype">double</span>* ptr = <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span>*<span class="keyword">&gt;</span>( calloc(10,<span class="keyword">sizeof</span>(<span class="keywordtype">double</span>)) );</div>
+<div class="line">    <span class="keyword">auto</span> check = [](<span class="keyword">const</span> <span class="keywordtype">char</span>* label, <span class="keywordtype">bool</span> ok) {</div>
+<div class="line">        <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; (ok ? <span class="stringliteral">&quot;✔ ok    &quot;</span> : <span class="stringliteral">&quot;✘ failed&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;  &quot;</span> &lt;&lt; label &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    };</div>
 <div class="line"> </div>
-<div class="line">    { <span class="comment">// dataset create: </span></div>
-<div class="line">        <span class="keyword">auto</span> ds_0 = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;/type/short with inline dcpl&quot;</span>, </div>
-<div class="line">                h5::current_dims{10,20}, h5::max_dims{10,H5S_UNLIMITED},</div>
-<div class="line">                h5::create_path | h5::utf8, <span class="comment">// optional lcpl with this default settings**</span></div>
-<div class="line">                h5::chunk{2,3} | h5::fill_value&lt;short&gt;{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9}, <span class="comment">// optional dcpl</span></div>
-<div class="line">                h5::default_dapl ); <span class="comment">// optional dapl</span></div>
-<div class="line">        <span class="comment">//** lcpl controls how path (or hdf5 name: links) created, `h5::create_path` makes sure that sub paths are created </span></div>
-<div class="line">        <span class="comment">// h5::default_lcpl and h5::lcpl are predifined conveniently such that h5::defeult_lcpl ::= h5::create_path | h5::utf8</span></div>
+<div class="line">    <span class="comment">// ── 1. Dataset creation with the full positional argument vocabulary ────</span></div>
+<div class="line">    <span class="comment">//    Every property list (lcpl / dcpl / dapl) is positional and optional.</span></div>
+<div class="line">    <span class="comment">//    The examples below produce equivalent datasets via different argument</span></div>
+<div class="line">    <span class="comment">//    permutations.</span></div>
+<div class="line">    {</div>
+<div class="line">        <span class="comment">// Inline dcpl built from pipe-chained flags; explicit lcpl + dapl.</span></div>
+<div class="line">        h5::create&lt;short&gt;(fd, <span class="stringliteral">&quot;/type/inline_dcpl&quot;</span>,</div>
+<div class="line">                h5::current_dims{10, 20}, h5::max_dims{10, H5S_UNLIMITED},</div>
+<div class="line">                h5::create_path | h5::utf8,                                      <span class="comment">// lcpl</span></div>
+<div class="line">                h5::chunk{2, 3} | h5::fill_value&lt;short&gt;{42} | h5::fletcher32</div>
+<div class="line">                    | h5::shuffle | h5::nbit | h5::gzip{9},                       <span class="comment">// dcpl</span></div>
+<div class="line">                h5::default_dapl);</div>
 <div class="line"> </div>
-<div class="line">        h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value&lt;short&gt;{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9};</div>
-<div class="line">        <span class="comment">// same as above, default values implicit, dcpl explicit</span></div>
-<div class="line">        <span class="keyword">auto</span> ds_1 = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;/type/short explicit dcpl&quot;</span>, h5::current_dims{10,20}, h5::max_dims{10,H5S_UNLIMITED}, dcpl);</div>
-<div class="line">        <span class="comment">// same as above, default values explicit</span></div>
-<div class="line">        <span class="keyword">auto</span> ds_2 = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;/type/short default dcpl lcpl&quot;</span>, h5::current_dims{10,20}, h5::max_dims{10,H5S_UNLIMITED},</div>
+<div class="line">        <span class="comment">// Same content with the dcpl hoisted into a named variable.</span></div>
+<div class="line">        h5::dcpl_t dcpl = h5::chunk{2, 3} | h5::fill_value&lt;short&gt;{42}</div>
+<div class="line">                        | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9};</div>
+<div class="line">        h5::create&lt;short&gt;(fd, <span class="stringliteral">&quot;/type/named_dcpl&quot;</span>,</div>
+<div class="line">                h5::current_dims{10, 20}, h5::max_dims{10, H5S_UNLIMITED}, dcpl);</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Same as above with every default spelled out.</span></div>
+<div class="line">        h5::create&lt;short&gt;(fd, <span class="stringliteral">&quot;/type/all_defaults_explicit&quot;</span>,</div>
+<div class="line">                h5::current_dims{10, 20}, h5::max_dims{10, H5S_UNLIMITED},</div>
 <div class="line">                h5::default_lcpl, dcpl, h5::default_dapl);</div>
-<div class="line">        <span class="comment">// if only max_dims specified, the current dims is set to max_dims or zero if the dimension is H5S_UNLIMITED</span></div>
-<div class="line">        <span class="comment">// making it suitable storage for packet table </span></div>
-<div class="line">        <span class="keyword">auto</span> ds_3 = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;/type/short max_dims&quot;</span>, h5::max_dims{10,H5S_UNLIMITED}, <span class="comment">// [10 X 0]  </span></div>
-<div class="line">              h5::chunk{10,1} | h5::gzip{9} );</div>
-<div class="line">        <span class="comment">// expandable dataset with compression and chunksize explicitly set</span></div>
-<div class="line">        h5::create&lt;std::string&gt;(fd,<span class="stringliteral">&quot;/types/string with chunk and compression&quot;</span>, h5::max_dims{H5S_UNLIMITED}, h5::chunk{10} | h5::gzip{9} );</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// max_dims alone — current_dims defaults to max_dims with H5S_UNLIMITED</span></div>
+<div class="line">        <span class="comment">// replaced by 0. Suitable as an empty container for packet-table-style</span></div>
+<div class="line">        <span class="comment">// appends.</span></div>
+<div class="line">        h5::create&lt;short&gt;(fd, <span class="stringliteral">&quot;/type/maxdims_only&quot;</span>,</div>
+<div class="line">                h5::max_dims{10, H5S_UNLIMITED},</div>
+<div class="line">                h5::chunk{10, 1} | h5::gzip{9});</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Variable-length strings work the same way.</span></div>
+<div class="line">        h5::create&lt;std::string&gt;(fd, <span class="stringliteral">&quot;/type/vlen_strings&quot;</span>,</div>
+<div class="line">                h5::max_dims{H5S_UNLIMITED}, h5::chunk{10} | h5::gzip{9});</div>
 <div class="line">    }</div>
-<div class="line">    {   <span class="comment">// create + write from 1D memory location into a 2D file space </span></div>
-<div class="line">        h5::write&lt;double&gt;(fd,<span class="stringliteral">&quot;dataset&quot;</span>, ad, h5::count{1,10});</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ── 2. Raw-pointer write into a 2-D filespace ────────────────────────────</span></div>
+<div class="line">    <span class="comment">//    The source is a 1-D `double[10]` on the stack; the destination</span></div>
+<div class="line">    <span class="comment">//    dataset is created as a 1×10 2-D dataspace (h5::count{1, 10}).</span></div>
+<div class="line">    <span class="keywordtype">double</span> src[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};</div>
+<div class="line">    h5::write&lt;double&gt;(fd, <span class="stringliteral">&quot;/dataset&quot;</span>, src, h5::count{1, 10});</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ── 3. Raw-pointer read with an offset into the dataset ─────────────────</span></div>
+<div class="line">    <span class="comment">//    Reads dataset[0, 2..9] (8 elements) and lands them at buf[0..7].</span></div>
+<div class="line">    <span class="comment">//    buf is heap-allocated to make the &quot;raw memory&quot; story explicit; in</span></div>
+<div class="line">    <span class="comment">//    practice you&#39;d use stack storage or std::vector::data().</span></div>
+<div class="line">    <a id="_a1" name="_a1"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr&lt;double[]&gt;</a> buf(<span class="keyword">new</span> <span class="keywordtype">double</span>[10]());        <span class="comment">// zero-init</span></div>
+<div class="line">    h5::read&lt;double&gt;(fd, <span class="stringliteral">&quot;/dataset&quot;</span>, buf.get(),</div>
+<div class="line">            h5::count{1, 8}, h5::offset{0, 2});</div>
+<div class="line"> </div>
+<div class="line">    {</div>
+<div class="line">        <a id="_a2" name="_a2"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> want = {2, 3, 4, 5, 6, 7, 8, 9, 0, 0};</div>
+<div class="line">        <span class="keywordtype">bool</span> ok = <span class="keyword">true</span>;</div>
+<div class="line">        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; ok &amp;&amp; i &lt; 10; ++i) ok = (buf[i] == want[i]);</div>
+<div class="line">        check(<span class="stringliteral">&quot;read offset{0,2} count{1,8} -&gt; buf[0..7]    (tail zero-init)&quot;</span>, ok);</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    {   <span class="comment">// read back to memory location: 2D file space -&gt; 1D mem space from specified offset</span></div>
-<div class="line">        h5::read&lt;double&gt;(fd,<span class="stringliteral">&quot;dataset&quot;</span>, ptr, h5::count{1,8}, h5::offset{0,2} );</div>
-<div class="line"> </div>
-<div class="line">        <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a>&lt;&lt;<span class="stringliteral">&quot;valued read: &quot;</span>;</div>
-<div class="line">            <span class="keywordflow">for</span>(<span class="keywordtype">int</span> i=0; i&lt;10; i++) <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a>&lt;&lt; ptr[i] &lt;&lt;<span class="stringliteral">&quot; &quot;</span>;</div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a>&lt;&lt;<span class="stringliteral">&quot;\n&quot;</span>;</div>
-<div class="line"> </div>
-<div class="line">       <span class="comment">//if you want to change memory offset, manipulate the passed pointer</span></div>
-<div class="line">        h5::read&lt;double&gt;(fd,<span class="stringliteral">&quot;dataset&quot;</span>, ptr+4, h5::count{1,3} );</div>
+<div class="line">    <span class="comment">// ── 4. Read into a non-zero destination offset within the buffer ────────</span></div>
+<div class="line">    <span class="comment">//    Shifting the destination is done by passing buf.get() + 4, not by</span></div>
+<div class="line">    <span class="comment">//    asking HDF5 to do it. h5cpp doesn&#39;t have a &quot;memory offset&quot; knob —</span></div>
+<div class="line">    <span class="comment">//    the pointer IS the offset.</span></div>
+<div class="line">    h5::read&lt;double&gt;(fd, <span class="stringliteral">&quot;/dataset&quot;</span>, buf.get() + 4,</div>
+<div class="line">            h5::count{1, 3});                              <span class="comment">// implicit offset = {0,0}</span></div>
+<div class="line">    {</div>
+<div class="line">        <span class="comment">// buf was {2,3,4,5,6,7,8,9,0,0}.  Reading 3 elements from dataset[0,0..2]</span></div>
+<div class="line">        <span class="comment">// = {0,1,2} into buf+4 overwrites buf[4..6] with {0,1,2}.</span></div>
+<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> want = {2, 3, 4, 5, 0, 1, 2, 9, 0, 0};</div>
+<div class="line">        <span class="keywordtype">bool</span> ok = <span class="keyword">true</span>;</div>
+<div class="line">        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; ok &amp;&amp; i &lt; 10; ++i) ok = (buf[i] == want[i]);</div>
+<div class="line">        check(<span class="stringliteral">&quot;read into buf+4: buf[4..6] = first 3 of file&quot;</span>, ok);</div>
 <div class="line">    }</div>
-<div class="line">    free( ptr );</div>
 <div class="line"> </div>
+<div class="line">    <span class="comment">// ── 5. Stack-array write with implicit 1-D shape ────────────────────────</span></div>
+<div class="line">    <span class="comment">//    Same surface, simpler example: 1-D destination, no offset gymnastics.</span></div>
+<div class="line">    {</div>
+<div class="line">        <a id="_a3" name="_a3"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int32_t</a> out[16];</div>
+<div class="line">        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; 16; ++i) out[i] = i * i;</div>
+<div class="line">        h5::write&lt;std::int32_t&gt;(fd, <span class="stringliteral">&quot;/dataset_1d&quot;</span>, out, h5::count{16});</div>
 <div class="line"> </div>
+<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/types/integer.html">std::int32_t</a> back[16] = {};</div>
+<div class="line">        h5::read&lt;std::int32_t&gt;(fd, <span class="stringliteral">&quot;/dataset_1d&quot;</span>, back, h5::count{16});</div>
+<div class="line">        <span class="keywordtype">bool</span> ok = <span class="keyword">true</span>;</div>
+<div class="line">        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; ok &amp;&amp; i &lt; 16; ++i) ok = (back[i] == i * i);</div>
+<div class="line">        check(<span class="stringliteral">&quot;write/read int32[16] (squares)&quot;</span>, ok);</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 <div class="ttc" id="abasic_ostream_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a></div></div>
+<div class="ttc" id="ainteger_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/types/integer.html">std::int32_t</a></div></div>
+<div class="ttc" id="aunique_ptr_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/memory/unique_ptr.html">std::unique_ptr</a></div></div>
+<div class="ttc" id="avector_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a></div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- HTML footer for doxygen 1.9.x — H5CPP -->

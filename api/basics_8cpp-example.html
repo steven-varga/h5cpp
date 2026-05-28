@@ -104,114 +104,117 @@ $(document).ready(function(){initNavTree('basics_8cpp-example.html',''); initRes
   <div class="headertitle"><div class="title">basics.cpp</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada</span></div>
-<div class="line"><span class="comment"> * Author: Varga, Steven &lt;steven@vargaconsulting.ca&gt;</span></div>
-<div class="line"><span class="comment"> */</span></div>
+<div class="fragment"><div class="line"><span class="comment">// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada</span></div>
+<div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;h5cpp/all&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cstddef&gt;</span></div>
-<div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"></span> </div>
-<div class="line"><span class="comment">basics.cpp:15:74: error: no matching function for call to </span></div>
-<div class="line"><span class="comment">‘h5::impl::prop_t&lt;</span></div>
-<div class="line"><span class="comment">    h5::impl::detail::hid_t&lt;h5::impl::fapl_t, H5Pclose, true, true, true, false&gt;, </span></div>
-<div class="line"><span class="comment">    h5::impl::default_fapl, </span></div>
-<div class="line"><span class="comment">    h5::impl::capi_t&lt;long int, H5F_libver_t, H5F_libver_t&gt;, </span></div>
-<div class="line"><span class="comment">    H5Pset_libver_bounds&gt;</span></div>
-<div class="line"><span class="comment">    ::prop_t(H5F_libver_t, H5F_libver_t)’</span></div>
-<div class="line"><span class="comment">*/</span></div>
+<div class="line"><span class="preprocessor">#include &lt;numeric&gt;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="keywordtype">int</span> main(){</div>
-<div class="line">    <span class="comment">// data type mapped from C/C++ type system to HDF5 through class templates</span></div>
-<div class="line">    <span class="comment">// h5::dt_t&lt;T&gt; hdf5_type_descriptor; </span></div>
+<div class="line">    <span class="comment">// Data types are mapped from the C/C++ type system to HDF5 through class templates.</span></div>
+<div class="line">    <span class="comment">// h5::dt_t&lt;T&gt; creates an HDF5 type descriptor for T.</span></div>
 <div class="line">    {</div>
-<div class="line">        <span class="comment">// default ctor selects H5T_NATIVE_INT through template partial specialization</span></div>
-<div class="line">        <span class="comment">// then obtains an hid_t HDF5 type descriptor through H5copy( H5T_NATIVE_INT )</span></div>
-<div class="line">        <span class="comment">// through template inheritance its behaviour matches the rest of the descriptors</span></div>
-<div class="line">        <span class="comment">// RAII closes resource when leaving scope </span></div>
+<div class="line">        <span class="comment">// The default constructor selects H5T_NATIVE_INT through template partial</span></div>
+<div class="line">        <span class="comment">// specialization, then obtains an hid_t HDF5 type descriptor via H5Tcopy.</span></div>
+<div class="line">        <span class="comment">// Through template inheritance its behaviour matches the rest of the descriptors.</span></div>
+<div class="line">        <span class="comment">// RAII closes the resource when leaving scope.</span></div>
 <div class="line">        h5::dt_t&lt;int&gt; my_int_type;</div>
-<div class="line">        <span class="comment">// depending on conversion policy type id may be implicitly or explicitly cast </span></div>
-<div class="line">        <span class="comment">// to CAPI style HDF5 ID</span></div>
-<div class="line">        hid_t capi_style_id = <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>( my_int_type );</div>
-<div class="line">        <span class="comment">// for types not yet defined you need to register it with thew following macro call:</span></div>
-<div class="line">        <span class="comment">// H5CPP_REGISTER_TYPE(C_COMPOUND_TYPE, HDF5_COMPOUND_TYPE )</span></div>
-<div class="line">        <span class="comment">// which is a template specialization of for given type, see H5Tall.hpp for details</span></div>
-<div class="line">        <span class="comment">//</span></div>
-<div class="line">        H5CPP_CHECK_EQ(  H5Tequal( capi_style_id, H5T_NATIVE_INT),</div>
-<div class="line">                <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/runtime_error.html">std::runtime_error</a>, <span class="stringliteral">&quot;HDF5 type system failure!!! &quot;</span> )</div>
 <div class="line"> </div>
-<div class="line">        <span class="comment">// types have names at compile + runtime</span></div>
-<div class="line">        std::cout &lt;&lt; h5::name&lt;int&gt;::value &lt;&lt; <a id="a1" name="a1"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>; <span class="comment">// prints out type information</span></div>
-<div class="line">        <a id="_a2" name="_a2"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; my_int_type &lt;&lt; <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>; <span class="comment">// prints out type information</span></div>
+<div class="line">        <span class="comment">// Depending on the conversion policy, the type id may be implicitly or explicitly</span></div>
+<div class="line">        <span class="comment">// cast to a C-API-style HDF5 ID.</span></div>
+<div class="line">        hid_t capi_style_id = <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>( my_int_type );</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// For types not yet defined, register them with the following macro:</span></div>
+<div class="line">        <span class="comment">// H5CPP_REGISTER_TYPE(C_COMPOUND_TYPE, HDF5_COMPOUND_TYPE)</span></div>
+<div class="line">        <span class="comment">// This is a template specialization for the given type; see H5Tall.hpp for details.</span></div>
+<div class="line">        <span class="comment">//</span></div>
+<div class="line">        H5CPP_CHECK_EQ( H5Tequal(capi_style_id, H5T_NATIVE_INT),</div>
+<div class="line">                <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/error/runtime_error.html">std::runtime_error</a>, <span class="stringliteral">&quot;HDF5 type system failure!!!&quot;</span> )</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Types have names at compile time and runtime.</span></div>
+<div class="line">        std::cout &lt;&lt; h5::name&lt;int&gt;::value &lt;&lt; <a id="a1" name="a1"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>; <span class="comment">// compile-time type name</span></div>
+<div class="line">        <a id="_a2" name="_a2"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; my_int_type &lt;&lt; <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>;          <span class="comment">// runtime type information</span></div>
 <div class="line">    }</div>
 <div class="line">    {</div>
 <div class="line">        h5::dcpl_t dcpl0 = h5::chunk{12} | h5::gzip{2};</div>
 <div class="line">        h5::dcpl_t dcpl1 = h5::chunk{12} | h5::gzip{2};</div>
 <div class="line">        h5::dcpl_t dcpl = dcpl0 | dcpl1;</div>
 <div class="line">        dcpl0 |= dcpl1;</div>
-<div class="line">        <span class="comment">//H5CPP_CHECK_EQ( sizeof(dcpl) == sizeof(hid_t), </span></div>
-<div class="line">        <span class="comment">//      std::runtime_error, &quot;HDF5 hid_t are not binary equivalent!!!&quot; )</span></div>
 <div class="line">    }</div>
 <div class="line">    <span class="comment">// error handling</span></div>
 <div class="line">    {</div>
-<div class="line">        <a id="a3" name="a3"></a><a class="code hl_function" href="group__file-io.html#ga62435704c4ac64279706bdf3ac1b87a2">h5::mute</a>(); <span class="comment">// to avoid confusion mute CAPI error messages</span></div>
+<div class="line">        <a id="a3" name="a3"></a><a class="code hl_function" href="group__file-io.html#ga62435704c4ac64279706bdf3ac1b87a2">h5::mute</a>(); <span class="comment">// suppress CAPI error messages for expected failures</span></div>
 <div class="line">        <span class="keywordflow">try</span> {</div>
 <div class="line">            h5::dcpl_t dcpl_0 = h5::gzip{79798}; <span class="comment">// invalid argument</span></div>
 <div class="line">        } <span class="keywordflow">catch</span> ( <span class="keyword">const</span> h5::error::any&amp; err ){</div>
-<div class="line">            <a id="_a4" name="_a4"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cerr</a> &lt;&lt; <span class="stringliteral">&quot;THIS ERROR is on PURPOSE: &quot;</span> &lt;&lt; err.what() &lt;&lt;<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>;</div>
+<div class="line">            <a id="_a4" name="_a4"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cerr</a> &lt;&lt; <span class="stringliteral">&quot;THIS ERROR IS INTENTIONAL: &quot;</span> &lt;&lt; err.what() &lt;&lt; <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a>;</div>
 <div class="line">        }</div>
 <div class="line">        <a id="a5" name="a5"></a><a class="code hl_function" href="group__file-io.html#ga458e8a5c14eb562a349fb27704f92fda">h5::unmute</a>();</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    { <span class="comment">// property lists can bae daisy chained with | operator</span></div>
+<div class="line">    { <span class="comment">// Property lists can be daisy-chained with the | operator.</span></div>
 <div class="line">        h5::fcpl_t fcpl = h5::file_space_page_size{4096} | h5::userblock{512};</div>
 <div class="line">        h5::fapl_t fapl = h5::fclose_degree_weak | h5::stdio;</div>
 <div class="line">        <span class="keyword">auto</span> some_prop = h5::libver_bounds({H5F_LIBVER_LATEST, H5F_LIBVER_LATEST});</div>
-<div class="line">        h5::page_buffer_size{{1024,0,0}};</div>
+<div class="line">        (void)some_prop; <span class="comment">// libver_bounds returns an object, keep it alive if used</span></div>
 <div class="line">        h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value&lt;short&gt;{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9};</div>
 <div class="line">        h5::lcpl_t lcpl = h5::create_path | h5::utf8;</div>
-<div class="line">        <span class="comment">// and come with sensible default setting: h5::default_xxxl where xxx ::= hdf5 property name </span></div>
-<div class="line">        <span class="comment">// h5::dapl_t dapl = h5::default_dapl; // compiler error, default values are not assignable, instead create your own as seen above</span></div>
-<div class="line">        <span class="comment">// h5::lcpl_t lcpl = h5::create_path | h5::utf8; </span></div>
+<div class="line">        <span class="comment">// Defaults are available as h5::default_xxxl where xxx is the HDF5 property name.</span></div>
+<div class="line">        <span class="comment">// h5::dapl_t dapl = h5::default_dapl; // compiler error: default values are not assignable.</span></div>
+<div class="line">        <span class="comment">// Instead, create your own as shown above.</span></div>
 <div class="line">    }</div>
-<div class="line">    { <span class="comment">// all resources follow RAII idiom / managed</span></div>
-<div class="line">            h5::fd_t fd = h5::create(<span class="stringliteral">&quot;001.h5&quot;</span>, H5F_ACC_TRUNC);  <span class="comment">// f5::fd_t is managed resource, will call H5Fclose upon leaving code block</span></div>
-<div class="line">            hid_t ref = <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>( fd );               <span class="comment">// static cast to hid_t is always allowed, ref must be treated as managed reference,</span></div>
-<div class="line">            (void)ref;</div>
-<div class="line">            <span class="comment">// must not call CAPI H5Fclose( ref )  on it. This explicit or implicit conversion</span></div>
-<div class="line">                                                            <span class="comment">// is to support CAPI interop.   </span></div>
+<div class="line">    { <span class="comment">// All resources follow the RAII idiom.</span></div>
+<div class="line">        h5::fd_t fd = h5::create(<span class="stringliteral">&quot;001.h5&quot;</span>, H5F_ACC_TRUNC);  <span class="comment">// h5::fd_t is a managed resource; H5Fclose is called on scope exit.</span></div>
+<div class="line">        hid_t ref = <span class="keyword">static_cast&lt;</span>hid_t<span class="keyword">&gt;</span>( fd );               <span class="comment">// static_cast to hid_t is always allowed. Treat ref as a borrowed</span></div>
+<div class="line">        (void)ref;                                          <span class="comment">// reference — do not call H5Fclose(ref) manually.</span></div>
+<div class="line">        <span class="comment">// This explicit or implicit conversion exists to support CAPI interop.</span></div>
 <div class="line">    }</div>
-<div class="line">    { <span class="comment">// file create example: </span></div>
-<div class="line">        <span class="comment">// flags := H5F_ACC_TRUNC | H5F_ACC_EXCL either to truncate or open file exclusively</span></div>
-<div class="line">        <span class="comment">// you may pass CAPI property list descriptors daisy chained with &#39;|&#39; operator </span></div>
+<div class="line">    { <span class="comment">// file creation example:</span></div>
+<div class="line">        <span class="comment">// flags := H5F_ACC_TRUNC | H5F_ACC_EXCL either truncate or open the file exclusively.</span></div>
+<div class="line">        <span class="comment">// CAPI property list descriptors can be daisy-chained with the | operator.</span></div>
 <div class="line">        <span class="keyword">auto</span> fd = h5::create(<span class="stringliteral">&quot;002.h5&quot;</span>, H5F_ACC_TRUNC,</div>
 <div class="line">                h5::file_space_page_size{4096} | h5::userblock{512} );  <span class="comment">// file creation properties</span></div>
-<div class="line">                <span class="comment">//,h5::fclose_degree_weak | h5::fapl_core{2048,1} );     // file access properties</span></div>
-<div class="line">        <span class="comment">// or the c++11 wrapped smart pointer equivalent h5::AP_DEFAULT</span></div>
+<div class="line">                    <span class="comment">//,h5::fclose_degree_weak | h5::fapl_core{2048,1} );  // file access properties</span></div>
+<div class="line">        <span class="comment">// Or use the raw CAPI default property lists:</span></div>
 <div class="line">        h5::create(<span class="stringliteral">&quot;003.h5&quot;</span>, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT );</div>
-<div class="line">        <span class="comment">// file is closed when returning h5::create function, convenient if we don&#39;t proceed with</span></div>
-<div class="line">        <span class="comment">// creating dataset</span></div>
+<div class="line">        <span class="comment">// The file is closed when h5::create returns, which is convenient if we do not</span></div>
+<div class="line">        <span class="comment">// proceed with creating a dataset.</span></div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    { <span class="comment">// dataset create: </span></div>
+<div class="line">    { <span class="comment">// dataset creation:</span></div>
 <div class="line">        <span class="keyword">auto</span> fd = h5::create(<span class="stringliteral">&quot;004.h5&quot;</span>, H5F_ACC_TRUNC );</div>
-<div class="line">        <span class="keyword">auto</span> ds_0 = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;/type/short/tree_0&quot;</span>, </div>
+<div class="line">        <span class="keyword">auto</span> ds_0 = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;/type/short/tree_0&quot;</span>,</div>
 <div class="line">                h5::current_dims{10,20}, h5::max_dims{10,H5S_UNLIMITED},</div>
-<div class="line">                h5::create_path | h5::utf8, <span class="comment">// optional lcpl with this default settings**</span></div>
+<div class="line">                h5::create_path | h5::utf8, <span class="comment">// optional lcpl; default settings are shown above**</span></div>
 <div class="line">                h5::chunk{2,3} | h5::fill_value&lt;short&gt;{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9}, <span class="comment">// optional dcpl</span></div>
 <div class="line">                h5::default_dapl ); <span class="comment">// optional dapl</span></div>
-<div class="line">        <span class="comment">//** lcpl controls how path (or hdf5 name: links) created, `h5::create_path` makes sure that sub paths are created  </span></div>
+<div class="line">        <span class="comment">// ** lcpl controls how paths (or HDF5 names: links) are created. h5::create_path ensures</span></div>
+<div class="line">        <span class="comment">//    that missing intermediate groups are created automatically.</span></div>
 <div class="line">        h5::dcpl_t dcpl = h5::chunk{2,3} | h5::fill_value&lt;short&gt;{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{2};</div>
-<div class="line">        <span class="comment">// same as above, default values implicit, dcpl explicit</span></div>
+<div class="line">        <span class="comment">// same as above, defaults implicit, dcpl explicit</span></div>
 <div class="line">        <span class="keyword">auto</span> ds_1 = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;/type/short/tree_1&quot;</span>, h5::current_dims{10,20}, h5::max_dims{10,H5S_UNLIMITED}, dcpl);</div>
-<div class="line">        <span class="comment">// same as above, default values explicit</span></div>
+<div class="line">        <span class="comment">// same as above, defaults explicit</span></div>
 <div class="line">        <span class="keyword">auto</span> ds_2 = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;/type/short/tree_2&quot;</span>, h5::current_dims{10,20}, h5::max_dims{10,H5S_UNLIMITED},</div>
 <div class="line">                h5::default_lcpl, dcpl, h5::default_dapl);</div>
-<div class="line">        <span class="comment">// if only max_dims specified, the current dims is set to max_dims or zero if the dimension is H5S_UNLIMITED</span></div>
-<div class="line">        <span class="comment">// making it suitable storage for packet table, compression not specified implies no compression</span></div>
-<div class="line">        <span class="comment">// gzip{0} == lowest level of compression!!!</span></div>
-<div class="line">        <span class="keyword">auto</span> ds_3 = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;/type/short/max_dims&quot;</span>, h5::max_dims{10,H5S_UNLIMITED}, <span class="comment">// [10 X 0]  </span></div>
+<div class="line">        <span class="comment">// If only max_dims is specified, current_dims is set to max_dims or to zero when the</span></div>
+<div class="line">        <span class="comment">// dimension is H5S_UNLIMITED, making it suitable for packet-table-style storage.</span></div>
+<div class="line">        <span class="comment">// gzip{0} means the lowest level of compression, not &quot;no compression&quot;.</span></div>
+<div class="line">        <span class="keyword">auto</span> ds_3 = h5::create&lt;short&gt;(fd,<span class="stringliteral">&quot;/type/short/max_dims&quot;</span>, h5::max_dims{10,H5S_UNLIMITED}, <span class="comment">// logical shape: [10 x 0]</span></div>
 <div class="line">              h5::chunk{10,1}  );</div>
+<div class="line">    }</div>
+<div class="line"> </div>
+<div class="line">    { <span class="comment">// writing and reading data:</span></div>
+<div class="line">        <span class="keyword">auto</span> fd = h5::create(<span class="stringliteral">&quot;005.h5&quot;</span>, H5F_ACC_TRUNC );</div>
+<div class="line">        <span class="comment">// In the C API you would create a dataspace, a type, a property list, call H5Dcreate,</span></div>
+<div class="line">        <span class="comment">// then H5Dwrite. In H5CPP the common path is a single call.</span></div>
+<div class="line">        <a id="_a6" name="_a6"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> data(100);</div>
+<div class="line">        <a id="a7" name="a7"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/iota.html">std::iota</a>(data.begin(), data.end(), 0.0);</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// one-shot create + write</span></div>
+<div class="line">        h5::write(fd, <span class="stringliteral">&quot;/dataset&quot;</span>, data, h5::chunk{10} | h5::gzip{2});</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// reading back: H5CPP infers the memory space and allocates the container</span></div>
+<div class="line">        <span class="keyword">auto</span> result = h5::read&lt;std::vector&lt;double&gt;&gt;(fd, <span class="stringliteral">&quot;/dataset&quot;</span>);</div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">}</div>
@@ -219,7 +222,9 @@ $(document).ready(function(){initNavTree('basics_8cpp-example.html',''); initRes
 <div class="ttc" id="aendl_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/manip/endl.html">std::endl</a></div><div class="ttdeci">T endl(T... args)</div></div>
 <div class="ttc" id="agroup__file-io_html_ga458e8a5c14eb562a349fb27704f92fda"><div class="ttname"><a href="group__file-io.html#ga458e8a5c14eb562a349fb27704f92fda">h5::unmute</a></div><div class="ttdeci">void unmute()</div><div class="ttdoc">restores previously saved error handler with h5::mute Read on Error Handling/Exceptions</div><div class="ttdef"><b>Definition</b> H5Eall.hpp:41</div></div>
 <div class="ttc" id="agroup__file-io_html_ga62435704c4ac64279706bdf3ac1b87a2"><div class="ttname"><a href="group__file-io.html#ga62435704c4ac64279706bdf3ac1b87a2">h5::mute</a></div><div class="ttdeci">void mute()</div><div class="ttdoc">removes default error handler preventing diagnostic error messages printed for direct CAPI calls....</div><div class="ttdef"><b>Definition</b> H5Eall.hpp:28</div></div>
+<div class="ttc" id="aiota_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/algorithm/iota.html">std::iota</a></div><div class="ttdeci">T iota(T... args)</div></div>
 <div class="ttc" id="aruntime_error_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/error/runtime_error.html">std::runtime_error</a></div></div>
+<div class="ttc" id="avector_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a></div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- HTML footer for doxygen 1.9.x — H5CPP -->

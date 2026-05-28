@@ -104,103 +104,127 @@ $(document).ready(function(){initNavTree('packettable_8cpp-example.html',''); in
   <div class="headertitle"><div class="title">packettable.cpp</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada</span></div>
-<div class="line"><span class="comment"> * Author: Varga, Steven &lt;steven@vargaconsulting.ca&gt;</span></div>
-<div class="line"><span class="comment"> */</span></div>
-<div class="line"><span class="preprocessor">#define ARMA_DONT_USE_WRAPPER</span></div>
+<div class="fragment"><div class="line"><span class="comment">// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Packet-table writers — append-only streams that buffer up to a chunk&#39;s worth</span></div>
+<div class="line"><span class="comment">// of records in memory and flush when full. The point is the call shape:</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">//     auto pt = h5::create&lt;T&gt;(fd, &quot;...&quot;, h5::max_dims{H5S_UNLIMITED, ...}, h5::chunk{...});</span></div>
+<div class="line"><span class="comment">//     for (auto record : stream) h5::append(pt, record);</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// `h5::pt_t` is just `h5::ds_t` with a thin write-cache layered on top, so</span></div>
+<div class="line"><span class="comment">// every dataset creation flag — `h5::chunk`, `h5::gzip`, `h5::fill_value`, ...</span></div>
+<div class="line"><span class="comment">// — applies unchanged.</span></div>
+<div class="line"> </div>
+<div class="line"><span class="preprocessor">#include &lt;Eigen/Dense&gt;</span>          <span class="comment">// include before h5cpp/all to enable the eigen mapper</span></div>
 <div class="line"><span class="preprocessor">#include &lt;armadillo&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;Eigen/Dense&gt;</span> <span class="comment">// must include Eigen before &lt;h5cpp/core&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;h5cpp/all&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &quot;generated.h&quot;</span>          <span class="comment">// registers sn::example::Record via H5CPP_REGISTER_STRUCT</span></div>
 <div class="line"> </div>
-<div class="line"><span class="preprocessor">#include &lt;cstdint&gt;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;numeric&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &quot;struct.h&quot;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;h5cpp/core&gt;</span></div>
-<div class="line">    <span class="comment">// generated file must be sandwiched between core and io </span></div>
-<div class="line">    <span class="comment">// to satisfy template dependencies in &lt;h5cpp/io&gt;  </span></div>
-<div class="line"><span class="preprocessor">    #include &quot;generated.h&quot;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;h5cpp/io&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &quot;utils.hpp&quot;</span></div>
+<div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
 <div class="line"> </div>
-<div class="line"><span class="keyword">template</span>&lt;<span class="keyword">class</span> T&gt; <span class="keyword">using </span>Matrix   = Eigen::Matrix&lt;T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor&gt;;</div>
+<div class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> T&gt; <span class="keyword">using </span>RowMajor = Eigen::Matrix&lt;T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor&gt;;</div>
 <div class="line"> </div>
-<div class="line"><span class="keywordtype">int</span> main(){</div>
+<div class="line"><span class="keywordtype">int</span> main() {</div>
+<div class="line">    <span class="keyword">auto</span> fd = h5::create(<span class="stringliteral">&quot;packettable.h5&quot;</span>, H5F_ACC_TRUNC);</div>
 <div class="line"> </div>
-<div class="line">    h5::fd_t fd = h5::create(<span class="stringliteral">&quot;example.h5&quot;</span>,H5F_ACC_TRUNC);</div>
+<div class="line">    <span class="keyword">auto</span> check = [](<span class="keyword">const</span> <span class="keywordtype">char</span>* label, <span class="keywordtype">bool</span> ok) {</div>
+<div class="line">        <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; (ok ? <span class="stringliteral">&quot;✔ ok    &quot;</span> : <span class="stringliteral">&quot;✘ failed&quot;</span>) &lt;&lt; <span class="stringliteral">&quot;  &quot;</span> &lt;&lt; label &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    };</div>
 <div class="line"> </div>
-<div class="line">    <span class="comment">// SCALAR: integral</span></div>
-<div class="line">    <span class="comment">// The motivation behind this example to allow 2D frames be recorded into a stream</span></div>
-<div class="line">    <span class="comment">// 3x5 is the frame or image size, with 2 planes. </span></div>
-<div class="line">    <span class="keywordflow">try</span> { <span class="comment">// centrally used error handling</span></div>
-<div class="line">        <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;int&gt;</a> stream(83);</div>
-<div class="line">        <a id="a1" name="a1"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/iota.html">std::iota</a>(<a id="a2" name="a2"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/begin.html">std::begin</a>(stream), <a id="a3" name="a3"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/end.html">std::end</a>(stream), 1);</div>
-<div class="line">        <span class="comment">// the leading dimension is extended once chunk is full, chunk is filled in row major order</span></div>
-<div class="line">        <span class="comment">// zero copy writes directly to chunk buffer then pushed through filter chain if specified</span></div>
-<div class="line">        <span class="comment">// works up to H5CPP_MAX_RANK default to 7</span></div>
-<div class="line">        <span class="comment">// last chunk if partial filled with h5::fill_value&lt;T&gt;( some_value )  </span></div>
-<div class="line">        h5::pt_t pt = h5::create&lt;int&gt;(fd, <span class="stringliteral">&quot;stream of integral 01&quot;</span>,</div>
-<div class="line">                 h5::max_dims{H5S_UNLIMITED,3,5}, h5::chunk{2,3,5} | h5::gzip{9} | h5::fill_value&lt;int&gt;(3) );</div>
-<div class="line">        <span class="keywordflow">for</span>( <span class="keyword">auto</span> record : stream )</div>
-<div class="line">            h5::append(pt, record);</div>
-<div class="line">        <span class="comment">//auto M = h5::read&lt;arma::mat&gt;(fd,&quot;stream of integral&quot; );</span></div>
-<div class="line">    } <span class="keywordflow">catch</span> ( <span class="keyword">const</span> h5::error::any&amp; e ){</div>
-<div class="line">        <a id="_a4" name="_a4"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cerr</a> &lt;&lt; <span class="stringliteral">&quot;ERROR:&quot;</span> &lt;&lt; e.what();</div>
+<div class="line">    <span class="comment">// Packet-table aligns the on-disk extent to chunk boundaries.  Streams</span></div>
+<div class="line">    <span class="comment">// below are sized to whole-chunk multiples so the read-back has no</span></div>
+<div class="line">    <span class="comment">// fill-value tail.  See the README for what happens with partial chunks.</span></div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// 1. stream of int into a 1-D unlimited dataset ──────────────────────────</span></div>
+<div class="line">    {</div>
+<div class="line">        <a id="_a1" name="_a1"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;int&gt;</a> stream(80);     <span class="comment">// 5 chunks of 16</span></div>
+<div class="line">        <a id="a2" name="a2"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/iota.html">std::iota</a>(stream.<a id="a3" name="a3"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/begin.html">begin</a>(), stream.<a id="a4" name="a4"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/end.html">end</a>(), 1);</div>
+<div class="line">        {</div>
+<div class="line">            h5::pt_t pt = h5::create&lt;int&gt;(fd, <span class="stringliteral">&quot;/stream/int_1d&quot;</span>,</div>
+<div class="line">                    h5::max_dims{H5S_UNLIMITED},</div>
+<div class="line">                    h5::chunk{16} | h5::gzip{6} | h5::fill_value&lt;int&gt;(0));</div>
+<div class="line">            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> x : stream) h5::append(pt, x);</div>
+<div class="line">        }   <span class="comment">// pt destructor flushes the trailing partial chunk</span></div>
+<div class="line">        <span class="keyword">auto</span> back = h5::read&lt;std::vector&lt;int&gt;&gt;(fd, <span class="stringliteral">&quot;/stream/int_1d&quot;</span>);</div>
+<div class="line">        check(<span class="stringliteral">&quot;stream&lt;int&gt; -&gt; 1D unlimited dataset      (80 elements)&quot;</span>,</div>
+<div class="line">              back.size() == stream.<a id="a5" name="a5"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/size.html">size</a>() &amp;&amp; back == stream);</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    <span class="keywordflow">try</span> { <span class="comment">// centrally used error handling</span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;int&gt;</a> stream(83);</div>
-<div class="line">        <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/iota.html">std::iota</a>(<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/begin.html">std::begin</a>(stream), <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/end.html">std::end</a>(stream), 1);</div>
-<div class="line">        <span class="comment">// the leading dimension is extended once chunk is full, chunk is filled in row major order</span></div>
-<div class="line">        <span class="comment">// zero copy writes directly to chunk buffer then pushed through filter chain if specified</span></div>
-<div class="line">        <span class="comment">// works up to H5CPP_MAX_RANK default to 7</span></div>
-<div class="line">        <span class="comment">// last chunk if partial filled with h5::fill_value&lt;T&gt;( some_value )  </span></div>
-<div class="line">        h5::pt_t pt = h5::create&lt;int&gt;(fd, <span class="stringliteral">&quot;stream of integral 02&quot;</span>,</div>
-<div class="line">                                      h5::max_dims{H5S_UNLIMITED}, h5::chunk{6} | h5::gzip{9} | h5::fill_value&lt;int&gt;(3) );</div>
-<div class="line">        <span class="keywordflow">for</span>( <span class="keyword">auto</span> record : stream )</div>
-<div class="line">            h5::append(pt, record);</div>
-<div class="line">    } <span class="keywordflow">catch</span> ( <span class="keyword">const</span> h5::error::any&amp; e ){</div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cerr</a> &lt;&lt; <span class="stringliteral">&quot;ERROR:&quot;</span> &lt;&lt; e.what();</div>
-<div class="line">    }</div>
-<div class="line">    </div>
-<div class="line"> </div>
-<div class="line">    <span class="comment">// SCALAR: pod </span></div>
-<div class="line">    <span class="keywordflow">try</span> { <span class="comment">//</span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;sn::example::Record&gt;</a> stream = h5::utils::get_test_data&lt;sn::example::Record&gt;(127);</div>
-<div class="line"> </div>
-<div class="line">        <span class="comment">// implicit conversion from h5::ds_t to h5::pt_t makes it a breeze to create</span></div>
-<div class="line">        <span class="comment">// packet_table from h5::open | h5::create calls,</span></div>
-<div class="line">        <span class="comment">// The newly created h5::pt_t  stateful container caches the incoming data until</span></div>
-<div class="line">        <span class="comment">// bucket filled. IO operations are at h5::chunk boundaries</span></div>
-<div class="line">        <span class="comment">// or when resource is released. Last partial chunk handled as expected.</span></div>
-<div class="line">        <span class="comment">//</span></div>
-<div class="line">        <span class="comment">// compiler assisted introspection generates boilerplate, developer </span></div>
-<div class="line">        <span class="comment">// can focus on the idea, leaving boring details to machines </span></div>
-<div class="line">        h5::pt_t pt = h5::create&lt;sn::example::Record&gt;(fd, <span class="stringliteral">&quot;stream of struct&quot;</span>,</div>
-<div class="line">                 h5::max_dims{H5S_UNLIMITED,7}, h5::chunk{4,7} | h5::gzip{9} );</div>
-<div class="line">        <span class="keywordflow">for</span>( <span class="keyword">auto</span> record : stream )</div>
-<div class="line">            h5::append(pt, record);</div>
-<div class="line">    } <span class="keywordflow">catch</span> ( <span class="keyword">const</span> h5::error::any&amp; e ){</div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cerr</a> &lt;&lt; <span class="stringliteral">&quot;ERROR:&quot;</span> &lt;&lt; e.what();</div>
+<div class="line">    <span class="comment">// 2. stream of int into a 3-D unlimited dataset (frame stream) ──────────</span></div>
+<div class="line">    <span class="comment">//    Each appended int fills one cell of a 3×5 frame; once 15 ints land</span></div>
+<div class="line">    <span class="comment">//    a frame is complete and the leading dim grows by one.  Chunk holds</span></div>
+<div class="line">    <span class="comment">//    two frames, so we use 4 frames = 60 ints to land cleanly.</span></div>
+<div class="line">    {</div>
+<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;int&gt;</a> stream(60);     <span class="comment">// 4 frames; 2-frame chunks; clean</span></div>
+<div class="line">        <a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/iota.html">std::iota</a>(stream.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/begin.html">begin</a>(), stream.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/end.html">end</a>(), 1);</div>
+<div class="line">        {</div>
+<div class="line">            h5::pt_t pt = h5::create&lt;int&gt;(fd, <span class="stringliteral">&quot;/stream/int_3d&quot;</span>,</div>
+<div class="line">                    h5::max_dims{H5S_UNLIMITED, 3, 5},</div>
+<div class="line">                    h5::chunk{2, 3, 5} | h5::gzip{6} | h5::fill_value&lt;int&gt;(0));</div>
+<div class="line">            <span class="keywordflow">for</span> (<span class="keywordtype">int</span> x : stream) h5::append(pt, x);</div>
+<div class="line">        }</div>
+<div class="line">        <span class="keyword">auto</span> back = h5::read&lt;std::vector&lt;int&gt;&gt;(fd, <span class="stringliteral">&quot;/stream/int_3d&quot;</span>);</div>
+<div class="line">        check(<span class="stringliteral">&quot;stream&lt;int&gt; -&gt; 3D unlimited dataset      (4 x 3 x 5)&quot;</span>,</div>
+<div class="line">              back.size() == stream.<a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/container/vector/size.html">size</a>() &amp;&amp; back == stream);</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    {   <span class="comment">// packet table for a collection of matrices modelling a HD resolution of gray scale images</span></div>
-<div class="line">        <span class="keywordtype">size_t</span> nrows = 2, ncols=256, nframes=100;</div>
-<div class="line">        h5::pt_t pt = h5::create&lt;double&gt;(fd, <span class="stringliteral">&quot;stream of matrices&quot;</span>,</div>
-<div class="line">                h5::max_dims{H5S_UNLIMITED,nrows,ncols}, h5::chunk{1,nrows,ncols} );</div>
-<div class="line">        Matrix&lt;double&gt; M(nrows,ncols);</div>
-<div class="line">        <span class="keywordtype">int</span> k=0;</div>
-<div class="line">        <span class="keywordflow">for</span>( <span class="keywordtype">int</span> i=0; i&lt;nrows; i++) <span class="keywordflow">for</span>(<span class="keywordtype">int</span> j=0; j&lt;ncols; j++) M(i,j) = ++k;</div>
-<div class="line">        <span class="comment">// actual code, you may insert arbitrary number of frames: nrows x ncols</span></div>
-<div class="line">        <span class="keywordflow">for</span>( <span class="keywordtype">int</span> i = 0; i &lt; nframes; i++)</div>
-<div class="line">            h5::append( pt, M);</div>
+<div class="line">    <span class="comment">// 3. stream of POD struct into a 1-D unlimited dataset ──────────────────</span></div>
+<div class="line">    {</div>
+<div class="line">        <span class="keyword">auto</span> stream = <a id="_a6" name="_a6"></a><a class="code hl_struct" href="structh5_1_1pod.html">h5::pod&lt;sn::example::Record&gt;</a>{} | h5::take(128);   <span class="comment">// 4 chunks of 32</span></div>
+<div class="line">        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; stream.size(); ++i) stream[i].idx = i;</div>
+<div class="line"> </div>
+<div class="line">        {</div>
+<div class="line">            h5::pt_t pt = h5::create&lt;sn::example::Record&gt;(fd, <span class="stringliteral">&quot;/stream/record&quot;</span>,</div>
+<div class="line">                    h5::max_dims{H5S_UNLIMITED},</div>
+<div class="line">                    h5::chunk{32} | h5::gzip{6});</div>
+<div class="line">            <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span>&amp; r : stream) h5::append(pt, r);</div>
+<div class="line">        }</div>
+<div class="line">        <span class="keyword">auto</span> back = h5::read&lt;std::vector&lt;sn::example::Record&gt;&gt;(fd, <span class="stringliteral">&quot;/stream/record&quot;</span>);</div>
+<div class="line">        <span class="keywordtype">bool</span> size_ok = back.size() == stream.size();</div>
+<div class="line">        <span class="keywordtype">bool</span> idx_ok = size_ok;</div>
+<div class="line">        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; idx_ok &amp;&amp; i &lt; back.size(); ++i)</div>
+<div class="line">            idx_ok = (back[i].idx == stream[i].idx);</div>
+<div class="line">        check(<span class="stringliteral">&quot;stream&lt;POD struct&gt; -&gt; 1D unlimited        (128 records, idx)&quot;</span>,</div>
+<div class="line">              size_ok &amp;&amp; idx_ok);</div>
 <div class="line">    }</div>
 <div class="line"> </div>
+<div class="line">    <span class="comment">// 4. stream of fixed-size matrices into a 3-D unlimited dataset ─────────</span></div>
+<div class="line">    <span class="comment">//    A &quot;frame&quot; is a 2 x 256 row-major float matrix; we stream `nframes`</span></div>
+<div class="line">    <span class="comment">//    of them and the leading dim grows.</span></div>
+<div class="line">    {</div>
+<div class="line">        <span class="keyword">constexpr</span> <span class="keywordtype">size_t</span> nrows = 2, ncols = 256, nframes = 20;</div>
+<div class="line">        RowMajor&lt;float&gt; frame(nrows, ncols);</div>
+<div class="line">        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; nrows; ++i)</div>
+<div class="line">            <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> j = 0; j &lt; ncols; ++j)</div>
+<div class="line">                frame(i, j) = <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(i * ncols + j);</div>
+<div class="line">        {</div>
+<div class="line">            h5::pt_t pt = h5::create&lt;float&gt;(fd, <span class="stringliteral">&quot;/stream/frames&quot;</span>,</div>
+<div class="line">                    h5::max_dims{H5S_UNLIMITED, nrows, ncols},</div>
+<div class="line">                    h5::chunk{1, nrows, ncols});</div>
+<div class="line">            <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> f = 0; f &lt; nframes; ++f) h5::append(pt, frame);</div>
+<div class="line">        }</div>
+<div class="line"> </div>
+<div class="line">        <span class="comment">// Read back; size should be nframes * nrows * ncols.</span></div>
+<div class="line">        <span class="keyword">auto</span> back = h5::read&lt;std::vector&lt;float&gt;&gt;(fd, <span class="stringliteral">&quot;/stream/frames&quot;</span>);</div>
+<div class="line">        <span class="keywordtype">bool</span> size_ok = back.size() == nframes * nrows * ncols;</div>
+<div class="line">        <span class="keywordtype">bool</span> values_ok = size_ok;</div>
+<div class="line">        <span class="comment">// Compare the first frame&#39;s worth of data.</span></div>
+<div class="line">        <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> k = 0; values_ok &amp;&amp; k &lt; nrows * ncols; ++k)</div>
+<div class="line">            values_ok = (back[k] == <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(k));</div>
+<div class="line">        check(<span class="stringliteral">&quot;stream&lt;Eigen frame&gt; -&gt; 3D unlimited   (20 x 2 x 256)&quot;</span>,</div>
+<div class="line">              size_ok &amp;&amp; values_ok);</div>
+<div class="line">    }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="abasic_ostream_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cerr</a></div></div>
-<div class="ttc" id="abegin_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/iterator/begin.html">std::begin</a></div><div class="ttdeci">T begin(T... args)</div></div>
-<div class="ttc" id="aend_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/iterator/end.html">std::end</a></div><div class="ttdeci">T end(T... args)</div></div>
+<div class="ttc" id="abasic_ostream_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a></div></div>
+<div class="ttc" id="abegin_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/begin.html">std::vector::begin</a></div><div class="ttdeci">T begin(T... args)</div></div>
+<div class="ttc" id="aend_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/end.html">std::vector::end</a></div><div class="ttdeci">T end(T... args)</div></div>
 <div class="ttc" id="aiota_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/algorithm/iota.html">std::iota</a></div><div class="ttdeci">T iota(T... args)</div></div>
+<div class="ttc" id="asize_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector/size.html">std::vector::size</a></div><div class="ttdeci">T size(T... args)</div></div>
+<div class="ttc" id="astructh5_1_1pod_html"><div class="ttname"><a href="structh5_1_1pod.html">h5::pod</a></div><div class="ttdef"><b>Definition</b> H5Uall.hpp:158</div></div>
 <div class="ttc" id="avector_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a></div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->

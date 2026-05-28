@@ -104,79 +104,66 @@ $(document).ready(function(){initNavTree('independent_8cpp-example.html',''); in
   <div class="headertitle"><div class="title">independent.cpp</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><span class="comment">/*</span></div>
-<div class="line"><span class="comment"> * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada</span></div>
-<div class="line"><span class="comment"> * Author: Varga, Steven &lt;steven@vargaconsulting.ca&gt;</span></div>
-<div class="line"><span class="comment"> */</span></div>
+<div class="fragment"><div class="line"><span class="comment">// Copyright (c) 2018-2026 Steven Varga, Toronto, ON Canada</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Parallel HDF5 — INDEPENDENT write/read across MPI ranks.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// Same dataset shape as collective.cpp but uses h5::independent for the</span></div>
+<div class="line"><span class="comment">// transfer mode.  In INDEPENDENT mode each rank issues its own MPI-IO</span></div>
+<div class="line"><span class="comment">// operation without cross-rank coordination — ranks may opt out of any</span></div>
+<div class="line"><span class="comment">// given call.  Lower-latency for irregular workloads; lower throughput</span></div>
+<div class="line"><span class="comment">// than COLLECTIVE for regular slabs.</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// REQUIRES: HDF5 built with --enable-parallel (HDF5_IS_PARALLEL=ON).</span></div>
+<div class="line"><span class="comment">//</span></div>
+<div class="line"><span class="comment">// RUN: mpirun -n &lt;N&gt; ./examples-mpi-independent</span></div>
 <div class="line"> </div>
 <div class="line"><span class="preprocessor">#include &lt;mpi.h&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;h5cpp/all&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;chrono&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;algorithm&gt;</span></div>
 <div class="line"> </div>
-<div class="line"><span class="preprocessor">#pragma GCC diagnostic ignored &quot;-Wnarrowing&quot;</span></div>
-<div class="line"><span class="comment">// armadillo</span></div>
-<div class="line"><span class="comment">//./configure -DCMAKE_INSTALL_PREFIX=/usr/local -DDETECT_HDF5=OFF</span></div>
 <div class="line"><span class="keywordtype">int</span> main(<span class="keywordtype">int</span> argc, <span class="keywordtype">char</span>** argv) {</div>
-<div class="line"> </div>
-<div class="line">    <span class="comment">// usual boiler place</span></div>
-<div class="line">    <span class="keywordtype">int</span> size, rank, name_len;</div>
-<div class="line">    <span class="keywordtype">char</span> processor_name[MPI_MAX_PROCESSOR_NAME];</div>
-<div class="line">    MPI_Init(NULL, NULL);</div>
-<div class="line">    MPI_Info info  = MPI_INFO_NULL;</div>
-<div class="line">    MPI_Comm comm  = MPI_COMM_WORLD;</div>
-<div class="line"> </div>
-<div class="line">    MPI_Comm_size(MPI_COMM_WORLD, &amp;size);</div>
+<div class="line">    MPI_Init(&amp;argc, &amp;argv);</div>
+<div class="line">    <span class="keywordtype">int</span> rank = 0, world_size = 0;</div>
 <div class="line">    MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);</div>
-<div class="line">    MPI_Get_processor_name(processor_name, &amp;name_len);</div>
+<div class="line">    MPI_Comm_size(MPI_COMM_WORLD, &amp;world_size);</div>
 <div class="line"> </div>
-<div class="line">    <span class="keywordtype">int</span> nrows = 10;</div>
-<div class="line">    { <span class="comment">// CREATE - WRITE</span></div>
-<div class="line">        <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> v(nrows);</div>
-<div class="line">        <a id="a1" name="a1"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/algorithm/fill.html">std::fill</a>(<a id="a2" name="a2"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/begin.html">std::begin</a>(v), <a id="a3" name="a3"></a><a class="code hl_functionRef" href="http://en.cppreference.com/w/cpp/iterator/end.html">std::end</a>(v), rank + 2 );</div>
-<div class="line">        <span class="comment">// open file with MPIIO</span></div>
-<div class="line">        <span class="keyword">auto</span> fd = h5::create(<span class="stringliteral">&quot;collective.h5&quot;</span>, H5F_ACC_TRUNC,</div>
-<div class="line">                h5::fcpl, </div>
-<div class="line">                h5::mpiio({MPI_COMM_WORLD, info}) <span class="comment">// pass the communicator and hints as usual</span></div>
-<div class="line">        );</div>
-<div class="line">        <span class="comment">// single write request is expanded to chunked write at compile time, setting up </span></div>
-<div class="line">        <span class="comment">// required arguments. </span></div>
-<div class="line">        <span class="comment">// Passed property lists, chunk and size descriptors may be interchanged, and or omitted</span></div>
-<div class="line">        <a id="a4" name="a4"></a><a class="code hl_function" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a>( fd, <span class="stringliteral">&quot;dataset&quot;</span>, v,</div>
-<div class="line">                h5::chunk{nrows,1}, h5::current_dims{nrows,size}, h5::offset{0,rank}, h5::count{nrows,1},</div>
-<div class="line">                h5::independent ); <span class="comment">// this makes `collective IO` magic happen</span></div>
-<div class="line">        <span class="comment">// RAII will close all descriptors when leaving code block</span></div>
+<div class="line">    <span class="keyword">constexpr</span> <span class="keywordtype">int</span> nrows = 10;</div>
+<div class="line"> </div>
+<div class="line">    <span class="comment">// ── CREATE + WRITE (independent transfer mode) ────────────────────────</span></div>
+<div class="line">    {</div>
+<div class="line">        <a id="_a0" name="_a0"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> v(nrows, <span class="keywordtype">double</span>(rank + 2));</div>
+<div class="line">        <span class="keyword">auto</span> fd = h5::create(<span class="stringliteral">&quot;independent.h5&quot;</span>, H5F_ACC_TRUNC, h5::default_fcpl,</div>
+<div class="line">            h5::mpiio({MPI_COMM_WORLD, MPI_INFO_NULL}));</div>
+<div class="line">        h5::write(fd, <span class="stringliteral">&quot;dataset&quot;</span>, v,</div>
+<div class="line">            h5::current_dims{nrows, world_size},</div>
+<div class="line">            h5::chunk{nrows, 1},</div>
+<div class="line">            h5::offset{0, rank},</div>
+<div class="line">            h5::count{nrows, 1},</div>
+<div class="line">            h5::independent);</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    { <span class="comment">// READ</span></div>
-<div class="line">        <span class="comment">// open container with MPIIO enabled</span></div>
-<div class="line">        <span class="keyword">auto</span> fd = h5::open(<span class="stringliteral">&quot;collective.h5&quot;</span>, H5F_ACC_RDWR,  h5::mpiio({MPI_COMM_WORLD, info}));</div>
-<div class="line">        <span class="comment">// this is a single shot read, all memory reservations are inside the `read` operator, convenient</span></div>
-<div class="line">        <span class="comment">// but suboptimal for loops. </span></div>
-<div class="line">        <span class="keyword">auto</span> data = h5::read&lt;std::vector&lt;double&gt;&gt;(fd, <span class="stringliteral">&quot;dataset&quot;</span>, h5::offset{0,rank}, h5::count{nrows,1}, h5::collective);</div>
-<div class="line">        <a id="_a5" name="_a5"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;rank: &quot;</span> &lt;&lt; rank &lt;&lt;<span class="stringliteral">&quot; data: &quot;</span>;</div>
-<div class="line">        <span class="keywordflow">for</span>( <span class="keyword">auto</span> v : data) <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; v &lt;&lt; <span class="stringliteral">&quot; &quot;</span>; <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt;<span class="stringliteral">&quot; &quot;</span>;</div>
+<div class="line">    <span class="comment">// ── READ (independent transfer mode — matches write) ─────────────────</span></div>
+<div class="line">    {</div>
+<div class="line">        <span class="keyword">auto</span> fd = h5::open(<span class="stringliteral">&quot;independent.h5&quot;</span>, H5F_ACC_RDWR,</div>
+<div class="line">            h5::mpiio({MPI_COMM_WORLD, MPI_INFO_NULL}));</div>
+<div class="line">        <span class="keyword">auto</span> data = h5::read&lt;std::vector&lt;double&gt;&gt;(fd, <span class="stringliteral">&quot;dataset&quot;</span>,</div>
+<div class="line">            h5::offset{0, rank}, h5::count{nrows, 1}, h5::independent);</div>
+<div class="line">        <a id="_a1" name="_a1"></a><a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a> &lt;&lt; <span class="stringliteral">&quot;rank &quot;</span> &lt;&lt; rank &lt;&lt; <span class="stringliteral">&quot; of &quot;</span> &lt;&lt; world_size</div>
+<div class="line">                  &lt;&lt; <span class="stringliteral">&quot; read &quot;</span> &lt;&lt; data.size() &lt;&lt; <span class="stringliteral">&quot; elements, first = &quot;</span> &lt;&lt; data[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line"> </div>
-<div class="line">        <span class="comment">// for high performance loops constructs please use:</span></div>
-<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> buffer(nrows); <span class="comment">// pre-allocate buffer, see documentation for variety of</span></div>
-<div class="line">        <span class="comment">// linear algebra, the STL or raw memory objects</span></div>
-<div class="line"> </div>
-<div class="line">        <span class="comment">// make sure to open dataset outside of the loop</span></div>
+<div class="line">        <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector&lt;double&gt;</a> buffer(nrows);</div>
 <div class="line">        <span class="keyword">auto</span> ds = h5::open(fd, <span class="stringliteral">&quot;dataset&quot;</span>);</div>
-<div class="line">        <span class="comment">// this is as efficient as it gets</span></div>
-<div class="line">        <a id="a6" name="a6"></a><a class="code hl_function" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a>(ds, buffer.data(),  h5::offset{0,rank}, h5::count{nrows,1}, h5::independent);</div>
+<div class="line">        <a id="a2" name="a2"></a><a class="code hl_function" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a>(ds, buffer.data(),</div>
+<div class="line">            h5::offset{0, rank}, h5::count{nrows, 1}, h5::independent);</div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    MPI_Barrier(MPI_COMM_WORLD);</div>
 <div class="line">    MPI_Finalize();</div>
+<div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 <div class="ttc" id="abasic_ostream_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/io/basic_ostream.html">std::cout</a></div></div>
-<div class="ttc" id="abegin_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/iterator/begin.html">std::begin</a></div><div class="ttdeci">T begin(T... args)</div></div>
-<div class="ttc" id="aend_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/iterator/end.html">std::end</a></div><div class="ttdeci">T end(T... args)</div></div>
-<div class="ttc" id="afill_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/algorithm/fill.html">std::fill</a></div><div class="ttdeci">T fill(T... args)</div></div>
-<div class="ttc" id="agroup__io-read_html_ga344b644b6bdcfdfd5fd3c397cc0e2e7f"><div class="ttname"><a href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a></div><div class="ttdeci">std::enable_if_t&lt;!std::is_same_v&lt; T, char ** &gt;, void &gt; read(const h5::ds_t &amp;ds, T *ptr, args_t &amp;&amp;... args)</div><div class="ttdef"><b>Definition</b> H5Dread.hpp:35</div></div>
-<div class="ttc" id="agroup__io-write_html_gaeedb492b2edeecb66043852ed8b59552"><div class="ttname"><a href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552">h5::write</a></div><div class="ttdeci">void write(const h5::ds_t &amp;ds, const h5::sp_t &amp;mem_space, const h5::sp_t &amp;file_space, const h5::dxpl_t &amp;dxpl, const T *ptr)</div><div class="ttdoc">write the memory content of const T* ptr with given mem_space into file_space of the dataset</div><div class="ttdef"><b>Definition</b> H5Dwrite.hpp:23</div></div>
+<div class="ttc" id="agroup__io-read_html_ga344b644b6bdcfdfd5fd3c397cc0e2e7f"><div class="ttname"><a href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">h5::read</a></div><div class="ttdeci">std::enable_if_t&lt;!std::is_same_v&lt; T, char ** &gt;, void &gt; read(const h5::ds_t &amp;ds, T *ptr, args_t &amp;&amp;... args)</div><div class="ttdef"><b>Definition</b> H5Dread.hpp:36</div></div>
 <div class="ttc" id="avector_html"><div class="ttname"><a href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a></div></div>
 </div><!-- fragment --> </div><!-- contents -->
 </div><!-- doc-content -->

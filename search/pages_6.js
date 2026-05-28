@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['c_2023_20p0009_20round_20trip_0',['mdspan — Non-Owning N-D Views, C++23 P0009 Round-Trip',['../example_guide_mdspan.html',1,'examples_guides_index']]],
+  ['c_20for_20hdf5_1',['H5CPP — Modern C++ for HDF5',['../index.html',1,'']]],
+  ['callbacks_2',['Transform — DXPL Expressions and Type-Conversion Callbacks',['../example_guide_transform.html',1,'examples_guides_index']]],
+  ['cbor_20backend_3',['cbor:: Attribute Vocabulary (CBOR Backend)',['../reports_compiler_cbor_attribute_taxonomy.html',1,'reports_index']]],
+  ['cbor_3a_3a_20attribute_20vocabulary_20cbor_20backend_4',['cbor:: Attribute Vocabulary (CBOR Backend)',['../reports_compiler_cbor_attribute_taxonomy.html',1,'reports_index']]],
+  ['cdash_5',['CDASH',['../curated_topics_cdash.html',1,'curated_topics']]],
+  ['compiler_20assisted_20hdf5_20serialisation_6',['Reflection — Compiler-Assisted HDF5 Serialisation',['../example_guide_reflection.html',1,'examples_guides_index']]],
+  ['compiler_20multi_20backend_20architecture_7',['h5cpp-compiler Multi-Backend Architecture',['../reports_compiler_multi_backend_architecture.html',1,'reports_index']]],
+  ['compiler_20prior_20art_20survey_8',['h5cpp-compiler Prior Art Survey',['../reports_compiler_prior_art_survey.html',1,'reports_index']]],
+  ['compound_20datasets_9',['Compound Datasets',['../example_guide_compound.html',1,'examples_guides_index']]],
+  ['compound_20types_10',['Multi-Translation-Unit Compound Types',['../example_guide_multi_tu.html',1,'examples_guides_index']]],
+  ['container_20shapes_11',['Supported container shapes',['../example_guide_container.html',1,'examples_guides_index']]],
+  ['container_20showdown_12',['STL Container Showdown',['../example_guide_stl.html',1,'examples_guides_index']]],
+  ['containers_13',['containers',['../example_guide_linalg.html',1,'Linear-Algebra Containers'],['../example_guide_pprint.html',1,'Pretty-Print for STL Containers']]],
+  ['conversion_20callbacks_14',['Transform — DXPL Expressions and Type-Conversion Callbacks',['../example_guide_transform.html',1,'examples_guides_index']]],
+  ['conversion_20policy_15',['Conversion Policy',['../link_conversion_policy.html',1,'']]],
+  ['cook_20book_16',['Cook book',['../examples_guides_index.html',1,'']]],
+  ['cout_20—_20io_20debug_20pretty_20printers_20for_20hdf5_20property_20lists_20dataspaces_20hyperslab_20arguments_20and_20handles_17',['cout — IO-Debug Pretty-Printers for HDF5 Property Lists, Dataspaces, Hyperslab Arguments, and Handles',['../example_guide_cout.html',1,'examples_guides_index']]],
+  ['csc_20round_20trip_18',['Sparse Matrices &amp; Vectors — CSC Round-Trip',['../example_guide_sparse.html',1,'examples_guides_index']]],
+  ['csv_20to_20hdf5_19',['CSV to HDF5',['../example_guide_csv.html',1,'examples_guides_index']]],
+  ['current_20state_20v1_2012_207_20',['h5cpp Multithreaded Filter Pipeline — Current State (v1.12.7)',['../reports_multithreading_pipeline_state.html',1,'reports_index']]],
+  ['custom_20datatypes_21',['Custom Datatypes',['../example_guide_datatypes.html',1,'examples_guides_index']]],
+  ['custom_20pipelines_22',['Custom Pipelines',['../example_guide_custom_pipeline.html',1,'examples_guides_index']]]
+];

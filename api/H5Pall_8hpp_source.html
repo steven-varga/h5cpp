@@ -510,8 +510,8 @@ $(document).ready(function(){initNavTree('H5Pall_8hpp_source.html',''); initResi
 <div class="line"><a id="l00404" name="l00404"></a><span class="lineno">  404</span>        H5CPP_CHECK_NZ( (handle = H5Pcreate(H5P_FILE_ACCESS)),</div>
 <div class="line"><a id="l00405" name="l00405"></a><span class="lineno">  405</span>            h5::error::property_list::misc, <span class="stringliteral">&quot;failed to create FAPL for ros3&quot;</span>);</div>
 <div class="line"><a id="l00406" name="l00406"></a><span class="lineno">  406</span>    }</div>
-<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span><span class="preprocessor">#if H5_VERSION_GE(1,12,1)</span></div>
-<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span>    <span class="comment">// Temporary credentials — AWS STS / IAM role (v2 FAPL, HDF5 &gt;= 1.12.1)</span></div>
+<div class="line"><a id="l00407" name="l00407"></a><span class="lineno">  407</span><span class="preprocessor">#if H5FD_CURR_ROS3_FAPL_T_VERSION &gt;= 2</span></div>
+<div class="line"><a id="l00408" name="l00408"></a><span class="lineno">  408</span>    <span class="comment">// Temporary credentials — AWS STS / IAM role (v2 FAPL, HDF5 &gt;= 1.14.x)</span></div>
 <div class="line"><a id="l00409" name="l00409"></a><span class="lineno">  409</span>    fapl_ros3(<span class="keywordtype">bool</span> authenticate,</div>
 <div class="line"><a id="l00410" name="l00410"></a><span class="lineno">  410</span>              <span class="keyword">const</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; aws_region,</div>
 <div class="line"><a id="l00411" name="l00411"></a><span class="lineno">  411</span>              <span class="keyword">const</span> <a class="code hl_classRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a>&amp; secret_id,</div>

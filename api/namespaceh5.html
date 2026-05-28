@@ -114,10 +114,22 @@ $(document).ready(function(){initNavTree('namespaceh5.html',''); initResizable()
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structh5_1_1bernoulli.html">bernoulli</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structh5_1_1exponential.html">exponential</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structh5_1_1gorilla.html">gorilla</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structh5_1_1has__scatter.html">has_scatter</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compile-time trait to determine if a type uses scatter/gather I/O.  <a href="structh5_1_1has__scatter.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structh5_1_1normal.html">normal</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structh5_1_1pod.html">pod</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structh5_1_1strlen.html">strlen</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structh5_1_1uniform.html">uniform</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="typedef-members" name="typedef-members"></a>
@@ -147,33 +159,30 @@ Functions</h2></td></tr>
 <tr class="memitem:ga344b644b6bdcfdfd5fd3c397cc0e2e7f" id="r_ga344b644b6bdcfdfd5fd3c397cc0e2e7f"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t&gt; </td></tr>
 <tr class="memitem:ga344b644b6bdcfdfd5fd3c397cc0e2e7f"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt;!std::is_same_v&lt; T, char ** &gt;, void &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#ga344b644b6bdcfdfd5fd3c397cc0e2e7f">read</a> (const h5::ds_t &amp;ds, T *ptr, args_t &amp;&amp;... args)</td></tr>
 <tr class="separator:ga344b644b6bdcfdfd5fd3c397cc0e2e7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gab77406c926f6f73453dc96ea3f21719c" id="r_gab77406c926f6f73453dc96ea3f21719c"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t&gt; </td></tr>
-<tr class="memitem:gab77406c926f6f73453dc96ea3f21719c"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#gab77406c926f6f73453dc96ea3f21719c">read</a> (const h5::fd_t &amp;fd, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, T *ptr, args_t &amp;&amp;... args)</td></tr>
-<tr class="separator:gab77406c926f6f73453dc96ea3f21719c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga1fff208b02f8e8ad5a1993f9175eb874" id="r_ga1fff208b02f8e8ad5a1993f9175eb874"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t, class  = std::enable_if_t&lt;arg::tpos&lt;const h5::count_t&amp;, const args_t&amp;...&gt;::present&gt;&gt; </td></tr>
+<tr class="memitem:ga1fff208b02f8e8ad5a1993f9175eb874"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#ga1fff208b02f8e8ad5a1993f9175eb874">read</a> (const h5::fd_t &amp;fd, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, T *ptr, args_t &amp;&amp;... args)</td></tr>
+<tr class="separator:ga1fff208b02f8e8ad5a1993f9175eb874"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ga2dd8847a599cc5925ccd9cda51da9083" id="r_ga2dd8847a599cc5925ccd9cda51da9083"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t&gt; </td></tr>
 <tr class="memitem:ga2dd8847a599cc5925ccd9cda51da9083"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#ga2dd8847a599cc5925ccd9cda51da9083">read</a> (const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;file_path, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, T *ptr, args_t &amp;&amp;... args)</td></tr>
 <tr class="separator:ga2dd8847a599cc5925ccd9cda51da9083"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gab135116636f6478cc572727d08115718" id="r_gab135116636f6478cc572727d08115718"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t&gt; </td></tr>
 <tr class="memitem:gab135116636f6478cc572727d08115718"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#gab135116636f6478cc572727d08115718">read</a> (const h5::ds_t &amp;ds, T &amp;ref, args_t &amp;&amp;... args)</td></tr>
 <tr class="separator:gab135116636f6478cc572727d08115718"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gad87746fcc40b8cd9aa66a5a14ad4fe7d" id="r_gad87746fcc40b8cd9aa66a5a14ad4fe7d"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t&gt; </td></tr>
-<tr class="memitem:gad87746fcc40b8cd9aa66a5a14ad4fe7d"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#gad87746fcc40b8cd9aa66a5a14ad4fe7d">read</a> (const h5::fd_t &amp;fd, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, T &amp;ref, args_t &amp;&amp;... args)</td></tr>
-<tr class="separator:gad87746fcc40b8cd9aa66a5a14ad4fe7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga77589727d7b1fa25926ddfca311a2d3b" id="r_ga77589727d7b1fa25926ddfca311a2d3b"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t&gt; </td></tr>
-<tr class="memitem:ga77589727d7b1fa25926ddfca311a2d3b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#ga77589727d7b1fa25926ddfca311a2d3b">read</a> (const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;file_path, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, T &amp;ref, args_t &amp;&amp;... args)</td></tr>
-<tr class="separator:ga77589727d7b1fa25926ddfca311a2d3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga517b0cc601e051121c3a35a821cb84d3" id="r_ga517b0cc601e051121c3a35a821cb84d3"><td class="memTemplParams" colspan="2">template&lt;class T , class D  = typename impl::decay&lt;T&gt;::type, class... args_t&gt; </td></tr>
-<tr class="memitem:ga517b0cc601e051121c3a35a821cb84d3"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt;!std::is_same_v&lt; D, <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &gt;, T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#ga517b0cc601e051121c3a35a821cb84d3">read</a> (const h5::ds_t &amp;ds, args_t &amp;&amp;... args)</td></tr>
-<tr class="separator:ga517b0cc601e051121c3a35a821cb84d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga517b0cc601e051121c3a35a821cb84d3" id="r_ga517b0cc601e051121c3a35a821cb84d3"><td class="memTemplParams" colspan="2">template&lt;class T , class D  = typename impl::decay&lt;T&gt;::type, class... args_t&gt; </td></tr>
-<tr class="memitem:ga517b0cc601e051121c3a35a821cb84d3"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; std::is_same_v&lt; D, <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &gt;, T &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceh5.html#ga517b0cc601e051121c3a35a821cb84d3">read</a> (const h5::ds_t &amp;ds, args_t &amp;&amp;... args)</td></tr>
-<tr class="separator:ga517b0cc601e051121c3a35a821cb84d3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga7178294054fa34c013ea111c43570a69" id="r_ga7178294054fa34c013ea111c43570a69"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t&gt; </td></tr>
-<tr class="memitem:ga7178294054fa34c013ea111c43570a69"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#ga7178294054fa34c013ea111c43570a69">read</a> (hid_t fd, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, args_t &amp;&amp;... args)</td></tr>
-<tr class="separator:ga7178294054fa34c013ea111c43570a69"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga3262eb4aab2431d432ce5c19dcfc50d1" id="r_ga3262eb4aab2431d432ce5c19dcfc50d1"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t&gt; </td></tr>
-<tr class="memitem:ga3262eb4aab2431d432ce5c19dcfc50d1"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#ga3262eb4aab2431d432ce5c19dcfc50d1">read</a> (const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;file_path, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, args_t &amp;&amp;... args)</td></tr>
-<tr class="separator:ga3262eb4aab2431d432ce5c19dcfc50d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga73b7a86951dfc30509b98ea4b18048b4" id="r_ga73b7a86951dfc30509b98ea4b18048b4"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!h5::meta::is_sparse_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </td></tr>
+<tr class="memitem:ga73b7a86951dfc30509b98ea4b18048b4"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#ga73b7a86951dfc30509b98ea4b18048b4">read</a> (const h5::fd_t &amp;fd, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, T &amp;ref, args_t &amp;&amp;... args)</td></tr>
+<tr class="separator:ga73b7a86951dfc30509b98ea4b18048b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gab2643be4500e952b7d98479666ecd458" id="r_gab2643be4500e952b7d98479666ecd458"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!h5::meta::is_sparse_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </td></tr>
+<tr class="memitem:gab2643be4500e952b7d98479666ecd458"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#gab2643be4500e952b7d98479666ecd458">read</a> (const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;file_path, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, T &amp;ref, args_t &amp;&amp;... args)</td></tr>
+<tr class="separator:gab2643be4500e952b7d98479666ecd458"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga8f2d3389183d67664a49c8a72a08b7e4" id="r_ga8f2d3389183d67664a49c8a72a08b7e4"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t&gt; </td></tr>
+<tr class="memitem:ga8f2d3389183d67664a49c8a72a08b7e4"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#ga8f2d3389183d67664a49c8a72a08b7e4">read</a> (const h5::ds_t &amp;ds, args_t &amp;&amp;... args)</td></tr>
+<tr class="separator:ga8f2d3389183d67664a49c8a72a08b7e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gaa8c1205da4ec11aca2168a83b8e990d8" id="r_gaa8c1205da4ec11aca2168a83b8e990d8"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!h5::meta::is_sparse_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </td></tr>
+<tr class="memitem:gaa8c1205da4ec11aca2168a83b8e990d8"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#gaa8c1205da4ec11aca2168a83b8e990d8">read</a> (hid_t fd, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, args_t &amp;&amp;... args)</td></tr>
+<tr class="separator:gaa8c1205da4ec11aca2168a83b8e990d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:gad92358502d3214230d14a5b367ba8dbf" id="r_gad92358502d3214230d14a5b367ba8dbf"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!h5::meta::is_sparse_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </td></tr>
+<tr class="memitem:gad92358502d3214230d14a5b367ba8dbf"><td class="memTemplItemLeft" align="right" valign="top">T&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-read.html#gad92358502d3214230d14a5b367ba8dbf">read</a> (const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;file_path, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, args_t &amp;&amp;... args)</td></tr>
+<tr class="separator:gad92358502d3214230d14a5b367ba8dbf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9ec5f372f2becfd6aed971f7cdfdfd6c" id="r_a9ec5f372f2becfd6aed971f7cdfdfd6c"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a9ec5f372f2becfd6aed971f7cdfdfd6c"><td class="memTemplItemLeft" align="right" valign="top">h5::ds_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceh5.html#a9ec5f372f2becfd6aed971f7cdfdfd6c">scatter</a> (hid_t fd, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;path, const T &amp;obj)</td></tr>
 <tr class="memdesc:a9ec5f372f2becfd6aed971f7cdfdfd6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic scatter (write) template for tier-2+ types.  <br /></td></tr>
@@ -190,16 +199,16 @@ Functions</h2></td></tr>
 <tr class="memitem:ga04074459415db5abc2a1d6b15db8b149"><td class="memTemplItemLeft" align="right" valign="top">h5::ds_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-write.html#ga04074459415db5abc2a1d6b15db8b149">write</a> (const h5::ds_t &amp;ds, const T *ptr, args_t &amp;&amp;... args)</td></tr>
 <tr class="memdesc:ga04074459415db5abc2a1d6b15db8b149"><td class="mdescLeft">&#160;</td><td class="mdescRight">writes data, from contiguous memory region into an existing, opened dataset specified by<code>h5::ds_t</code> descriptor Lower level template with generative programming paradigm constructs an optimal function respec to specified arguments  <br /></td></tr>
 <tr class="separator:ga04074459415db5abc2a1d6b15db8b149"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaaeaad6bf828fb672daeb6b6e7584d8b5" id="r_gaaeaad6bf828fb672daeb6b6e7584d8b5"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!std::is_pointer_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </td></tr>
+<tr class="memitem:gaaeaad6bf828fb672daeb6b6e7584d8b5" id="r_gaaeaad6bf828fb672daeb6b6e7584d8b5"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!std::is_pointer_v&lt;std::decay_t&lt;T&gt;&gt; || std::is_array_v&lt;T&gt;&gt;&gt; </td></tr>
 <tr class="memitem:gaaeaad6bf828fb672daeb6b6e7584d8b5"><td class="memTemplItemLeft" align="right" valign="top">h5::ds_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-write.html#gaaeaad6bf828fb672daeb6b6e7584d8b5">write</a> (const h5::ds_t &amp;ds, const T &amp;ref, args_t &amp;&amp;... args)</td></tr>
 <tr class="memdesc:gaaeaad6bf828fb672daeb6b6e7584d8b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">writes data within an HDF5 container specified with <code>h5::fd_t</code> descriptor By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block <br  />
- This template specialization acts as a switchboard between objects with <b>contiguous</b> content, such as <code><a class="elRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt;int&gt;</code> and objects where the actual content maybe scattered in memory. In the altter case with the help of <code>h5::gather</code> operator, and O(n) complexity this template builds a vector of pointers to actual content, and delegates it to <code><a class="el" href="group__io-write.html#gaeedb492b2edeecb66043852ed8b59552" title="write the memory content of const T* ptr with given mem_space into file_space of the dataset">h5::write</a>&lt;element_t*&gt;(.., ptr**)</code> call.  <br /></td></tr>
+ This template specialization acts as a switchboard between objects with <b>contiguous</b> content, such as <code><a class="elRef" href="http://en.cppreference.com/w/cpp/container/vector.html">std::vector</a>&lt;int&gt;</code> and objects where the actual content maybe scattered in memory. In the altter case with the help of <code>h5::gather</code> operator, and O(n) complexity this template builds a vector of pointers to actual content, and delegates it to <code>h5::write&lt;element_t*&gt;(.., ptr**)</code> call.  <br /></td></tr>
 <tr class="separator:gaaeaad6bf828fb672daeb6b6e7584d8b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:gaf88f87d3ec00918118b8f5492735dcb3" id="r_gaf88f87d3ec00918118b8f5492735dcb3"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t&gt; </td></tr>
-<tr class="memitem:gaf88f87d3ec00918118b8f5492735dcb3"><td class="memTemplItemLeft" align="right" valign="top">h5::ds_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-write.html#gaf88f87d3ec00918118b8f5492735dcb3">write</a> (const h5::fd_t &amp;fd, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, const T *ptr, args_t &amp;&amp;... args)</td></tr>
-<tr class="memdesc:gaf88f87d3ec00918118b8f5492735dcb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">writes data within an HDF5 container specified with <code>h5::fd_t</code> descriptor HDF5 dataset may or may not exist, in first case it is opened and in the latter created. The implemantation comes with sensible default arguments, which can be tuned with optional property list. By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block  <br /></td></tr>
-<tr class="separator:gaf88f87d3ec00918118b8f5492735dcb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ga81e5325759479e2320a3f4f8b45177b5" id="r_ga81e5325759479e2320a3f4f8b45177b5"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!std::is_pointer_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </td></tr>
+<tr class="memitem:ga7d649fabf505b2787069b8f7766b18ae" id="r_ga7d649fabf505b2787069b8f7766b18ae"><td class="memTemplParams" colspan="2">template&lt;<a class="elRef" href="http://en.cppreference.com/w/cpp/types/size_t.html">std::size_t</a> N, class... args_t&gt; </td></tr>
+<tr class="memitem:ga7d649fabf505b2787069b8f7766b18ae"><td class="memTemplItemLeft" align="right" valign="top">h5::ds_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-write.html#ga7d649fabf505b2787069b8f7766b18ae">write</a> (const h5::fd_t &amp;fd, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, const char(&amp;ref)[N], args_t &amp;&amp;... args)</td></tr>
+<tr class="memdesc:ga7d649fabf505b2787069b8f7766b18ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">writes data within an HDF5 container specified with <code>h5::fd_t</code> descriptor HDF5 dataset may or may not exist, in first case it is opened and in the latter created. The implemantation comes with sensible default arguments, which can be tuned with optional property list. By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block  <br /></td></tr>
+<tr class="separator:ga7d649fabf505b2787069b8f7766b18ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ga81e5325759479e2320a3f4f8b45177b5" id="r_ga81e5325759479e2320a3f4f8b45177b5"><td class="memTemplParams" colspan="2">template&lt;class T , class... args_t, class  = std::enable_if_t&lt;!std::is_pointer_v&lt;std::decay_t&lt;T&gt;&gt;			                      &amp;&amp; !h5::meta::is_sparse_v&lt;std::decay_t&lt;T&gt;&gt;&gt;&gt; </td></tr>
 <tr class="memitem:ga81e5325759479e2320a3f4f8b45177b5"><td class="memTemplItemLeft" align="right" valign="top">h5::ds_t&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="group__io-write.html#ga81e5325759479e2320a3f4f8b45177b5">write</a> (const h5::fd_t &amp;fd, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;dataset_path, const T &amp;ref, args_t &amp;&amp;... args)</td></tr>
 <tr class="memdesc:ga81e5325759479e2320a3f4f8b45177b5"><td class="mdescLeft">&#160;</td><td class="mdescRight">writes data within an HDF5 container specified with <code>h5::fd_t</code> descriptor HDF5 dataset may or may not exist, in first case it is opened and in the latter created. The implemantation comes with sensible default arguments, which can be tuned with optional property list. By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block  <br /></td></tr>
 <tr class="separator:ga81e5325759479e2320a3f4f8b45177b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -219,6 +228,14 @@ Functions</h2></td></tr>
 <tr class="separator:ga59abf211b556d34dd62cfe66c02ba782"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:gaccc4c34767a251e8697be73b041a8ec5" id="r_gaccc4c34767a251e8697be73b041a8ec5"><td class="memItemLeft" align="right" valign="top">h5::fd_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="group__file-io.html#gaccc4c34767a251e8697be73b041a8ec5">open</a> (const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;path, unsigned flags, const h5::fapl_t &amp;fapl=h5::default_fapl)</td></tr>
 <tr class="separator:gaccc4c34767a251e8697be73b041a8ec5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7a1d02a18ffc6a0738e3e3b95a2f2306" id="r_a7a1d02a18ffc6a0738e3e3b95a2f2306"><td class="memTemplParams" colspan="2">template&lt;class HID_T &gt; </td></tr>
+<tr class="memitem:a7a1d02a18ffc6a0738e3e3b95a2f2306"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; h5::impl::is_valid_group_parent&lt; HID_T &gt;::value, h5::gr_t &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceh5.html#a7a1d02a18ffc6a0738e3e3b95a2f2306">gcreate</a> (const HID_T &amp;parent, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;path, const h5::lcpl_t &amp;lcpl=h5::default_lcpl)</td></tr>
+<tr class="memdesc:a7a1d02a18ffc6a0738e3e3b95a2f2306"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an HDF5 group and returns a managed h5::gr_t handle.  <br /></td></tr>
+<tr class="separator:a7a1d02a18ffc6a0738e3e3b95a2f2306"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc254623402d9df7882a99c0d9fdfaf6" id="r_acc254623402d9df7882a99c0d9fdfaf6"><td class="memTemplParams" colspan="2">template&lt;class HID_T &gt; </td></tr>
+<tr class="memitem:acc254623402d9df7882a99c0d9fdfaf6"><td class="memTemplItemLeft" align="right" valign="top">std::enable_if_t&lt; h5::impl::is_valid_group_parent&lt; HID_T &gt;::value, h5::gr_t &gt;&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespaceh5.html#acc254623402d9df7882a99c0d9fdfaf6">gopen</a> (const HID_T &amp;parent, const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;path)</td></tr>
+<tr class="memdesc:acc254623402d9df7882a99c0d9fdfaf6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Opens an existing HDF5 group and returns a managed h5::gr_t handle.  <br /></td></tr>
+<tr class="separator:acc254623402d9df7882a99c0d9fdfaf6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>public namespace </p>
@@ -309,63 +326,6 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ga517b0cc601e051121c3a35a821cb84d3" name="ga517b0cc601e051121c3a35a821cb84d3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ga517b0cc601e051121c3a35a821cb84d3">&#9670;&#160;</a></span>read()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class T , class D  = typename impl::decay&lt;T&gt;::type, class... args_t&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::enable_if_t&lt; std::is_same_v&lt; D, <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &gt;, T &gt; h5::read </td>
-          <td>(</td>
-          <td class="paramtype">const h5::ds_t &amp;&#160;</td>
-          <td class="paramname"><em>ds</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">args_t &amp;&amp;...&#160;</td>
-          <td class="paramname"><em>args</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Direct read from an opened dataset descriptor that returns the entire data space wrapped into the object specified. Optional arguments <b>args:= h5::offset | h5::stride | h5::count | h5::block</b> may be specified for partial IO, to describe the retrieved hyperslab from hdf5 file space. Default case is to select and retrieve all elements from dataset. </p><div class="fragment"><div class="line">h5::fd_t fd = h5::open(<span class="stringliteral">&quot;myfile.h5&quot;</span>, H5F_ACC_RDWR);</div>
-<div class="line"><span class="keyword">auto</span> vec = h5::read&lt;std::vector&lt;std::string&gt;&gt;( fd, <span class="stringliteral">&quot;path/to/variable_length_string&quot;</span>,    h5::count{10,10}, h5::offset{5,0} );    </div>
-</div><!-- fragment --> <dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">ds</td><td>valid open <code>h5::ds_t</code> dataset descriptor</td></tr>
-    <tr><td class="paramname">offset</td><td>coordinates of the first element selected in file space; one value per dataset dimension (e.g. <code>h5::offset{0,0,0}</code> for rank-3)</td></tr>
-    <tr><td class="paramname">stride</td><td>step between selected elements in each dimension; defaults to <code>{1,1,...}</code> (every element)</td></tr>
-    <tr><td class="paramname">count</td><td>number of blocks selected in each dimension; combined with <code>block</code> gives the total selection shape</td></tr>
-    <tr><td class="paramname">block</td><td>size of each selected block in each dimension; defaults to <code>{1,1,...}</code> (single elements) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="tparams"><dt>Template Parameters</dt><dd>
-  <table class="tparams">
-    <tr><td class="paramname">T</td><td>element type — one of the <a class="el" href="link_base_template_types.html">supported elementary types</a>: integral, float, double, or a registered compound type </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>fully constructed object of type <code>T</code> populated with dataset data; throws <code>h5::error</code> on failure </dd></dl>
-
-</div>
-</div>
 <a id="a9ec5f372f2becfd6aed971f7cdfdfd6c" name="a9ec5f372f2becfd6aed971f7cdfdfd6c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9ec5f372f2becfd6aed971f7cdfdfd6c">&#9670;&#160;</a></span>scatter()</h2>
 
@@ -417,6 +377,8 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>h5::ds_t the dataset handle (for chaining) </dd></dl>
+<dl class="section examples"><dt>Examples</dt><dd><a class="el" href="compound_8cpp-example.html#a5">compound.cpp</a>.</dd>
+</dl>
 
 </div>
 </div>
@@ -471,6 +433,101 @@ template&lt;typename T &gt; </div>
   </dd>
 </dl>
 
+</div>
+</div>
+<a id="a7a1d02a18ffc6a0738e3e3b95a2f2306" name="a7a1d02a18ffc6a0738e3e3b95a2f2306"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7a1d02a18ffc6a0738e3e3b95a2f2306">&#9670;&#160;</a></span>gcreate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class HID_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::enable_if_t&lt; h5::impl::is_valid_group_parent&lt; HID_T &gt;::value, h5::gr_t &gt; h5::gcreate </td>
+          <td>(</td>
+          <td class="paramtype">const HID_T &amp;&#160;</td>
+          <td class="paramname"><em>parent</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;&#160;</td>
+          <td class="paramname"><em>path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const h5::lcpl_t &amp;&#160;</td>
+          <td class="paramname"><em>lcpl</em> = <code>h5::default_lcpl</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Creates an HDF5 group and returns a managed h5::gr_t handle. </p>
+<p>Accepts a file or group as parent. The optional <code>lcpl</code> controls link creation semantics (character encoding, intermediate path creation). h5::default_lcpl enables UTF-8 encoding and intermediate group creation, which is almost always the right default.</p>
+<div class="fragment"><div class="line">h5::gr_t gr = <a class="code hl_function" href="namespaceh5.html#a7a1d02a18ffc6a0738e3e3b95a2f2306">h5::gcreate</a>(fd, <span class="stringliteral">&quot;sensors/imu&quot;</span>);          <span class="comment">// intermediate path created</span></div>
+<div class="line">h5::gr_t sub = <a class="code hl_function" href="namespaceh5.html#a7a1d02a18ffc6a0738e3e3b95a2f2306">h5::gcreate</a>(gr, <span class="stringliteral">&quot;channel_0&quot;</span>);            <span class="comment">// nested under existing group</span></div>
+<div class="ttc" id="anamespaceh5_html_a7a1d02a18ffc6a0738e3e3b95a2f2306"><div class="ttname"><a href="namespaceh5.html#a7a1d02a18ffc6a0738e3e3b95a2f2306">h5::gcreate</a></div><div class="ttdeci">std::enable_if_t&lt; h5::impl::is_valid_group_parent&lt; HID_T &gt;::value, h5::gr_t &gt; gcreate(const HID_T &amp;parent, const std::string &amp;path, const h5::lcpl_t &amp;lcpl=h5::default_lcpl)</div><div class="ttdoc">Creates an HDF5 group and returns a managed h5::gr_t handle.</div><div class="ttdef"><b>Definition</b> H5Gcreate.hpp:32</div></div>
+</div><!-- fragment --> <dl class="section examples"><dt>Examples</dt><dd><a class="el" href="attributes_8cpp-example.html#a1">attributes.cpp</a>.</dd>
+</dl>
+
+</div>
+</div>
+<a id="acc254623402d9df7882a99c0d9fdfaf6" name="acc254623402d9df7882a99c0d9fdfaf6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc254623402d9df7882a99c0d9fdfaf6">&#9670;&#160;</a></span>gopen()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;class HID_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::enable_if_t&lt; h5::impl::is_valid_group_parent&lt; HID_T &gt;::value, h5::gr_t &gt; h5::gopen </td>
+          <td>(</td>
+          <td class="paramtype">const HID_T &amp;&#160;</td>
+          <td class="paramname"><em>parent</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="elRef" href="http://en.cppreference.com/w/cpp/string/basic_string.html">std::string</a> &amp;&#160;</td>
+          <td class="paramname"><em>path</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Opens an existing HDF5 group and returns a managed h5::gr_t handle. </p>
+<div class="fragment"><div class="line">h5::gr_t gr = <a class="code hl_function" href="namespaceh5.html#acc254623402d9df7882a99c0d9fdfaf6">h5::gopen</a>(fd, <span class="stringliteral">&quot;/sensors/imu&quot;</span>);</div>
+<div class="line">h5::awrite(gr, <span class="stringliteral">&quot;sample_rate&quot;</span>, 200.0);</div>
+<div class="ttc" id="anamespaceh5_html_acc254623402d9df7882a99c0d9fdfaf6"><div class="ttname"><a href="namespaceh5.html#acc254623402d9df7882a99c0d9fdfaf6">h5::gopen</a></div><div class="ttdeci">std::enable_if_t&lt; h5::impl::is_valid_group_parent&lt; HID_T &gt;::value, h5::gr_t &gt; gopen(const HID_T &amp;parent, const std::string &amp;path)</div><div class="ttdoc">Opens an existing HDF5 group and returns a managed h5::gr_t handle.</div><div class="ttdef"><b>Definition</b> H5Gopen.hpp:20</div></div>
+</div><!-- fragment --> 
 </div>
 </div>
 </div><!-- contents -->

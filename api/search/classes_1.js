@@ -25,13 +25,14 @@ var searchData=
   ['basic_5fstring_22',['basic_string',['http://en.cppreference.com/w/cpp/string/basic_string.html',1,'std']]],
   ['basic_5fstringbuf_23',['basic_stringbuf',['http://en.cppreference.com/w/cpp/io/basic_stringbuf.html',1,'std']]],
   ['basic_5fstringstream_24',['basic_stringstream',['http://en.cppreference.com/w/cpp/io/basic_stringstream.html',1,'std']]],
-  ['bernoulli_5fdistribution_25',['bernoulli_distribution',['http://en.cppreference.com/w/cpp/numeric/random/bernoulli_distribution.html',1,'std']]],
-  ['bidirectional_5fiterator_5ftag_26',['bidirectional_iterator_tag',['http://en.cppreference.com/w/cpp/iterator/iterator_tags.html',1,'std']]],
-  ['binary_5ffunction_27',['binary_function',['http://en.cppreference.com/w/cpp/utility/functional/binary_function.html',1,'std']]],
-  ['binary_5fnegate_28',['binary_negate',['http://en.cppreference.com/w/cpp/utility/functional/binary_negate.html',1,'std']]],
-  ['binomial_5fdistribution_29',['binomial_distribution',['http://en.cppreference.com/w/cpp/numeric/random/binomial_distribution.html',1,'std']]],
-  ['bit_5fand_30',['bit_and',['http://en.cppreference.com/w/cpp/utility/functional/bit_and.html',1,'std']]],
-  ['bit_5fnot_31',['bit_not',['http://en.cppreference.com/w/cpp/utility/functional/bit_not.html',1,'std']]],
-  ['bit_5for_32',['bit_or',['http://en.cppreference.com/w/cpp/utility/functional/bit_or.html',1,'std']]],
-  ['bitset_33',['bitset',['http://en.cppreference.com/w/cpp/utility/bitset.html',1,'std']]]
+  ['bernoulli_25',['bernoulli',['../structh5_1_1bernoulli.html',1,'h5']]],
+  ['bernoulli_5fdistribution_26',['bernoulli_distribution',['http://en.cppreference.com/w/cpp/numeric/random/bernoulli_distribution.html',1,'std']]],
+  ['bidirectional_5fiterator_5ftag_27',['bidirectional_iterator_tag',['http://en.cppreference.com/w/cpp/iterator/iterator_tags.html',1,'std']]],
+  ['binary_5ffunction_28',['binary_function',['http://en.cppreference.com/w/cpp/utility/functional/binary_function.html',1,'std']]],
+  ['binary_5fnegate_29',['binary_negate',['http://en.cppreference.com/w/cpp/utility/functional/binary_negate.html',1,'std']]],
+  ['binomial_5fdistribution_30',['binomial_distribution',['http://en.cppreference.com/w/cpp/numeric/random/binomial_distribution.html',1,'std']]],
+  ['bit_5fand_31',['bit_and',['http://en.cppreference.com/w/cpp/utility/functional/bit_and.html',1,'std']]],
+  ['bit_5fnot_32',['bit_not',['http://en.cppreference.com/w/cpp/utility/functional/bit_not.html',1,'std']]],
+  ['bit_5for_33',['bit_or',['http://en.cppreference.com/w/cpp/utility/functional/bit_or.html',1,'std']]],
+  ['bitset_34',['bitset',['http://en.cppreference.com/w/cpp/utility/bitset.html',1,'std']]]
 ];
