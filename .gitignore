@@ -20,6 +20,19 @@ _CPack_Packages/
 install_manifest.txt
 compile_commands.json
 
+# Path-specific Makefile patterns — only the cmake-generated ones, leaving
+# legit upstream Makefiles in doxy/, examples/half-float/, and the vendored
+# zstd build scripts untouched. Added after an accidental in-source `cmake .`
+# scattered "# CMAKE generated file" Makefiles across the source tree (see
+# git history: "ignore in-source cmake Makefile pollution").
+/thirdparty/Makefile
+/thirdparty/*/Makefile
+/thirdparty/dlib/v[0-9]*-build/
+/thirdparty/blitz/v[0-9]*-build/
+/bench/Makefile
+/test/examples/Makefile
+/examples/s3/Makefile
+
 # =============================================================================
 # Compiler-generated intermediates
 # =============================================================================

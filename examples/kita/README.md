@@ -1,3 +1,0 @@
-## MPI examples
-
-
