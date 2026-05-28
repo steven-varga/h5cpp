@@ -41,7 +41,11 @@ TEST_CASE("h5::have_ros3_vfd constexpr is true") {
     CHECK(h5::have_ros3_vfd == true);
 }
 
-#if H5_VERSION_GE(1,12,1)
+// v2 FAPL struct (with session_token field) lands in HDF5 1.14+. Gate on the
+// actual struct version macro rather than the library version — HDF5 1.12.x
+// reports >= 1.12.1 but ships only the v1 H5FD_ros3_fapl_t.  See memory entry
+// feedback_ros3_v2_fapl_gate.
+#if H5FD_CURR_ROS3_FAPL_T_VERSION >= 2
 TEST_CASE("fapl_ros3 v2 ctor — session token round-trip") {
     h5::fapl_ros3 p{true, "eu-west-1", "KEY_ID", "SECRET", "SESSION_TOKEN"};
     h5::fapl_t fapl = p;

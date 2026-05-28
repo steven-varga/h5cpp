@@ -610,7 +610,8 @@ TEST_CASE("H5Tmeta storage_representation classifies nested vector containers") 
     CHECK((h5::meta::storage_representation_v<std::vector<std::vector<std::string>>> == h5::meta::storage_representation_t::unsupported));
     CHECK((h5::meta::storage_representation_v<std::vector<std::vector<std::vector<int>>>> == h5::meta::storage_representation_t::unsupported));
     CHECK((h5::meta::storage_representation_v<std::vector<std::string>> == h5::meta::storage_representation_t::vlen_text_dataset));
-    CHECK((h5::meta::storage_representation_v<std::vector<std::array<int, 3>>> == h5::meta::storage_representation_t::fixed_inner_extent_dataset));
+    // Winston model: vector<std::array<T,N>> uses array_dataset (rank-1 of H5T_ARRAY[N]).
+    CHECK((h5::meta::storage_representation_v<std::vector<std::array<int, 3>>> == h5::meta::storage_representation_t::array_dataset));
 }
 
 TEST_CASE("H5Tmeta storage_representation leaves bitfield and opaque pointer storage unsupported") {
@@ -631,11 +632,11 @@ TEST_CASE("H5Tmeta storage_representation scalar covers arithmetic types") {
     CHECK(h5::meta::storage_representation_v<char>              == sr_t::scalar);
 }
 
-TEST_CASE("H5Tmeta storage_representation c_array covers ranks 1 2 and 3") {
+TEST_CASE("H5Tmeta storage_representation array_element covers ranks 1 2 and 3") {
     using sr_t = h5::meta::storage_representation_t;
-    CHECK(h5::meta::storage_representation_v<int[4]>         == sr_t::c_array);
-    CHECK(h5::meta::storage_representation_v<double[2][3]>   == sr_t::c_array);
-    CHECK(h5::meta::storage_representation_v<float[2][2][2]> == sr_t::c_array);
+    CHECK(h5::meta::storage_representation_v<int[4]>         == sr_t::array_element);
+    CHECK(h5::meta::storage_representation_v<double[2][3]>   == sr_t::array_element);
+    CHECK(h5::meta::storage_representation_v<float[2][2][2]> == sr_t::array_element);
 }
 
 TEST_CASE("H5Tmeta storage_representation vector and array cover contiguous linear") {
@@ -643,10 +644,14 @@ TEST_CASE("H5Tmeta storage_representation vector and array cover contiguous line
     CHECK(h5::meta::storage_representation_v<std::vector<int>>    == sr_t::linear_value_dataset);
     CHECK(h5::meta::storage_representation_v<std::vector<double>> == sr_t::linear_value_dataset);
     CHECK(h5::meta::storage_representation_v<std::vector<float>>  == sr_t::linear_value_dataset);
-    CHECK((h5::meta::storage_representation_v<std::array<int,4>>)    == sr_t::linear_value_dataset);
-    CHECK((h5::meta::storage_representation_v<std::array<double,8>>)  == sr_t::linear_value_dataset);
+    // Winston model: top-level std::array<T,N> for non-char T lands as a
+    // scalar dataspace + H5T_ARRAY[N] (storage = array_element), not as a
+    // rank-1 linear-value dataset. See H5Tmeta.hpp:263-266.
+    CHECK((h5::meta::storage_representation_v<std::array<int,4>>)    == sr_t::array_element);
+    CHECK((h5::meta::storage_representation_v<std::array<double,8>>)  == sr_t::array_element);
     // more-specific specializations must still win
     CHECK((h5::meta::storage_representation_v<std::vector<std::vector<int>>>)    == sr_t::ragged_vlen_dataset);
-    CHECK((h5::meta::storage_representation_v<std::vector<std::array<int,4>>>)   == sr_t::fixed_inner_extent_dataset);
+    // Winston model: vector<std::array<T,N>> uses array_dataset (rank-1 of H5T_ARRAY[N]).
+    CHECK((h5::meta::storage_representation_v<std::vector<std::array<int,4>>>)   == sr_t::array_dataset);
     CHECK((h5::meta::storage_representation_v<std::vector<std::string>>)         == sr_t::vlen_text_dataset);
 }
