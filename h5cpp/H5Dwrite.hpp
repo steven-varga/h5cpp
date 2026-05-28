@@ -5,6 +5,7 @@
 #pragma once
 #include "H5capi.hpp"
 #include "H5Tmeta.hpp"
+#include "H5Tsparse.hpp"
 #include "H5Dopen.hpp"
 #include "H5Dgather.hpp"
 #include "H5Dscatter.hpp"
@@ -133,11 +134,16 @@ namespace h5 {
 			H5Pclose(fapl);
 			H5Fclose(fid);
 		} else {
-			h5::sp_t mem_space = h5::create_simple( n_elements );
+			// Scalar dataspaces don't support hyperslab selection; H5Sselect_all
+			// on both sides is the equivalent path for H5S_SCALAR file spaces.
+			H5S_class_t file_cls = H5Sget_simple_extent_type(static_cast<hid_t>(file_space));
+			h5::sp_t mem_space = (file_cls == H5S_SCALAR)
+				? h5::sp_t{H5Screate(H5S_SCALAR)}
+				: h5::create_simple( n_elements );
 			h5::select_all( mem_space );
-			// we want to optimize for best hyper block selection, in order to do that
-			// let's find out what level of control is needed
-			if constexpr (toffset::present || tstride::present || tblock::present){
+			if (file_cls == H5S_SCALAR) {
+				err = H5Sselect_all(file_space);
+			} else if constexpr (toffset::present || tstride::present || tblock::present){
 				// HYPERBLOCK selection: we either have the argument in `args...` or using default values
 				const h5::block_t& block = arg::get( h5::default_block, args...);
 				const h5::offset_t& offset = arg::get( h5::default_offset, args...);
@@ -225,51 +231,334 @@ namespace h5 {
 	* H5Dflush(ds); 
 	* @endcode 
  	*/
+	// The SFINAE excludes raw pointers (they go through the T* overload) but
+	// carves out C-arrays — `T[N]` decays to a pointer, but we still want the
+	// by-reference path to handle them (e.g., char[N] fixed-length strings).
 	template <class T, class... args_t,
-		class = std::enable_if_t<!std::is_pointer_v<std::decay_t<T>>>>
+		class = std::enable_if_t<!std::is_pointer_v<std::decay_t<T>> || std::is_array_v<T>>>
 	inline h5::ds_t write(const h5::ds_t& ds, const T& ref,  args_t&&... args) try {
 		using tcount = typename arg::tpos<const h5::count_t&,const args_t&...>;
 		using element_t = typename impl::decay<T>::type;
+		using traits = h5::meta::access_traits_t<T>; // we classify type
+		using sr_t = h5::meta::storage_representation_t;
 
-		using traits = h5::meta::access_traits_t<T>;
 		constexpr auto kind = traits::kind;
+		constexpr auto storage = h5::meta::storage_representation_v<T>;
 
-		if constexpr (kind == h5::meta::access_t::contiguous
-				   || kind == h5::meta::access_t::object
-				   || kind == h5::meta::access_t::text) {
+		// Stopper: scatter types must use the fd-gateway overload so the compiler-generated
+		// h5::scatter<T> specialization can dispatch. Calling h5::write(ds, ref) on a scatter
+		// type would silently bypass scatter and fall through to the aggregate path with
+		// register_struct<T>() == H5I_UNINIT.
+		static_assert(!h5::has_scatter<std::decay_t<T>>::value,
+			"h5::write(ds, ref): scatter types must use h5::write(fd, path, ref) so the "
+			"compiler-generated h5::scatter<T> specialization can dispatch.");
+
+		// Stopper: unsupported storage usually means an unregistered POD aggregate, a
+		// deeply-nested container, or std::vector<bool>. Without this the dispatch can
+		// fall through to H5Dwrite with H5I_UNINIT and produce a broken file or crash.
+		// Guarded for the h5cpp-compiler bootstrap pass: when generated.h is the empty
+		// stub, H5CPP_REGISTER_STRUCT hasn't fired yet, so has_registered_compound<T>
+		// is false and the storage falls through to 'unsupported'. The compiler sets
+		// -DH5CPP_BUILDING_TYPE_INFO so this check is skipped during its AST scan.
+#ifndef H5CPP_BUILDING_TYPE_INFO
+		static_assert(storage != sr_t::unsupported,
+			"h5::write: storage_representation_v<T> resolved to 'unsupported'. "
+			"Check: unregistered POD aggregate (use H5CPP_REGISTER_STRUCT), "
+			"std::vector<bool>, or container nesting beyond vector<vector<T>>/vector<string>.");
+#endif
+
+		// Stopper (borrowed from #274): containers of containers must route via VLEN
+		// storage. Iterator-staging and pointers-gather paths can't faithfully serialize
+		// nested containers. element_t comes from impl::decay<T>, which is SFINAE-safe
+		// for non-container T (returns T itself, so is_stl_like<element_t>=false).
+		static_assert(
+			!h5::meta::is_stl_like<element_t>::value ||
+			storage == sr_t::ragged_vlen_dataset ||
+			storage == sr_t::vlen_text_dataset ||
+			storage == sr_t::array_dataset ||
+			storage == sr_t::array_element ||
+			storage == sr_t::fls_dataset ||
+			storage == sr_t::fixed_inner_extent_dataset,
+			"h5::write: containers of containers are only supported for vector<string> "
+			"(vlen_text_dataset) or vector<vector<T>> (ragged_vlen_dataset).");
+
+		if constexpr (storage == sr_t::array_element) {
+			// Top-level T[N] / std::array<T,N> (non-char) — scalar dataspace +
+			// H5T_ARRAY[N] dt_t<T> element. The traits::size dims drive the
+			// array extent; traits::data points at the contiguous buffer.
+			using element_t_loc = typename traits::element_t;
+			auto dims = traits::size(ref);
+			hsize_t array_dims[H5CPP_MAX_RANK];
+			for (std::size_t i = 0; i < dims.size(); ++i) array_dims[i] = dims[i];
+			h5::meta::resolved_type_t<element_t_loc> base_type;
+			hid_t array_type = H5Tarray_create(static_cast<hid_t>(base_type),
+				static_cast<unsigned>(dims.size()), array_dims);
+			const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+			h5::sp_t mem_space{H5Screate(H5S_SCALAR)};
+			h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
+			H5Sselect_all(static_cast<hid_t>(file_space));
+			H5CPP_CHECK_NZ(
+				H5Dwrite(static_cast<hid_t>(ds), array_type,
+					static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space),
+					static_cast<hid_t>(dxpl), traits::data(ref)),
+				h5::error::io::dataset::write, h5::error::msg::write_dataset);
+			H5Tclose(array_type);
+		} else if constexpr (storage == sr_t::array_dataset) {
+			// Outer<std::array<T,N>> (non-char T) — rank-1 dataspace of
+			// H5T_ARRAY[N] dt_t<T> elements.  For vector (which exposes
+			// .data()) we hand HDF5 the buffer directly; for list/set/etc.
+			// we copy elements into a contiguous scratch vector first.
+			using inner_t = std::remove_cv_t<typename std::remove_reference_t<T>::value_type>;
+			using elem_scalar = typename inner_t::value_type;
+			constexpr std::size_t N_inner = std::tuple_size<inner_t>::value;
+			hsize_t array_dims[1] = { static_cast<hsize_t>(N_inner) };
+			h5::meta::resolved_type_t<elem_scalar> base_type;
+			hid_t array_type = H5Tarray_create(static_cast<hid_t>(base_type), 1, array_dims);
+			const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+			std::size_t outer_count = std::distance(std::begin(ref), std::end(ref));
+			std::vector<inner_t> scratch;
+			const void* ptr = nullptr;
+			if constexpr (h5::meta::has_data_pointer<std::remove_cv_t<std::remove_reference_t<T>>>::value) {
+				ptr = ref.empty() ? nullptr : ref.front().data();
+			} else {
+				scratch.assign(std::begin(ref), std::end(ref));
+				ptr = scratch.empty() ? nullptr : scratch.front().data();
+			}
+			h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(outer_count));
+			h5::select_all(mem_space);
+			h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
+			H5Sselect_all(file_space);
+			H5CPP_CHECK_NZ(
+				H5Dwrite(static_cast<hid_t>(ds), array_type,
+					mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
+				h5::error::io::dataset::write, h5::error::msg::write_dataset);
+			H5Tclose(array_type);
+		} else if constexpr (storage == sr_t::fls_dataset) {
+			// Outer<std::array<char,N>> — rank-1 dataspace of fixed-length-
+			// string elements.  Iterator-stages for non-vector outers.
+			using inner_t = std::remove_cv_t<typename std::remove_reference_t<T>::value_type>;
+			constexpr std::size_t N_inner = std::tuple_size<inner_t>::value;
+			hid_t str_type = H5Tcopy(H5T_C_S1);
+			H5Tset_size(str_type, N_inner);
+			const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+			std::size_t outer_count = std::distance(std::begin(ref), std::end(ref));
+			std::vector<inner_t> scratch;
+			const void* ptr = nullptr;
+			if constexpr (h5::meta::has_data_pointer<std::remove_cv_t<std::remove_reference_t<T>>>::value) {
+				ptr = ref.empty() ? nullptr : ref.front().data();
+			} else {
+				scratch.assign(std::begin(ref), std::end(ref));
+				ptr = scratch.empty() ? nullptr : scratch.front().data();
+			}
+			h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(outer_count));
+			h5::select_all(mem_space);
+			h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
+			H5Sselect_all(file_space);
+			H5CPP_CHECK_NZ(
+				H5Dwrite(static_cast<hid_t>(ds), str_type,
+					mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
+				h5::error::io::dataset::write, h5::error::msg::write_dataset);
+			H5Tclose(str_type);
+		} else if constexpr (kind == h5::meta::access_t::composite) {
+			// scalar composite (std::tuple<Ts...>): pack into buffer matching the
+			// HDF5 compound type's field offsets (dt_t<tuple> + tuple_layout agree).
+			std::vector<char> buf(traits::bytes());
+			traits::pack(ref, buf.data());
+			h5::meta::resolved_type_t<T> mem_type;
+			const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+			h5::sp_t mem_space{H5Screate(H5S_SCALAR)};
+			h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
+			H5Sselect_all(static_cast<hid_t>(file_space));
+			H5CPP_CHECK_NZ(
+				H5Dwrite(static_cast<hid_t>(ds), static_cast<hid_t>(mem_type),
+					static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space),
+					static_cast<hid_t>(dxpl), buf.data()),
+				h5::error::io::dataset::write, h5::error::msg::write_dataset);
+		} else if constexpr (kind == h5::meta::access_t::text) {
+			// Scalar text — single string element on a scalar dataspace.
+			// Two storage flavours share this branch:
+			//   - vlen_text_dataset (std::string, string_view): H5T_VARIABLE
+			//     size, write the relay pointer (&relay) so HDF5 stores the
+			//     pointed-to bytes.
+			//   - fixed_length_string (char[N]): H5Tset_size(N), write the
+			//     N raw bytes directly.
+			const char* relay = traits::data(ref);
+			hid_t str_type = H5Tcopy(H5T_C_S1);
+			if constexpr (storage == sr_t::fixed_length_string) {
+				H5Tset_size(str_type, traits::fixed_length);
+			} else {
+				H5Tset_size(str_type, H5T_VARIABLE);
+			}
+			const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+			h5::sp_t mem_space{H5Screate(H5S_SCALAR)};
+			h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
+			H5Sselect_all(static_cast<hid_t>(file_space));
+			H5CPP_CHECK_NZ(
+				H5Dwrite(static_cast<hid_t>(ds), str_type,
+					static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space),
+					static_cast<hid_t>(dxpl),
+					(storage == sr_t::fixed_length_string)
+						? static_cast<const void*>(relay)
+						: static_cast<const void*>(&relay)),
+				h5::error::io::dataset::write, h5::error::msg::write_dataset);
+			H5Tclose(str_type);
+		} else if constexpr (kind == h5::meta::access_t::contiguous || kind == h5::meta::access_t::object) {
 			auto ptr = traits::data(ref);
-			if constexpr (tcount::present)
-				::h5::write(ds, ptr,  args...);
-			else {
+			if constexpr (!tcount::present) {
 				h5::count_t count = traits::size( ref );
 				::h5::write(ds, ptr, count, args...);
-			}
+			} else ::h5::write(ds, ptr,  args...);
 		} else if constexpr (kind == h5::meta::access_t::pointers) {
-			// e.g. vector<string>, vector<vector<int>> — elements have .data() but are not flat
-			using element_t = typename impl::decay<typename traits::element_t>::type;
-			std::vector<element_t> elements;
-			const element_t* ptrs = h5::gather(ref, elements);
-			if constexpr (tcount::present)
-				::h5::write<element_t>(ds, ptrs,  args...);
-			else {
-				h5::count_t count = traits::size( ref );
-				::h5::write<element_t>(ds, ptrs, count, args...);
+			if constexpr (storage == sr_t::vlen_text_dataset) {
+				// vector<string> — relay array of char*; HDF5 owns no memory here
+				std::vector<const char*> relay;
+				relay.reserve(ref.size());
+				for (const auto& s : ref) relay.push_back(s.c_str());
+				hid_t vlen_str = H5Tcopy(H5T_C_S1);
+				H5Tset_size(vlen_str, H5T_VARIABLE);
+				const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+				h5::count_t count = traits::size(ref);
+				h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(count[0]));
+				h5::select_all(mem_space);
+				h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
+				H5Sselect_all(file_space);
+				H5CPP_CHECK_NZ(
+					H5Dwrite(static_cast<hid_t>(ds), vlen_str,
+						mem_space, file_space, static_cast<hid_t>(dxpl), relay.data()),
+					h5::error::io::dataset::write, h5::error::msg::write_dataset);
+				H5Tclose(vlen_str);
+			} else if constexpr (storage == sr_t::ragged_vlen_dataset) {
+				// vector<L> where L is an iterable container — hvl_t relay.
+				// For L=std::vector we can point hvl_t.p directly at the inner
+				// buffer; for L=list/set/deque/etc. we copy each inner into a
+				// flat scratch buffer first.
+				using inner_t = typename traits::element_t;
+				using elem_t  = typename inner_t::value_type;
+				std::vector<hvl_t> relay(ref.size());
+				std::vector<std::vector<elem_t>> scratch;
+				constexpr bool inner_has_data = h5::meta::has_data_pointer<inner_t>::value;
+				if constexpr (!inner_has_data) scratch.resize(ref.size());
+				for (std::size_t i = 0; i < ref.size(); ++i) {
+					if constexpr (inner_has_data) {
+						relay[i].len = ref[i].size();
+						relay[i].p   = const_cast<void*>(static_cast<const void*>(ref[i].data()));
+					} else {
+						scratch[i].assign(ref[i].begin(), ref[i].end());
+						relay[i].len = scratch[i].size();
+						relay[i].p   = scratch[i].data();
+					}
+				}
+				h5::meta::resolved_type_t<elem_t> base_type;
+				hid_t vlen_type = H5Tvlen_create(static_cast<hid_t>(base_type));
+				const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+				h5::count_t count = traits::size(ref);
+				h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(count[0]));
+				h5::select_all(mem_space);
+				h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
+				H5Sselect_all(file_space);
+				H5CPP_CHECK_NZ(
+					H5Dwrite(static_cast<hid_t>(ds), vlen_type,
+						mem_space, file_space, static_cast<hid_t>(dxpl), relay.data()),
+					h5::error::io::dataset::write, h5::error::msg::write_dataset);
+				H5Tclose(vlen_type);
+			} else if constexpr (h5::meta::access_kind_v<typename traits::element_t> == h5::meta::access_t::composite) {
+				// vector<tuple<Ts...>> — pack each element via element traits
+				using elem_traits = h5::meta::access_traits_t<typename traits::element_t>;
+				std::size_t n = ref.size();
+				std::vector<char> buf(n * elem_traits::bytes());
+				for (std::size_t i = 0; i < n; ++i)
+					elem_traits::pack(ref[i], buf.data() + i * elem_traits::bytes());
+				h5::meta::resolved_type_t<typename traits::element_t> mem_type;
+				const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+				h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(n));
+				h5::select_all(mem_space);
+				h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
+				H5Sselect_all(file_space);
+				H5CPP_CHECK_NZ(
+					H5Dwrite(static_cast<hid_t>(ds), static_cast<hid_t>(mem_type),
+						mem_space, file_space, static_cast<hid_t>(dxpl), buf.data()),
+					h5::error::io::dataset::write, h5::error::msg::write_dataset);
+			} else {
+				// flat pointer gather: vector<NonTrivialPod> — element has .data() but is flat
+				using element_t = typename impl::decay<typename traits::element_t>::type;
+				std::vector<element_t> elements;
+				const element_t* ptrs = h5::gather(ref, elements);
+				if constexpr (!tcount::present) {
+					h5::count_t count = traits::size(ref);
+					::h5::write<element_t>(ds, ptrs, count, args...);
+				} else ::h5::write<element_t>(ds, ptrs, args...);
 			}
 		} else if constexpr (kind == h5::meta::access_t::iterators) {
-			// e.g. list<int>, set<int>, map<K,V> — no direct pointer, copy to staging buffer
-			using element_t = typename impl::decay<typename traits::element_t>::type;
-			auto count = traits::size(ref);
-			size_t n = 1;
-			for (std::size_t i = 0; i < count.size(); ++i) n *= count[i];
-			std::vector<element_t> buffer;
-			buffer.reserve(n);
-			for (const auto& elem : ref)
-				buffer.push_back(elem);
-			::h5::write(ds, buffer.data(), h5::count_t(count), args...);
-		} else {
-			static_assert(kind != h5::meta::access_t::unsupported,
-				"unsupported type for h5::write");
-		}
+			if constexpr (storage == sr_t::key_value_dataset) {
+				// map<K,V> and variants — compound HDF5 type with "key" and "value" fields
+				using element_t = typename traits::element_t;
+				using key_t     = std::remove_const_t<typename element_t::first_type>;
+				using value_t   = typename element_t::second_type;
+				struct kv_t { key_t key; value_t value; };
+				h5::meta::resolved_type_t<key_t>   kt;
+				h5::meta::resolved_type_t<value_t> vt;
+				hid_t compound = H5Tcreate(H5T_COMPOUND, sizeof(kv_t));
+				H5Tinsert(compound, "key",   offsetof(kv_t, key),   static_cast<hid_t>(kt));
+				H5Tinsert(compound, "value", offsetof(kv_t, value), static_cast<hid_t>(vt));
+				std::vector<kv_t> buffer;
+				buffer.reserve(ref.size());
+				for (const auto& [k, v] : ref)
+					buffer.push_back({static_cast<key_t>(k), v});
+				const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+				h5::count_t count = traits::size(ref);
+				h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(count[0]));
+				h5::select_all(mem_space);
+				h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
+				H5Sselect_all(file_space);
+				H5CPP_CHECK_NZ(
+					H5Dwrite(static_cast<hid_t>(ds), compound,
+						mem_space, file_space, static_cast<hid_t>(dxpl), buffer.data()),
+					h5::error::io::dataset::write, h5::error::msg::write_dataset);
+				H5Tclose(compound);
+			} else if constexpr (h5::meta::access_kind_v<typename traits::element_t> == h5::meta::access_t::composite) {
+				// list<tuple>, set<tuple>, deque<tuple>: pack via element traits.
+				// Iterator traversal (no operator[]); count via traits::size.
+				using elem_traits = h5::meta::access_traits_t<typename traits::element_t>;
+				std::size_t n = traits::size(ref)[0];
+				std::vector<char> buf(n * elem_traits::bytes());
+				std::size_t i = 0;
+				for (const auto& elem : ref) {
+					elem_traits::pack(elem, buf.data() + i * elem_traits::bytes());
+					++i;
+				}
+				h5::meta::resolved_type_t<typename traits::element_t> mem_type;
+				const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
+				h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(n));
+				h5::select_all(mem_space);
+				h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
+				H5Sselect_all(file_space);
+				H5CPP_CHECK_NZ(
+					H5Dwrite(static_cast<hid_t>(ds), static_cast<hid_t>(mem_type),
+						mem_space, file_space, static_cast<hid_t>(dxpl), buf.data()),
+					h5::error::io::dataset::write, h5::error::msg::write_dataset);
+			} else {
+				// staging buffer: list<T>, set<T>, deque<T> — linear sequences
+				using element_t = typename impl::decay<typename traits::element_t>::type;
+				// Guard (review item A2): the staging path memcpy's native element_t
+				// layout to disk via resolved_type_t<element_t>. For non-std-layout
+				// element_t the on-disk layout would silently diverge from the HDF5
+				// compound type. Composite element types route through the branch
+				// above; this catches any future escape (user-defined non-std-layout).
+				static_assert(std::is_standard_layout_v<element_t>,
+					"h5::write: iterator-staging path requires standard-layout element_t. "
+					"Use composite-kind types (e.g. wrap in std::tuple) or convert to a "
+					"flat representation before writing.");
+				auto count = traits::size(ref);
+				size_t n = 1;
+				for (std::size_t i = 0; i < count.size(); ++i) n *= count[i];
+				std::vector<element_t> buffer;
+				buffer.reserve(n);
+				for (const auto& elem : ref)
+					buffer.push_back(elem);
+				::h5::write(ds, buffer.data(), h5::count_t(count), args...);
+			}
+		} else static_assert(kind != h5::meta::access_t::unsupported, "unsupported type for h5::write");
+		
 		return ds;
 	} catch ( const std::exception& err ){
 		throw h5::error::io::dataset::write( err.what() );
@@ -321,6 +610,39 @@ namespace h5 {
 	* 	h5::current_dims{vec.length()}, h5::max_dims{H5S_UNLIMITED}, h5::chunk{1024} | h5::gzip{9});
 	* @endcode 
  	*/ 
+	// char[N] gets a dedicated overload because the generic const T* template
+	// wins partial ordering for array arguments via array-to-pointer decay,
+	// but for fixed-length-string semantics we want a fixed-length scalar
+	// dataset. Inline the create+write here so we don't recurse back into
+	// this overload via T*; the by-ref path can't be reached by template
+	// argument deduction because T=char[N] vs T=char(*) is ambiguous in the
+	// generic gateway.
+	template <std::size_t N, class... args_t>
+	inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const char (&ref)[N], args_t&&... args ){
+		h5::ds_t ds;
+		h5::mute();
+			bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
+		h5::unmute();
+		if (is_dataset_present) {
+			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+			ds = h5::open(fd, dataset_path, dapl);
+		} else {
+			const h5::lcpl_t& lcpl = arg::get(h5::default_lcpl, args...);
+			h5::dcpl_t default_dcpl{H5Pcreate(H5P_DATASET_CREATE)};
+			const h5::dcpl_t& dcpl = arg::get(default_dcpl, args...);
+			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+			hid_t str_type = H5Tcopy(H5T_C_S1);
+			H5Tset_size(str_type, N);
+			h5::sp_t space{H5Screate(H5S_SCALAR)};
+			ds = h5::createds(fd, dataset_path, str_type, space, lcpl, dcpl, dapl);
+			H5Tclose(str_type);
+		}
+		// Now write into the dataset. Goes through the kind=text/fixed_length
+		// branch of the ds-write dispatch.
+		::h5::write<char[N]>(ds, ref, std::forward<args_t>(args)...);
+		return ds;
+	}
+
 	template <class T, class... args_t>
 	inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T* ptr,  args_t&&... args  ){
 		using tcount  = typename arg::tpos<const h5::count_t&, const args_t&...>;
@@ -395,7 +717,8 @@ namespace h5 {
 	* @endcode 
  	*/ 
 		template <class T, class... args_t,
-			class = std::enable_if_t<!std::is_pointer_v<std::decay_t<T>>>>
+			class = std::enable_if_t<!std::is_pointer_v<std::decay_t<T>>
+			                      && !h5::meta::is_sparse_v<std::decay_t<T>>>>
 		inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
 			if constexpr (h5::has_scatter<std::decay_t<T>>::value) {
 				// Scatter path: compiler-generated scatter<T> handles open/create + row append.
@@ -403,34 +726,152 @@ namespace h5 {
 				// specialization embeds them or the dataset was pre-created.
 				return h5::scatter<std::decay_t<T>>(fd, dataset_path, ref);
 			} else {
-				h5::ds_t ds; // initialized to H5I_UNINIT
-			// find out if we have to create the dataset
-			h5::mute();
-				// Returns a negative value when the function fails and may return a negative value if the link does not exist.
-				// - name is not local to the group specified by loc_id or, if loc_id is something other than a group identifier, 
-				//        name is not local to the root group
-				// - Any element of the relative path or absolute path in name, except the target link, does not exist.
-				bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
-			h5::unmute(); // <- make sure not to mute error handling longer than needed
-			
-			if (is_dataset_present) {
-				const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
-				ds = h5::open(fd, dataset_path, dapl);
-			} else {
-				// dataset doesn't exist, or some error happened, since h5::create doesn't know of the 
-				// memory space size as `T& ref` never passed along we have to compute the `h5::current_dims_t{}` upfront
-				using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&, const args_t&...>;
-				using element_t = typename h5::impl::decay<T>::type;
-				if constexpr (tcurrent_dims::present) // user knows what he is doing, specified h5::current_dims{} explicitly
-					ds = h5::create<element_t>(fd, dataset_path, args...);
-				else { // h5::current_dims{..} is explicitly given by `h5::count` and optional h5::offset{}, h5::stride{}, h5::block{}
-					h5::count_t count = impl::size(ref);
-					h5::current_dims_t current_dims = h5::impl::get_current_dims(count, args...); // get correct dimensions
-					ds = h5::create<element_t>(fd, dataset_path, current_dims, args...);          // and use it to create dataset
+				using traits   = h5::meta::access_traits_t<T>;
+				using sr_t     = h5::meta::storage_representation_t;
+				constexpr auto storage = h5::meta::storage_representation_v<T>;
+
+				// Stopper: mirror the ds-dispatch overload guard so an unregistered or
+				// deeply-nested type fails at compile time on the gateway path too.
+				// (Scatter types are handled by the if-branch above, before this assert.)
+#ifndef H5CPP_BUILDING_TYPE_INFO
+				static_assert(storage != sr_t::unsupported,
+					"h5::write: storage_representation_v<T> resolved to 'unsupported'. "
+					"Check: unregistered POD aggregate (use H5CPP_REGISTER_STRUCT), "
+					"std::vector<bool>, or container nesting beyond vector<vector<T>>/vector<string>.");
+#endif
+
+				h5::ds_t ds;
+				h5::mute();
+					bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
+				h5::unmute();
+
+				if (is_dataset_present) {
+					const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+					ds = h5::open(fd, dataset_path, dapl);
+				} else {
+					using tcurrent_dims = typename arg::tpos<const h5::current_dims_t&, const args_t&...>;
+					const h5::lcpl_t& lcpl = arg::get(h5::default_lcpl, args...);
+					h5::dcpl_t default_dcpl{H5Pcreate(H5P_DATASET_CREATE)};
+					const h5::dcpl_t& dcpl = arg::get(default_dcpl, args...);
+					const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+
+					if constexpr (storage == sr_t::array_element) {
+						// Scalar dataspace + H5T_ARRAY[dims...] dt_t<T>.
+						using element_t_loc = typename traits::element_t;
+						auto dims = traits::size(ref);
+						hsize_t array_dims[H5CPP_MAX_RANK];
+						for (std::size_t i = 0; i < dims.size(); ++i) array_dims[i] = dims[i];
+						h5::meta::resolved_type_t<element_t_loc> base_type;
+						hid_t array_type = H5Tarray_create(static_cast<hid_t>(base_type),
+							static_cast<unsigned>(dims.size()), array_dims);
+						h5::sp_t space{H5Screate(H5S_SCALAR)};
+						ds = h5::createds(fd, dataset_path, array_type, space, lcpl, dcpl, dapl);
+						H5Tclose(array_type);
+					} else if constexpr (storage == sr_t::array_dataset) {
+						// Rank-1 dataspace of H5T_ARRAY[N] dt_t<T> elements.
+						using inner_t = typename traits::element_t;
+						using elem_scalar = typename inner_t::value_type;
+						constexpr std::size_t N_inner = std::tuple_size<inner_t>::value;
+						hsize_t array_dims[1] = { static_cast<hsize_t>(N_inner) };
+						h5::meta::resolved_type_t<elem_scalar> base_type;
+						hid_t array_type = H5Tarray_create(static_cast<hid_t>(base_type), 1, array_dims);
+						h5::current_dims_t current_dims;
+						current_dims.rank = 1;
+						current_dims[0] = static_cast<hsize_t>(std::distance(std::begin(ref), std::end(ref)));
+						h5::sp_t space = h5::create_simple(current_dims);
+						ds = h5::createds(fd, dataset_path, array_type, space, lcpl, dcpl, dapl);
+						H5Tclose(array_type);
+					} else if constexpr (storage == sr_t::fls_dataset) {
+						// Rank-1 dataspace of H5T_C_S1+set_size(N) elements.
+						using inner_t = typename traits::element_t;
+						constexpr std::size_t N_inner = std::tuple_size<inner_t>::value;
+						hid_t str_type = H5Tcopy(H5T_C_S1);
+						H5Tset_size(str_type, N_inner);
+						h5::current_dims_t current_dims;
+						current_dims.rank = 1;
+						current_dims[0] = static_cast<hsize_t>(std::distance(std::begin(ref), std::end(ref)));
+						h5::sp_t space = h5::create_simple(current_dims);
+						ds = h5::createds(fd, dataset_path, str_type, space, lcpl, dcpl, dapl);
+						H5Tclose(str_type);
+					} else if constexpr (traits::kind == h5::meta::access_t::text) {
+						// Scalar text — single string element on a scalar
+						// dataspace. Variable-length (std::string / view) or
+						// fixed-length (char[N] / std::array<char,N>) depending on storage.
+						hid_t str_type = H5Tcopy(H5T_C_S1);
+						if constexpr (storage == sr_t::fixed_length_string) {
+							H5Tset_size(str_type, traits::fixed_length);
+						} else {
+							H5Tset_size(str_type, H5T_VARIABLE);
+						}
+						h5::sp_t space{H5Screate(H5S_SCALAR)};
+						ds = h5::createds(fd, dataset_path, str_type, space, lcpl, dcpl, dapl);
+						H5Tclose(str_type);
+					} else if constexpr (traits::kind == h5::meta::access_t::object && storage == sr_t::scalar) {
+						// Scalar object kind (std::pair, std::complex): single
+						// H5T_COMPOUND element on a scalar dataspace via dt_t<T>.
+						h5::meta::resolved_type_t<T> mem_type;
+						h5::sp_t space{H5Screate(H5S_SCALAR)};
+						ds = h5::createds(fd, dataset_path, static_cast<hid_t>(mem_type), space, lcpl, dcpl, dapl);
+					} else if constexpr (traits::kind == h5::meta::access_t::composite) {
+						// scalar composite (tuple): scalar compound dataset
+						h5::meta::resolved_type_t<T> mem_type;
+						h5::sp_t space{H5Screate(H5S_SCALAR)};
+						ds = h5::createds(fd, dataset_path, static_cast<hid_t>(mem_type), space, lcpl, dcpl, dapl);
+					} else if constexpr (h5::meta::access_kind_v<typename traits::element_t> == h5::meta::access_t::composite) {
+						// vector<tuple>/list<tuple>/etc.: rank-1 compound dataset
+						using elem_t = typename traits::element_t;
+						h5::meta::resolved_type_t<elem_t> mem_type;
+						h5::count_t count = traits::size(ref);
+						h5::current_dims_t current_dims = h5::impl::get_current_dims(count, args...);
+						h5::sp_t space = h5::create_simple(current_dims);
+						ds = h5::createds(fd, dataset_path, static_cast<hid_t>(mem_type), space, lcpl, dcpl, dapl);
+					} else if constexpr (storage == sr_t::vlen_text_dataset) {
+						// vector<string>: 1D dataset of variable-length strings
+						hid_t vlen_str = H5Tcopy(H5T_C_S1);
+						H5Tset_size(vlen_str, H5T_VARIABLE);
+						h5::count_t count = traits::size(ref);
+						h5::current_dims_t current_dims = h5::impl::get_current_dims(count, args...);
+						h5::sp_t space = h5::create_simple(current_dims);
+						ds = h5::createds(fd, dataset_path, vlen_str, space, lcpl, dcpl, dapl);
+						H5Tclose(vlen_str);
+					} else if constexpr (storage == sr_t::ragged_vlen_dataset) {
+						// vector<vector<T>>: 1D dataset of HDF5 VLEN elements
+						using inner_t = typename traits::element_t;
+						using elem_t  = typename inner_t::value_type;
+						h5::meta::resolved_type_t<elem_t> base_type;
+						hid_t vlen_type = H5Tvlen_create(static_cast<hid_t>(base_type));
+						h5::count_t count = traits::size(ref);
+						h5::current_dims_t current_dims = h5::impl::get_current_dims(count, args...);
+						h5::sp_t space = h5::create_simple(current_dims);
+						ds = h5::createds(fd, dataset_path, vlen_type, space, lcpl, dcpl, dapl);
+						H5Tclose(vlen_type);
+					} else if constexpr (storage == sr_t::key_value_dataset) {
+						// map<K,V> and variants: compound HDF5 type with "key" and "value" fields
+						using element_t = typename traits::element_t;
+						using key_t   = std::remove_const_t<typename element_t::first_type>;
+						using value_t = typename element_t::second_type;
+						struct kv_t { key_t key; value_t value; };
+						h5::meta::resolved_type_t<key_t> kt;
+						h5::meta::resolved_type_t<value_t> vt;
+						hid_t compound = H5Tcreate(H5T_COMPOUND, sizeof(kv_t));
+						H5Tinsert(compound, "key",   offsetof(kv_t, key),   static_cast<hid_t>(kt));
+						H5Tinsert(compound, "value", offsetof(kv_t, value), static_cast<hid_t>(vt));
+						h5::count_t count = traits::size(ref);
+						h5::current_dims_t current_dims = h5::impl::get_current_dims(count, args...);
+						h5::sp_t space = h5::create_simple(current_dims);
+						ds = h5::createds(fd, dataset_path, compound, space, lcpl, dcpl, dapl);
+						H5Tclose(compound);
+					} else if constexpr (tcurrent_dims::present) {
+						using element_t = typename h5::impl::decay<T>::type;
+						ds = h5::create<element_t>(fd, dataset_path, args...);
+					} else {
+						using element_t = typename h5::impl::decay<T>::type;
+						h5::count_t count = traits::size(ref);
+						h5::current_dims_t current_dims = h5::impl::get_current_dims(count, args...);
+						ds = h5::create<element_t>(fd, dataset_path, current_dims, args...);
+					}
 				}
-			}
-			// we either have `ds` != H5I_UNINIT or an exception thrown, safe to delegate
-			return ::h5::write(ds, ref,  args...);
+				return ::h5::write(ds, ref, args...);
 			}
 		}
 

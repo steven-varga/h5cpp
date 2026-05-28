@@ -19,9 +19,16 @@ namespace h5 {
 	using cx_float = std::complex<float>;    /**< scientific type */
 }
 
-#define H5CPP_supported_elementary_types "supported elementary types ::= pod_struct | float | double |  [signed](int8 | int16 | int32 | int64)"
+#define H5CPP_supported_elementary_types "supported elementary types ::= pod_struct | enum | float | double |  [signed](int8 | int16 | int32 | int64)"
 namespace h5::utils {
-	template <class T> static constexpr bool is_supported = std::is_class_v<T> | std::is_arithmetic_v<T>;
+	// Scalar gate for the H5Dread/H5Awrite raw-pointer paths. Class types
+	// (POD structs, wrappers like Celsius, opaque/precision-modified wrappers)
+	// reach a dt_t<T> spec; arithmetic types and enums reach the native dt_t
+	// path. The storage_representation layer routes enums as 'scalar', so we
+	// admit them here too — without this, h5::read<std::vector<enum_t>> fails
+	// the assert despite enum_t having a valid dt_t spec.
+	template <class T> static constexpr bool is_supported =
+		std::is_class_v<T> || std::is_arithmetic_v<T> || std::is_enum_v<T>;
 	template <typename T> inline  std::vector<T> get_test_data( size_t n, size_t min, size_t max){
 		std::random_device rd;
 		std::default_random_engine rng(rd());

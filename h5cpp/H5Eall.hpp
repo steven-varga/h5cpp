@@ -81,6 +81,7 @@ namespace h5::error {
 		const std::string set_chunk = "couldn't set chunk...";
 		const std::string write_dataset = "couldn't write dataset...";
 		const std::string read_dataset = "couldn't read dataset...";
+		const std::string create_group   = "couldn't create group...";
 		const std::string create_dataset = "couldn't create dataset...";
 		const std::string create_file = "couldn't create file...";
 		const std::string create_property_list = "couldn't create property list...";
@@ -254,6 +255,29 @@ namespace h5::error::io::attribute {
 	struct delete_ : public h5::error::io::attribute::any {
 		delete_() : h5::error::io::attribute::any() {}
 		delete_( const std::string& msg ) : h5::error::io::attribute::any( msg ){}
+	};
+}
+
+namespace h5::error::io::group {
+	struct any : public h5::error::io::any {
+		any() : h5::error::io::any() {}
+		any( const std::string& msg ) : h5::error::io::any( msg ){}
+	};
+	struct open : public h5::error::io::group::any {
+		open() : h5::error::io::group::any() {}
+		open( const std::string& msg ) : h5::error::io::group::any( msg ){}
+	};
+	struct close : public h5::error::io::group::any {
+		close() : h5::error::io::group::any() {}
+		close( const std::string& msg ) : h5::error::io::group::any( msg ){}
+	};
+	struct create : public h5::error::io::group::any {
+		create() : h5::error::io::group::any() {}
+		create( const std::string& msg ) : h5::error::io::group::any( msg ){}
+	};
+	struct misc : public h5::error::io::group::any {
+		misc() : h5::error::io::group::any() {}
+		misc( const std::string& msg ) : h5::error::io::group::any( msg ){}
 	};
 }
 
