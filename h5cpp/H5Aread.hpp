@@ -330,16 +330,19 @@ namespace h5 {
 	}
 }
 
-// Implicit read for `T v = parent["attr"]`. Mirrors the at_t::operator=(V) write
-// path: the at_t produced by parent::operator[] carries the parent's `ds` and the
-// attribute `name`; the conversion forwards to h5::aread<V>(ds, name).
+// Implicit read for `T v = parent["attr"]`. The at_t conversion operator
+// (inline in H5Iall.hpp) forwards here. Kept as a free function template — NOT
+// an out-of-line member-template conversion operator of the at_t specialization
+// — because MSVC (VS2022 14.4x) emits a C1001 internal compiler error on that
+// form when the examples' bracket-syntax reads instantiate it. Mirrors the
+// at_t::operator=(V) write path.
 //
 // Forwards the raw ::hid_t directly (is_valid_attr accepts it) rather than
 // wrapping in an h5::ob_t — the wrapper would close the underlying handle on
 // destruction and orphan the caller's parent. Throws if ds is invalid.
-template<> template <class V, class>
-inline h5::at_t::operator V() const {
-	if( !H5Iis_valid(this->ds) )
+template <class V>
+inline V h5::impl::detail::at_read(::hid_t ds, const std::string& name) {
+	if( !H5Iis_valid(ds) )
 		throw h5::error::io::attribute::read("h5::at_t implicit read: parent ds handle is invalid; use parent[\"name\"].");
-	return h5::aread<V>(this->ds, this->name);
+	return h5::aread<V>(ds, name);
 }

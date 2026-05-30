@@ -242,6 +242,15 @@ namespace h5::impl::detail {
 		::hid_t dapl;
 	};
 
+	// Free helper backing at_t's implicit-read conversion (defined out-of-line
+	// in H5Aread.hpp once h5::aread is visible). The conversion operator stays
+	// inline in the class body and forwards here: MSVC (VS2022 14.4x) emits a
+	// C1001 internal compiler error on an *out-of-line* member-template
+	// conversion operator of an explicit specialization, which the examples'
+	// bracket-syntax reads instantiate. A plain free function template compiles
+	// cleanly out-of-line on every toolchain. (#282)
+	template <class V> V at_read(::hid_t ds, const std::string& name);
+
 	// Phase II — async attribute id.
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, false,false,hdf5::attribute>
@@ -334,7 +343,7 @@ namespace h5::impl::detail {
 		 */
 		template <class V,
 			class = std::enable_if_t<!std::is_same_v<V, ::hid_t>>>
-		operator V() const;
+		operator V() const { return h5::impl::detail::at_read<V>(this->ds, this->name); }
 
 		::hid_t ds;
 		std::string name;
