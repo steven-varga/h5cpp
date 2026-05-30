@@ -7,6 +7,13 @@ cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 ## match hdf5 versioning x.x.x.h5cpp-version
 project(h5cpp-examples VERSION 1.10.4.5 LANGUAGES CXX C)
 
+# Honor <PackageName>_ROOT (CMP0074, CMake 3.12+). The cmake_minimum_required
+# above predates it, so without this find_package(HDF5) below would silently
+# ignore the HDF5_ROOT we build for custom HDF Group installs. (#295)
+if(POLICY CMP0074)
+	cmake_policy(SET CMP0074 NEW)
+endif()
+
 # check if the correct version of hdf5 available
 set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
