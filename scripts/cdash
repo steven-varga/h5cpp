@@ -1,16 +1,25 @@
 #!/usr/bin/env bash
-# Submit h5cpp test results to CDash from any machine.
+# Submit h5cpp test + coverage results to CDash from any machine.
+#
+# Defaults: COVERAGE=ON (forces Debug + gcov), BUILD_EXAMPLES=ON, SUBMIT=ON.
+# Runs on desktops and under SLURM unchanged — JOBS, site, and build name adapt
+# to the job's CPU allocation and cluster automatically (see CTestDashboard.cmake).
 #
 # Usage: scripts/cdash [KEY=value ...]
 #
 # Examples:
-#   scripts/cdash
-#   scripts/cdash TRACK=Nightly
-#   scripts/cdash BUILD_TYPE=Debug HDF5_ROOT=/opt/hdf5
-#   scripts/cdash CTEST_BUILD_NAME=linux-aarch64-gcc-13-Release
-#   scripts/cdash BUILD_EXAMPLES=ON   # also build and test examples (needs armadillo/blaze/etc.)
-#   scripts/cdash SUBMIT=OFF          # dry run: build+test, no upload
-#   CXX=clang++-18 scripts/cdash
+#   scripts/cdash                                  # coverage + examples, submit
+#   scripts/cdash SUBMIT=OFF                        # dry run: build+test+coverage, no upload
+#   scripts/cdash COVERAGE=OFF BUILD_TYPE=Release   # plain Release build, no coverage
+#   scripts/cdash HDF5_DIR=/opt/hdf5/cmake          # pin HDF5 (module installs, discovery trap)
+#   CXX=g++-14 GCOV=gcov-14 scripts/cdash           # match gcov to the compiler
+#   CXX=clang++-18 GCOV='llvm-cov gcov' scripts/cdash
+#
+# SLURM (sbatch) — JOBS auto-derives from the allocation:
+#   #!/bin/bash
+#   #SBATCH -N1 -c16 -t00:30:00
+#   module load hdf5 gcc                            # site-specific
+#   srun scripts/cdash HDF5_DIR="$HDF5_DIR/cmake"   # or run on a login node if compute nodes have no outbound HTTPS
 #
 # All KEY=value pairs are forwarded to CTestDashboard.cmake as -DKEY=value.
 set -euo pipefail

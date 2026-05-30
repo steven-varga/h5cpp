@@ -3,14 +3,24 @@
 # or via the wrapper: scripts/cdash [KEY=value ...]
 #
 # Overridable variables (pass as -DKEY=value or KEY=value to the wrapper):
-#   BUILD_TYPE        Release|Debug|RelWithDebInfo  (default: Release)
+#   BUILD_TYPE        Release|Debug|RelWithDebInfo  (default: Debug when COVERAGE=ON, else Release)
 #   TRACK             Experimental|Nightly          (default: Experimental)
-#   JOBS              N                             (default: logical CPU count)
+#   JOBS              N                             (default: SLURM CPU allocation if set, else logical CPU count)
 #   HDF5_ROOT         /path/to/hdf5                 (default: cmake auto-detect)
 #   HDF5_DIR          /path/to/hdf5/cmake           (default: cmake auto-detect)
-#   CTEST_BUILD_NAME  label                         (default: <os>-<arch>-<compiler>-<BUILD_TYPE>)
+#   CTEST_BUILD_NAME  label                         (default: <os>-<arch>-<compiler>-<BUILD_TYPE>[-<node>] )
+#   CTEST_SITE        label                         (default: SLURM_CLUSTER_NAME if set, else hostname)
 #   SUBMIT            ON|OFF                        (default: ON)
-#   COVERAGE          ON|OFF                        (default: OFF; forces Debug + gcov)
+#   COVERAGE          ON|OFF                        (default: ON; forces Debug + gcov)
+#   BUILD_EXAMPLES    ON|OFF                        (default: ON)
+#
+# Runs unattended on desktops and under SLURM (sbatch/srun) alike. Under SLURM,
+# JOBS honours the job's CPU allocation (SLURM_CPUS_PER_TASK / SLURM_CPUS_ON_NODE)
+# so the build never oversubscribes a shared node, the dashboard site defaults to
+# the cluster name (SLURM_CLUSTER_NAME) so all nodes group together, and the build
+# name is suffixed with the compute-node hostname to keep per-node runs distinct.
+# Note: compute nodes often lack direct outbound HTTPS — run on a login/interactive
+# node, set HTTPS_PROXY, or pass SUBMIT=OFF on the node and resubmit from a login node.
 
 cmake_minimum_required(VERSION 3.17)
 
@@ -29,7 +39,7 @@ if(NOT DEFINED SUBMIT)
   set(SUBMIT ON)
 endif()
 if(NOT DEFINED COVERAGE)
-  set(COVERAGE OFF)
+  set(COVERAGE ON)
 endif()
 if(COVERAGE)
   # gcov line counts are only meaningful against an unoptimised, instrumented
@@ -37,11 +47,26 @@ if(COVERAGE)
   set(BUILD_TYPE "Debug")
 endif()
 if(NOT DEFINED JOBS)
-  cmake_host_system_information(RESULT JOBS QUERY NUMBER_OF_LOGICAL_CORES)
+  # Under SLURM, honour the job's CPU allocation so the build does not
+  # oversubscribe a shared node; fall back to the machine's logical core
+  # count on a desktop / login node.
+  if(DEFINED ENV{SLURM_CPUS_PER_TASK})
+    set(JOBS "$ENV{SLURM_CPUS_PER_TASK}")
+  elseif(DEFINED ENV{SLURM_CPUS_ON_NODE})
+    set(JOBS "$ENV{SLURM_CPUS_ON_NODE}")
+  else()
+    cmake_host_system_information(RESULT JOBS QUERY NUMBER_OF_LOGICAL_CORES)
+  endif()
 endif()
 
-# ── site = hostname ────────────────────────────────────────────────────────
-cmake_host_system_information(RESULT CTEST_SITE QUERY HOSTNAME)
+# ── site: cluster name under SLURM, else hostname (overridable) ─────────────
+if(NOT DEFINED CTEST_SITE)
+  if(DEFINED ENV{SLURM_CLUSTER_NAME})
+    set(CTEST_SITE "$ENV{SLURM_CLUSTER_NAME}")
+  else()
+    cmake_host_system_information(RESULT CTEST_SITE QUERY HOSTNAME)
+  endif()
+endif()
 
 # ── build name: os-arch-compiler-type (auto, overridable) ─────────────────
 if(NOT DEFINED CTEST_BUILD_NAME)
@@ -55,6 +80,13 @@ if(NOT DEFINED CTEST_BUILD_NAME)
   endif()
 
   set(CTEST_BUILD_NAME "${_os}-${_arch}-${_compiler}-${BUILD_TYPE}")
+
+  # When running under SLURM the site is the (shared) cluster name, so append
+  # the compute-node hostname to keep concurrent per-node submissions distinct.
+  if(DEFINED ENV{SLURM_JOB_ID})
+    cmake_host_system_information(RESULT _node QUERY HOSTNAME)
+    set(CTEST_BUILD_NAME "${CTEST_BUILD_NAME}-${_node}")
+  endif()
 endif()
 
 # ── generator: prefer Ninja ────────────────────────────────────────────────
@@ -69,7 +101,7 @@ set(CTEST_BUILD_FLAGS          "-j${JOBS}")
 
 # ── cmake configure options ────────────────────────────────────────────────
 if(NOT DEFINED BUILD_EXAMPLES)
-  set(BUILD_EXAMPLES OFF)
+  set(BUILD_EXAMPLES ON)
 endif()
 
 set(_options
