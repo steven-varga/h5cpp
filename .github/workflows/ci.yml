@@ -845,8 +845,14 @@ jobs:
             '*/test/*' \
             '*/thirdparty/*' \
             '*/examples/*' \
+            '*/h5cpp/H5Zpipeline_pool.hpp' \
             --ignore-errors unused,mismatch,inconsistent \
             --output-file coverage.info
+          # H5Zpipeline_pool.hpp is excluded TEMPORARILY: the FAPL worker pool
+          # never reaches the write/read dispatch (H5Fget_access_plist drops the
+          # inserted property), so pool_pipeline_t is unreachable through the
+          # public API and reads as 0% dead code. Tracked in #286 — remove this
+          # exclusion once activation is fixed and the pool path is exercised.
 
           rm coverage.full.info
           lcov --gcov-tool /usr/bin/gcov-14 --list coverage.info
