@@ -8,32 +8,10 @@ permissions:
   contents: write
 
 jobs:
-  # MkDocs — conceptual docs, architecture pages, guides
-  deploy-mkdocs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.x'
-
-      - name: Install MkDocs + Material theme
-        run: pip install mkdocs mkdocs-material
-
-      - name: Build MkDocs site
-        run: mkdocs build
-
-      - name: Deploy MkDocs to gh-pages root
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
-          keep_files: true
-
-  # Doxygen — API reference generated from C++ headers
+  # Doxygen — full project documentation site (API reference + curated
+  # I/O+TOPICS axes + COOKBOOK + REPORTS, all generated from headers,
+  # examples, and the doxy/docs/{index,aliases,curated,reports}/ markdown).
+  # Publishes to the gh-pages root; MkDocs has been retired.
   deploy-doxygen:
     runs-on: ubuntu-latest
     steps:
@@ -55,13 +33,13 @@ jobs:
           # version-deriving git describe in docs-build.sh sees real releases.
           git fetch --tags --depth=0 origin || true
 
-      - name: Build Doxygen API reference (version from git tag, post-processed)
+      - name: Build Doxygen documentation (version from git tag, post-processed)
         run: scripts/docs-build.sh
 
       - name: Summarise Doxygen warnings
         if: always()
         run: |
-          log=docs/doxygen/warnings.log
+          log=doxy/docs/doxygen/warnings.log
           if [[ -f $log ]]; then
             count=$(wc -l < $log)
             echo "::notice::Doxygen warnings: $count lines (see uploaded artifact 'doxygen-warnings')"
@@ -75,14 +53,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: doxygen-warnings
-          path: docs/doxygen/warnings.log
+          path: doxy/docs/doxygen/warnings.log
           if-no-files-found: ignore
           retention-days: 30
 
-      - name: Deploy Doxygen to gh-pages/api
+      - name: Deploy Doxygen to gh-pages root
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/doxygen/html
-          destination_dir: api
+          publish_dir: ./doxy/docs/doxygen/html
           keep_files: true

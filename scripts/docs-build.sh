@@ -49,6 +49,6 @@ echo "docs-build: PROJECT_NUMBER = $H5CPP_DOXYGEN_VERSION"
 
 ( cd doxy && doxygen Doxyfile )
 
-"$repo_root/scripts/docs-postprocess.sh" docs/doxygen/html
+"$repo_root/scripts/docs-postprocess.sh" doxy/docs/doxygen/html
 
-echo "docs-build: generated docs/doxygen/html/"
+echo "docs-build: generated doxy/docs/doxygen/html/"

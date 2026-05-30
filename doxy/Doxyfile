@@ -1,6 +1,6 @@
 # Doxyfile 1.9.x — H5CPP API reference
 # Run from the doxy/ directory: doxygen Doxyfile
-# Output lands in ../docs/doxygen/html/ (separate from MkDocs site/)
+# Output lands in docs/doxygen/html/ (separate from MkDocs site/)
 
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = H5CPP
@@ -12,7 +12,7 @@ PROJECT_NAME           = H5CPP
 PROJECT_NUMBER         = $(H5CPP_DOXYGEN_VERSION)
 PROJECT_BRIEF          = "Modern C++ templates for HDF5 serial and parallel I/O"
 PROJECT_LOGO           =
-OUTPUT_DIRECTORY       = ../docs/doxygen
+OUTPUT_DIRECTORY       = docs/doxygen
 CREATE_SUBDIRS         = NO
 ALLOW_UNICODE_NAMES    = NO
 OUTPUT_LANGUAGE        = English
@@ -47,7 +47,7 @@ WARN_NO_PARAMDOC       = NO
 # Emit warnings into a logfile alongside stderr so CI can upload it as an
 # artifact for coverage-tracking visibility. The file lives in the build dir
 # so it's picked up by the workflow's actions/upload-artifact step.
-WARN_LOGFILE           = ../docs/doxygen/warnings.log
+WARN_LOGFILE           = docs/doxygen/warnings.log
 
 # Input: API headers + README as main page + local Doxygen pages +
 # the curated reports tree + the alias-vocabulary reference. Conceptual
@@ -55,24 +55,17 @@ WARN_LOGFILE           = ../docs/doxygen/warnings.log
 # carries the API reference and the design/inventory prose that
 # accompanies it.
 INPUT                  = ../h5cpp \
-                         ../README.md \
-                         ../docs/reports \
-                         ../docs/aliases.md \
+                         docs/index.md \
+                         docs/reports \
+                         docs/curated \
+                         docs/aliases.md \
                          ../examples \
                          .
 
 FILE_PATTERNS          = *.cpp *.hpp *.h *.md *.dox
 RECURSIVE              = YES
 
-EXCLUDE                = ../docs/doxygen \
-                         ../docs/overrides \
-                         ../docs/assets \
-                         ../docs/styles \
-                         ../docs/javascripts \
-                         ../docs/dot \
-                         ../docs/icons \
-                         ../docs/pix \
-                         ../docs/examples
+EXCLUDE                = docs/doxygen
 # ../examples/ is added to INPUT only so README.md files become Doxygen
 # pages. Exclude the example *source* files from INPUT scanning — they're
 # already handled as `\example` listings via EXAMPLE_PATH below and shouldn't
@@ -87,6 +80,24 @@ EXCLUDE_PATTERNS       = */thirdparty/* \
                          */examples/*/*.h \
                          */examples/*/CMakeLists.txt \
                          */examples/*/Makefile
+
+# Drop the h5::impl::* implementation namespace AND the h5::error::*
+# exception hierarchy from documentation entirely. With Classes /
+# Namespaces tabs hidden in DoxygenLayout.xml, documented-but-unnested
+# structs still leak into the root of navtreedata.js as bare entries
+# (rollback / any / open / close / read / write / create / misc /
+# delete_ for each error category). Excluding the symbols here keeps
+# them out of the nav while the structs remain valid C++ to throw/catch.
+EXCLUDE_SYMBOLS        = h5::impl::* \
+                         h5::error::* \
+                         h5::pod \
+                         h5::strlen \
+                         h5::has_scatter \
+                         h5::gorilla \
+                         h5::uniform \
+                         h5::normal \
+                         h5::exponential \
+                         h5::bernoulli
 
 EXAMPLE_PATH           = ../examples/attributes \
                          ../examples/basics \
@@ -119,9 +130,7 @@ EXAMPLE_PATH           = ../examples/attributes \
 EXAMPLE_PATTERNS       = *.cpp *.hpp *.h
 EXAMPLE_RECURSIVE      = YES
 
-IMAGE_PATH             = ../docs/pix
-
-USE_MDFILE_AS_MAINPAGE = ../README.md
+USE_MDFILE_AS_MAINPAGE = docs/index.md
 
 # Index and layout
 ALPHABETICAL_INDEX     = NO
@@ -150,10 +159,10 @@ ENUM_VALUES_PER_LINE   = 4
 GENERATE_LATEX         = NO
 
 # Tag files for cross-links
-TAGFILES              += "../docs/tags/cppreference-doxygen-web.tag.xml=https://en.cppreference.com/"
+TAGFILES              += "docs/tags/cppreference-doxygen-web.tag.xml=https://en.cppreference.com/"
 
 # Alias includes — each file adds ALIASES lines
-@INCLUDE_PATH          = ../docs/links
+@INCLUDE_PATH          = docs/links
 @INCLUDE               = h5cpp.txt
 @INCLUDE               = hdf5.txt
 @INCLUDE               = linalg.txt
