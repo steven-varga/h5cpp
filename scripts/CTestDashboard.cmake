@@ -7,8 +7,10 @@
 #   TRACK             Experimental|Nightly          (default: Experimental)
 #   JOBS              N                             (default: logical CPU count)
 #   HDF5_ROOT         /path/to/hdf5                 (default: cmake auto-detect)
+#   HDF5_DIR          /path/to/hdf5/cmake           (default: cmake auto-detect)
 #   CTEST_BUILD_NAME  label                         (default: <os>-<arch>-<compiler>-<BUILD_TYPE>)
 #   SUBMIT            ON|OFF                        (default: ON)
+#   COVERAGE          ON|OFF                        (default: OFF; forces Debug + gcov)
 
 cmake_minimum_required(VERSION 3.17)
 
@@ -25,6 +27,14 @@ if(NOT DEFINED TRACK)
 endif()
 if(NOT DEFINED SUBMIT)
   set(SUBMIT ON)
+endif()
+if(NOT DEFINED COVERAGE)
+  set(COVERAGE OFF)
+endif()
+if(COVERAGE)
+  # gcov line counts are only meaningful against an unoptimised, instrumented
+  # build, so coverage runs force Debug regardless of any BUILD_TYPE passed.
+  set(BUILD_TYPE "Debug")
 endif()
 if(NOT DEFINED JOBS)
   cmake_host_system_information(RESULT JOBS QUERY NUMBER_OF_LOGICAL_CORES)
@@ -77,6 +87,34 @@ endif()
 if(DEFINED HDF5_ROOT)
   list(APPEND _options "-DHDF5_ROOT=${HDF5_ROOT}")
 endif()
+# HDF5_DIR (the package config dir) is the reliable discovery knob when an
+# h5cc on PATH would otherwise shadow the intended install.
+if(DEFINED HDF5_DIR)
+  list(APPEND _options "-DHDF5_DIR=${HDF5_DIR}")
+endif()
+
+# ── coverage instrumentation (optional) ──────────────────────────────────────
+if(COVERAGE)
+  list(APPEND _options
+    "-DCMAKE_C_FLAGS=--coverage -fprofile-update=atomic -O0 -g"
+    "-DCMAKE_CXX_FLAGS=--coverage -fprofile-update=atomic -O0 -g"
+    "-DCMAKE_EXE_LINKER_FLAGS=--coverage")
+
+  # gcov tool — honour $GCOV (e.g. gcov-14 to match g++-14), else first on PATH.
+  if(DEFINED ENV{GCOV})
+    set(CTEST_COVERAGE_COMMAND "$ENV{GCOV}")
+  else()
+    find_program(CTEST_COVERAGE_COMMAND NAMES gcov)
+  endif()
+
+  # Scope the Coverage step to library headers only.  CTestCustom.cmake already
+  # carries these excludes for the build tree; we set them here too so the
+  # off-CI -S run is self-contained.  H5Zpipeline_pool.hpp is dead through the
+  # public API (see #286) and excluded until activation is fixed.
+  list(APPEND CTEST_CUSTOM_COVERAGE_EXCLUDE
+    "/thirdparty/" "/test/" "/examples/" "/usr/" "/CMakeFiles/"
+    "/H5Zpipeline_pool.hpp")
+endif()
 
 # ── announce ───────────────────────────────────────────────────────────────
 message(STATUS "────────────────────────────────────────")
@@ -87,6 +125,7 @@ message(STATUS "  track:      ${TRACK}")
 message(STATUS "  build dir:  ${CTEST_BINARY_DIRECTORY}")
 message(STATUS "  jobs:       ${JOBS}")
 message(STATUS "  examples:   ${BUILD_EXAMPLES}")
+message(STATUS "  coverage:   ${COVERAGE}")
 message(STATUS "  submit:     ${SUBMIT}")
 message(STATUS "────────────────────────────────────────")
 
@@ -109,6 +148,16 @@ ctest_test(
   PARALLEL_LEVEL "${JOBS}"
   RETURN_VALUE   _rv_test
 )
+
+if(COVERAGE)
+  ctest_coverage(
+    BUILD        "${CTEST_BINARY_DIRECTORY}"
+    RETURN_VALUE _rv_coverage
+  )
+  if(_rv_coverage)
+    message(WARNING "CDash coverage step returned ${_rv_coverage}")
+  endif()
+endif()
 
 if(SUBMIT)
   ctest_submit(RETURN_VALUE _rv_submit)
