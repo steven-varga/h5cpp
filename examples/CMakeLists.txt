@@ -222,19 +222,11 @@ else()
     endif()
 endif()
 
-# ublas headers are vendored but rely on system Boost config/compiler headers
-find_path(H5CPP_BOOST_CONFIG_INCLUDE_EX NAMES boost/config.hpp)
-if(H5CPP_BOOST_CONFIG_INCLUDE_EX)
-    message( "-- Vendored: ublas added to examples" )
-    # examples/attributes/attributes.cpp uses the boost/* layout
-    # (#include <boost/numeric/ublas/matrix.hpp>); the vendored libublas only
-    # exposes the numeric/* layout, so propagate the system/vcpkg Boost include
-    # dir through libublas for any target that links it.
-    target_include_directories(libublas INTERFACE ${H5CPP_BOOST_CONFIG_INCLUDE_EX})
-    add_h5cpp_example(ublas linalg/ublas.cpp LIBRARIES libublas)
-else()
-    message("-- Boost config headers not found — ublas example disabled")
-endif()
+# uBLAS is fully vendored (header-only closure under thirdparty/ublas, #293) —
+# libublas resolves <boost/numeric/ublas/...> standalone, so no system Boost is
+# required and the example always builds.
+message("-- Vendored: ublas added to examples")
+add_h5cpp_example(ublas linalg/ublas.cpp LIBRARIES libublas)
 
 # ------------------------------------------------------------------------------
 # Sparse linalg examples (CSC group layout, scipy/Julia interop)
