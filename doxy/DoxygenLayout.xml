@@ -59,7 +59,7 @@
       <tab type="user"    visible="yes" title="MPI"               url="@ref example_guide_mpi"/>
     </tab>
 
-    <!-- USABILITY — per-category feature scorecard for v1.12.6. -->
+    <!-- USABILITY — per-category feature scorecard for v1.12.7. -->
     <tab type="user"      visible="yes" title="USABILITY" url="@ref reports_usability_evaluation"/>
 
     <!-- REPORTS — full project reports tree.  Compiled from docs/reports/

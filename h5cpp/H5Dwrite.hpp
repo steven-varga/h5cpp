@@ -16,7 +16,7 @@ namespace h5 {
 	* \par_ds
 	* @param mem_space the dimensions of the memory region being transferred
 	* @param file_space the dimensions of the target dataset region `nelems(mem_space) == nelems(file_space)`
-	* \par_dxpl
+	* @param dxpl data transfer property list (`h5::dxpl_t`)
 	* \par_ptr
 	* \tpar_T
  	*/ 
@@ -572,7 +572,7 @@ namespace h5 {
 	* with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block 
 	* \par_fd
 	* \par_dataset_path
-	* \par_ptr
+	* \par_ref
     * \par_args
 	* \returns_ds
 	* 

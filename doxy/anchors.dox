@@ -991,7 +991,7 @@
  *
  * Once those three are in scope, the type joins the same generic
  * read/write/create dispatch as `std::vector<T>` — no per-library
- * special-case at the call site. See the @ref reports_type_system_architecture_notes
+ * special-case at the call site. See the @ref reports_type_system_map
  * "Type System Architecture Notes" for the design rationale.
  *
  * @sa @ref link_base_template_types "Supported Types"
@@ -1286,12 +1286,12 @@
  * across the per-container mapper headers (`H5M*.hpp`), where the
  * detection-idiom fallbacks fire, and how third-party containers
  * route without registration — is in
- * @ref reports_type_system_architecture_notes "Architecture / Type-system architecture notes"
+ * @ref reports_type_system_map "Architecture / Type-system architecture notes"
  * (Project Reports → Architecture).
  *
  * @sa link_handle_reference link_raii_idiom link_conversion_policy
  *     link_stl_template_types link_linalg_template_types
- *     reports_type_system_architecture_notes reports_type_system_map
+ *     reports_type_system_map
  *     example_guide_container example_guide_compound example_guide_linalg
  *     example_guide_sparse example_guide_mdspan example_guide_string
  */

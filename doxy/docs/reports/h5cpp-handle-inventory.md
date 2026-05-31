@@ -1,6 +1,6 @@
 @page reports_handle_inventory H5CPP Handle Inventory & Pretty-Print Status
 
-**Status as of h5cpp v1.12.6.** Scope: every RAII handle wrapper h5cpp ships — file, dataset, attribute, group, object, dataspace, datatype, 16 property-list variants, and the 5 async-mode counterparts.
+**Status as of h5cpp v1.12.7.** Scope: every RAII handle wrapper h5cpp ships — file, dataset, attribute, group, object, dataspace, datatype, 16 property-list variants, and the 5 async-mode counterparts.
 
 All handle types are aliases of the common base
 `h5::impl::detail::hid_t<T, capi_close, FromCapi, ToCapi, Kind>` defined in

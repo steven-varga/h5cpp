@@ -64,7 +64,7 @@ namespace h5 {
 	 * Defaults to `{0}` — a scalar attribute. Pass a non-trivial extent for an array-valued attribute (e.g. `h5::current_dims{8}` for an
 	 * 8-element vector attribute).
 	 *
-	 * @param acpl  attribute creation property list (`h5::acpl_t`); defaults to `H5P_ATTRIBUTE_CREATE`.
+	 * @arg \c acpl —  attribute creation property list (`h5::acpl_t`); defaults to `H5P_ATTRIBUTE_CREATE`.
 	 *
 	 * @throws h5::error::io::attribute::create   on `H5Acreate2` failure (parent does not exist, attribute already exists, type
 	 *         conversion error, etc.).

@@ -10,7 +10,7 @@ with the prose that explains the design decisions behind them.
 The "why does this layer exist and how was it built" reports.
 
 - @subpage reports_type_system_map — the live type-system map (every C++ source type → HDF5 type → storage mechanism)
-- @subpage reports_multithreading_pipeline_state — current state of the multithreaded filter pipeline in v1.12.6 (`h5::high_throughput` DAPL + `h5::append` packet-table paths)
+- @subpage reports_multithreading_pipeline_state — current state of the multithreaded filter pipeline in v1.12.7 (`h5::high_throughput` DAPL + `h5::append` packet-table paths)
 - @subpage reports_compiler_multi_backend_architecture — h5cpp-compiler's plug-in serialisation backend framework (11 backends: HDF5 + Protobuf + JSON + MsgPack + CBOR + BSON + Avro + RLP + SQL ×3 dialects)
 
 ## Inventories & Guides
@@ -43,7 +43,7 @@ h5cpp-compiler's AST walker parses to produce each artifact.
 
 ## Project Assessment
 
-- @subpage reports_usability_evaluation — v1.12.6 per-category feature scorecard with rationale (✔ / ◇ / ✘ status across 13 dimensions)
+- @subpage reports_usability_evaluation — v1.12.7 per-category feature scorecard with rationale (✔ / ◇ / ✘ status across 13 dimensions)
 
 ---
 

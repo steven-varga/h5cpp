@@ -451,6 +451,8 @@ namespace h5 {
 	}
 }
 
+/// @cond INTERNAL  (out-of-line operator[] specializations; Doxygen can't match
+/// these to the in-class declarations and warns "no uniquely matching member" — #297)
 template<> inline
 h5::at_t h5::ds_t::operator[]( const char name[] ){
 	//we don't have the object parameters yet available the only thing to do is
@@ -497,3 +499,4 @@ h5::at_t h5::at_t::operator=( const std::initializer_list<V> args ){
 	h5::awrite(ds, name, args);
 	return *this;
 }
+/// @endcond

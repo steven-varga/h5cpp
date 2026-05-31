@@ -38,7 +38,7 @@ namespace h5 {
 	 *
 	 * Attributes do not chunk and do not support partial I/O; the full value is materialised in memory.
 	 *
-	 * @param parent  open parent handle: raw `::hid_t`, `h5::gr_t`, `h5::ds_t`, `h5::ob_t`, or `h5::dt_t<T>` — enforced at compile
+	 * @param ds  open parent handle: raw `::hid_t`, `h5::gr_t`, `h5::ds_t`, `h5::ob_t`, or `h5::dt_t<T>` — enforced at compile
 	 *                time via `h5::impl::is_valid_attr`. Typed `h5::fd_t` is **not** accepted directly; pass `static_cast<::hid_t>(fd)`.
 	 * @param name    attribute name (UTF-8); resolved relative to `parent`.
 	 * @param acpl    attribute creation property list (`h5::acpl_t`); defaults to `h5::default_acpl`.

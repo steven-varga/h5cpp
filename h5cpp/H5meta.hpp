@@ -191,12 +191,15 @@ namespace h5::impl {
 namespace h5::meta::impl {
     template <std::size_t...> struct extents{ };
 
+    /// @cond INTERNAL  (recursive metaprogramming — Doxygen mis-reads the
+    /// self-referential base as a recursive class relation; #297)
     template <class T, std::size_t N, std::size_t... next>
     struct extents_ : public extents_<T, N-1, std::extent<T,N-1>::value, next...>{ };
 
     template <class T, std::size_t... next> struct extents_<T, 0, next... >{
         using type = extents<next...>;
     };
+    /// @endcond
 
     template <class T, std::size_t N=std::rank<T>::value>
     using get_extents = typename extents_<T, N>::type;
@@ -250,6 +253,7 @@ namespace h5::meta::impl {
     h5cpp_fname2(long, double)
 
     template <class T, char... digits> using text = impl::name<typename std::remove_all_extents<T>::type, digits...>;
+    /// @cond INTERNAL  (recursive extent→string metaprogramming; #297)
     template <int rank, class T, int... digits> struct parse;
     template <int rank, class T, int rem, int... digits> struct parse_extent;
 
@@ -266,6 +270,7 @@ namespace h5::meta::impl {
         : parse<rank, T, ',',digits...> {}; // separate dimensions with comma: ','
     template <class T,  int... digits> struct parse_extent <0, T, 0, digits...>
         : parse<0, T, digits...> {};        // terminal case has no commas:
+    /// @endcond
 #undef h5cpp_short__
 }
 namespace h5::meta {

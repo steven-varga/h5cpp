@@ -161,7 +161,7 @@ h5::async::fd_t afd = h5::async::create(path, H5F_ACC_TRUNC,
 ```
 
 See @ref handle_ref_async "Async-mode handles" for the type-level
-machinery; the @ref reports_fapl_multithreading_workplan report
+machinery; the @ref reports_multithreading_pipeline_state report
 covers the FAPL-scoped worker pool and the async-mode dispatch
 strategy.
 

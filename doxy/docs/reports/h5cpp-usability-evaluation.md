@@ -1,6 +1,6 @@
 @page reports_usability_evaluation h5cpp Usability Evaluation
 
-> **Re-evaluation for h5cpp v1.12.6.** Earlier scorecard (post-#149–#153
+> **Re-evaluation for h5cpp v1.12.7.** Earlier scorecard (post-#149–#153
 > merge) is superseded — major gaps closed since then: STL non-contiguous
 > containers, async I/O, references, sparse Eigen, C++20+ adoption,
 > macOS packaging, h5cpp-compiler reflection, multithreaded filter
@@ -8,7 +8,7 @@
 >
 > Legend: ✔ Full / ◇ Partial / ✘ Missing / **bold** = new since earlier eval
 
----
+<hr>
 
 ## 1. Core I/O Operations
 
@@ -139,7 +139,7 @@ with `scipy.sparse.csc_matrix`, Julia `HDF5.jl`, 10x Genomics, Loompy.
 | **Async-mode descriptors (Phase II)** | ✔ | `h5::async::fd_t` / `ds_t` / `at_t` / `gr_t` / `ob_t` — compile-time mode discrimination; `operator ::hid_t() = delete` to prevent raw-CAPI escape |
 | **Async-mode factories** | ✔ | `h5::async::create` / `h5::async::open` propagate the FAPL-scoped executor through descendant descriptors |
 | **HDF5 1.13+ official async** | ◇ | `H5Dwrite_async` / `H5Dread_async` CAPI not yet directly wrapped; h5cpp's async-mode dispatch achieves the same outcome through the FAPL worker pool |
-| **Threaded filter pipeline (sigma queue)** | ✔ | DAPL high-throughput tag activates pool-parallel decompression; design documented in @ref reports_threaded_pipeline_sigma_queue |
+| **Threaded filter pipeline (sigma queue)** | ✔ | DAPL high-throughput tag activates pool-parallel decompression; design documented in @ref reports_multithreading_pipeline_state |
 
 ---
 
@@ -223,7 +223,7 @@ trait composition (Walter Brown feature detection).
 | **POD struct macro (`H5CPP_REGISTER_STRUCT`)** | ✔ | One-line registration; in-memory == on-disk layout |
 | **h5cpp-compiler (Clang LibTooling, external)** | ✔ | Walks AST, emits compound descriptor + `gather<T>` / `scatter<T>` for non-POD types with vector/string/map fields. Zero-copy on write; one-copy on read. Repo: <https://github.com/vargalabs/h5cpp-compiler> |
 | **Multi-backend emission (HDF5 + Protobuf + JSON Schema + SQL DDL + Avro)** | ◇ | HDF5 producer landed; other producers on the multi-backend roadmap — design at @ref reports_compiler_multi_backend_architecture |
-| **C++26 reflection (P2996 + P3394)** | ◇ | Roadmap document at @ref reports_reflection_cpp26_roadmap; header-only `h5cpp/reflection/` path planned for the first C++26-complete compiler |
+| **C++26 reflection (P2996 + P3394)** | ◇ | Roadmap: C++26 P2996/P3394 reflection (planned); header-only `h5cpp/reflection/` path planned for the first C++26-complete compiler |
 | **Field-level annotations** | ✔ | Attribute syntax for h5cpp-compiler today (`[[h5::name("x")]]`, `[[h5::chunk(1024)]]`, `[[h5::on_missing("...")]]`); same vocabulary planned for C++26 annotations (`[[=h5::chunk{1024}]]`) |
 
 ---
@@ -268,7 +268,7 @@ trait composition (Walter Brown feature detection).
 ## Top 5 Most Desirable Unsupported Features
 
 > Each one of the original Top 5 has been addressed or substantially
-> mitigated. Re-evaluated for v1.12.6:
+> mitigated. Re-evaluated for v1.12.7:
 
 | Rank | Feature | Impact | Status / Path Forward |
 |------|---------|--------|------------------------|

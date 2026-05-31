@@ -60,7 +60,7 @@ scorecard. Pick the one that matches what you're trying to do:
 | **@ref curated_io_api "I/O"** | "I have a `FILE` / `DATASET` / `ATTRIBUTE` / `GROUP` — what API do I call?" | API reference organised by HDF5 object kind |
 | **@ref curated_topics "TOPICS"** | "What does h5cpp *support*, and how does it work under the hood?" | Capability reference: properties, linalg, STL, reflection, filters, MPI, error handling, type system, CDash, reports |
 | **@ref examples_guides_index "COOKBOOK"** | "Just show me a runnable example." | 28 worked examples — basics, datasets, attributes, groups, compound, linalg, sparse, mdspan, transform, optimised, packet table, custom pipeline, references, smart pointers, reflection, multi-TU, half-float, CSV, S3, MPI, … |
-| **@ref reports_usability_evaluation "USABILITY"** | "What's actually supported in v1.12.6?" | Per-category feature scorecard (✔ / ◇ / ✘) — core I/O, type coverage, linalg, advanced HDF5, parallel & async, sparse, error handling, STL, type system, reflection, build & CI |
+| **@ref reports_usability_evaluation "USABILITY"** | "What's actually supported in v1.12.7?" | Per-category feature scorecard (✔ / ◇ / ✘) — core I/O, type coverage, linalg, advanced HDF5, parallel & async, sparse, error handling, STL, type system, reflection, build & CI |
 
 ---
 
@@ -85,7 +85,7 @@ A few of the differentiators worth knowing about up front:
 
 # Install
 
-Pre-built packages for **v1.12.6**, one row per platform — the
+Pre-built packages for **v1.12.7**, one row per platform — the
 **H5CPP** column is the header-only library (required); the
 **COMPILER** column is the optional Clang LibTooling-based reflection
 toolchain (needed only for non-POD struct persistence — see
@@ -107,16 +107,16 @@ toolchain (needed only for non-POD struct persistence — see
 > Silicon today.
 
 SHA-256 checksums on each release page:
-[h5cpp v1.12.6][rel-h5cpp] · [h5cpp-compiler v1.12.6][rel-compiler]
+[h5cpp v1.12.7][rel-h5cpp] · [h5cpp-compiler v1.12.6][rel-compiler]
 &middot; browse [all h5cpp releases][all-h5cpp] /
 [all compiler releases][all-compiler] for older versions and
 pre-release builds.
 
 ```bash
 # H5CPP — install once downloaded:
-sudo apt install ./h5cpp-dev-v1.12.6-linux-x86_64.deb        # Ubuntu / Debian
-sudo dnf install ./h5cpp-dev-v1.12.6-linux-x86_64.rpm        # RHEL / Fedora
-sudo installer -pkg h5cpp-dev-v1.12.6-darwin-arm64.pkg \
+sudo apt install ./h5cpp-dev-v1.12.7-linux-x86_64.deb        # Ubuntu / Debian
+sudo dnf install ./h5cpp-dev-v1.12.7-linux-x86_64.rpm        # RHEL / Fedora
+sudo installer -pkg h5cpp-dev-v1.12.7-darwin-arm64.pkg \
                 -target /                                      # macOS arm64
 # Windows: double-click the .exe — NSIS installer with Start menu entries
 
@@ -167,9 +167,9 @@ dashboard:
 
 ---
 
-# What's in v1.12.6
+# What's in v1.12.7
 
-The @ref reports_usability_evaluation "v1.12.6 usability scorecard"
+The @ref reports_usability_evaluation "v1.12.7 usability scorecard"
 has the full picture — highlights since the earlier evaluation:
 
 - **STL non-contiguous unblocked** — `std::map`, `std::list`,
@@ -197,9 +197,9 @@ has the full picture — highlights since the earlier evaluation:
 | Coming from… | Start at | Why |
 | :----------- | :------- | :-- |
 | **HDF5 CAPI** | @ref curated_io_api | One-to-one mapping from HDF5 verbs (`H5Fcreate`, `H5Dwrite`, `H5Aopen`) to h5cpp's typed equivalents |
-| **h5py** (Python) | @ref reports_vs_h5py_syntax | Side-by-side syntax comparison |
+| **h5py** (Python) | @ref curated_io_api | Side-by-side syntax comparison |
 | **Boost.Serialization / Cereal / nlohmann::json** | @ref curated_topics_reflection | How h5cpp's compiler-assisted reflection avoids intrusive macros |
-| **HighFive** | @ref reports_performance_comparison_framework | Methodology used to compare h5cpp against HighFive and raw CAPI |
+| **HighFive** | the `bench/` suite | Methodology used to compare h5cpp against HighFive and raw CAPI |
 | **A new C++ project** | The quickstart above + @ref example_guide_basics | 60 seconds to a working `h5::write` / `h5::read` round-trip |
 | **A linear-algebra-heavy codebase** | @ref curated_topics_linalg | Per-library mapper headers and storage-order rules |
 | **An LLM-tooling pipeline** (RPC schemas, JSON Schema) | @ref reports_compiler_multi_backend_architecture | One struct → HDF5 + Protobuf + JSON Schema + SQL + Avro from a single source of truth |
@@ -235,22 +235,23 @@ theme.</small>
 <!-- ----------------------------------------------------------------------
      Download URL definitions — kept at the bottom to keep the install
      table readable. Reference convention:
-       100-105  → h5cpp library      (release: vargalabs/h5cpp v1.12.6)
+       100-105  → h5cpp library      (release: vargalabs/h5cpp v1.12.7)
        200-206  → h5cpp-compiler     (release: vargalabs/h5cpp-compiler v1.12.6)
        rel-*    → per-release pages with SHA-256 checksums
        all-*    → "all releases" landing pages
        src-*    → source repository roots
-     When v1.12.7 ships, find/replace `v1.12.6` → `v1.12.7` in these
-     definitions; the table above does not embed any URLs directly.
+     The two products version independently: bump each block to its own
+     latest release tag (library is on v1.12.7; h5cpp-compiler trails at
+     v1.12.6 until its next release). The table above embeds no URLs directly.
      ---------------------------------------------------------------------- -->
 
-<!-- h5cpp library (header-only) — v1.12.6 -->
-[100]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.6/h5cpp-dev-v1.12.6-linux-x86_64.deb
-[101]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.6/h5cpp-dev-v1.12.6-linux-aarch64.deb
-[102]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.6/h5cpp-dev-v1.12.6-linux-x86_64.rpm
-[103]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.6/h5cpp-dev-v1.12.6-linux-aarch64.rpm
-[104]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.6/h5cpp-dev-v1.12.6-darwin-arm64.pkg
-[105]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.6/h5cpp-dev-v1.12.6-windows-amd64.exe
+<!-- h5cpp library (header-only) — v1.12.7 -->
+[100]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.7/h5cpp-dev-v1.12.7-linux-x86_64.deb
+[101]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.7/h5cpp-dev-v1.12.7-linux-aarch64.deb
+[102]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.7/h5cpp-dev-v1.12.7-linux-x86_64.rpm
+[103]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.7/h5cpp-dev-v1.12.7-linux-aarch64.rpm
+[104]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.7/h5cpp-dev-v1.12.7-darwin-arm64.pkg
+[105]: https://github.com/vargalabs/h5cpp/releases/download/v1.12.7/h5cpp-dev-v1.12.7-windows-amd64.exe
 
 <!-- h5cpp-compiler (Clang LibTooling reflection toolchain) — v1.12.6 -->
 [200]: https://github.com/vargalabs/h5cpp-compiler/releases/download/v1.12.6/h5cpp-compiler-1.12.6-Linux-amd64.deb
@@ -262,7 +263,7 @@ theme.</small>
 [206]: https://github.com/vargalabs/h5cpp-compiler/releases/download/v1.12.6/h5cpp-compiler-1.12.6-win64.exe
 
 <!-- Release pages (SHA-256 checksums + release notes) -->
-[rel-h5cpp]:    https://github.com/vargalabs/h5cpp/releases/tag/v1.12.6
+[rel-h5cpp]:    https://github.com/vargalabs/h5cpp/releases/tag/v1.12.7
 [rel-compiler]: https://github.com/vargalabs/h5cpp-compiler/releases/tag/v1.12.6
 
 <!-- "All releases" landing pages -->

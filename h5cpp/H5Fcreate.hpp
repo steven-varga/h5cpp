@@ -21,7 +21,7 @@ namespace h5{
 	 * HDF5 CAPI calls.  
 	 *   
 	 *
-	 * \par_file_path \par_fcrt_flags \par_fcpl \par_fapl  \returns_fd
+	 * \par_path \par_fcrt_flags \par_fcpl \par_fapl  \returns_fd
 	 * \sa_h5cpp \sa_hdf5 \sa_stl
 	 * @code
 	 * { 

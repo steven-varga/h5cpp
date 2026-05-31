@@ -26,7 +26,12 @@ FULL_PATH_NAMES        = NO
 TAB_SIZE               = 4
 MARKDOWN_SUPPORT       = YES
 TOC_INCLUDE_HEADINGS   = 0
-AUTOLINK_SUPPORT       = YES
+# Disabled deliberately (#297): automatic symbol-linking tried to resolve every
+# inline `type<T>::member` code reference as a link and failed on 130+ of them
+# (Doxygen parses the `<T>` as HTML, orphaning the `::member`). Explicit
+# navigation via @ref / \ref / [text](@ref x) is unaffected. Re-enabling means
+# escaping those code spans project-wide first.
+AUTOLINK_SUPPORT       = NO
 BUILTIN_STL_SUPPORT    = NO
 HIDE_UNDOC_MEMBERS     = YES
 HIDE_UNDOC_CLASSES     = YES
@@ -44,6 +49,7 @@ SHOW_NAMESPACES        = NO
 WARN_FORMAT            = "$file:$line: $text"
 WARN_AS_ERROR          = NO
 WARN_NO_PARAMDOC       = NO
+WARN_IF_INCOMPLETE_DOC = NO
 # Emit warnings into a logfile alongside stderr so CI can upload it as an
 # artifact for coverage-tracking visibility. The file lives in the build dir
 # so it's picked up by the workflow's actions/upload-artifact step.
@@ -97,7 +103,9 @@ EXCLUDE_SYMBOLS        = h5::impl::* \
                          h5::uniform \
                          h5::normal \
                          h5::exponential \
-                         h5::bernoulli
+                         h5::bernoulli \
+                         h5::meta::impl::parse_extent* \
+                         h5::meta::impl::extents_*
 
 EXAMPLE_PATH           = ../examples/attributes \
                          ../examples/basics \

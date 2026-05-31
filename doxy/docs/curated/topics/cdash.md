@@ -168,6 +168,5 @@ on every CI run — no submitter action required.
 - [Codecov documentation](https://docs.codecov.com/docs)
 - @ref curated_topics_mpi — the MPI variants are part of the
   submission matrix
-- @ref reports_performance_comparison_framework — performance
-  results from the comparative-evaluation framework, complementary
-  to the CDash testing dashboard
+- The `bench/` suite carries the comparative performance workloads,
+  complementary to the CDash testing dashboard

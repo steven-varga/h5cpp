@@ -109,7 +109,8 @@ namespace h5 {
      * content. <br/>
      * `h5::gather` is a template mechanism to facilitate the latter process by finding and returning a set of 
      * `element_t` type pointers to the actual content of an object.  
-     * \par_ref \par_ptr
+     * \par_ref
+     * @param ptrs vector receiving element pointers into the gathered content
      * @return ptr the same `element_t` pointer passed to the call (the in-out parameter is returned unchanged for chaining)
      * \tpar_T
      */ 

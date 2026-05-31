@@ -23,8 +23,8 @@ namespace h5{
 	 * filter chain transparently.
 	 *
 	 * \par_fd
-	 * \par_dataset_path
-	 * \par_dapl
+	 * \par_path
+	 * @param dapl dataset access property list (`h5::dapl_t`)
 	 * \returns_ds
 	 *
 	 * @throws h5::error::io::dataset::open  on `H5Dopen2` failure (dataset

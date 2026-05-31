@@ -1,6 +1,15 @@
-@page reports_multithreading_pipeline_state h5cpp Multithreaded Filter Pipeline — Current State (v1.12.6)
+@page reports_multithreading_pipeline_state h5cpp Multithreaded Filter Pipeline — Current State (v1.12.7)
 
-h5cpp v1.12.6 ships a working multithreaded filter pipeline built on three orthogonal pieces:
+@warning **Status (v1.12.7): the FAPL-scoped parallel pipeline is currently inert through the public API.**
+`h5::threads{N}` installs the worker pool on the user's FAPL, but the write/read dispatch sites
+re-resolve it via `H5Fget_access_plist`, which does **not** preserve the inserted property — so
+`impl::resolve_worker_pool` returns `nullptr` and every path falls back to the synchronous
+`basic_pipeline_t`. `pool_pipeline_t` therefore does not execute in this release; the parallel
+tests still pass because the synchronous fallback produces correct data. The design described below
+is accurate as *intent*. The activation fix (and two related `high_throughput` direct-chunk defects)
+is tracked in [issue #286](https://github.com/vargalabs/h5cpp/issues/286).
+
+h5cpp v1.12.7 is architected around a multithreaded filter pipeline built on three orthogonal pieces:
 
 | Piece | Role | User-facing API | Where it lives |
 |---|---|---|---|
@@ -278,7 +287,7 @@ and the pool sees idle time.
 
 | Capability | Status |
 |---|---|
-| Rank-1 parallel decompress | ✔ Shipped in v1.12.6 |
+| Rank-1 parallel decompress | ◇ Implemented but not engaged — the FAPL pool is dropped before dispatch (#286); falls back to synchronous read |
 | Rank-N parallel decompress | ◇ Falls through to synchronous `pipeline_t<>::read` |
 | Speculative read-ahead | ◇ Future — the structure (read_in_flight_ deque, separate drain) is in place; not currently triggered |
 | Parallel I/O across multiple datasets | ◇ Not in scope — HDF5 chunk I/O is single-writer per file |
@@ -398,11 +407,11 @@ running variants of this recipe.
 
 ## 11. Bottom line
 
-For h5cpp v1.12.6 users:
+For h5cpp v1.12.7 users:
 
-- **Parallel filter compute is on.** Add `h5::threads{}` to the FAPL when you create or open the file; the rest is automatic.
-- **For one-shot writes**, also set `h5::high_throughput` on the DAPL — per-dataset opt-in.
-- **For streaming with `h5::pt_t` / `h5::append`**, the FAPL flag alone is enough — packet tables auto-detect.
+- **Parallel filter compute is wired but currently inert (#286).** `h5::threads{}` on the FAPL is accepted and the API behaves correctly, but the pool is not resolved at the write/read dispatch sites — work runs on the synchronous path until the activation fix lands.
+- **For one-shot writes**, `h5::high_throughput` on the DAPL is the per-dataset opt-in (synchronous today).
+- **For streaming with `h5::pt_t` / `h5::append`**, the FAPL flag is the trigger — packet tables auto-detect (synchronous today).
 - **Always pair both with chunked datasets and a non-trivial filter chain** (`h5::gzip{N}`, `h5::shuffle`, `h5::nbit`, `h5::scaleoffset`, custom). Without filters there's nothing to parallelise.
 - **Drain points are explicit and synchronous.** `~pool_pipeline_t()` blocks until every closure completes; `h5::flush(pt)` does the same for streaming. No fire-and-forget mode.
 

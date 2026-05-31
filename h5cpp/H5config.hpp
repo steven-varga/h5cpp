@@ -91,11 +91,6 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
 @example attributes.cpp
 @example basics.cpp
 @example compound.cpp
-@example compound.c
-@example compound.h
-@example struct.cpp
-@example struct.h
-@example struct.cpp
 @example struct.h
 @example container.cpp
 @example detected.cpp
@@ -118,8 +113,6 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
 @example independent.cpp
 @example throughput.cpp
 @example file_per_rank.cpp
-@example tu_01.cpp
-@example tu_02.cpp
 @example main.cpp
 @example optimized.cpp
 @example packettable.cpp
@@ -130,16 +123,13 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
 @example reflection.cpp
 @example s3.cpp
 @example smart_ptr.cpp
-@example arma.cpp
 @example eigen.cpp
-@example compound.cpp
 @example maps.cpp
 @example nested.cpp
 @example sequences.cpp
 @example sets.cpp
 @example strings.cpp
 @example tuples_pairs.cpp
-@example vector.cpp
 @example string.cpp
 @example transform.cpp
 @example utf.cpp

@@ -240,7 +240,7 @@ the h5cpp dispatch).
   `linear_value_dataset` path as `std::vector`)
 - @ref curated_topics_reflection — extending the type system for
   user-defined types via macro, h5cpp-compiler, or C++26 reflection
-- @ref reports_type_system_architecture_notes — the design
+- @ref reports_type_system_map — the design
   rationale + the bootstrap problem (`H5CPP_BUILDING_TYPE_INFO`)
 - @ref reports_type_system_map — exhaustive map of every
   storage_representation case with worked examples

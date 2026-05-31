@@ -294,7 +294,7 @@ See the `h5cpp/H5Marma.hpp` mapper as the worked reference.
   reference (this page is a subset focused on STL)
 - @ref curated_topics_linalg — same dispatch traits, applied to
   arma / Eigen / xtensor / etc.
-- @ref reports_type_system_architecture_notes — design rationale
+- @ref reports_type_system_map — design rationale
   for the trait system (Walter Brown idiom + h5cpp's extensions)
 - @ref example_guide_stl — runnable per-type STL examples
 - @ref example_guide_container — fixed-extent container patterns
