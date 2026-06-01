@@ -7,6 +7,13 @@ cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 ## match hdf5 versioning x.x.x.h5cpp-version
 project(h5cpp-examples VERSION 1.10.4.5 LANGUAGES CXX C)
 
+# Honor <PackageName>_ROOT (CMP0074, CMake 3.12+). The cmake_minimum_required
+# above predates it, so without this find_package(HDF5) below would silently
+# ignore the HDF5_ROOT we build for custom HDF Group installs. (#295)
+if(POLICY CMP0074)
+	cmake_policy(SET CMP0074 NEW)
+endif()
+
 # check if the correct version of hdf5 available
 set(H5CPP_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
 
@@ -222,19 +229,11 @@ else()
     endif()
 endif()
 
-# ublas headers are vendored but rely on system Boost config/compiler headers
-find_path(H5CPP_BOOST_CONFIG_INCLUDE_EX NAMES boost/config.hpp)
-if(H5CPP_BOOST_CONFIG_INCLUDE_EX)
-    message( "-- Vendored: ublas added to examples" )
-    # examples/attributes/attributes.cpp uses the boost/* layout
-    # (#include <boost/numeric/ublas/matrix.hpp>); the vendored libublas only
-    # exposes the numeric/* layout, so propagate the system/vcpkg Boost include
-    # dir through libublas for any target that links it.
-    target_include_directories(libublas INTERFACE ${H5CPP_BOOST_CONFIG_INCLUDE_EX})
-    add_h5cpp_example(ublas linalg/ublas.cpp LIBRARIES libublas)
-else()
-    message("-- Boost config headers not found — ublas example disabled")
-endif()
+# uBLAS is fully vendored (header-only closure under thirdparty/ublas, #293) —
+# libublas resolves <boost/numeric/ublas/...> standalone, so no system Boost is
+# required and the example always builds.
+message("-- Vendored: ublas added to examples")
+add_h5cpp_example(ublas linalg/ublas.cpp LIBRARIES libublas)
 
 # ------------------------------------------------------------------------------
 # Sparse linalg examples (CSC group layout, scipy/Julia interop)

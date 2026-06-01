@@ -9,16 +9,17 @@
 #include "H5Dopen.hpp"
 #include "H5Dgather.hpp"
 #include "H5Dscatter.hpp"
+#include "H5io_registry.hpp"
 
 namespace h5 {
-  /** @ingroup io-write
+  /** \func_write_hdr
 	* @brief write the memory content of `const T* ptr` with given `mem_space`  into `file_space` of the dataset
-	* @param ds valid h5::ds_t descriptor
+	* \par_ds
 	* @param mem_space the dimensions of the memory region being transferred
 	* @param file_space the dimensions of the target dataset region `nelems(mem_space) == nelems(file_space)`
-	* @param dxpl transfer property list to fine tune IO ops
-	* @param ptr `const T*` typed pointer to supported objects or elementary types
-	* @tparam T C++ fundamental numeric or pod types, but not strings 
+	* @param dxpl data transfer property list (`h5::dxpl_t`)
+	* \par_ptr
+	* \tpar_T
  	*/ 
 	template <class T>
 	inline void write( const h5::ds_t& ds, const h5::sp_t& mem_space, const h5::sp_t& file_space, const h5::dxpl_t& dxpl, const T* ptr  ){
@@ -30,15 +31,15 @@ namespace h5 {
 				h5::error::io::dataset::write, h5::error::msg::write_dataset);
 	}
 
-   /** @ingroup io-write
+   /** \func_write_hdr
  	* @brief writes data, from contiguous memory region  into an existing, opened dataset specified by`h5::ds_t` descriptor 
 	* Lower level template with generative programming paradigm constructs an optimal function respec to specified arguments
-	* @param ds valid h5::ds_t descriptor
-	* @param ptr `const T*` typed pointer to supported objects or elementary types
-    * @param args[, ...] comma separated list of arguments in arbitrary order, only `T object` is required 
-	* @return h5::ds_t  returns the same `ds` dataset descriptor as the first param 
+	* \par_ds
+	* \par_ptr
+    * \par_args
+	* \returns_ds
 	* 
-	* @tparam T element_t type  
+	* \tpar_T
 	*
 	* <br/>The following arguments are context sensitive, may be passed in arbitrary order and with the exception
 	* of `const T*` pointing to the memory region being saved, the arguments are optional. By default the arguments are set to sensible values,
@@ -46,14 +47,14 @@ namespace h5 {
 	* tuning mechanism to get the best experience without calling HDF5 CAPI functions directly. 
     *
 	*
-	* @param h5::count number of element of `element_t`, compiler time error if not specified when `T*` is a pointer. Not the same as HDF5  `count`
+	* \par_count
 	* in hyperslab selection; instead from this value the correct `slab_count` is derived considering the block size whenever applicable with a normalisation step:
     * `slab_count[i] = h5::count[i] / h5::block[i]`
-	* @param h5::stride_t determins how many elements to move in each dimension from current position, `stride[i] >= block[i] && stride[i] != 0` 
-	* @param h5::block_t only used when `stride` is specified, as `h5::count` otherwise the `slab_block` is derived from `h5::count` or number of elements 
-	* @param h5::offset_t writes `T object` starting from this coordinates, considers this value into `h5::current_dims` when applicable
-	* @param h5::dcpl_t data control property list
-	* @param h5::dxpl_t data transfer property list
+	* \par_stride
+	* \par_block
+	* \par_offset
+	* \par_dcpl
+	* \par_dxpl
 	* 
 	* <br/><b>example:</b>
 	* @code
@@ -107,16 +108,14 @@ namespace h5 {
 			const h5::offset_t& offset = arg::get( h5::default_offset, args...);
 			const h5::stride_t& stride = arg::get( h5::default_stride, args...);
 
-			// Phase 1.3.3 — if the file's FAPL has h5::threads{N}, route
-			// compress work through the shared pool via a local
-			// pool_pipeline_t.  Otherwise use the existing DAPL-stored
-			// basic_pipeline_t pointer for synchronous filter chain.
-			hid_t fid  = H5Iget_file_id(static_cast<hid_t>(ds));
-			hid_t fapl = H5Fget_access_plist(fid);
-			auto pool  = h5::impl::resolve_worker_pool(fapl);
+			// Phase 1.3.3 / slice C (#286) — H5Fget_access_plist strips
+			// user properties, so resolve_worker_pool on a reconstructed
+			// FAPL always returns nullptr.  Look up the pool directly in
+			// the per-file registry, keyed by H5Fget_fileno.
+			const unsigned long fileno = h5::impl::file_key(static_cast<::hid_t>(ds));
+			auto pool = h5::impl::registry().resolve_pool(fileno);
 			if (pool) {
-				const unsigned cap = h5::impl::resolve_backpressure(
-					fapl, pool->worker_count());
+				const unsigned cap = h5::impl::registry().resolve_cap(fileno);
 				h5::impl::pool_pipeline_t pipe(std::move(pool), cap);
 				// set_cache populates the filter chain from the dataset's DCPL.
 				h5::dcpl_t dcpl{H5Dget_create_plist(static_cast<hid_t>(ds))};
@@ -131,8 +130,6 @@ namespace h5 {
 				H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
 				filters->write(ds, offset, stride, block, count, dxpl, ptr);
 			}
-			H5Pclose(fapl);
-			H5Fclose(fid);
 		} else {
 			// Scalar dataspaces don't support hyperslab selection; H5Sselect_all
 			// on both sides is the equivalent path for H5S_SCALAR file spaces.
@@ -177,7 +174,7 @@ namespace h5 {
 		throw h5::error::io::dataset::write( err.what() );
 	}
 	
-   /** @ingroup io-write
+   /** \func_write_hdr
  	*  @brief writes data  within an HDF5 container specified with `h5::fd_t` descriptor 
 	* By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified
 	* with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block <br/>
@@ -185,12 +182,12 @@ namespace h5 {
 	* objects where the actual content maybe scattered in memory. In the altter case with the help of `h5::gather` operator, and O(n) complexity 
 	* this template builds a vector of pointers to actual content, and delegates it to	`h5::write<element_t*>(.., ptr**)` call.
 	*
-	* @param ds valid h5::ds_t descriptor
-	* @param ref `T` typed reference to supported objects or elementary types
-    * @param args[, ...] comma separated list of arguments in arbitrary order, only `T object` is required 
-	* @return h5::ds_t  a valid, RAII enabled handle, binary compatible with HDF5 CAP `hid_t` 
+	* \par_ds
+	* \par_ref
+    * \par_args
+	* \returns_ds
 	* 
-	* @tparam T C++ type of dataset being written into HDF5 container
+	* \tpar_T
 	*
 	* <br/>The following arguments are context sensitive, may be passed in arbitrary order and with the exception
 	* of `const ref&` object being saved, the arguments are optional. By default the arguments are set to sensible values,
@@ -198,25 +195,25 @@ namespace h5 {
 	* tuning mechanism to get the best experience without calling HDF5 CAPI functions directly. 
     *
 	*
-	* @param h5::current_dims_t optionaly  defines the size of the dataset, applicable only to datasets which has to be created
+	* \par_current_dims
 	* When omitted, the system computes the default value as follows  `h5::block{..}` and `h5::stride{..}` given as:
 	* 		`current_dims[i] = count[i] (stride[i] - block[i] + 1) + offset[i]` and when only `h5::count` is available 
 	*       `current_dims[i] = count[i] + offset[i]`
-	* @param h5::max_dims_t  optional maximum size of dataset, applicable only to datasets which has to be created `max_dims[i] >= current_dims[i]`
+	* \par_max_dims
 	* or `H5S_UNLIMITED` along the dimension intended to be extendable
-	* @param h5::count number of element of `element_t`, compiler time error if not specified when `T*` is a pointer. Not the same as HDF5  `count`
+	* \par_count
 	* in hyperslab selection; instead from this value the correct `slab_count` is derived considering the block size whenever applicable with a normalisation step:
     * `slab_count[i] = h5::count[i] / h5::block[i]`
-	* @param h5::stride_t determins how many elements to move in each dimension from current position, `stride[i] >= block[i] && stride[i] != 0` 
-	* @param h5::block_t only used when `stride` is specified, as `h5::count` otherwise the `slab_block` is derived from `h5::count` or number of elements 
-	* @param h5::offset_t writes `T object` starting from this coordinates, considers this value into `h5::current_dims` when applicable	
-	* @param h5::stride_t skip this many blocks along given dimension
-	* @param h5::block_t only used when `stride` is specified 
-	* @param h5::offset_t writes `T object` starting from this coordinates, considers this shift into `h5::current_dims` when applicable
-	* @param h5::dcpl_t data creation property list, used only if dataset needs to be created
-	* @param h5::dxpl_t data transfer property list, used for IO 
-	* @param h5::dapl_t data access property list, how existing dataset is opened  
-	* @param h5::lcpl_t link control property list, controls how path is created when applicable	
+	* \par_stride
+	* \par_block
+	* \par_offset
+	* \par_stride
+	* \par_block
+	* \par_offset
+	* \par_dcpl
+	* \par_dxpl
+	* \par_dapl
+	* \par_lcpl
 	* 
 	* <br/><b>example:</b>
 	* @code
@@ -564,42 +561,42 @@ namespace h5 {
 		throw h5::error::io::dataset::write( err.what() );
 	}
 
-    /** @ingroup io-write
+    /** \func_write_hdr
  	*  @brief writes data within an HDF5 container specified with `h5::fd_t` descriptor 
 	* HDF5 dataset may or may not exist, in first case it is opened and in the latter created. The implemantation comes with sensible 
 	* default arguments, which can be tuned with optional property list.
 	* By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified
 	* with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block 
-	* @param fd valid h5::fd_t descriptor
-	* @param dataset_path where the dataset is, or will be created within the HDF5 file
-	* @param ptr pointer to memory region with T* type
-    * @param args[, ...] comma separated list of arguments in arbitrary order, only `T object` is required 
-	* @return h5::ds_t  a valid, RAII enabled handle, binary compatible with HDF5 CAP `hid_t` 
+	* \par_fd
+	* \par_dataset_path
+	* \par_ref
+    * \par_args
+	* \returns_ds
 	* 
-	* @tparam T the type HDF5 dataset is created with
+	* \tpar_T
 	*
 	* <br/>The following arguments are context sensitive, may be passed in arbitrary order and with the exception
 	* of `T object` being saved, the arguments are optional. The arguments are set to sensible values, and in most cases
 	* will provide good performance by default, with that in mind, it is an easy high level fine tuning mechanism to 
 	* get the best experience witout trading readability. 
 	*
-	* @param h5::current_dims_t optionaly  defines the size of the dataset, applicable only to datasets which has to be created
+	* \par_current_dims
 	* When omitted, the system computes the default value as follows  `h5::block{..}` and `h5::stride{..}` given as:
 	* 		`current_dims[i] = count[i] (stride[i] - block[i] + 1) + offset[i]` and when only `h5::count` is available 
 	*       `current_dims[i] = count[i] + offset[i]`
-	* @param h5::max_dims_t  optional maximum size of dataset, applicable only to datasets which has to be created `max_dims[i] >= current_dims[i]`
+	* \par_max_dims
 	* or `H5S_UNLIMITED` along the dimension intended to be extendable
 	*
-	* @param h5::count number of element of `element_t`, compiler time error if not specified when `T*` is a pointer. Not the same as HDF5  `count`
+	* \par_count
 	* in hyperslab selection; instead from this value the correct `slab_count` is derived considering the block size whenever applicable with a normalisation step:
     * `slab_count[i] = h5::count[i] / h5::block[i]`
-	* @param h5::stride_t determins how many elements to move in each dimension from current position, `stride[i] >= block[i] && stride[i] != 0` 
-	* @param h5::block_t only used when `stride` is specified, as `h5::count` otherwise the `slab_block` is derived from `h5::count` or number of elements 
-	* @param h5::offset_t writes `T object` starting from this coordinates, considers this shift into `h5::current_dims` when applicable
-	* @param h5::dcpl_t data creation property list, used only if dataset needs to be created
-	* @param h5::dxpl_t data transfer property list, used for IO 
-	* @param h5::dapl_t data access property list, how existing dataset is opened  
-	* @param h5::lcpl_t link control property list, controls how path is created when applicable
+	* \par_stride
+	* \par_block
+	* \par_offset
+	* \par_dcpl
+	* \par_dxpl
+	* \par_dapl
+	* \par_lcpl
 	* 
 	* <br/><b>example:</b>
 	* @code
@@ -670,42 +667,42 @@ namespace h5 {
 		return ::h5::write(ds, ptr, args...);
 	}
 
-    /** @ingroup io-write
+    /** \func_write_hdr
  	*  @brief writes data within an HDF5 container specified with `h5::fd_t` descriptor 
 	* HDF5 dataset may or may not exist, in first case it is opened and in the latter created. The implemantation comes with sensible 
 	* default arguments, which can be tuned with optional property list.
 	* By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified
 	* with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block 
-	* @param fd valid h5::fd_t descriptor
-	* @param dataset_path where the dataset is, or will be created within the HDF5 file
-	* @param ref supported objects or elementary types
-    * @param args[, ...] comma separated list of arguments in arbitrary order, only `T object` is required 
-	* @return h5::ds_t  a valid, RAII enabled handle, binary compatible with HDF5 CAP `hid_t` 
+	* \par_fd
+	* \par_dataset_path
+	* \par_ref
+    * \par_args
+	* \returns_ds
 	* 
-	* @tparam T C++ type of dataset being written into HDF5 container
+	* \tpar_T
 	*
 	* <br/>The following arguments are context sensitive, may be passed in arbitrary order and with the exception
 	* of `T object` being saved, the arguments are optional. The arguments are set to sensible values, and in most cases
 	* will provide good performance by default, with that in mind, it is an easy high level fine tuning mechanism to 
 	* get the best experience witout trading readability. 
 	*
-	* @param h5::current_dims_t optionaly  defines the size of the dataset, applicable only to datasets which has to be created
+	* \par_current_dims
 	* When omitted, the system computes the default value as follows  `h5::block{..}` and `h5::stride{..}` given as:
 	* 		`current_dims[i] = count[i] (stride[i] - block[i] + 1) + offset[i]` and when only `h5::count` is available 
 	*       `current_dims[i] = count[i] + offset[i]`
-	* @param h5::max_dims_t  optional maximum size of dataset, applicable only to datasets which has to be created `max_dims[i] >= current_dims[i]`
+	* \par_max_dims
 	* or `H5S_UNLIMITED` along the dimension intended to be extendable
 	*
-	* @param h5::count number of element of `element_t`, compiler time error if not specified when `T*` is a pointer. Not the same as HDF5  `count`
+	* \par_count
 	* in hyperslab selection; instead from this value the correct `slab_count` is derived considering the block size whenever applicable with a normalisation step:
     * `slab_count[i] = h5::count[i] / h5::block[i]`
-	* @param h5::stride_t determins how many elements to move in each dimension from current position, `stride[i] >= block[i] && stride[i] != 0` 
-	* @param h5::block_t only used when `stride` is specified, as `h5::count` otherwise the `slab_block` is derived from `h5::count` or number of elements 
-	* @param h5::offset_t writes `T object` starting from this coordinates, considers this shift into `h5::current_dims` when applicable
-	* @param h5::dcpl_t data creation property list, used only if dataset needs to be created
-	* @param h5::dxpl_t data transfer property list, used for IO 
-	* @param h5::dapl_t data access property list, how existing dataset is opened  
-	* @param h5::lcpl_t link control property list, controls how path is created when applicable
+	* \par_stride
+	* \par_block
+	* \par_offset
+	* \par_dcpl
+	* \par_dxpl
+	* \par_dapl
+	* \par_lcpl
 	* 
 	* <br/><b>example:</b>
 	* @code
@@ -876,42 +873,42 @@ namespace h5 {
 		}
 
 
-   /** @ingroup io-write
+   /** \func_write_hdr
  	*  @brief writes content of an object, collection of object or memory location to a possibly not yet existing dataset 
 	* within an HDF5 container opened with flag `H5F_ACC_RDWR`
 	* By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified
 	* with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block 
-	* @param file_path path the the HDF5 file
-	* @param dataset_path where the dataset is, or will be created within the HDF5 file
-    * @param args[, ...] comma separated list of arguments in arbitrary order, only `T object` | `const T*` is required 
-	* @return h5::ds_t  a valid, RAII enabled handle, binary compatible with HDF5 CAP `hid_t` 
+	* \par_file_path
+	* \par_dataset_path
+    * \par_args
+	* \returns_ds
 	* 
-	* @tparam T C++ type of dataset being written into HDF5 container
+	* \tpar_T
 	*
 	* <br/>The following arguments are context sensitive, may be passed in arbitrary order and with the exception
 	* of `const ref&` or `const T*` object being saved/memory region pointed to, the arguments are optional. By default the arguments are set to sensible values,
 	* and in most cases the function call will deliver good performance. With that in mind, the options below provide an easy to use high level fine
 	* tuning mechanism to get the best experience without calling HDF5 CAPI functions directly. 
     *
-	* @param h5::current_dims_t optionaly  defines the size of the dataset, applicable only to datasets which has to be created
+	* \par_current_dims
 	* When omitted, the system computes the default value as follows  `h5::block{..}` and `h5::stride{..}` given as:
 	* 		`current_dims[i] = count[i] (stride[i] - block[i] + 1) + offset[i]` and when only `h5::count` is available 
 	*       `current_dims[i] = count[i] + offset[i]`
-	* @param h5::max_dims_t  optional maximum size of dataset, applicable only to datasets which has to be created `max_dims[i] >= current_dims[i]`
+	* \par_max_dims
 	* or `H5S_UNLIMITED` along the dimension intended to be extendable
-	* @param h5::count number of element of `element_t`, compiler time error if not specified when `T*` is a pointer. Not the same as HDF5  `count`
+	* \par_count
 	* in hyperslab selection; instead from this value the correct `slab_count` is derived considering the block size whenever applicable with a normalisation step:
     * `slab_count[i] = h5::count[i] / h5::block[i]`
-	* @param h5::stride_t determins how many elements to move in each dimension from current position, `stride[i] >= block[i] && stride[i] != 0` 
-	* @param h5::block_t only used when `stride` is specified, as `h5::count` otherwise the `slab_block` is derived from `h5::count` or number of elements 
-	* @param h5::offset_t writes `T object` starting from this coordinates, considers this value into `h5::current_dims` when applicable	
-	* @param h5::stride_t skip this many blocks along given dimension
-	* @param h5::block_t only used when `stride` is specified 
-	* @param h5::offset_t writes `T object` starting from this coordinates, considers this shift into `h5::current_dims` when applicable
-	* @param h5::dcpl_t data creation property list, used only if dataset needs to be created
-	* @param h5::dxpl_t data transfer property list, used for IO 
-	* @param h5::dapl_t data access property list, how existing dataset is opened  
-	* @param h5::lcpl_t link control property list, controls how path is created when applicabl
+	* \par_stride
+	* \par_block
+	* \par_offset
+	* \par_stride
+	* \par_block
+	* \par_offset
+	* \par_dcpl
+	* \par_dxpl
+	* \par_dapl
+	* \par_lcpl
 	* <br/><b>example:</b>
 	* @code
 	* std::vector<int> data = ...

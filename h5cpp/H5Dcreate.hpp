@@ -12,30 +12,30 @@
 
 //TODO: if constexpr(..){} >= c++17
 namespace h5 {
-  /** @ingroup io-create
+  /** \func_create_hdr
  	*  @brief creates a dataset within  an already opened HDF5 container
 	* By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified
 	* with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block 
-	* @param fd valid h5::fd_t descriptor
-	* @param dataset_path where the dataset is, or will be created within the HDF5 file
-    * @param args[, ...] comma separated list of arguments in arbitrary order, only `T object` | `const T*` is required 
-	* @return h5::ds_t  a valid, RAII enabled handle, binary compatible with HDF5 CAP `hid_t` 
+	* \par_fd
+	* \par_dataset_path
+    * \par_args
+	* \returns_ds
 	* 
-	* @tparam T C++ type of dataset being written into HDF5 container
+	* \tpar_T
 	*
 	* <br/>The following arguments are context sensitive, may be passed in arbitrary order and with the exception
 	* of `const ref&` or `const T*` object being saved/memory region pointed to, the arguments are optional. By default the arguments are set to sensible values,
 	* and in most cases the function call will deliver good performance. With that in mind, the options below provide an easy to use high level fine
 	* tuning mechanism to get the best experience without calling HDF5 CAPI functions directly. 
     *
-	* @param h5::current_dims_t optionaly  defines the size of the dataset, applicable only to datasets which has to be created
+	* \par_current_dims
 	* When omitted, the system computes the default value as follows  `h5::block{..}` and `h5::stride{..}` given as:
 	* 		`current_dims[i] = count[i] (stride[i] - block[i] + 1) + offset[i]` and when only `h5::count` is available 
 	*       `current_dims[i] = count[i] + offset[i]`
-	* @param h5::max_dims_t  optional maximum size of dataset, applicable only to datasets which has to be created `max_dims[i] >= current_dims[i]`
+	* \par_max_dims
 	* or `H5S_UNLIMITED` along the dimension intended to be extendable
-	* @param h5::dcpl_t data creation property list, used only if dataset needs to be created
-	* @param h5::lcpl_t link control property list, controls how path is created when applicabl
+	* \par_dcpl
+	* \par_lcpl
 	* <br/><b>example:</b>
 	* @code
 	* auto ds = h5::create<short>("file.h5","path/to/dataset", 
@@ -103,30 +103,30 @@ namespace h5 {
 			throw h5::error::io::dataset::create( err.what() );
 	}
 
-  /** @ingroup io-create
+  /** \func_create_hdr
  	*  @brief creates a dataset within  an HDF5 container opened with flag `H5F_ACC_RDWR`
 	* By default the HDF5 dataset size, the file space, is derived from the passed object properties, or may be explicitly specified
 	* with optional properties such as h5::count, h5::current_dims h5::max_dims, h5::stride, h5::block 
-	* @param file_path path the the HDF5 file
-	* @param dataset_path where the dataset is, or will be created within the HDF5 file
-    * @param args[, ...] comma separated list of arguments in arbitrary order, only `T object` | `const T*` is required 
-	* @return h5::ds_t  a valid, RAII enabled handle, binary compatible with HDF5 CAP `hid_t` 
+	* \par_file_path
+	* \par_dataset_path
+    * \par_args
+	* \returns_ds
 	* 
-	* @tparam T C++ type of dataset being written into HDF5 container
+	* \tpar_T
 	*
 	* <br/>The following arguments are context sensitive, may be passed in arbitrary order and with the exception
 	* of `const ref&` or `const T*` object being saved/memory region pointed to, the arguments are optional. By default the arguments are set to sensible values,
 	* and in most cases the function call will deliver good performance. With that in mind, the options below provide an easy to use high level fine
 	* tuning mechanism to get the best experience without calling HDF5 CAPI functions directly. 
     *
-	* @param h5::current_dims_t optionaly  defines the size of the dataset, applicable only to datasets which has to be created
+	* \par_current_dims
 	* When omitted, the system computes the default value as follows  `h5::block{..}` and `h5::stride{..}` given as:
 	* 		`current_dims[i] = count[i] (stride[i] - block[i] + 1) + offset[i]` and when only `h5::count` is available 
 	*       `current_dims[i] = count[i] + offset[i]`
-	* @param h5::max_dims_t  optional maximum size of dataset, applicable only to datasets which has to be created `max_dims[i] >= current_dims[i]`
+	* \par_max_dims
 	* or `H5S_UNLIMITED` along the dimension intended to be extendable
-	* @param h5::dcpl_t data creation property list, used only if dataset needs to be created
-	* @param h5::lcpl_t link control property list, controls how path is created when applicabl
+	* \par_dcpl
+	* \par_lcpl
 	* <br/><b>example:</b>
 	* @code
 	* auto ds = h5::create<short>("file.h5","path/to/dataset", 

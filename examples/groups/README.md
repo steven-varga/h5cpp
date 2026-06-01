@@ -1,4 +1,4 @@
-# Groups
+@page example_guide_groups Groups
 
 A group is HDF5's directory. The point of this example is simple: building hierarchies, attaching attributes to them, listing what's inside, linking objects together, and handling the errors all fit on one page of h5cpp.
 
@@ -264,3 +264,7 @@ file (fd_t)
 ```
 
 Groups are HDF5's namespace mechanism: they organise objects, carry annotations, and let you build cross-references via links. Everything else in HDF5 lives inside one.
+
+## Source
+
+- [`groups.cpp`](groups_8cpp-example.html) — rendered with syntax highlighting

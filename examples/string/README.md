@@ -1,4 +1,4 @@
-# Strings — VLEN Round-Trip Across Datasets and Attributes
+@page example_guide_string Strings — VLEN Round-Trip Across Datasets and Attributes
 
 HDF5 strings are not a single thing — the format has four orthogonal axes
 (length, character set, padding, element type). h5cpp picks one canonical
@@ -136,3 +136,7 @@ Lives in `examples/CMakeLists.txt:434`. No library dependencies — only the
 - **`h5cpp/H5Uall.hpp`** — the `operator<<` overloads that pretty-print `std::vector<std::string>` to stdout.
 - **`examples/compound/`** — strings inside POD aggregates via the `H5CPP_REGISTER_STRUCT` macro (the workaround for the tuple-with-string limitation).
 - **`examples/datasets/`** — full `offset` / `count` / `stride` / `block` hyperslab vocabulary that works on numeric datasets, blocked here on VLEN strings.
+
+## Source
+
+- [`string.cpp`](string_8cpp-example.html) — rendered with syntax highlighting

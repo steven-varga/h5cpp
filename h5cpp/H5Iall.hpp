@@ -13,6 +13,20 @@
 #include <memory>      /* std::shared_ptr — async descriptor exec field */
 #include <initializer_list>
 
+// Slice C (#286): forward-declare the registry helpers used by the RAII
+// close path to detach the file-pool entry on H5Fclose.  A direct
+// #include of H5io_registry.hpp here would introduce a cycle:
+//   H5Iall.hpp → H5io_registry.hpp → H5Pthreads.hpp → H5Pall.hpp
+//              → H5Tall.hpp → H5Iall.hpp
+// The aggregator (h5cpp/core, h5cpp/all) includes H5io_registry.hpp
+// after H5Iall.hpp, where the inline definitions are satisfied.
+// registry_detach_file() is a thin free-function shim defined in
+// H5io_registry.hpp; forward-declaring it here avoids requiring the
+// complete type of io_registry_t.
+namespace h5::impl {
+    void registry_detach_file(::hid_t file_id);
+}
+
 #ifdef H5CPP_CONVERSION_IMPLICIT
 	#define H5CPP__EXPLICIT
 #else
@@ -95,8 +109,10 @@ namespace h5::impl::detail {
 		}
 		hid_t& operator =( const hid_t& ref) {
             if (this == &ref) return *this;
-            if( H5Iis_valid( handle ) )
+            if( H5Iis_valid( handle ) ) {
+                h5::impl::registry_detach_file( handle );
                 capi_close( handle );
+            }
 			handle = ref.handle;
 			if( H5Iis_valid( handle ) )
 				H5Iinc_ref( handle );
@@ -104,8 +120,10 @@ namespace h5::impl::detail {
 		}
         hid_t& operator =( hid_t&& ref) {
             if (this == &ref) return *this;
-            if( H5Iis_valid( handle ) )
+            if( H5Iis_valid( handle ) ) {
+                h5::impl::registry_detach_file( handle );
                 capi_close( handle );
+            }
 			handle = ref.handle;
             ref.handle = H5I_UNINIT;
 			return *this;
@@ -116,9 +134,23 @@ namespace h5::impl::detail {
 			ref.handle = H5I_UNINIT;
 		}
 		~hid_t(){
-			if( H5Iis_valid( handle ) )
+			if( H5Iis_valid( handle ) ) {
+                h5::impl::registry_detach_file( handle );
 				capi_close( handle );
+            }
 		}
+
+		using at_t = hid_t<h5::impl::at_t,H5Aclose,true,true,hdf5::attribute>;
+		/**
+		 * @brief Attribute indexer — `parent["name"] = value` writes, `T v = parent["name"]` reads.
+		 *
+		 * Returns a transient `h5::at_t` carrying this parent's handle and the
+		 * attribute name. Combine with `at_t::operator=(V)` to write, or with
+		 * the templated `at_t::operator V() const` to read. Mirrors the
+		 * `h5::create` / `h5::aread` / `h5::awrite` free-function surface.
+		 */
+		at_t operator[]( const char arg[] );
+
 		protected:
 		::hid_t handle;
 	};
@@ -230,6 +262,15 @@ namespace h5::impl::detail {
 		::hid_t dapl;
 	};
 
+	// Free helper backing at_t's implicit-read conversion (defined out-of-line
+	// in H5Aread.hpp once h5::aread is visible). The conversion operator stays
+	// inline in the class body and forwards here: MSVC (VS2022 14.4x) emits a
+	// C1001 internal compiler error on an *out-of-line* member-template
+	// conversion operator of an explicit specialization, which the examples'
+	// bracket-syntax reads instantiate. A plain free function template compiles
+	// cleanly out-of-line on every toolchain. (#282)
+	template <class V> V at_read(::hid_t ds, const std::string& name);
+
 	// Phase II — async attribute id.
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, false,false,hdf5::attribute>
@@ -296,6 +337,33 @@ namespace h5::impl::detail {
 
 		template <class V> at_t operator=( V arg  );
 		template <class V> at_t operator=( const std::initializer_list<V> args  ){return at_t{H5I_UNINIT}; };
+
+		/**
+		 * @brief Attribute indexer — `gr["name"] = value` writes, `T v = gr["name"]` reads.
+		 *
+		 * Returns a transient `h5::at_t` carrying this parent's handle and
+		 * the attribute name. Re-declared on this spec (not inherited from
+		 * the any spec) so name lookup finds it on the derived type. See
+		 * the matching `at_t::operator=(V)` and `at_t::operator V() const`.
+		 */
+		at_t operator[]( const char arg[] );
+
+		/**
+		 * @brief Implicit read: `T v = parent["attr"]`.
+		 *
+		 * Lives on this spec so it fires on the `at_t` that `operator[]`
+		 * returns (which carries the parent `ds` and attribute `name`).
+		 * Forwards to `h5::aread<V>(ds, name)`. Excludes `::hid_t` to keep
+		 * the base-spec `operator ::hid_t() const` available for plain
+		 * `static_cast` on the handle itself.
+		 *
+		 * @tparam V  any type accepted by `h5::aread<V>` — see @ref link_base_template_types.
+		 * @throws h5::error::io::attribute::read  if `ds` is invalid (the
+		 *         at_t was default-constructed or its parent was UNINIT).
+		 */
+		template <class V,
+			class = std::enable_if_t<!std::is_same_v<V, ::hid_t>>>
+		operator V() const { return h5::impl::detail::at_read<V>(this->ds, this->name); }
 
 		::hid_t ds;
 		std::string name;

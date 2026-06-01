@@ -1,4 +1,4 @@
-# Compound Datasets
+@page example_guide_compound Compound Datasets
 
 This example shows the small set of moves needed to store C++ structs in HDF5. The point is simple: a user-defined struct becomes an HDF5 compound type, the compound type is reflected by the H5CPP compiler, and the same struct round-trips through `h5::write` / `h5::read` without anyone touching `H5Tinsert`.
 
@@ -160,3 +160,10 @@ attributes   →  on-disk shape / filter / name →  [[h5::chunk(...)]], [[h5::n
 ```
 
 User code writes a regular C++ struct. The H5CPP compiler reads it, decides which tier it belongs to, and emits the matching HDF5 type descriptors and serialisation bodies into `generated.h`. The dispatch path is then identical to writing any other C++ object.
+
+## Source
+
+- [`compound.cpp`](compound_8cpp-example.html) — rendered with syntax highlighting
+- [`generated.h`](generated_8h-example.html) — rendered with syntax highlighting
+- [`non-pod.h`](non_pod_8h-example.html) — rendered with syntax highlighting
+- [`pod.h`](pod_8h-example.html) — rendered with syntax highlighting

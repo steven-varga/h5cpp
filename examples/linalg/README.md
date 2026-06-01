@@ -1,4 +1,4 @@
-# Linear-Algebra Containers
+@page example_guide_linalg Linear-Algebra Containers
 
 This directory shows how h5cpp talks to the major C++ linear-algebra libraries. The point is simple: write your matrix or tensor with the same `h5::write` / `h5::read` you'd use for `std::vector` — h5cpp picks the right path for each library's memory layout.
 
@@ -141,7 +141,7 @@ In the course of getting these examples to actually run, several real h5cpp bugs
 | `h5cpp/H5Mvalarray.hpp` | Added `has_explicit_storage_repr` + `storage_representation_impl` → `linear_value_dataset`; without these `std::valarray<T>` resolved to `unsupported` |
 | `h5cpp/H5Meigen.hpp` | `get<ColMajor>::ctor` dim-swap removed — matches the rationalized `access_traits_t::size = {rows, cols}` convention used by every other mapper |
 | `h5cpp/H5Marma.hpp`, `H5Mblaze.hpp`, `H5Mblitz.hpp`, `H5Mdlib.hpp`, `H5Mublas.hpp`, `H5Mvalarray.hpp` | `access_traits_t::data` was missing the non-const overload, so non-const reads dispatched through `h5::impl::data(const T&)` and returned `const T*` — `H5Dread.hpp:225` then failed with `cannot convert 'const T*' to 'T*'`. Added `static auto data(T& c) noexcept` to every contiguous-mapper spec. Eigen and xtensor were already correct. Surfaced by `examples/optimized`, which does an in-place `h5::read(ds, M, offset)`. |
-| `h5cpp/H5Mblaze.hpp` + `thirdparty/blaze/CMakeLists.txt` | `size(rowmat)` returned `{columns, rows}` instead of `{rows, columns}`; `get<rowmat>::ctor` matched it with a swap. Both corrected to the rationalized `{rows, columns}` convention. Additionally, Blaze's default SIMD row padding made `data()` non-contiguous: a `(3 × 4)` matrix of `short` had row spacing 8, so the first 12 elements read out of `data()` interleaved zeros between the rows. Setting `BLAZE_USE_PADDING=0` on the `libblaze` interface target disables that padding so `data()` is honestly packed. |
+| `h5cpp/H5Mblaze.hpp` + `thirdparty/blaze/CMakeLists.txt` | `size(rowmat)` returned `{columns, rows}` instead of `{rows, columns}`; the row-major `get`/`ctor` mapper matched it with a swap. Both corrected to the rationalized `{rows, columns}` convention. Additionally, Blaze's default SIMD row padding made `data()` non-contiguous: a `(3 × 4)` matrix of `short` had row spacing 8, so the first 12 elements read out of `data()` interleaved zeros between the rows. Setting `BLAZE_USE_PADDING=0` on the `libblaze` interface target disables that padding so `data()` is honestly packed. |
 
 ## Known Remaining Issues
 
@@ -149,3 +149,16 @@ In the course of getting these examples to actually run, several real h5cpp bugs
 2. **`itpp.cpp` is orphaned.** Disabled in CMake (`examples/CMakeLists.txt:202-205`) because ITPP v4.3.1 isn't C++17-clean. File still ships for reference.
 3. **Some mapper conventions still differ on shape order.** Dlib + uBLAS use a `{cols, rows}` legacy convention in their `impl::size`; arma + eigen + blitz + blaze use `{rows, cols}`. Explicit `h5::chunk{r, c}` only works when its order matches the mapper's. The linalg examples sidestep this by not passing chunk specs.
 4. **Code duplication across files.** All seven working files share ~70% identical scaffolding. A future cleanup could trim each to ~15 lines and have a single "universal pattern" code block in this README. Not actively harmful.
+
+## Source
+
+- [`arma.cpp`](arma_8cpp-example.html) — rendered with syntax highlighting
+- [`blaze.cpp`](blaze_8cpp-example.html) — rendered with syntax highlighting
+- [`blitz.cpp`](blitz_8cpp-example.html) — rendered with syntax highlighting
+- [`dlib.cpp`](dlib_8cpp-example.html) — rendered with syntax highlighting
+- [`eigen3.cpp`](eigen3_8cpp-example.html) — rendered with syntax highlighting
+- [`itpp.cpp`](itpp_8cpp-example.html) — rendered with syntax highlighting
+- [`ublas.cpp`](ublas_8cpp-example.html) — rendered with syntax highlighting
+- [`valarray.cpp`](valarray_8cpp-example.html) — rendered with syntax highlighting
+- [`xtensor-blas.cpp`](xtensor_blas_8cpp-example.html) — rendered with syntax highlighting
+- [`xtensor.cpp`](xtensor_8cpp-example.html) — rendered with syntax highlighting

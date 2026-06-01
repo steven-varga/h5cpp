@@ -1,0 +1,105 @@
+##
+## H5CPP custom Doxygen aliases
+## Included from doxy/Doxyfile via @INCLUDE
+##
+## ----------------------------------------------------------------------------
+## Developer reference for this vocabulary: docs/aliases.md
+##   - Catalog of every alias and what it expands to
+##   - Standard docstring template
+##   - Workflow for adding / removing aliases (>= 5-use threshold)
+##   - Contribution rule: CONTRIBUTING.md (section "Documentation — alias-first")
+## ----------------------------------------------------------------------------
+##
+## Internal page anchors: use {#link_name} in a page, reference with [text](@ref link_name)
+##
+
+############ CROSS-REFERENCE
+ALIASES += sa_h5cpp="@sa h5::open h5::read h5::write h5::fd_t h5::ds_t h5::err_t"
+ALIASES += sa_exception="@exception std::runtime_error if the dataset or file is not found"
+ALIASES += sa_conversion="see [explicit/implicit conversion](@ref link_conversion) for H5CPP"
+ALIASES += sa_sparse="@sa `h5::write(arma::SpMat)` `h5::read<arma::SpMat>` `h5::write(Eigen::SparseMatrix)` — CSC interop with scipy / Julia HDF5.jl / 10x Genomics"
+ALIASES += sa_mdspan="@sa `std::mdspan` `h5::write` `h5::read` — requires libstdc++ ≥ 15 / libc++ ≥ 19 (`__cpp_lib_mdspan >= 202207L`)"
+ALIASES += sa_async="@sa `h5::async::create` `h5::async::open` `h5::threads{N}` — FAPL-scoped executor model"
+ALIASES += sa_token="@sa `h5::token_t` `h5::oinfo` `h5::token_equal` — rename-stable object identity (HDF5 1.12+)"
+
+############ FILE / DATASET PARAMETERS
+ALIASES += par_file_path="@param file_path path to the HDF5 container within the OS file system"
+ALIASES += par_dataset_path="@param dataset_path location of the dataset within the HDF5 container (absolute or relative POSIX-style path)"
+ALIASES += par_path="@param path path to the HDF5 object (file path for file open/create; dataset path for dataset open)"
+ALIASES += par_attr="@param attr attribute name (UTF-8); resolved relative to the parent object"
+ALIASES += par_fcrt_flags="@param flags file create flags: `H5F_ACC_TRUNC` | `H5F_ACC_EXCL` | `H5F_ACC_DEBUG`"
+ALIASES += par_fopn_flags="@param flags file open flags: `H5F_ACC_RDWR` | `H5F_ACC_RDONLY`"
+
+ALIASES += par_fd="@param fd valid open `h5::fd_t` file descriptor"
+ALIASES += par_ds="@param ds valid open `h5::ds_t` dataset descriptor"
+ALIASES += par_sp="@param sp valid `h5::sp_t` dataspace descriptor"
+ALIASES += par_handle="@param handle any `h5::hid_t<T>` descriptor (`fd_t` | `ds_t` | `gr_t` | `at_t` | `dcpl_t` | `fapl_t`)"
+ALIASES += par_ref_t="@param ref valid `h5::reference_t` handle (RAII-managed; `H5Rdestroy` on scope exit)"
+
+############ PROPERTY LIST PARAMETERS
+ALIASES += par_fcpl="@param fcpl [file creation property list](@ref link_fcpl_l) — controls file meta-data layout"
+ALIASES += par_fapl="@param fapl [file access property list](@ref link_fapl_l) — controls file driver and parallel I/O settings"
+ALIASES += par_dapl="@arg \c dapl — [dataset access property list](@ref link_dapl_l)"
+ALIASES += par_dcpl="@arg \c dcpl — [dataset creation property list](@ref link_dcpl_l)"
+ALIASES += par_dxpl="@arg \c dxpl — [data transfer property list](@ref link_dxpl_l)"
+ALIASES += par_lcpl="@arg \c lcpl — [link creation property list](@ref link_lcpl_l)"
+
+############ I/O SHAPE PARAMETERS
+ALIASES += par_ref="@param ref reference to a linear algebra object (armadillo, eigen, blitz, blaze, dlib, ublas) or `std::vector<T>`"
+ALIASES += par_ptr="@param ptr pointer to a memory region large enough to receive all requested elements"
+ALIASES += par_offset="@arg \c offset — coordinates of the first element selected in file space; one value per dataset dimension (e.g. `h5::offset{0,0,0}` for rank-3)"
+ALIASES += par_stride="@arg \c stride — step between selected elements in each dimension; defaults to `{1,1,...}` (every element)"
+ALIASES += par_count="@arg \c count — number of blocks selected in each dimension; combined with `block` gives the total selection shape"
+ALIASES += par_block="@arg \c block — size of each selected block in each dimension; defaults to `{1,1,...}` (single elements)"
+ALIASES += par_max_dims="@arg \c max_dims — maximum dataset extent; use `H5S_UNLIMITED` to mark an extendable dimension"
+ALIASES += par_current_dims="@arg \c current_dims — initial (current) dataset extent"
+ALIASES += par_chunk_dims="@arg \c chunk — chunk shape for chunked storage; required for compression and streaming; each chunk is the unit of I/O"
+ALIASES += par_deflate="@arg \c deflate — gzip compression level 0–9; 0 disables compression"
+ALIASES += par_thread_count="@param N number of worker threads in the FAPL-scoped pool; 0 disables parallel filter compression"
+ALIASES += par_args="@param args[, ...] comma-separated list of arguments in arbitrary order; only `T object` (or `const T*` for pointer overloads) is required — the rest (offset, stride, count, block, dxpl, current_dims, max_dims, dcpl, lcpl, …) are context-sensitive optionals"
+ALIASES += par_args_attr="@param args[, ...] comma-separated list of arguments in arbitrary order; only `T object` (or `const T*` for pointer overloads) is required — the optionals are `h5::current_dims` (attribute shape; defaults to scalar) and `h5::acpl_t` (attribute creation property list; defaults to `H5P_ATTRIBUTE_CREATE`). Attributes do not chunk and do not support partial I/O, so offset / stride / count / block / dxpl / max_dims / dcpl / lcpl do **not** apply."
+
+############ V1.12 SHAPE / OBJECT PARAMETERS
+ALIASES += par_mdspan="@param view `std::mdspan` view over caller-owned storage; rank deduced from the extents (requires `__cpp_lib_mdspan >= 202207L`)"
+ALIASES += par_sparse="@param matrix sparse matrix (`arma::SpMat` or `Eigen::SparseMatrix`, ColMajor); stored on disk as the CSC group convention"
+
+############ TEMPLATE PARAMETERS
+ALIASES += tpar_T="@tparam T any of the [Supported Types](@ref link_base_template_types) — elementary scalar, string, registered compound, STL container (sequence / associative / array-of), dense or sparse linalg container, mdspan view, or reference handle. Resolves to a `storage_representation_t` at compile time; the dispatch picks the matching read / write path."
+ALIASES += tpar_FD="@tparam fd_t accepts `hid_t` or `h5::fd_t` to support both CAPI and H5CPP call sites"
+ALIASES += tpar_DS="@tparam ds_t accepts `hid_t` or `h5::ds_t` to support both CAPI and H5CPP call sites"
+ALIASES += tpar_AP="@tparam fcpl_t property list type: `h5::fcpl_t` | `hid_t` | `H5P_DEFAULT` \sa_conversion"
+ALIASES += tpar_CP="@tparam fapl_t access property list type: `h5::fapl_t` | `hid_t` | `H5P_DEFAULT` \sa_conversion"
+
+############ RETURN VALUES
+ALIASES += returns_fd="@return open `h5::fd_t` file descriptor; throws `h5::error` on failure"
+ALIASES += returns_ds="@return open `h5::ds_t` dataset descriptor; throws `h5::error` on failure"
+# returns_err: used on void overloads that report errors by throwing, not by return value.
+# (The legacy `returns_void` alias was dropped in #282 as a verbatim duplicate of `returns_err`.)
+ALIASES += returns_err="@return void — errors are reported by throwing `h5::error` derived exceptions"
+ALIASES += returns_object="@return fully constructed object of type `T` populated with dataset data; throws `h5::error` on failure"
+ALIASES += returns_string_vec="@return `std::vector<std::string>` populated with dataset contents"
+ALIASES += returns_gr="@return `h5::gr_t` group descriptor for the on-disk layout (closes via RAII)"
+ALIASES += returns_ref="@return `h5::reference_t` handle (rule-of-five RAII; throws `h5::error` on failure)"
+ALIASES += returns_paths="@return `std::vector<std::string>` of object paths relative to the start node"
+
+############ FUNCTION GROUP HEADERS
+# All dataset-side overloads land in the single `datasets` group (HDF5
+# datasets) — mirrors how `attribute-io` carries the full attribute
+# surface. The per-operation aliases (\func_read_hdr, \func_write_hdr,
+# etc.) are kept as semantic markers in source so a reader can tell at
+# a glance which surface a function belongs to; the @ingroup target is
+# uniform on the rendered side.
+ALIASES += func_create_hdr="\ingroup datasets"
+ALIASES += func_create_links="\sa_h5cpp \sa_hdf5 \sa_stl \sa_linalg"
+
+ALIASES += func_write_hdr="\ingroup datasets"
+ALIASES += func_write_desc="Write an object into an HDF5 dataset. The dataset must exist or be created first with `h5::create`."
+
+ALIASES += func_read_hdr="\ingroup datasets"
+ALIASES += func_read_desc="Read data from an HDF5 dataset into memory. Optional offset/stride/count/block arguments select a hyperslab; omitting them reads the entire dataset."
+
+ALIASES += func_append_hdr="\ingroup datasets"
+ALIASES += func_attr_hdr="\ingroup attribute-io"
+ALIASES += func_sparse_hdr="\ingroup datasets"
+ALIASES += func_async_hdr="\ingroup async-io"
+ALIASES += func_traversal_hdr="\ingroup traversal"

@@ -1,4 +1,4 @@
-# CSV to HDF5
+@page example_guide_csv CSV to HDF5
 
 This example shows the small pattern for streaming rows from a CSV file into an HDF5 packet table. The point is simple: a row-at-a-time text source becomes a compressed, chunked, attribute-annotated HDF5 dataset without anyone touching `H5Tinsert` by hand.
 
@@ -174,3 +174,9 @@ CSV row  →  POD struct  →  packet-table append  →  chunked, compressed dat
 ```
 
 The CSV reader hands you typed columns. The struct is the on-disk row layout. The packet table buffers the appends. The compound type comes from the H5CPP compiler. No `H5Tinsert`, `H5Sclose`, or `H5Dclose` in user code.
+
+## Source
+
+- [`csv2hdf5.cpp`](csv2hdf5_8cpp-example.html) — rendered with syntax highlighting
+- [`generated.h`](generated_8h-example.html) — rendered with syntax highlighting
+- [`struct.h`](struct_8h-example.html) — rendered with syntax highlighting

@@ -16,7 +16,7 @@ endif()
 # embeds it as PROJECT_VERSION rather than a stale hardcoded number.  Falls
 # back to a placeholder when building from a tarball without git history.
 find_package(Git QUIET)
-set(H5CPP_PROJECT_VERSION "1.12.0")
+set(H5CPP_PROJECT_VERSION "1.12.7")
 if(GIT_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
     execute_process(
         COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0 --match "v[0-9]*"
@@ -224,6 +224,30 @@ target_compile_features(h5cpp INTERFACE cxx_std_20)
 # without it the #error guard in H5Qall.hpp always fires even under /std:c++20.
 if(MSVC)
     target_compile_options(h5cpp INTERFACE /Zc:__cplusplus)
+endif()
+
+# The h5cpp-compiler reflection annotations ([[h5::doc]], [[h5::chunk]],
+# [[h5::compress]], [[h5::name]], [[h5::ignore]], ...) live in the `h5::`
+# attribute namespace. A plain compiler — i.e. one not running the h5cpp-compiler
+# preprocessing pass — does not know that namespace, ignores the attributes, and
+# emits -Wattributes for every annotated struct. Declare the namespace
+# intentional so consumers that annotate their own types build cleanly. Scoped
+# to `h5::` where the compiler supports it (GCC 11+); Clang/older GCC fall back
+# to the broader unknown-attribute switch; MSVC silences C5030.  Guarded by
+# check_cxx_compiler_flag so unsupported toolchains are left untouched. (#291)
+if(MSVC)
+    target_compile_options(h5cpp INTERFACE /wd5030)
+else()
+    include(CheckCXXCompilerFlag)
+    check_cxx_compiler_flag("-Wno-attributes=h5::" H5CPP_HAS_WNO_ATTRIBUTES_NS)
+    if(H5CPP_HAS_WNO_ATTRIBUTES_NS)
+        target_compile_options(h5cpp INTERFACE -Wno-attributes=h5::)
+    else()
+        check_cxx_compiler_flag("-Wno-unknown-attributes" H5CPP_HAS_WNO_UNKNOWN_ATTRIBUTES)
+        if(H5CPP_HAS_WNO_UNKNOWN_ATTRIBUTES)
+            target_compile_options(h5cpp INTERFACE -Wno-unknown-attributes)
+        endif()
+    endif()
 endif()
 
 if(H5CPP_HAVE_ROS3_VFD)
@@ -453,24 +477,7 @@ string(TOLOWER "${CPACK_PACKAGE_FILE_NAME}" CPACK_PACKAGE_FILE_NAME)
 include(CPack)
 
 # ─── Developer convenience targets ───────────────────────────────────────────
-find_program(MKDOCS_EXECUTABLE mkdocs)
 find_program(DOXYGEN_EXECUTABLE doxygen)
-
-if(MKDOCS_EXECUTABLE)
-    add_custom_target(docs COMMAND ${MKDOCS_EXECUTABLE} build --config-file ${CMAKE_SOURCE_DIR}/mkdocs.yml --site-dir ${CMAKE_BINARY_DIR}/site
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} 
-        COMMENT "Building MkDocs documentation → build/site"
-        VERBATIM
-    )
-    set(MKDOCS_DEV_ADDR "127.0.0.1:8000" CACHE STRING "host:port for mkdocs serve (docs-serve target)")
-    add_custom_target(docs-serve COMMAND ${MKDOCS_EXECUTABLE} serve --livereload
-        --dev-addr ${MKDOCS_DEV_ADDR}
-        --config-file ${CMAKE_SOURCE_DIR}/mkdocs.yml
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Serving MkDocs with live reload at ${MKDOCS_DEV_ADDR} (Ctrl-C to stop)"
-        VERBATIM
-    )
-endif()
 
 if(DOXYGEN_EXECUTABLE)
     add_custom_target(docs-doxygen COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile

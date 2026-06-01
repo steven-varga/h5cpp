@@ -1,4 +1,4 @@
-# UTF-8 — Unicode Throughout the Identifier Surface
+@page example_guide_utf UTF-8 — Unicode Throughout the Identifier Surface
 
 HDF5 1.8+ supports UTF-8 across every place an object can be *named* — file
 names, group names, dataset names, attribute names — plus the byte content of
@@ -137,3 +137,7 @@ and HDF5 ≥ 1.8.
 - **`examples/string/`** — string *content* round-trip (this example covers the naming surface; that one covers the byte content of values, including non-ASCII UTF-8 in scalar and vector string datasets and attributes).
 - **`examples/groups/`** — group creation and intermediate-path semantics; the nested mixed-script path here exercises the same `create_intermediate_group{1}` machinery from the default LCPL.
 - **HDF5 file-creation property reference** — https://support.hdfgroup.org/documentation/hdf5/latest/group___f___c_p_l.html
+
+## Source
+
+- [`utf.cpp`](utf_8cpp-example.html) — rendered with syntax highlighting

@@ -7,6 +7,7 @@
 #include "H5capi.hpp"
 #include "H5Tmeta.hpp"
 #include "H5cout.hpp"
+#include "H5io_registry.hpp"
 #include <memory>
 #include <string>
 #include <variant>
@@ -177,19 +178,18 @@ void h5::pt_t::init( const h5::ds_t& handle ){
 		ds = h5::ds_t{H5Dopen2(fid, dname.data(), dapl)};
 		H5Pclose(dapl);
 
-		// Phase 1.3.3 — resolve the file's FAPL pool while we still hold
-		// a live fid.  When the FAPL has h5::threads{N} installed, swap
-		// the variant from basic_pipeline_t (default) to pool_pipeline_t
-		// constructed with the pool + back-pressure cap.  When no pool
-		// is present, the default basic_pipeline_t stays — synchronous
-		// behavior, identical to pre-Phase-I.
-		hid_t fapl = H5Fget_access_plist(fid);
-		if (auto pool = impl::resolve_worker_pool(fapl)) {
-			const unsigned cap = impl::resolve_backpressure(fapl, pool->worker_count());
-			pipeline.emplace<std::unique_ptr<impl::pool_pipeline_t>>(
-				std::make_unique<impl::pool_pipeline_t>(std::move(pool), cap));
+		// Phase 1.3.3 / slice C (#286) — H5Fget_access_plist strips user
+		// properties, so resolve_worker_pool on a reconstructed FAPL
+		// always returns nullptr.  Look up the pool in the per-file
+		// registry instead, keyed by H5Fget_fileno.
+		{
+			const unsigned long fileno = impl::file_key_of_file(fid);
+			if (auto pool = impl::registry().resolve_pool(fileno)) {
+				const unsigned cap = impl::registry().resolve_cap(fileno);
+				pipeline.emplace<std::unique_ptr<impl::pool_pipeline_t>>(
+					std::make_unique<impl::pool_pipeline_t>(std::move(pool), cap));
+			}
 		}
-		H5Pclose(fapl);
 
 		H5Fclose(fid);
 		dt = h5::dt_t<void>{H5Dget_type(static_cast<hid_t>(ds))};
@@ -368,32 +368,95 @@ inline void h5::pt_t::reset() {
 }
 
 namespace h5 {
-	/** @ingroup io-append
-	 * @brief extends HDF5 dataset along the first/slowest growing dimension, then writes passed object to the newly created space
-	 * @param pt packet_table descriptor
-	 * @param ref T type const reference to object appended
-	 * @tparam T dimensions must match the dimension of HDF5 space upto rank-1
+	/**
+	 * \func_append_hdr
+	 * @brief Append a value to the streaming end of a packet table.
+	 *
+	 * Buffers `ref` into the packet table's in-memory chunk; once the
+	 * chunk fills it is flushed to the underlying dataset along the
+	 * first (slowest-growing) dimension. Multi-rank packet tables
+	 * write a hyperplane at a time — `ref`'s shape must match
+	 * `chunk_dims[1..rank-1]`.
+	 *
+	 * @param pt   open `h5::pt_t` packet-table descriptor.
+	 * @param ref  value to append; must match the packet table's
+	 *             element type and per-record shape.
+	 * \tpar_T
+	 * \returns_err
+	 *
+	 * @throws h5::error::io::dataset::write   on `H5Dwrite` failure
+	 *         during a chunk flush.
+	 *
+	 * <br/><b>example:</b>
+	 * @code
+	 * h5::fd_t fd = h5::create("stream.h5", H5F_ACC_TRUNC);
+	 * h5::pt_t pt = h5::create<float>(fd, "/stream",
+	 *                  h5::max_dims{H5S_UNLIMITED}, h5::chunk{1024});
+	 *
+	 * for (float sample : stream)
+	 *     h5::append(pt, sample);
+	 *
+	 * h5::flush(pt); // explicit flush of the trailing partial chunk
+	 * @endcode
+	 *
+	 * \sa_h5cpp
+	 * \sa_hdf5
+	 * @sa h5::create h5::flush h5::reset @ref link_handle_reference
+	 *     "Handles, Descriptors, and Property Lists"
 	 */
-
 	template<class T> inline
 	void append( h5::pt_t& pt, const T& ref){
 		pt.append( ref );
 	}
 
-	/** @ingroup io-append
-	 * @brief raw-pointer overload: writes one full chunk straight from `ptr`
-	 *        (no per-element buffering).  Caller is responsible for providing
-	 *        exactly `chunk_dims[0] * ... * chunk_dims[rank-1]` contiguous
-	 *        elements.  Without this overload, raw pointers would bind to the
-	 *        by-ref template above (`T` deduced as `<scalar>*`) and route to
-	 *        the non-scalar member overload, which expects a container with
-	 *        `meta::data` / `meta::size` — silently the wrong path.
+	/**
+	 * \func_append_hdr
+	 * @brief Raw-pointer append — writes one full chunk straight from `ptr`.
+	 *
+	 * Bypasses the per-element buffer used by the by-reference overload
+	 * — the caller supplies a contiguous block of exactly
+	 * `chunk_dims[0] * ... * chunk_dims[rank-1]` elements and the
+	 * packet table flushes it as a single chunk. Use this when you
+	 * already have a chunk-sized buffer to deposit.
+	 *
+	 * Without this overload, raw pointers would bind to the by-ref
+	 * template above (with `T` deduced as `<scalar>*`) and route to
+	 * the non-scalar member path, which expects a container with
+	 * `meta::data` / `meta::size` — silently the wrong dispatch.
+	 *
+	 * @param pt   open `h5::pt_t` packet-table descriptor.
+	 * @param ptr  pointer to a contiguous chunk-sized buffer of `T`.
+	 * \tpar_T
+	 * \returns_err
+	 *
+	 * @throws h5::error::io::dataset::write   on `H5Dwrite` failure.
+	 *
+	 * \sa_h5cpp
+	 * @sa h5::append(h5::pt_t&, const T&)
 	 */
 	template<class T> inline
 	void append( h5::pt_t& pt, const T* ptr){
 		pt.append( ptr );
 	}
 
+	/**
+	 * \func_append_hdr
+	 * @brief Flush the packet table's pending in-memory chunk to disk.
+	 *
+	 * The destructor of `h5::pt_t` also flushes; call this explicitly
+	 * when you need to make the streamed data visible before the
+	 * descriptor goes out of scope (e.g. for an external reader, or
+	 * before mid-program `h5::read` on the same dataset).
+	 *
+	 * @param pt  open `h5::pt_t` packet-table descriptor.
+	 * \returns_err
+	 *
+	 * @throws h5::error::io::dataset::close   on `H5Dwrite` failure
+	 *         during the flush.
+	 *
+	 * \sa_h5cpp
+	 * @sa h5::append h5::reset
+	 */
 	inline void flush(h5::pt_t& pt) try {
 		pt.flush();
         //TODO: find better mechanism for deprecating code: #pragma message("not implemented: do not call pt_t::flush() ...")
@@ -401,11 +464,23 @@ namespace h5 {
 	} catch ( const std::runtime_error& e){
 		throw h5::error::io::dataset::close( e.what() );
 	}
-	/** @ingroup io-append
-	 * @brief zeros the packet-table dimension tracker so the same pt_t can be
-	 * reused for a fresh logical session. Does not shrink the underlying
-	 * dataset on disk; the caller is responsible for any HDF5-level cleanup.
-	 * @param pt packet_table descriptor
+
+	/**
+	 * \func_append_hdr
+	 * @brief Reset the packet table's dimension tracker for reuse.
+	 *
+	 * Zeros the in-memory position so the same `pt_t` can stream a
+	 * fresh logical session into the same underlying dataset. Does
+	 * **not** shrink the dataset on disk — the caller is responsible
+	 * for any HDF5-level cleanup (truncate via `H5Dset_extent`, etc.).
+	 *
+	 * @param pt  open `h5::pt_t` packet-table descriptor.
+	 * \returns_err
+	 *
+	 * @throws h5::error::io::dataset::write   on internal flush failure.
+	 *
+	 * \sa_h5cpp
+	 * @sa h5::append h5::flush
 	 */
 	inline void reset(h5::pt_t& pt) try {
 		pt.reset();

@@ -79,6 +79,8 @@ add_test_case(H5Sall)
 add_test_case(H5capi)
 add_test_case(H5cout)
 add_test_case(H5Zpipeline)
+add_test_case(H5Dhighthroughput)
+add_test_case(H5coverage_edges)
 add_test_case(H5Dappend)
 add_test_case(H5Rall)
 # add_test_case(H5E_exceptions)
@@ -102,6 +104,30 @@ add_test_case(H5Zpipeline_parallel_read)
 add_test_case(H5Zgorilla)
 # add_test_case(H5Iall)
 add_test_case(H5async)        # Phase II scaffold lifecycle + submit_and_wait tests
+
+# ---------------------------------------------------------------------------
+# #286 — per-file worker-pool registry tests (slice D).
+#
+# Covers four scenarios:
+#   1. multi-open → one pool  (two H5Fopen/H5Fcreate on same path → same pool ptr)
+#   2. call_once first-open race  (N threads each open a different file concurrently)
+#   3. leaked-fd / teardown ordering  (RAII close removes the registry entry)
+#   4. regression: pool ENGAGES  (write with h5::threads{N}+h5::high_throughput
+#      resolves a non-null pool from the registry at the H5Dwrite dispatch site)
+# ---------------------------------------------------------------------------
+add_test_case(H5io_registry)
+
+# ---------------------------------------------------------------------------
+# #286 — FAPL/DAPL/fileno behaviour probes (plain C, acceptance criteria).
+#
+# These document the HDF5 behaviours that drive the registry design:
+#   - fapl_embed_probe: H5Fget_access_plist strips H5Pinsert2 user properties.
+#   - dapl_dcpl_probe:  custom DAPL/DCPL properties survive same-handle only.
+#   - fileno_probe:     H5Fget_fileno is stable for two opens of one file.
+#
+# Probes are labelled "probe;#286" — run with: ctest -L probe
+# ---------------------------------------------------------------------------
+add_subdirectory(probe)
 
 # ---------------------------------------------------------------------------
 # C++20 streaming ranges view — issue [#181].

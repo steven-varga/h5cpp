@@ -41,18 +41,11 @@ add_example_test(test_arma_io     LIBRARIES libarmadillo)
 add_example_test(test_blaze_io    LIBRARIES libblaze)
 add_example_test(test_dlib_io     LIBRARIES libdlib)
 
-# ublas v1.74 uses std::allocator::construct which was removed in C++20.
-# Skip the ublas test under C++20 builds.
-if(CMAKE_CXX_STANDARD LESS 20)
-    find_path(H5CPP_BOOST_CONFIG_INCLUDE NAMES boost/config.hpp)
-    if(H5CPP_BOOST_CONFIG_INCLUDE)
-        add_example_test(test_ublas_io LIBRARIES libublas)
-    else()
-        message(STATUS "Boost config headers not found — skipping test_ublas_io")
-    endif()
-else()
-    message(STATUS "C++20 build — skipping test_ublas_io (ublas v1.74 requires std::allocator::construct, removed in C++20)")
-endif()
+# uBLAS is fully vendored (header-only, #293). The bundled 1.89 is C++20-clean
+# (the std::allocator::construct removal that forced v1.74 to be skipped under
+# C++20 is long fixed), and libublas resolves <boost/...> without system Boost,
+# so the test builds unconditionally.
+add_example_test(test_ublas_io LIBRARIES libublas)
 
 add_example_test(test_blitz_io    LIBRARIES libblitz)
 

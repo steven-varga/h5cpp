@@ -89,19 +89,18 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
 
 /**
 @example attributes.cpp
-@example collective.cpp
-@example independent.cpp
-@example throughput.cpp
-@example tu_01.cpp
-@example tu_02.cpp
-@example optimized.cpp
-
 @example basics.cpp
 @example compound.cpp
-@example compound.c
-@example compound.h
-@example struct.cpp
 @example struct.h
+@example container.cpp
+@example detected.cpp
+@example tiny_containers.hpp
+@example cout.cpp
+@example csv2hdf5.cpp
+@example datasets.cpp
+@example datatypes.cpp
+@example pipeline.cpp
+@example groups.cpp
 @example arma.cpp
 @example blaze.cpp
 @example blitz.cpp
@@ -109,57 +108,72 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
 @example eigen3.cpp
 @example itpp.cpp
 @example ublas.cpp
+@example mdspan.cpp
+@example collective.cpp
+@example independent.cpp
+@example throughput.cpp
+@example file_per_rank.cpp
+@example main.cpp
+@example optimized.cpp
 @example packettable.cpp
+@example packet_batches.cpp
+@example pprint.cpp
 @example raw.cpp
+@example reference.cpp
+@example reflection.cpp
+@example s3.cpp
+@example smart_ptr.cpp
+@example eigen.cpp
+@example maps.cpp
+@example nested.cpp
+@example sequences.cpp
+@example sets.cpp
+@example strings.cpp
+@example tuples_pairs.cpp
+@example string.cpp
 @example transform.cpp
+@example utf.cpp
 */
 
 
-/** @defgroup io-create template <T> ds_t create( file, path, space [,lcpl] [,dcpl] [,acpl] );
- * \brief **fd** - open file descriptor or path to hdf5 file,   **path** - how you reach dataset within file, 
- * **space** -- describes the current and maximum dimensions of dataset, 
- * [h5::lcpl | h5::dcpl h5::dapl](@ref link_property_lists) are to fine tune link,dataset properties.
+/** @defgroup datasets HDF5 datasets
+ *  \brief Templated dataset I/O — `h5::create`, `h5::open`,
+ *  `h5::read`, `h5::write`, packet-table streaming (`h5::append`
+ *  / `h5::flush` / `h5::reset`), and the sparse-matrix CSC group
+ *  form. Element type `T` follows the
+ *  [Supported Types](@ref link_base_template_types) dispatch
+ *  matrix; offset / stride / count / block select hyperslabs;
+ *  chunking, compression, and access tuning go through the
+ *  [property-list family](@ref link_property_lists).
+ *  \sa_hdf5
  */
 
-/** @defgroup io-read h5::read<T>( ds | path [,offset] [,stride] [,count] [,dxpl] ); 
- * \brief Templated full or partial IO READ operations that help you to have access to [dataset]s by either returning 
- * [supported linear algebra](@ref link_linalg_template_types) and [STL containers](@ref link_stl_template_types) 
- * or updating the content of already existing objects by passing reference or pointer 
- * to them.  The provided implementations rely on compile time constexpr evaluations, SFINEA pattern matching as 
- * well as static_assert compile time error handling where ever was permitted. Optional [runtime error mechanism](@ref link_error_handler)
- * added with HDF5 error stack unwinding otherwise. 
- * Starting from the  most convenient implementation, where you only have to point at a dataset and the right size object is returned, you find 
- * calls which operate on pre-allocated objects. In case the objects are unsupported there is efficient implementation for raw pointers.
- * When objects are passed then the number of elements are computed from the size of the object, therefore specifying **h5::count** is 
- * compile time error. On the other hand when working with classes and  raw pointers, **h5::count** is the only way to tell how much data you're to retrieve,
- * hence it is required.   
- * The first group of function arguments are mandatory whereas the optional arguments may be specified in any order, 
- * or omitted entirely.
- *
- * [dataset]: https://support.hdfgroup.org/documentation/hdf5/latest/_l_b_dataset.html
+/** @defgroup attribute-io HDF5 attributes
+ *  \brief Templated attribute I/O on any parent that can carry metadata —
+ *  files, groups, datasets, opaque objects, committed datatypes. Element
+ *  type `T` follows the same dispatch as the dataset API
+ *  (see [Supported Types](@ref link_base_template_types)); attributes do
+ *  not chunk, do not support partial I/O, and use the
+ *  [acpl property list](@ref link_property_lists) family.
+ *  \sa_hdf5
  */
 
-/** @defgroup io-write herr_t h5::write<T>( ds | path, object<T> [,offset] [ ,stride ] [,count] [,dxpl] );
- *  \brief Templated WRITE operations object:= std::vector<S> | arma::Row<T> | arma::Col<T> | arma::Mat<T> | arma::Cube<T> | raw_ptr 
+/** @defgroup io-wrap RAII handles
+ *  \brief Thin, `std::unique_ptr`-like type-safe wrappers for the CAPI
+ *  `hid_t` / `herr_t` types. Closes the underlying CAPI handle on
+ *  destruction or when passed to the corresponding HDF5 CAPI function.
+ *  \sa_hdf5
  */
 
-/** @defgroup io-append h5::append<T>( pt , T object);
- *  \brief dataset APPEND operations for streamed data access with examples
- */
-
-/** @defgroup io-wrap [  handle | type_id ] -s with RAII
- * \brief thin std::unique_ptr like type safe thin wrap-s for CAPI **hid_t**,**herr_t** types which upon destruction, or being passed to 
- * HDF5 CAPI functions will do the right thing. 
- * \hdf5_links
- */
-
-/** @defgroup file-io h5::open | h5::create | h5::mute | h5::unmute
- *  \brief These  h5::open | h5::close | h5::create  operations  are to create/manipulate an hdf5 container. 
- *  In POSIX sense HDF5 container is an entire **image** of a file system and the **dataset** is a document within. Datasets may be manipulated
- *  with h5::create | h5::read | h5::write | h5::append operations. While File IO operations are straight maps from already existing CAPI HDF5 calls, 
- *  they are furnished with [RAII](@ref link_raii_idiom), and type safety to aid productivity. 
- *  How the  returned managed handles may be passed to CAPI calls is [governed by H5CPP conversion policy](@ref link_conversion_policy) 
- *  h5::mute | h5::unmute are miscellaneous thread safe calls for those rare occasions when you need to turn HDF5 CAPI error handler output
- *  **off** and **on**.  Typically used when failure is information: checking existence of [dataset|path] by call-fail pattern, etc...  
- *  \hdf5_links
+/** @defgroup file-io HDF5 files
+ *  \brief Create, open, and close an HDF5 container.
+ *  In POSIX terms an HDF5 container is the entire **image** of a file
+ *  system and the **dataset** is a document within. Datasets are
+ *  manipulated via `h5::create` / `h5::read` / `h5::write` /
+ *  `h5::append`. File operations map directly onto HDF5 CAPI calls
+ *  but are furnished with [RAII](@ref link_raii_idiom) and type safety.
+ *  How the returned managed handles may be passed to CAPI calls is [governed by the H5CPP conversion policy](@ref link_conversion_policy).
+ *  `h5::mute` | `h5::unmute` are miscellaneous thread-safe calls for the rare occasions when you need to turn HDF5 CAPI error-handler output
+ *  **off** and **on** — typically used when failure is information (checking existence of a dataset / path by the call-fail pattern, etc.).
+ *  \sa_hdf5
  */

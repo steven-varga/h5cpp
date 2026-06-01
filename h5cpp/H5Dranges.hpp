@@ -137,9 +137,9 @@ namespace h5 {
      * The returned range satisfies std::ranges::input_range and can be used
      * in a range-for loop or passed to any std::ranges algorithm.
      *
-     * @tparam T  Element type matching the HDF5 dataset's stored type.
-     * @param  ds Open dataset handle (must be rank-1 and chunked).
-     * @return    view_range over h5::impl::iterator_t<T>.
+     * \tpar_T
+     * \par_ds
+     * @return view_range over `h5::impl::iterator_t<T>` — satisfies `std::ranges::input_range`; dataset must be rank-1 and chunked.
      */
     template<typename T>
     [[nodiscard]] view_range<impl::iterator_t<T>> view(h5::ds_t ds) {

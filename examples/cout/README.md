@@ -1,4 +1,4 @@
-# cout — IO-Debug Pretty-Printers for HDF5 Property Lists, Dataspaces, Hyperslab Arguments, and Handles
+@page example_guide_cout cout — IO-Debug Pretty-Printers for HDF5 Property Lists, Dataspaces, Hyperslab Arguments, and Handles
 
 Drop `std::cout << x` into any IO call site for instant visibility into property lists, dataspaces, hyperslab arguments, and the RAII handles themselves — the values you'd otherwise chase through `h5dump` or a debugger. h5cpp ships `operator<<` overloads for the argument types you already pass to `h5::read` / `h5::write` (offset, count, stride, block, current_dims, max_dims), for the dataspace, for the data-transfer property list, and for six high-information handles, with a generic fallback covering every other handle type. Container pretty-printing for `std::vector` / `map` / `tuple` / etc. lives in a separate header and has its own example under `examples/pprint/`.
 
@@ -158,3 +158,7 @@ In priority order, the report's recommended next pass:
 - **`h5cpp/H5Uall.hpp`** — STL container pretty-printer family (`vector` / `list` / `set` / `map` / `array` / `deque` / `pair` / `tuple` / `stack` / `queue`).
 - **`examples/pprint/`** — dedicated STL pretty-printer demo.
 - **`examples/datasets/`** — the `offset` / `count` / `stride` / `block` arguments these printers help debug.
+
+## Source
+
+- [`cout.cpp`](cout_8cpp-example.html) — rendered with syntax highlighting

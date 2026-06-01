@@ -26,8 +26,12 @@
 #include <cstring>
 #include <utility>
 
-//FIXME: move it elsewhere
-#define H5CPP_supported_elementary_types "supported elementary types ::= pod_struct | float | double |  [signed](int8 | int16 | int32 | int64)"
+// H5CPP_supported_elementary_types is defined once in H5misc.hpp (the
+// canonical copy that includes `enum`); H5misc is always pulled in ahead of
+// this header via h5cpp/core, and the macro is only consumed by the
+// static_assert diagnostics in H5Dread/H5Dwrite. The duplicate definition
+// that used to live here conflicted with H5misc's and produced a redefinition
+// warning in every TU including core (#289).
 
 // stl detection with templates, this probably should stay until concepts become mainstream
 namespace h5::meta {

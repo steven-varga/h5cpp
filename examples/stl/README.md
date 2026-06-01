@@ -1,4 +1,4 @@
-# STL Container Showdown
+@page example_guide_stl STL Container Showdown
 
 A full coverage matrix for every STL container shape supported by h5cpp's dispatch — sourced from the Write-Side / Read-Side Type Matrices in `tasks/h5cpp-type-system-architecture-notes.md`.
 
@@ -167,3 +167,15 @@ Long containers truncate at `H5CPP_CONSOLE_WIDTH` (default 10, this build uses 3
 - **`examples/compound/`** — the single-file version of the compound POD path that `compound.cpp` reuses.
 - **`examples/container/`** — the same I/O dispatch surface for STL and *custom* (non-`std::`) containers.
 - **`h5cpp/H5Mstl.hpp`** — the per-container access-traits specialisations.
+
+## Source
+
+- [`compound.cpp`](compound_8cpp-example.html) — rendered with syntax highlighting
+- [`generated.h`](generated_8h-example.html) — rendered with syntax highlighting
+- [`maps.cpp`](maps_8cpp-example.html) — rendered with syntax highlighting
+- [`nested.cpp`](nested_8cpp-example.html) — rendered with syntax highlighting
+- [`sequences.cpp`](sequences_8cpp-example.html) — rendered with syntax highlighting
+- [`sets.cpp`](sets_8cpp-example.html) — rendered with syntax highlighting
+- [`strings.cpp`](strings_8cpp-example.html) — rendered with syntax highlighting
+- [`struct.h`](struct_8h-example.html) — rendered with syntax highlighting
+- [`tuples_pairs.cpp`](tuples_pairs_8cpp-example.html) — rendered with syntax highlighting

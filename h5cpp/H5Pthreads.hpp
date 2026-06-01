@@ -42,6 +42,7 @@
 // 1.3 wires pt_t / h5::write / h5::read consumer sites.
 
 #include "H5Pall.hpp"
+#include "H5Zall.hpp"   // filter::warm_dispatch — resolve vendored CPU-dispatch single-threaded
 #include "detail/doorbell.hpp"
 #include "detail/stoppable_thread.hpp"
 #include <atomic>
@@ -85,6 +86,11 @@ struct worker_pool_t {
     // Pool size is fixed at construction; cannot resize at runtime.
     // n == 0 means "use std::thread::hardware_concurrency()".
     explicit worker_pool_t(unsigned n) {
+        // Resolve vendored compressors' lazy CPU-feature dispatch single-threaded
+        // before any worker can run; otherwise the first parallel compress/decompress
+        // self-patches a process-global function pointer from several threads at once
+        // (TSan: data race on libdeflate's 'adler32_impl').  See filter::warm_dispatch.
+        h5::impl::filter::warm_dispatch();
         const unsigned count = n ? n : std::max(1u, std::thread::hardware_concurrency());
         workers_.reserve(count);
         for (unsigned i = 0; i < count; ++i)

@@ -6,6 +6,7 @@
 #include <h5cpp/H5Zpipeline_basic.hpp>
 #include <vector>
 #include <cstring>
+#include <numeric>
 #include "support/fixture.hpp"
 
 TEST_CASE("basic_pipeline_t set_cache with chunked gzip dataset") {
@@ -183,3 +184,38 @@ TEST_CASE("filter::error throws runtime_error") {
     char dst[8] = {};
     CHECK_THROWS_AS(h5::impl::filter::error(dst, src, 8, 0, 1, nullptr), std::runtime_error);
 }
+
+// ---------------------------------------------------------------------------
+// Multi-dimensional chunk decomposition — exercises the rank>1 nested-loop
+// write path in pipeline_t<>::write (H5Zpipeline.hpp:413-437) that the
+// rank-1 round-trips above never reach.
+// ---------------------------------------------------------------------------
+TEST_CASE("basic_pipeline_t rank-2 chunked gzip round-trip") {
+    h5::test::file_fixture_t f("test-pipeline-rank2.h5");
+    h5::ds_t ds = h5::create<double>(f.fd, "ds", h5::current_dims_t{8, 8},
+        h5::chunk{4, 4} | h5::gzip{6});
+    h5::dcpl_t dcpl = h5::get_dcpl(ds);
+    h5::impl::basic_pipeline_t pipeline;
+    pipeline.set_cache(dcpl, sizeof(double));
+
+    std::vector<double> data(64);
+    std::iota(data.begin(), data.end(), 0.0);
+
+    h5::offset_t offset{0, 0};
+    h5::stride_t stride{1, 1};
+    h5::block_t  block{1, 1};
+    h5::count_t  count{8, 8};
+
+    pipeline.write(ds, offset, stride, block, count, h5::default_dxpl, data.data());
+
+    std::vector<double> rb(64);
+    pipeline.read(ds, offset, stride, block, count, h5::default_dxpl, rb.data());
+    for (size_t i = 0; i < data.size(); ++i)
+        CHECK(rb[i] == data[i]);
+}
+
+// NOTE: an in-place filter chain (h5::chunk | h5::shuffle) round-trip through
+// basic_pipeline_t was found to read back byte-shuffled data (e.g. 0x03020100)
+// — the reverse-shuffle is not applied on the direct-chunk read path. Left out
+// here pending a focused fix; the filter::shuffle reverse is covered directly
+// in H5Zshuffle.cpp.

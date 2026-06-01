@@ -1,4 +1,4 @@
-# Reflection — Compiler-Assisted HDF5 Serialisation
+@page example_guide_reflection Reflection — Compiler-Assisted HDF5 Serialisation
 
 C++ already knows the layout of your structs. HDF5 does not. Bridging the two by hand means maintaining a parallel schema in `H5Tinsert` calls that drifts out of sync every time a field is added, renamed, or reordered.
 
@@ -263,3 +263,9 @@ No external dependencies.
 - `examples/multi-tu/` — generated descriptor use across multiple translation units
 - `tasks/h5cpp-compiler-h5-attribute-taxonomy.md` — full annotation vocabulary
 - `tasks/h5cpp-type-system-architecture-notes.md` — kind × storage dispatch matrix
+
+## Source
+
+- [`generated.h`](generated_8h-example.html) — rendered with syntax highlighting
+- [`reflection.cpp`](reflection_8cpp-example.html) — rendered with syntax highlighting
+- [`types.h`](types_8h-example.html) — rendered with syntax highlighting

@@ -1,4 +1,4 @@
-# References — Region & Object Pointers Across Datasets
+@page example_guide_reference References — Region & Object Pointers Across Datasets
 
 An HDF5 *reference* is a portable pointer-like value that names either a whole object (object reference) or a hyperslab inside a dataset (region reference). h5cpp wraps the HDF5 1.12+ generic reference type `H5R_ref_t` in `h5::reference_t`, and the same `h5::write` / `h5::read` shape used everywhere else applies:
 
@@ -102,3 +102,7 @@ The previous failure modes — `static_assert: storage_representation_v<referenc
 - **`h5cpp/H5Rreference.hpp`** — low-level `h5::impl::reference::*` helpers (`create_region`, `open_object`, `open_region`, `copy`, `destroy`, `reclaim`) over the HDF5 C API.
 - **`h5cpp/H5Rregion.hpp`** — public `h5::reference(...)` factory and the experimental `h5::exp::write` / `h5::exp::read<T>` paths that drive partial I/O through a reference.
 - **`examples/datasets/`** — the same `offset` / `count` / `stride` / `block` hyperslab vocabulary used to define the regions a reference points at.
+
+## Source
+
+- [`reference.cpp`](reference_8cpp-example.html) — rendered with syntax highlighting
