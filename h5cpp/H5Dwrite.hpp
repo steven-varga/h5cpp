@@ -27,7 +27,7 @@ namespace h5 {
 		using element_t = typename h5::impl::decay<T>::type;
 		h5::meta::resolved_type_t<element_t> type;
 		H5CPP_CHECK_NZ(
-			H5Dwrite( static_cast<hid_t>( ds ), type, mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
+			H5Dwrite( static_cast<hid_t>( ds ), type, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr),
 				h5::error::io::dataset::write, h5::error::msg::write_dataset);
 	}
 
@@ -139,7 +139,7 @@ namespace h5 {
 				: h5::create_simple( n_elements );
 			h5::select_all( mem_space );
 			if (file_cls == H5S_SCALAR) {
-				err = H5Sselect_all(file_space);
+				err = H5Sselect_all(static_cast<hid_t>(file_space));
 			} else if constexpr (toffset::present || tstride::present || tblock::present){
 				// HYPERBLOCK selection: we either have the argument in `args...` or using default values
 				const h5::block_t& block = arg::get( h5::default_block, args...);
@@ -147,14 +147,14 @@ namespace h5 {
 				const h5::stride_t& stride = arg::get( h5::default_stride, args...);
 				if constexpr( tblock::present ){ // we have to normalise `count` such that `size[i] = count[i] * block[i]` holds
 					for(int i=0; i < rank; i++) count[i] /= block[i];
-					err = H5Sselect_hyperslab(file_space, H5S_SELECT_SET, *offset, *stride, *count, *block);
+					err = H5Sselect_hyperslab(static_cast<hid_t>(file_space), H5S_SELECT_SET, *offset, *stride, *count, *block);
 				} else { // we have to convert h5::count_t{..} to h5::block{..} and initiate a single block transfer
 					h5::block_t block_ = static_cast<h5::block_t>(count);
 					block_.rank = rank; // memory space may have different rank, be sure to use the rank of file_space
-					err = H5Sselect_hyperslab(file_space, H5S_SELECT_SET, *offset, *stride, *h5::default_count, *block_);
+					err = H5Sselect_hyperslab(static_cast<hid_t>(file_space), H5S_SELECT_SET, *offset, *stride, *h5::default_count, *block_);
 				}
 			} else // SELECT_ALL this is the fastest approach, mem_space and file_space must match
-				err = H5Sselect_all(file_space);
+				err = H5Sselect_all(static_cast<hid_t>(file_space));
 			// throw an exception if eny error
 			H5CPP_CHECK_NZ(err, h5::error::io::dataset::write, h5::error::msg::select_hyperslab);
 			// MSVC partial-ordering bug: the unqualified `::h5::write(ds, mem, file, dxpl, ptr)`
@@ -324,10 +324,10 @@ namespace h5 {
 			h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(outer_count));
 			h5::select_all(mem_space);
 			h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
-			H5Sselect_all(file_space);
+			H5Sselect_all(static_cast<hid_t>(file_space));
 			H5CPP_CHECK_NZ(
 				H5Dwrite(static_cast<hid_t>(ds), array_type,
-					mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
+					static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr),
 				h5::error::io::dataset::write, h5::error::msg::write_dataset);
 			H5Tclose(array_type);
 		} else if constexpr (storage == sr_t::fls_dataset) {
@@ -350,10 +350,10 @@ namespace h5 {
 			h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(outer_count));
 			h5::select_all(mem_space);
 			h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
-			H5Sselect_all(file_space);
+			H5Sselect_all(static_cast<hid_t>(file_space));
 			H5CPP_CHECK_NZ(
 				H5Dwrite(static_cast<hid_t>(ds), str_type,
-					mem_space, file_space, static_cast<hid_t>(dxpl), ptr),
+					static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr),
 				h5::error::io::dataset::write, h5::error::msg::write_dataset);
 			H5Tclose(str_type);
 		} else if constexpr (kind == h5::meta::access_t::composite) {
@@ -418,10 +418,10 @@ namespace h5 {
 				h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(count[0]));
 				h5::select_all(mem_space);
 				h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
-				H5Sselect_all(file_space);
+				H5Sselect_all(static_cast<hid_t>(file_space));
 				H5CPP_CHECK_NZ(
 					H5Dwrite(static_cast<hid_t>(ds), vlen_str,
-						mem_space, file_space, static_cast<hid_t>(dxpl), relay.data()),
+						static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), relay.data()),
 					h5::error::io::dataset::write, h5::error::msg::write_dataset);
 				H5Tclose(vlen_str);
 			} else if constexpr (storage == sr_t::ragged_vlen_dataset) {
@@ -452,10 +452,10 @@ namespace h5 {
 				h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(count[0]));
 				h5::select_all(mem_space);
 				h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
-				H5Sselect_all(file_space);
+				H5Sselect_all(static_cast<hid_t>(file_space));
 				H5CPP_CHECK_NZ(
 					H5Dwrite(static_cast<hid_t>(ds), vlen_type,
-						mem_space, file_space, static_cast<hid_t>(dxpl), relay.data()),
+						static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), relay.data()),
 					h5::error::io::dataset::write, h5::error::msg::write_dataset);
 				H5Tclose(vlen_type);
 			} else if constexpr (h5::meta::access_kind_v<typename traits::element_t> == h5::meta::access_t::composite) {
@@ -470,10 +470,10 @@ namespace h5 {
 				h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(n));
 				h5::select_all(mem_space);
 				h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
-				H5Sselect_all(file_space);
+				H5Sselect_all(static_cast<hid_t>(file_space));
 				H5CPP_CHECK_NZ(
 					H5Dwrite(static_cast<hid_t>(ds), static_cast<hid_t>(mem_type),
-						mem_space, file_space, static_cast<hid_t>(dxpl), buf.data()),
+						static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), buf.data()),
 					h5::error::io::dataset::write, h5::error::msg::write_dataset);
 			} else {
 				// flat pointer gather: vector<NonTrivialPod> — element has .data() but is flat
@@ -506,10 +506,10 @@ namespace h5 {
 				h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(count[0]));
 				h5::select_all(mem_space);
 				h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
-				H5Sselect_all(file_space);
+				H5Sselect_all(static_cast<hid_t>(file_space));
 				H5CPP_CHECK_NZ(
 					H5Dwrite(static_cast<hid_t>(ds), compound,
-						mem_space, file_space, static_cast<hid_t>(dxpl), buffer.data()),
+						static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), buffer.data()),
 					h5::error::io::dataset::write, h5::error::msg::write_dataset);
 				H5Tclose(compound);
 			} else if constexpr (h5::meta::access_kind_v<typename traits::element_t> == h5::meta::access_t::composite) {
@@ -528,10 +528,10 @@ namespace h5 {
 				h5::sp_t mem_space = h5::create_simple(static_cast<hsize_t>(n));
 				h5::select_all(mem_space);
 				h5::sp_t file_space{H5Dget_space(static_cast<hid_t>(ds))};
-				H5Sselect_all(file_space);
+				H5Sselect_all(static_cast<hid_t>(file_space));
 				H5CPP_CHECK_NZ(
 					H5Dwrite(static_cast<hid_t>(ds), static_cast<hid_t>(mem_type),
-						mem_space, file_space, static_cast<hid_t>(dxpl), buf.data()),
+						static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), buf.data()),
 					h5::error::io::dataset::write, h5::error::msg::write_dataset);
 			} else {
 				// staging buffer: list<T>, set<T>, deque<T> — linear sequences
@@ -616,9 +616,10 @@ namespace h5 {
 	// generic gateway.
 	template <std::size_t N, class... args_t>
 	inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const char (&ref)[N], args_t&&... args ){
+	  return h5::impl::on_collector([&]() -> h5::ds_t {   // MT: run the whole gateway on the global collector thread
 		h5::ds_t ds;
 		h5::mute();
-			bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
+			bool is_dataset_present = H5Lexists(static_cast<hid_t>(fd), dataset_path.c_str(), H5P_DEFAULT) > 0;
 		h5::unmute();
 		if (is_dataset_present) {
 			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
@@ -638,16 +639,18 @@ namespace h5 {
 		// branch of the ds-write dispatch.
 		::h5::write<char[N]>(ds, ref, std::forward<args_t>(args)...);
 		return ds;
+	  });
 	}
 
 	template <class T, class... args_t>
 	inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T* ptr,  args_t&&... args  ){
+	  return h5::impl::on_collector([&]() -> h5::ds_t {   // MT: run the whole gateway on the global collector thread
 		using tcount  = typename arg::tpos<const h5::count_t&, const args_t&...>;
 		static_assert( tcount::present, "h5::count_t{ ... } must be provided to describe T* memory region" );
 		h5::ds_t ds; // initialized to H5I_UNINIT
 		
 		h5::mute(); // find out if we have to create the dataset 
-			bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
+			bool is_dataset_present = H5Lexists(static_cast<hid_t>(fd), dataset_path.c_str(), H5P_DEFAULT) > 0;
 		h5::unmute(); // <- make sure not to mute error handling longer than needed
 		if (is_dataset_present) {
 			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
@@ -665,6 +668,7 @@ namespace h5 {
 		}
 		// we either have `ds` != H5I_UNINIT or an exception thrown, safe to delegate
 		return ::h5::write(ds, ptr, args...);
+	  });
 	}
 
     /** \func_write_hdr
@@ -717,11 +721,12 @@ namespace h5 {
 			class = std::enable_if_t<!std::is_pointer_v<std::decay_t<T>>
 			                      && !h5::meta::is_sparse_v<std::decay_t<T>>>>
 		inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
+		  return h5::impl::on_collector([&]() -> h5::ds_t {   // MT: run the whole gateway on the global collector thread
 			if constexpr (h5::has_scatter<std::decay_t<T>>::value) {
 				// Scatter path: compiler-generated scatter<T> handles open/create + row append.
 				// Call-site properties (chunk, compress, etc.) are ignored here; the generated
 				// specialization embeds them or the dataset was pre-created.
-				return h5::scatter<std::decay_t<T>>(fd, dataset_path, ref);
+				return h5::scatter<std::decay_t<T>>(static_cast<hid_t>(fd), dataset_path, ref);
 			} else {
 				using traits   = h5::meta::access_traits_t<T>;
 				using sr_t     = h5::meta::storage_representation_t;
@@ -739,7 +744,7 @@ namespace h5 {
 
 				h5::ds_t ds;
 				h5::mute();
-					bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
+					bool is_dataset_present = H5Lexists(static_cast<hid_t>(fd), dataset_path.c_str(), H5P_DEFAULT) > 0;
 				h5::unmute();
 
 				if (is_dataset_present) {
@@ -870,6 +875,7 @@ namespace h5 {
 				}
 				return ::h5::write(ds, ref, args...);
 			}
+		  });
 		}
 
 
@@ -927,4 +933,10 @@ namespace h5 {
 		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR, h5::default_fapl );
 		return ::h5::write( fd, dataset_path, args...);
 	}
+
+	// (The separate async-fd write overloads are retired: under H5CPP_MULTITHREAD
+	// the single write(fd_t) gateways below are wrapped in h5::impl::on_collector,
+	// so the whole create+write+close runs on the one global collector thread —
+	// concurrency-safe for distinct datasets, with compression still fanning out to
+	// the worker pool.  In a classic build on_collector is a no-op pass-through.)
 }

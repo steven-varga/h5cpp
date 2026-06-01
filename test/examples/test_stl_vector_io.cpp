@@ -27,7 +27,7 @@ TEST_CASE("[example] stl vector<double> round-trip") {
             h5::max_dims{H5S_UNLIMITED, 10},
             h5::chunk{1, 10} | h5::gzip{9}
         );
-        CHECK(ds > 0);
+        CHECK(static_cast<hid_t>(ds) > 0);
     }
 
     // READ BACK

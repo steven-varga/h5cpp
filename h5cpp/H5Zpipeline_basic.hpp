@@ -25,7 +25,7 @@ inline void h5::impl::basic_pipeline_t::write_chunk_impl( const hsize_t* offset,
 
 	if (tail == 0) {
 		// no filters, ( if blocking ) -> data == chunk0 otherwise directly from container
-		H5Dwrite_chunk(ds, dxpl, 0x0, offset, nbytes, data);
+		H5Dwrite_chunk(static_cast<::hid_t>(ds), dxpl, 0x0, offset, nbytes, data);
 		return;
 	}
 
@@ -38,7 +38,7 @@ inline void h5::impl::basic_pipeline_t::write_chunk_impl( const hsize_t* offset,
 			if (!length)
 				mask |= 1u << j;
 		}
-		H5Dwrite_chunk(ds, dxpl, mask, offset, length, buf);
+		H5Dwrite_chunk(static_cast<::hid_t>(ds), dxpl, mask, offset, length, buf);
 		return;
 	}
 
@@ -54,7 +54,7 @@ inline void h5::impl::basic_pipeline_t::write_chunk_impl( const hsize_t* offset,
 			mask |= 1 << j;
 	}
 	// direct write available from > 1.10.4
-	H5Dwrite_chunk(ds, dxpl, mask, offset, length, out);
+	H5Dwrite_chunk(static_cast<::hid_t>(ds), dxpl, mask, offset, length, out);
 }
 
 
@@ -67,9 +67,9 @@ inline void h5::impl::basic_pipeline_t::read_chunk_impl( const hsize_t* offset, 
 		// No filters: read decompressed chunk directly into chunk0
 #if H5_VERSION_GE(2,0,0)
 		size_t buf_size = nbytes;
-		H5Dread_chunk2(ds, dxpl, offset, &filter_mask, chunk0, &buf_size);
+		H5Dread_chunk2(static_cast<::hid_t>(ds), dxpl, offset, &filter_mask, chunk0, &buf_size);
 #else
-		H5Dread_chunk(ds, dxpl, offset, &filter_mask, chunk0);
+		H5Dread_chunk(static_cast<::hid_t>(ds), dxpl, offset, &filter_mask, chunk0);
 #endif
 		return;
 	}
@@ -80,9 +80,9 @@ inline void h5::impl::basic_pipeline_t::read_chunk_impl( const hsize_t* offset, 
 	void* read_target = (tail % 2 == 1) ? chunk1 : chunk0;
 #if H5_VERSION_GE(2,0,0)
 	size_t buf_size = nbytes;
-	H5Dread_chunk2(ds, dxpl, offset, &filter_mask, read_target, &buf_size);
+	H5Dread_chunk2(static_cast<::hid_t>(ds), dxpl, offset, &filter_mask, read_target, &buf_size);
 #else
-	H5Dread_chunk(ds, dxpl, offset, &filter_mask, read_target);
+	H5Dread_chunk(static_cast<::hid_t>(ds), dxpl, offset, &filter_mask, read_target);
 #endif
 
 	void* src = read_target;

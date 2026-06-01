@@ -195,7 +195,23 @@ endfunction()
 # Linalg examples
 # ------------------------------------------------------------------------------
 message( "-- Vendored: dlib library, added to examples" )
-add_h5cpp_example(dlib linalg/dlib.cpp LIBRARIES libdlib)
+add_h5cpp_example(async-pipeline async-pipeline/async_profile.cpp)
+
+## multithreaded-pipeline — #287 async-vs-sync profiling harness (per-case execs)
+add_h5cpp_example(multithreaded-pipeline multithreaded-pipeline/pipeline.cpp
+	LIBRARIES Threads::Threads)
+add_h5cpp_example(multithreaded-pipeline-raw multithreaded-pipeline/pipeline.cpp
+	LIBRARIES Threads::Threads COMPILE_DEFINITIONS H5CPP_BENCH_CASE=H5CPP_BENCH_CASE_RAW)
+add_h5cpp_example(multithreaded-pipeline-direct-gzip multithreaded-pipeline/pipeline.cpp
+	LIBRARIES Threads::Threads COMPILE_DEFINITIONS H5CPP_BENCH_CASE=H5CPP_BENCH_CASE_DIRECT_GZIP)
+add_h5cpp_example(multithreaded-pipeline-hdf5-gzip multithreaded-pipeline/pipeline.cpp
+	LIBRARIES Threads::Threads COMPILE_DEFINITIONS H5CPP_BENCH_CASE=H5CPP_BENCH_CASE_HDF5_GZIP)
+add_h5cpp_example(multithreaded-pipeline-single multithreaded-pipeline/pipeline.cpp
+	LIBRARIES Threads::Threads COMPILE_DEFINITIONS H5CPP_BENCH_CASE=H5CPP_BENCH_CASE_SINGLE)
+add_h5cpp_example(multithreaded-pipeline-multi multithreaded-pipeline/pipeline.cpp
+	LIBRARIES Threads::Threads COMPILE_DEFINITIONS H5CPP_BENCH_CASE=H5CPP_BENCH_CASE_MULTI)
+add_h5cpp_example(multithreaded-pipeline-async multithreaded-pipeline/pipeline.cpp
+	LIBRARIES Threads::Threads COMPILE_DEFINITIONS H5CPP_BENCH_CASE=H5CPP_BENCH_CASE_ASYNC)
 
 message( "-- Vendored: eigen3 added to examples" )
 add_h5cpp_example(eigen3 linalg/eigen3.cpp LIBRARIES Eigen3::Eigen)

@@ -370,9 +370,9 @@ inline void pool_pipeline_t::read_chunk_impl(const hsize_t* offset_in,
     if (tail == 0) {
 #if H5_VERSION_GE(2,0,0)
         std::size_t buf_size = nbytes;
-        H5Dread_chunk2(ds, dxpl, offset_in, &filter_mask, chunk0, &buf_size);
+        H5Dread_chunk2(static_cast<::hid_t>(ds), dxpl, offset_in, &filter_mask, chunk0, &buf_size);
 #else
-        H5Dread_chunk(ds, dxpl, offset_in, &filter_mask, chunk0);
+        H5Dread_chunk(static_cast<::hid_t>(ds), dxpl, offset_in, &filter_mask, chunk0);
 #endif
         return;
     }
@@ -380,9 +380,9 @@ inline void pool_pipeline_t::read_chunk_impl(const hsize_t* offset_in,
     void* read_target = (tail % 2 == 1) ? chunk1 : chunk0;
 #if H5_VERSION_GE(2,0,0)
     std::size_t buf_size = nbytes;
-    H5Dread_chunk2(ds, dxpl, offset_in, &filter_mask, read_target, &buf_size);
+    H5Dread_chunk2(static_cast<::hid_t>(ds), dxpl, offset_in, &filter_mask, read_target, &buf_size);
 #else
-    H5Dread_chunk(ds, dxpl, offset_in, &filter_mask, read_target);
+    H5Dread_chunk(static_cast<::hid_t>(ds), dxpl, offset_in, &filter_mask, read_target);
 #endif
 
     void* src = read_target;

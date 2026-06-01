@@ -53,18 +53,25 @@ namespace h5{
 		H5CPP_CHECK_PROP( fcpl,  h5::error::io::file::create, "invalid file control property list" );
 		H5CPP_CHECK_PROP( fapl,  h5::error::io::file::create, "invalid file access property list" );
 
-        hid_t fd;
-	   	H5CPP_CHECK_NZ(
-					(fd = H5Fcreate(path.data(), flags, static_cast<hid_t>( fcpl ), static_cast<hid_t>( fapl ) )),
-					h5::error::io::file::create,	h5::error::msg::create_file);
-        // Register per-file worker pool while the original user fapl is still live.
-        // H5Fget_access_plist would return a stripped copy that drops user properties.
-        if (auto pool = h5::impl::resolve_worker_pool(static_cast<::hid_t>(fapl))) {
-            const unsigned cap = h5::impl::resolve_backpressure(
-                    static_cast<::hid_t>(fapl), pool->worker_count());
-            h5::impl::registry().attach(
-                    h5::impl::file_key_of_file(fd), std::move(pool), cap);
-        }
-        return fd_t{fd};
+        // MT: the file create + fileno derivation + registry attach run on the one
+        // global collector thread — under Threadsafety-OFF HDF5, EVERY C-API call
+        // must come from the same thread (its global free-lists/id-tables corrupt
+        // otherwise, even across sequential calls from different threads).  No-op
+        // pass-through in a classic build.
+        return h5::impl::on_collector([&]() -> h5::fd_t {
+            hid_t fd;
+            H5CPP_CHECK_NZ(
+                        (fd = H5Fcreate(path.data(), flags, static_cast<hid_t>( fcpl ), static_cast<hid_t>( fapl ) )),
+                        h5::error::io::file::create,	h5::error::msg::create_file);
+            // Register per-file worker pool while the original user fapl is still live.
+            // H5Fget_access_plist would return a stripped copy that drops user properties.
+            if (auto pool = h5::impl::resolve_worker_pool(static_cast<::hid_t>(fapl))) {
+                const unsigned cap = h5::impl::resolve_backpressure(
+                        static_cast<::hid_t>(fapl), pool->worker_count());
+                h5::impl::registry().attach(
+                        h5::impl::file_key_of_file(fd), std::move(pool), cap);
+            }
+            return fd_t{fd};
+        });
     }
 }

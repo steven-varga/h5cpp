@@ -36,7 +36,7 @@ TEST_CASE("[example] attributes round-trip") {
     h5::awrite(ds, "att_27", std::string("std::string"));
 
     // WRITE attributes to group
-    h5::gr_t gr{H5Gopen(fd, "/directory", H5P_DEFAULT)};
+    h5::gr_t gr{H5Gopen(static_cast<hid_t>(fd), "/directory", H5P_DEFAULT)};
     h5::awrite(gr, "att_21", 42);
     h5::awrite(gr, "att_22", std::vector<double>{1., 3., 4., 5.});
     h5::awrite(gr, "att_25", "const char[N]");

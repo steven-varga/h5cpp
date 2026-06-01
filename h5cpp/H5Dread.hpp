@@ -337,7 +337,7 @@ namespace h5 {
 			const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
 			h5::sp_t mem_space = h5::create_simple(outer);
 			h5::select_all(mem_space);
-			H5Sselect_all(file_space);
+			H5Sselect_all(static_cast<hid_t>(file_space));
 			// Vector: direct buffer. List/set/etc.: read into scratch, then assign.
 			if constexpr (h5::meta::has_data_pointer<std::remove_cv_t<std::remove_reference_t<T>>>::value) {
 				ref.resize(static_cast<std::size_t>(outer));
@@ -371,7 +371,7 @@ namespace h5 {
 			const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
 			h5::sp_t mem_space = h5::create_simple(outer);
 			h5::select_all(mem_space);
-			H5Sselect_all(file_space);
+			H5Sselect_all(static_cast<hid_t>(file_space));
 			if constexpr (h5::meta::has_data_pointer<std::remove_cv_t<std::remove_reference_t<T>>>::value) {
 				ref.resize(static_cast<std::size_t>(outer));
 				H5CPP_CHECK_NZ(
@@ -628,7 +628,7 @@ namespace h5 {
 		void read( const h5::fd_t& fd,  const std::string& dataset_path, T& ref, args_t&&... args ){
 		if constexpr (h5::has_scatter<std::decay_t<T>>::value) {
 			// Gather path: compiler-generated gather<T> handles open + row read.
-			h5::gather<std::decay_t<T>>(fd, dataset_path, ref);
+			h5::gather<std::decay_t<T>>(static_cast<hid_t>(fd), dataset_path, ref);
 		} else {
 			// Stopper: mirror the ds-dispatch overload's unsupported-storage guard so
 			// the gateway path fails at compile time too. (Scatter types are handled
@@ -1081,10 +1081,25 @@ namespace h5 {
 	template<class T, class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>>
 	inline T read( hid_t fd, const std::string& dataset_path, args_t&&... args ){
+		return h5::impl::on_collector([&]() -> T {   // MT: read runs on the one global collector thread
+			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+			h5::ds_t ds = h5::open(fd, dataset_path, dapl );
+			return ::h5::read<T>(ds, args...);
+		});
+	}
 
-		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
-		h5::ds_t ds = h5::open(fd, dataset_path, dapl );
-		return ::h5::read<T>(ds, args...);
+	// Value-returning read by FILE handle.  Mirrors the hid_t overload above but
+	// takes h5::fd_t directly: required under the conversion-off / H5CPP_MULTITHREAD
+	// boundary (where fd_t has no implicit ::hid_t decay), and the preferred exact
+	// match in classic mode — the read-side parallel of the write(fd_t) gateway.
+	template<class T, class... args_t,
+		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>>
+	inline T read( const h5::fd_t& fd, const std::string& dataset_path, args_t&&... args ){
+		return h5::impl::on_collector([&]() -> T {   // MT: read runs on the one global collector thread
+			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+			h5::ds_t ds = h5::open(fd, dataset_path, dapl );
+			return ::h5::read<T>(ds, args...);
+		});
 	}
  	/**
  	 * \func_read_hdr
@@ -1118,7 +1133,9 @@ namespace h5 {
 	template<class T, class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>> // dispatch to above
 	inline T read(const std::string& file_path, const std::string& dataset_path, args_t&&... args ){
-		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR );
-		return ::h5::read<T>( fd, dataset_path, args...);
+		return h5::impl::on_collector([&]() -> T {   // MT: whole open+read+close on the one collector thread
+			h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR );
+			return ::h5::read<T>( fd, dataset_path, args...);
+		});
 	}
 }

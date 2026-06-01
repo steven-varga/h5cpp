@@ -75,7 +75,7 @@ inline h5::ds_t h5::scatter<scatter_pod_t>(hid_t fd, const std::string& path,
     h5::unmute();
 
     if (exists) {
-        ds = h5::open(fd, path, h5::default_dapl);
+        ds = h5::open(h5::fd_t(fd), path, h5::default_dapl);
     } else {
         h5::dcpl_t dcpl{H5Pcreate(H5P_DATASET_CREATE)};
         hsize_t chunk = 64;
@@ -84,13 +84,13 @@ inline h5::ds_t h5::scatter<scatter_pod_t>(hid_t fd, const std::string& path,
         hsize_t cur = 0;
         hsize_t max = H5S_UNLIMITED;
         hid_t space = H5Screate_simple(1, &cur, &max);
-        ds = h5::createds(fd, path, compound_type(),
+        ds = h5::createds(h5::fd_t(fd), path, compound_type(),
                           h5::sp_t{space}, h5::default_lcpl, dcpl, h5::default_dapl);
     }
 
-    hsize_t row = h5::detail::next_row(ds);
+    hsize_t row = h5::detail::next_row(static_cast<hid_t>(ds));
     row_t r{obj.timestamp, obj.value};
-    herr_t err = h5::detail::write_one_row(ds, compound_type(), row, &r);
+    herr_t err = h5::detail::write_one_row(static_cast<hid_t>(ds), compound_type(), row, &r);
     REQUIRE(err >= 0);
     return ds;
 }
@@ -99,13 +99,13 @@ template<>
 inline void h5::gather<scatter_pod_t>(hid_t fd, const std::string& path,
                                        scatter_pod_t& obj) {
     using namespace h5::generated::scatter_pod_t_;
-    h5::ds_t ds = h5::open(fd, path, h5::default_dapl);
+    h5::ds_t ds = h5::open(h5::fd_t(fd), path, h5::default_dapl);
 
-    hsize_t nrows = h5::detail::next_row(ds);
+    hsize_t nrows = h5::detail::next_row(static_cast<hid_t>(ds));
     REQUIRE(nrows > 0);
 
     row_t r{};
-    herr_t err = h5::detail::read_one_row(ds, compound_type(), nrows - 1, &r);
+    herr_t err = h5::detail::read_one_row(static_cast<hid_t>(ds), compound_type(), nrows - 1, &r);
     REQUIRE(err >= 0);
 
     obj.timestamp = r.timestamp;
@@ -132,7 +132,7 @@ TEST_CASE("[#258] detail::next_row on empty 1-D dataset returns 0") {
                                h5::default_lcpl, dcpl, h5::default_dapl);
     H5Tclose(ctype);
 
-    CHECK(h5::detail::next_row(ds) == 0);
+    CHECK(h5::detail::next_row(static_cast<hid_t>(ds)) == 0);
 }
 
 TEST_CASE("[#258] detail::write_one_row extends dataset and writes row") {
@@ -152,14 +152,14 @@ TEST_CASE("[#258] detail::write_one_row extends dataset and writes row") {
                                h5::default_lcpl, dcpl, h5::default_dapl);
 
     double buf = 3.14;
-    herr_t err = h5::detail::write_one_row(ds, ctype, 0, &buf);
+    herr_t err = h5::detail::write_one_row(static_cast<hid_t>(ds), ctype, 0, &buf);
     CHECK(err >= 0);
-    CHECK(h5::detail::next_row(ds) == 1);
+    CHECK(h5::detail::next_row(static_cast<hid_t>(ds)) == 1);
 
     double buf2 = 2.71;
-    err = h5::detail::write_one_row(ds, ctype, 1, &buf2);
+    err = h5::detail::write_one_row(static_cast<hid_t>(ds), ctype, 1, &buf2);
     CHECK(err >= 0);
-    CHECK(h5::detail::next_row(ds) == 2);
+    CHECK(h5::detail::next_row(static_cast<hid_t>(ds)) == 2);
 
     H5Tclose(ctype);
 }
@@ -181,12 +181,12 @@ TEST_CASE("[#258] detail::read_one_row reads back correct row") {
                                h5::default_lcpl, dcpl, h5::default_dapl);
 
     double v0 = 1.0, v1 = 2.0, v2 = 3.0;
-    h5::detail::write_one_row(ds, ctype, 0, &v0);
-    h5::detail::write_one_row(ds, ctype, 1, &v1);
-    h5::detail::write_one_row(ds, ctype, 2, &v2);
+    h5::detail::write_one_row(static_cast<hid_t>(ds), ctype, 0, &v0);
+    h5::detail::write_one_row(static_cast<hid_t>(ds), ctype, 1, &v1);
+    h5::detail::write_one_row(static_cast<hid_t>(ds), ctype, 2, &v2);
 
     double out = 0.0;
-    herr_t err = h5::detail::read_one_row(ds, ctype, 1, &out);
+    herr_t err = h5::detail::read_one_row(static_cast<hid_t>(ds), ctype, 1, &out);
     CHECK(err >= 0);
     CHECK(out == doctest::Approx(2.0));
 
@@ -201,8 +201,8 @@ TEST_CASE("[#258] h5::write dispatches to scatter specialization") {
 
     scatter_pod_t obj{42ULL, 3.14};
     h5::ds_t ds = h5::write(f.fd, "session", obj);
-    CHECK(H5Iis_valid(ds) > 0);
-    CHECK(h5::detail::next_row(ds) == 1);
+    CHECK(H5Iis_valid(static_cast<hid_t>(ds)) > 0);
+    CHECK(h5::detail::next_row(static_cast<hid_t>(ds)) == 1);
 }
 
 TEST_CASE("[#258] h5::read dispatches to gather specialization") {
@@ -226,11 +226,11 @@ TEST_CASE("[#258] multiple scatter writes append rows") {
     h5::write(f.fd, "log", scatter_pod_t{3000ULL, 3.0});
 
     h5::ds_t ds = h5::open(f.fd, "log");
-    CHECK(h5::detail::next_row(ds) == 3);
+    CHECK(h5::detail::next_row(static_cast<hid_t>(ds)) == 3);
 
     // gather reads the last row by default in our test specialization
     scatter_pod_t last{};
-    h5::gather<scatter_pod_t>(f.fd, "log", last);
+    h5::gather<scatter_pod_t>(static_cast<hid_t>(f.fd), "log", last);
     CHECK(last.timestamp == 3000ULL);
     CHECK(last.value == doctest::Approx(3.0));
 }
@@ -240,7 +240,7 @@ TEST_CASE("[#258] unregistered type still uses normal write path") {
 
     std::vector<double> data = {1.0, 2.0, 3.0};
     h5::ds_t ds = h5::write(f.fd, "vec", data);
-    CHECK(H5Iis_valid(ds) > 0);
+    CHECK(H5Iis_valid(static_cast<hid_t>(ds)) > 0);
 
     auto back = h5::read<std::vector<double>>(f.fd, "vec");
     CHECK(back.size() == 3);

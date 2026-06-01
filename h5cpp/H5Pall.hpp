@@ -30,6 +30,7 @@ namespace h5::impl {
 		prop_base(){ }
 		// removed ctor
 		~prop_base(){
+			h5::impl::capi_lock _lk;   // MT: H5Pclose touches HDF5 global state
 			if( H5Iis_valid( handle ) ){
 				H5Pclose( handle );
 			}
@@ -47,6 +48,7 @@ namespace h5::impl {
 		template <class R>
 		std::enable_if_t< std::is_same_v<R, phid_t>, phid_t >
 		operator|( const R& rhs ) const {
+			h5::impl::capi_lock _lk;   // MT: H5Pcopy + copy_impl(H5Pset) touch HDF5 global state
 			::hid_t merged;
 			H5CPP_CHECK_NZ( (merged = H5Pcopy( static_cast<::hid_t>(rhs) )),
 				   h5::error::property_list::misc, "failed to copy property list");
@@ -59,6 +61,7 @@ namespace h5::impl {
 		}
 		/*transfering ownership to managed handle*/
 		operator phid_t( ) const {
+			h5::impl::capi_lock _lk;   // MT: copy_impl(H5Pset) + H5Iinc_ref touch HDF5 global state
 			static_cast<const Derived*>(this)->copy_impl( handle );
 			H5Iinc_ref( handle ); /*keep this alive */
 			return phid_t{handle};
@@ -76,15 +79,17 @@ namespace h5::impl {
 		using type = phid_t;
 
 		prop_t( typename capi::args_t values ) : args( values ) {
+			h5::impl::capi_lock _lk;   // MT: H5Pcreate touches HDF5 global state
 			H5CPP_CHECK_NZ( (this->handle = H5Pcreate(init())),
 				   h5::error::property_list::misc, "failed to create property");
 		}
 		prop_t(){
+			h5::impl::capi_lock _lk;   // MT: H5Pcreate touches HDF5 global state
 			H5CPP_CHECK_NZ( (this->handle = H5Pcreate(init())),
 				   h5::error::property_list::misc, "failed to create property");
 		}
 		void copy_impl(::hid_t id) const {
-			//int i = capi_call + 1;
+			h5::impl::capi_lock _lk;   // MT: H5Pset_* touches HDF5 global state
 			/*CAPI needs `this` hid_t id passed along */
 			capi_t capi_args = std::tuple_cat( std::tie(id), args );
 			H5CPP_CHECK_NZ( std::apply(capi_call, capi_args),

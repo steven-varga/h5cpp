@@ -38,9 +38,9 @@ TEST_CASE("[example] basics API demonstration") {
     // File creation and RAII close
     {
         h5::fd_t fd = h5::create(filename, H5F_ACC_TRUNC);
-        CHECK(fd > 0);
+        CHECK(static_cast<hid_t>(fd) > 0);
         hid_t ref = static_cast<hid_t>(fd);
-        CHECK(ref > 0);
+        CHECK(static_cast<hid_t>(ref) > 0);
     }
 
     // Dataset creation with various property combinations
@@ -52,27 +52,27 @@ TEST_CASE("[example] basics API demonstration") {
             h5::create_path | h5::utf8,
             h5::chunk{2, 3} | h5::fill_value<short>{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9},
             h5::default_dapl);
-        CHECK(ds_0 > 0);
+        CHECK(static_cast<hid_t>(ds_0) > 0);
 
         h5::dcpl_t dcpl = h5::chunk{2, 3} | h5::fill_value<short>{42} | h5::fletcher32 | h5::shuffle | h5::nbit | h5::gzip{9};
         auto ds_1 = h5::create<short>(fd, "/type/short/tree_1",
             h5::current_dims{10, 20}, h5::max_dims{10, H5S_UNLIMITED}, dcpl);
-        CHECK(ds_1 > 0);
+        CHECK(static_cast<hid_t>(ds_1) > 0);
 
         auto ds_2 = h5::create<short>(fd, "/type/short/tree_2",
             h5::current_dims{10, 20}, h5::max_dims{10, H5S_UNLIMITED},
             h5::default_lcpl, dcpl, h5::default_dapl);
-        CHECK(ds_2 > 0);
+        CHECK(static_cast<hid_t>(ds_2) > 0);
 
         auto ds_3 = h5::create<short>(fd, "/type/short/max_dims",
             h5::max_dims{10, H5S_UNLIMITED},
             h5::chunk{10, 1});
-        CHECK(ds_3 > 0);
+        CHECK(static_cast<hid_t>(ds_3) > 0);
 
         auto ds_4 = h5::create<std::string>(fd, "/types/string with chunk and compression",
             h5::max_dims{H5S_UNLIMITED},
             h5::chunk{10} | h5::gzip{9});
-        CHECK(ds_4 > 0);
+        CHECK(static_cast<hid_t>(ds_4) > 0);
     }
 
     std::filesystem::remove(filename);

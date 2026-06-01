@@ -59,7 +59,7 @@ namespace h5 {
 		pt_t& operator=( h5::pt_t&& pt ){
             // prevent self assign
             if (this == &pt) return *this;
-            if(H5Iis_valid(this->ds)){ // flush and close dataset
+            if(H5Iis_valid(static_cast<hid_t>(this->ds))){ // flush and close dataset
                 this->flush();
                 free(this->fill_value);
             }
@@ -241,7 +241,7 @@ inline void h5::pt_t::append( const std::string& ref ) {
 	H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, nullptr, &block, &count);
 	
 	H5Dwrite( static_cast<hid_t>( ds ), 
-		dt, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
+		dt, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr);
 	n = 0;
 }
 template <>
@@ -260,7 +260,7 @@ inline void h5::pt_t::append( const char* ref ) {
 	H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, NULL, &block, &count);
 
 	H5Dwrite( static_cast<hid_t>( ds ),
-		dt, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
+		dt, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr);
 	n = 0;
 }
 
@@ -343,7 +343,7 @@ void h5::pt_t::flush(){
 			H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, nullptr, &block, &count);
 
 			H5Dwrite( static_cast<hid_t>( ds ),
-				dt, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
+				dt, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr);
 		} else {
 			// the remainder of last chunk must be set to fill_value; arbitrary type size supported
 			for(hsize_t i=0; i<(N-n); i++)
@@ -493,7 +493,7 @@ inline std::ostream& operator<<(std::ostream &os, const h5::pt_t& pt) {
     os << std::dec;
 	os <<"packet table:\n"
 		 "------------------------------------------\n";
-    if( !H5Iis_valid(pt.ds)) {
+    if( !H5Iis_valid(static_cast<hid_t>(pt.ds))) {
         os << "ds: H5I_UNINIT" <<std::endl;
         return os;
     }
