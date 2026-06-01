@@ -10,6 +10,7 @@
 #include "H5Dopen.hpp" // be sure this precedes error handling macro-s !!!
 #include "H5Rreference.hpp"
 #include "H5Dscatter.hpp"
+#include "H5io_registry.hpp"
 #include <string>
 #include <stdexcept>
 #include <type_traits>
@@ -95,18 +96,14 @@ namespace h5 {
 			return layout == H5D_CHUNKED;
 		}();
 		if( use_pipeline ){
-			// Phase 1.3.3 — if the file's FAPL has h5::threads{N}, route
-			// reads through a local pool_pipeline_t.  Currently pool_pipeline_t::
-			// read_chunk_impl is synchronous (parallel decompress is Phase 1.5+),
-			// so the FAPL-pool branch is semantically equivalent to the DAPL
-			// path today; the structure is in place for the read-ahead
-			// optimization to land later without changing call sites.
-			hid_t fid  = H5Iget_file_id(static_cast<hid_t>(ds));
-			hid_t fapl = H5Fget_access_plist(fid);
-			auto pool  = h5::impl::resolve_worker_pool(fapl);
+			// Phase 1.3.3 / slice C (#286) — H5Fget_access_plist strips
+			// user properties, so resolve_worker_pool on a reconstructed
+			// FAPL always returns nullptr.  Look up the pool directly in
+			// the per-file registry, keyed by H5Fget_fileno.
+			const unsigned long fileno = h5::impl::file_key(static_cast<::hid_t>(ds));
+			auto pool = h5::impl::registry().resolve_pool(fileno);
 			if (pool) {
-				const unsigned cap = h5::impl::resolve_backpressure(
-					fapl, pool->worker_count());
+				const unsigned cap = h5::impl::registry().resolve_cap(fileno);
 				h5::impl::pool_pipeline_t pipe(std::move(pool), cap);
 				h5::dcpl_t dcpl{H5Dget_create_plist(static_cast<hid_t>(ds))};
 				hid_t type_id  = H5Dget_type(static_cast<hid_t>(ds));
@@ -119,8 +116,6 @@ namespace h5 {
 				H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
 				filters->read(ds, offset, stride, block, count, dxpl, ptr);
 			}
-			H5Pclose(fapl);
-			H5Fclose(fid);
 		}else{
 			// Scalar dataspaces don't support hyperslab selection; H5Sselect_all
 			// on both sides is the equivalent path for rank=0 / H5S_SCALAR.

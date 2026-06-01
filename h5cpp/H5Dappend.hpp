@@ -7,6 +7,7 @@
 #include "H5capi.hpp"
 #include "H5Tmeta.hpp"
 #include "H5cout.hpp"
+#include "H5io_registry.hpp"
 #include <memory>
 #include <string>
 #include <variant>
@@ -177,19 +178,18 @@ void h5::pt_t::init( const h5::ds_t& handle ){
 		ds = h5::ds_t{H5Dopen2(fid, dname.data(), dapl)};
 		H5Pclose(dapl);
 
-		// Phase 1.3.3 — resolve the file's FAPL pool while we still hold
-		// a live fid.  When the FAPL has h5::threads{N} installed, swap
-		// the variant from basic_pipeline_t (default) to pool_pipeline_t
-		// constructed with the pool + back-pressure cap.  When no pool
-		// is present, the default basic_pipeline_t stays — synchronous
-		// behavior, identical to pre-Phase-I.
-		hid_t fapl = H5Fget_access_plist(fid);
-		if (auto pool = impl::resolve_worker_pool(fapl)) {
-			const unsigned cap = impl::resolve_backpressure(fapl, pool->worker_count());
-			pipeline.emplace<std::unique_ptr<impl::pool_pipeline_t>>(
-				std::make_unique<impl::pool_pipeline_t>(std::move(pool), cap));
+		// Phase 1.3.3 / slice C (#286) — H5Fget_access_plist strips user
+		// properties, so resolve_worker_pool on a reconstructed FAPL
+		// always returns nullptr.  Look up the pool in the per-file
+		// registry instead, keyed by H5Fget_fileno.
+		{
+			const unsigned long fileno = impl::file_key_of_file(fid);
+			if (auto pool = impl::registry().resolve_pool(fileno)) {
+				const unsigned cap = impl::registry().resolve_cap(fileno);
+				pipeline.emplace<std::unique_ptr<impl::pool_pipeline_t>>(
+					std::make_unique<impl::pool_pipeline_t>(std::move(pool), cap));
+			}
 		}
-		H5Pclose(fapl);
 
 		H5Fclose(fid);
 		dt = h5::dt_t<void>{H5Dget_type(static_cast<hid_t>(ds))};

@@ -112,6 +112,48 @@ namespace h5::impl::filter {
 		b = std::max(b, size + 4);   // fletcher32 appends 4-byte checksum
 		return b;
 	}
+
+	// Resolve the vendored compressors' lazy CPU-feature dispatch on the CALLING
+	// thread, exactly once.  libdeflate (and zstd) pick their SIMD implementation
+	// on first use by writing a resolved function pointer into a process-global
+	// (e.g. libdeflate's `adler32_impl`).  When the worker pool first runs several
+	// compress/decompress jobs at once, those first-call writes race — TSan reports
+	// a data race on global 'adler32_impl' in libdeflate_adler32.  Value-benign
+	// (every thread resolves the same pointer) but a data race / UB nonetheless.
+	// Warming the dispatch single-threaded here makes the globals read-only for the
+	// workers.  Invoked once from worker_pool_t's constructor (H5Pthreads.hpp).
+	inline void warm_dispatch() noexcept {
+		static std::once_flag once;
+		std::call_once(once, []() noexcept {
+			unsigned char in[64]  = {0};
+			unsigned char comp[256];
+			unsigned char back[64];
+#if defined(H5CPP_HAS_LIBDEFLATE)
+			(void) libdeflate_adler32(1, in, sizeof in);
+			(void) libdeflate_crc32(0, in, sizeof in);
+			if (libdeflate_compressor* c = libdeflate_alloc_compressor(6)) {
+				const size_t n = libdeflate_zlib_compress(c, in, sizeof in, comp, sizeof comp);
+				libdeflate_free_compressor(c);
+				if (n) if (libdeflate_decompressor* d = libdeflate_alloc_decompressor()) {
+					size_t got = 0;
+					(void) libdeflate_zlib_decompress(d, comp, n, back, sizeof back, &got);
+					libdeflate_free_decompressor(d);
+				}
+			}
+#endif
+#if defined(H5CPP_HAS_LZ4)
+			(void) LZ4_compress_default(reinterpret_cast<const char*>(in),
+			                            reinterpret_cast<char*>(comp),
+			                            static_cast<int>(sizeof in),
+			                            static_cast<int>(sizeof comp));
+#endif
+#if defined(H5CPP_HAS_ZSTD)
+			(void) ZSTD_compress(comp, sizeof comp, in, sizeof in, 1);
+#endif
+			(void) in; (void) comp; (void) back;  // unused when all compressors disabled
+		});
+	}
+
 	inline size_t zlib_deflate_encode(void* dst, const void* src, size_t size, unsigned level) {
 #if defined(H5CPP_HAS_LIBDEFLATE)
 		libdeflate_compressor* compressor = libdeflate_alloc_compressor(static_cast<int>(level));

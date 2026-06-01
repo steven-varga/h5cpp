@@ -9,6 +9,7 @@
 #include "H5Dopen.hpp"
 #include "H5Dgather.hpp"
 #include "H5Dscatter.hpp"
+#include "H5io_registry.hpp"
 
 namespace h5 {
   /** \func_write_hdr
@@ -107,16 +108,14 @@ namespace h5 {
 			const h5::offset_t& offset = arg::get( h5::default_offset, args...);
 			const h5::stride_t& stride = arg::get( h5::default_stride, args...);
 
-			// Phase 1.3.3 — if the file's FAPL has h5::threads{N}, route
-			// compress work through the shared pool via a local
-			// pool_pipeline_t.  Otherwise use the existing DAPL-stored
-			// basic_pipeline_t pointer for synchronous filter chain.
-			hid_t fid  = H5Iget_file_id(static_cast<hid_t>(ds));
-			hid_t fapl = H5Fget_access_plist(fid);
-			auto pool  = h5::impl::resolve_worker_pool(fapl);
+			// Phase 1.3.3 / slice C (#286) — H5Fget_access_plist strips
+			// user properties, so resolve_worker_pool on a reconstructed
+			// FAPL always returns nullptr.  Look up the pool directly in
+			// the per-file registry, keyed by H5Fget_fileno.
+			const unsigned long fileno = h5::impl::file_key(static_cast<::hid_t>(ds));
+			auto pool = h5::impl::registry().resolve_pool(fileno);
 			if (pool) {
-				const unsigned cap = h5::impl::resolve_backpressure(
-					fapl, pool->worker_count());
+				const unsigned cap = h5::impl::registry().resolve_cap(fileno);
 				h5::impl::pool_pipeline_t pipe(std::move(pool), cap);
 				// set_cache populates the filter chain from the dataset's DCPL.
 				h5::dcpl_t dcpl{H5Dget_create_plist(static_cast<hid_t>(ds))};
@@ -131,8 +130,6 @@ namespace h5 {
 				H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
 				filters->write(ds, offset, stride, block, count, dxpl, ptr);
 			}
-			H5Pclose(fapl);
-			H5Fclose(fid);
 		} else {
 			// Scalar dataspaces don't support hyperslab selection; H5Sselect_all
 			// on both sides is the equivalent path for H5S_SCALAR file spaces.
