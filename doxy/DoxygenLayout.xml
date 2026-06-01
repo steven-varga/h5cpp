@@ -1,28 +1,87 @@
 <doxygenlayout version="1.0">
   <navindex>
     <tab type="mainpage"  visible="yes" title="Introduction"/>
-    <tab type="modules"   visible="yes" title="IO API" intro="
-      H5CPP provides C++17 templates for CREATE, READ, WRITE and APPEND operations
-      across popular linear algebra packages, STL containers, and raw memory.
-      Use the groups below to navigate overload families."/>
-    <tab type="pages"     visible="yes" title="Documents" intro="
-      Architecture guides, type-system overview, linalg integration, and workflow notes."/>
-    <tab type="examples"  visible="yes" title="Examples" intro="
-      Ready-to-compile examples. Each subdirectory has a Makefile; refer to the
-      Introduction page for build prerequisites."/>
+
+    <!-- I/O axis — by HDF5 object kind (file / dataset / attribute / group).
+         Answers "I have a Y, how do I call X on it?" -->
+    <tab type="usergroup" visible="yes" title="I/O" url="@ref curated_io_api">
+      <tab type="usergroup" visible="yes" title="FILE"       url="@ref curated_io_api_file">
+        <tab type="user"    visible="yes" title="h5::create" url="@ref curated_io_api_file_create"/>
+        <tab type="user"    visible="yes" title="h5::open"   url="@ref curated_io_api_file_open"/>
+      </tab>
+      <tab type="user"      visible="yes" title="DATASET"    url="@ref curated_io_api_dataset"/>
+      <tab type="user"      visible="yes" title="ATTRIBUTES" url="@ref curated_io_api_attributes"/>
+      <tab type="user"      visible="yes" title="GROUPS"     url="@ref curated_io_api_groups"/>
+    </tab>
+
+    <!-- TOPICS axis — by capability / concern. -->
+    <tab type="usergroup" visible="yes" title="TOPICS" url="@ref curated_topics">
+      <tab type="user"    visible="yes" title="PROPERTIES"     url="@ref curated_topics_properties"/>
+      <tab type="user"    visible="yes" title="LINEAR ALGEBRA" url="@ref curated_topics_linalg"/>
+      <tab type="user"    visible="yes" title="STL"            url="@ref curated_topics_stl"/>
+      <tab type="user"    visible="yes" title="REFLECTION"     url="@ref curated_topics_reflection"/>
+      <tab type="user"    visible="yes" title="FILTERS"        url="@ref curated_topics_filters"/>
+      <tab type="user"    visible="yes" title="MPI"            url="@ref curated_topics_mpi"/>
+      <tab type="user"    visible="yes" title="ERROR"          url="@ref curated_topics_error"/>
+      <tab type="user"    visible="yes" title="TYPESYSTEM"     url="@ref curated_topics_typesystem"/>
+      <tab type="user"    visible="yes" title="CDASH"          url="@ref curated_topics_cdash"/>
+    </tab>
+
+    <!-- COOKBOOK — the 28 example READMEs as a third axis. -->
+    <tab type="usergroup" visible="yes" title="COOKBOOK" url="@ref examples_guides_index">
+      <tab type="user"    visible="yes" title="Basics"            url="@ref example_guide_basics"/>
+      <tab type="user"    visible="yes" title="Datasets"          url="@ref example_guide_datasets"/>
+      <tab type="user"    visible="yes" title="Attributes"        url="@ref example_guide_attributes"/>
+      <tab type="user"    visible="yes" title="Groups"            url="@ref example_guide_groups"/>
+      <tab type="user"    visible="yes" title="Datatypes"         url="@ref example_guide_datatypes"/>
+      <tab type="user"    visible="yes" title="Compound"          url="@ref example_guide_compound"/>
+      <tab type="user"    visible="yes" title="Containers"        url="@ref example_guide_container"/>
+      <tab type="user"    visible="yes" title="STL"               url="@ref example_guide_stl"/>
+      <tab type="user"    visible="yes" title="Strings"           url="@ref example_guide_string"/>
+      <tab type="user"    visible="yes" title="UTF-8"             url="@ref example_guide_utf"/>
+      <tab type="user"    visible="yes" title="Linear algebra"    url="@ref example_guide_linalg"/>
+      <tab type="user"    visible="yes" title="Sparse"            url="@ref example_guide_sparse"/>
+      <tab type="user"    visible="yes" title="mdspan (C++23)"    url="@ref example_guide_mdspan"/>
+      <tab type="user"    visible="yes" title="Transform"         url="@ref example_guide_transform"/>
+      <tab type="user"    visible="yes" title="Optimized"         url="@ref example_guide_optimized"/>
+      <tab type="user"    visible="yes" title="Raw memory"        url="@ref example_guide_raw_memory"/>
+      <tab type="user"    visible="yes" title="Packet table"      url="@ref example_guide_packet_table"/>
+      <tab type="user"    visible="yes" title="Custom pipeline"   url="@ref example_guide_custom_pipeline"/>
+      <tab type="user"    visible="yes" title="cout"              url="@ref example_guide_cout"/>
+      <tab type="user"    visible="yes" title="pprint"            url="@ref example_guide_pprint"/>
+      <tab type="user"    visible="yes" title="Reference"         url="@ref example_guide_reference"/>
+      <tab type="user"    visible="yes" title="Smart pointer"     url="@ref example_guide_smart_ptr"/>
+      <tab type="user"    visible="yes" title="Reflection"        url="@ref example_guide_reflection"/>
+      <tab type="user"    visible="yes" title="Multi-TU"          url="@ref example_guide_multi_tu"/>
+      <tab type="user"    visible="yes" title="Half float"        url="@ref example_guide_half_float"/>
+      <tab type="user"    visible="yes" title="CSV"               url="@ref example_guide_csv"/>
+      <tab type="user"    visible="yes" title="S3"                url="@ref example_guide_s3"/>
+      <tab type="user"    visible="yes" title="MPI"               url="@ref example_guide_mpi"/>
+    </tab>
+
+    <!-- USABILITY — per-category feature scorecard for v1.12.7. -->
+    <tab type="user"      visible="yes" title="USABILITY" url="@ref reports_usability_evaluation"/>
+
+    <!-- REPORTS — full project reports tree.  Compiled from docs/reports/
+         (flat layout) via the @subpage chain anchored at reports_index. -->
+    <tab type="user"      visible="yes" title="REPORTS" url="@ref reports_index"/>
+
+    <tab type="modules"   visible="no"  title="" intro=""/>
+    <tab type="pages"     visible="no"  title="" intro=""/>
+    <tab type="examples"  visible="no" title=""/>
     <tab type="namespaces" visible="no" title="">
       <tab type="namespacelist"    visible="no" title="" intro=""/>
       <tab type="namespacemembers" visible="no" title="" intro=""/>
     </tab>
     <tab type="classes" visible="no" title="">
-      <tab type="classlist"    visible="yes" title="" intro=""/>
-      <tab type="classindex"   visible="$ALPHABETICAL_INDEX" title=""/>
-      <tab type="hierarchy"    visible="yes" title="" intro=""/>
-      <tab type="classmembers" visible="yes" title="" intro=""/>
+      <tab type="classlist"    visible="no" title="" intro=""/>
+      <tab type="classindex"   visible="no" title=""/>
+      <tab type="hierarchy"    visible="no" title="" intro=""/>
+      <tab type="classmembers" visible="no" title="" intro=""/>
     </tab>
     <tab type="files" visible="no" title="">
-      <tab type="filelist" visible="yes" title="" intro=""/>
-      <tab type="globals"  visible="yes" title="" intro=""/>
+      <tab type="filelist" visible="no" title="" intro=""/>
+      <tab type="globals"  visible="no" title="" intro=""/>
     </tab>
   </navindex>
 

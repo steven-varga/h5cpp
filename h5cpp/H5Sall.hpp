@@ -128,8 +128,8 @@ namespace h5::impl {
 	 * Current and maximum dimension of an HDF5 object is how much space is available for immediate or further use within a dataset.
 	 * This routing computes the size along each dimesnion of `current_dims` and it considers the object size given by `count`, its 
 	 * coordinates within the filespace `h5::offset`, how it is spaced `h5::stride` and the `h5::block` size.
-	 * @param count rank and size of the object along each dimension
-	 * @tparam T C++ type of dataset being written into HDF5 container
+	 * @param count rank and size of the object along each dimension (the H5Sall sense — different from the hyperslab `\par_count`)
+	 * \tpar_T
 	 *
 	 * <br/>The following arguments are context sensitive, may be passed in arbitrary order and with the exception
 	 * of `T object` being saved, the arguments are optional. The arguments are set to sensible values, and in most cases

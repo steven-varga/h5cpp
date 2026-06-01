@@ -1,4 +1,4 @@
-# MPI examples
+@page example_guide_mpi MPI examples
 
 Two families of MPI + HDF5, with different dependencies:
 
@@ -151,3 +151,10 @@ Gated on `MPI_FOUND` (all four) and `HDF5_IS_PARALLEL` (first three). When eithe
 - **`examples/packet-table/`** — streaming append; an alternative for ranks producing data over time without coordinating offsets
 - **HDF5 manual: Parallel HDF5** — https://docs.hdfgroup.org/hdf5/develop/group___p_h5_p.html
 - **HDF5 virtual datasets (VDS)** — for post-merging file-per-rank outputs into one logical view
+
+## Source
+
+- [`collective.cpp`](collective_8cpp-example.html) — rendered with syntax highlighting
+- [`file_per_rank.cpp`](file_per_rank_8cpp-example.html) — rendered with syntax highlighting
+- [`independent.cpp`](independent_8cpp-example.html) — rendered with syntax highlighting
+- [`throughput.cpp`](throughput_8cpp-example.html) — rendered with syntax highlighting

@@ -14,7 +14,7 @@ namespace h5{
 	/** @ingroup file-io 
 	 * opens an existing HDF5 file, the returned h5::fd_t descriptor automatically closes backed resource when leaving code block
 	 * The h5::fd_t is a thin hid_t size object with std::unique_ptr like properties.
-	 * \par_file_path \par_fopn_flags \par_fapl  \returns_fd
+	 * \par_path \par_fopn_flags \par_fapl  \returns_fd
 	 * \sa_h5cpp \sa_hdf5 \sa_stl
 	 * @code 
 	 * {

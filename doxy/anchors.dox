@@ -2,72 +2,1298 @@
  * @file anchors.dox
  * @brief Doxygen page definitions for cross-references used in H5CPP headers.
  *
- * These pages resolve @ref link_* targets that appear in H5config.hpp,
- * H5Eall.hpp, and H5Fcreate.hpp.  Each @page command also registers the
- * page name as a Doxygen label usable with @ref.
+ * These pages resolve `\ref link_*` targets that appear in H5config.hpp,
+ * H5Eall.hpp, and H5Fcreate.hpp.  Each `\page` directive also registers
+ * the page name as a Doxygen label usable with `\ref`.
  */
 
 /**
  * @page link_error_handler Error Handling
- * H5CPP reports errors by throwing exceptions derived from `h5::error`.
- * Use `h5::mute()` / `h5::unmute()` to suppress or restore the default
- * HDF5 error handler around code that intentionally probes for missing
- * datasets or groups.
  *
- * See also: `h5::mute`, `h5::unmute`, `h5::error`
+ * H5CPP reports errors as exceptions, not return codes. Every CAPI call
+ * the library makes is wrapped by one of the `H5CPP_CHECK_*` macros in
+ * `h5cpp/H5config.hpp`; on failure the macro throws a typed exception
+ * derived from `h5::error::any` (which derives from
+ * `std::runtime_error`). The exception type identifies what was
+ * happening (open / close / read / write / create / append / misc) and
+ * on what kind of object (file / dataset / packet_table / attribute /
+ * group / property_list).
+ *
+ * @section error_hierarchy Exception hierarchy
+ *
+ * Two roots, both in the `h5::error` namespace:
+ *
+ * <ul>
+ * <li><b><code>h5::error::any</code></b> — base type for every
+ *     thrown exception. Inherits `std::runtime_error`, so a single
+ *     `catch (const std::exception&)` will catch anything h5cpp
+ *     throws.</li>
+ * <li><b><code>h5::error::rollback</code></b> — separate hierarchy,
+ *     does *not* inherit `runtime_error`. Reserved for transactional
+ *     code paths that need to distinguish "stop the operation and
+ *     undo" from "fatal error". Most application code can ignore the
+ *     rollback hierarchy.</li>
+ * </ul>
+ *
+ * Under `h5::error::any` the tree fans out by HDF5 object kind. Each
+ * leaf type signals which operation failed:
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Namespace</th><th>Leaf types</th><th>Thrown by</th></tr>
+ *   <tr><td><code>h5::error::io::file</code></td>
+ *       <td>open, close, read, write, create, misc</td>
+ *       <td><code>h5::open</code> / <code>h5::create</code> on a file path</td></tr>
+ *   <tr><td><code>h5::error::io::dataset</code></td>
+ *       <td>open, close, read, write, append, create, misc</td>
+ *       <td><code>h5::open(fd, name)</code>, <code>h5::read</code>,
+ *           <code>h5::write</code>, <code>h5::create&lt;T&gt;</code></td></tr>
+ *   <tr><td><code>h5::error::io::packet_table</code></td>
+ *       <td>open, close, read, write, append, create, misc</td>
+ *       <td>packet-table append APIs (<code>h5::pt_t</code>)</td></tr>
+ *   <tr><td><code>h5::error::io::attribute</code></td>
+ *       <td>open, close, read, write, create, misc, delete_</td>
+ *       <td><code>h5::aread</code>, <code>h5::awrite</code>,
+ *           <code>h5::acreate</code></td></tr>
+ *   <tr><td><code>h5::error::io::group</code></td>
+ *       <td>open, close, create, misc</td>
+ *       <td><code>h5::gopen</code>, <code>h5::gcreate</code></td></tr>
+ *   <tr><td><code>h5::error::property_list</code></td>
+ *       <td>argument, misc</td>
+ *       <td>property-list constructors / setters
+ *           (<code>h5::fapl_t</code>, <code>h5::dcpl_t</code>, …)</td></tr>
+ * </table>
+ *
+ * Each kind also exposes an `any` type (e.g. `h5::error::io::file::any`)
+ * that catches every leaf in that category. This is the level most
+ * application code will catch on:
+ *
+ * @code
+ * try {
+ *     h5::ds_t ds = h5::open(fd, "/may/not/exist");
+ * } catch (const h5::error::io::dataset::open& e) {
+ *     // exact: dataset open failed
+ * } catch (const h5::error::io::dataset::any& e) {
+ *     // anything dataset-related — typed for the operation
+ * } catch (const h5::error::any& e) {
+ *     // fallback: anything h5cpp throws
+ * } catch (const std::exception& e) {
+ *     // ultimate fallback: anything at all
+ * }
+ * @endcode
+ *
+ * @section error_message Error message format
+ *
+ * Every exception carries a `std::string` `what()` message produced by
+ * the `H5CPP_ERROR_MSG` macro in `h5cpp/H5config.hpp`:
+ *
+ * @code
+ * <source-file> line# <N> : <human-readable description>
+ * @endcode
+ *
+ * The description comes from one of the canonical strings in
+ * `h5::error::msg::` (`create_file`, `open_dataset`,
+ * `select_hyperslab`, …) or a custom string supplied at the throw
+ * site. Each message ends in a trailing ellipsis ("…") to make the
+ * messages identifiable at a glance in mixed-source logs.
+ *
+ * @section error_mute Muting the native HDF5 error stack
+ *
+ * HDF5's C API also writes its own diagnostic stack to `stderr` when a
+ * call fails. By default that stack is enabled, so a single thrown
+ * h5cpp exception emits *both* the C++ exception body and a multi-line
+ * HDF5 trace. For code that intentionally probes — checking whether a
+ * dataset exists by trying to open it, for example — the trace is
+ * noise. `h5::mute()` suppresses the C API stack; `h5::unmute()`
+ * restores the previous handler. Both functions are thread-safe.
+ *
+ * The canonical "probe by try" pattern, used across the examples:
+ *
+ * @code
+ * h5::mute();
+ * bool exists;
+ * try {
+ *     auto ds = h5::open(fd, "/possibly/missing");
+ *     exists = true;
+ * } catch (const h5::error::io::dataset::open&) {
+ *     exists = false;
+ * }
+ * h5::unmute();
+ * @endcode
+ *
+ * Three production-example uses of this idiom in the tree:
+ * `examples/attributes/attributes.cpp:224`,
+ * `examples/groups/groups.cpp:207`, and the `h5::exists` helper
+ * itself.
+ *
+ * @section error_throw_macros The CHECK_* macros (internals)
+ *
+ * Code inside h5cpp's headers does not write `throw` directly; it
+ * goes through one of six macros that map a return-code shape to the
+ * correct exception type:
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Macro</th><th>Fires when</th><th>Typical use</th></tr>
+ *   <tr><td><code>H5CPP_CHECK_NZ(call, T, msg)</code></td>
+ *       <td>call returns &lt; 0</td>
+ *       <td>most HDF5 functions (negative return = failure)</td></tr>
+ *   <tr><td><code>H5CPP_CHECK_EQ(call, T, msg)</code></td>
+ *       <td>call returns 0</td>
+ *       <td>functions whose 0 is the failure signal</td></tr>
+ *   <tr><td><code>H5CPP_CHECK_SIZE(call, T, msg)</code></td>
+ *       <td>call returns 0</td>
+ *       <td>size-returning functions (sentinel = 0)</td></tr>
+ *   <tr><td><code>H5CPP_CHECK_NULL(call, T, msg)</code></td>
+ *       <td>call returns nullptr</td>
+ *       <td>pointer-returning helpers</td></tr>
+ *   <tr><td><code>H5CPP_CHECK_PROP(id, T, msg)</code></td>
+ *       <td>static_cast&lt;hid_t&gt;(id) &lt; 0</td>
+ *       <td>property-list arguments</td></tr>
+ *   <tr><td><code>H5CPP_CHECK_ID(id, T, msg)</code></td>
+ *       <td>static_cast&lt;hid_t&gt;(id) is 0</td>
+ *       <td>handle invariants on entry</td></tr>
+ * </table>
+ *
+ * `T` is the exception type from the hierarchy above; `msg` is one of
+ * the predefined strings in `h5::error::msg::` (or a custom literal).
+ * The macros are not part of the user-facing surface but the patterns
+ * show up in every header — useful background for reading the code.
+ *
+ * @section error_rollback The rollback hierarchy
+ *
+ * `h5::error::rollback` and its per-namespace variants
+ * (`h5::error::io::rollback`, `h5::error::io::dataset::rollback`, …)
+ * are reserved for code paths that need to signal "abort the current
+ * operation and unwind committed work" separately from "an error
+ * occurred". The rollback types do **not** inherit
+ * `std::runtime_error`, so a `catch (const std::exception&)` will
+ * NOT catch them. Catch the rollback hierarchy explicitly when you
+ * need it; otherwise it bubbles past application-level handlers.
+ *
+ * Most h5cpp consumers will never need to catch a rollback exception
+ * — they're internal to the threaded pipeline (`H5Pthreads.hpp`,
+ * `H5executor.hpp`) and the FAPL-scoped worker pool.
+ *
+ * @section error_types All exception types
+ *
+ * Every leaf type below has its own auto-generated reference page
+ * (click through for the constructor, the inheritance graph, and the
+ * brief description). Use the leaf type for fine-grained catches, the
+ * per-category `any` for "anything in this category", or
+ * ``h5::error::any`` as the project-wide root.
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Category</th><th>Catch-all</th><th>Operation leaves</th><th>Rollback</th></tr>
+ *   <tr><td><b>I/O root</b></td>
+ *       <td>`h5::error::io::any`</td>
+ *       <td>(see categories below)</td>
+ *       <td>`h5::error::io::rollback`</td></tr>
+ *   <tr><td><b>File</b></td>
+ *       <td>`h5::error::io::file::any`</td>
+ *       <td>`h5::error::io::file::open`, `h5::error::io::file::close`, `h5::error::io::file::read`, `h5::error::io::file::write`, `h5::error::io::file::create`, `h5::error::io::file::misc`</td>
+ *       <td>`h5::error::io::file::rollback`</td></tr>
+ *   <tr><td><b>Dataset</b></td>
+ *       <td>`h5::error::io::dataset::any`</td>
+ *       <td>`h5::error::io::dataset::open`, `h5::error::io::dataset::close`, `h5::error::io::dataset::read`, `h5::error::io::dataset::write`, `h5::error::io::dataset::append`, `h5::error::io::dataset::create`, `h5::error::io::dataset::misc`</td>
+ *       <td>`h5::error::io::dataset::rollback`</td></tr>
+ *   <tr><td><b>Packet table</b></td>
+ *       <td>`h5::error::io::packet_table::any`</td>
+ *       <td>`h5::error::io::packet_table::open`, `h5::error::io::packet_table::close`, `h5::error::io::packet_table::read`, `h5::error::io::packet_table::write`, `h5::error::io::packet_table::append`, `h5::error::io::packet_table::create`, `h5::error::io::packet_table::misc`</td>
+ *       <td>`h5::error::io::packet_table::rollback`</td></tr>
+ *   <tr><td><b>Attribute</b></td>
+ *       <td>`h5::error::io::attribute::any`</td>
+ *       <td>`h5::error::io::attribute::open`, `h5::error::io::attribute::close`, `h5::error::io::attribute::read`, `h5::error::io::attribute::write`, `h5::error::io::attribute::create`, `h5::error::io::attribute::delete_`, `h5::error::io::attribute::misc`</td>
+ *       <td>`h5::error::io::attribute::rollback`</td></tr>
+ *   <tr><td><b>Group</b></td>
+ *       <td>`h5::error::io::group::any`</td>
+ *       <td>`h5::error::io::group::open`, `h5::error::io::group::close`, `h5::error::io::group::create`, `h5::error::io::group::misc`</td>
+ *       <td>(none)</td></tr>
+ *   <tr><td><b>Property list</b></td>
+ *       <td>`h5::error::property_list::any`</td>
+ *       <td>`h5::error::property_list::argument`, `h5::error::property_list::misc`</td>
+ *       <td>`h5::error::property_list::rollback`</td></tr>
+ *   <tr><td><b>Root</b></td>
+ *       <td>`h5::error::any`</td>
+ *       <td>(see categories above)</td>
+ *       <td>`h5::error::rollback`</td></tr>
+ * </table>
+ *
+ * @sa h5::mute h5::unmute h5::error::any h5::error::io::file::any h5::error::io::dataset::any
+ *     @ref link_handle_reference @ref link_conversion_policy @ref link_raii_idiom
  */
 
 /**
  * @page link_conversion_policy Conversion Policy
- * H5CPP managed handle types (`h5::fd_t`, `h5::ds_t`, etc.) implement an
- * implicit conversion to `hid_t` so that they can be passed directly to
- * HDF5 C API calls without casting.  The conversion is governed by the
- * RAII wrapper and closes the underlying resource when the handle goes
- * out of scope.
  *
- * See also: `h5::fd_t`, `h5::ds_t`, @ref link_raii_idiom
+ * h5cpp's managed handle types — every wrapper catalogued in
+ * @ref link_handle_reference "Handles, Descriptors & Property Lists"
+ * (the object handles `h5::fd_t` / `h5::ds_t` / `h5::gr_t` / `h5::at_t`
+ * / `h5::ob_t` / `h5::sp_t`, the datatype template `h5::dt_t<T>`, the
+ * reference handle `h5::reference_t`, and every property-list wrapper
+ * `h5::fapl_t` / `h5::fcpl_t` / `h5::dapl_t` / …) — wrap HDF5's raw
+ * `hid_t` integer ID in an RAII container that owns its lifetime.
+ * The **conversion policy** is the contract for how those wrappers and
+ * the raw `hid_t` interconvert at call sites that mix h5cpp and the
+ * HDF5 C API.
+ *
+ * Three orthogonal axes, each toggleable at compile time:
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Axis</th><th>Default</th><th>Opt-out macro</th><th>Effect when disabled</th></tr>
+ *   <tr><td><b>to-CAPI</b> &nbsp; (`h5::fd_t` → `hid_t`)</td>
+ *       <td>enabled (<code>H5CPP_CONVERSION_TO_CAPI</code>)</td>
+ *       <td><code>-DH5CPP_CONVERSION_TO_CAPI_DISABLED</code></td>
+ *       <td>conversion operator removed; passing a wrapper to the C API does not compile</td></tr>
+ *   <tr><td><b>from-CAPI</b> &nbsp; (`hid_t` → `h5::fd_t`)</td>
+ *       <td>enabled (<code>H5CPP_CONVERSION_FROM_CAPI</code>)</td>
+ *       <td><code>-DH5CPP_CONVERSION_FROM_CAPI_DISABLED</code></td>
+ *       <td>constructor removed; cannot wrap a raw `hid_t` returned by HDF5</td></tr>
+ *   <tr><td><b>implicit</b> vs <b>explicit</b> &nbsp; (cast required?)</td>
+ *       <td>implicit (<code>H5CPP_CONVERSION_IMPLICIT</code>)</td>
+ *       <td><code>-DH5CPP_CONVERSION_EXPLICIT</code></td>
+ *       <td><code>static_cast&lt;::hid_t&gt;(fd)</code> required at every call site that needs the raw handle</td></tr>
+ * </table>
+ *
+ * The implementation lives in `h5cpp/H5config.hpp` lines 53-64
+ * (the three `#ifndef` / `#define` blocks that flip the macros) and
+ * `h5cpp/H5Iall.hpp` lines 16-20 (the `H5CPP__EXPLICIT` selector that
+ * the wrapper template uses to qualify the conversion operator).
+ *
+ * @section conversion_default Default behaviour (recommended)
+ *
+ * With no opt-out macros set — the default in 95% of consumer code —
+ * both directions are wired and the conversion is implicit:
+ *
+ * @code
+ * h5::fd_t fd = h5::create("file.h5", H5F_ACC_TRUNC);   // wrapper from h5cpp
+ * H5Dcreate(fd, "ds", H5T_NATIVE_FLOAT, ... );          // implicit: fd → hid_t
+ * h5::ds_t ds(some_raw_hid_t);                          // implicit: hid_t → ds_t
+ * @endcode
+ *
+ * The wrapper is binary-compatible with `hid_t` (a single `::hid_t
+ * handle;` member), so the call-site code is identical to using the
+ * raw integer ID — there is no per-call overhead.
+ *
+ * @section conversion_explicit Explicit mode (catch-conversions opt-in)
+ *
+ * Compile with `-DH5CPP_CONVERSION_EXPLICIT` to require an explicit
+ * cast at every conversion site. Useful when migrating a large
+ * codebase from raw `hid_t` to h5cpp wrappers and you want the
+ * compiler to flag every mixed call:
+ *
+ * @code
+ * // with H5CPP_CONVERSION_EXPLICIT defined:
+ * h5::fd_t fd = h5::create("file.h5", H5F_ACC_TRUNC);
+ * H5Dcreate(fd, ...);                                   // ❌ compile error: no implicit conversion
+ * H5Dcreate(static_cast<hid_t>(fd), ...);               // ✔ explicit cast required
+ *
+ * h5::ds_t ds(raw_hid_t);                               // ❌ compile error: explicit ctor
+ * h5::ds_t ds = h5::ds_t{raw_hid_t};                    // ✔ direct-initialisation form
+ * @endcode
+ *
+ * Under the hood: `H5CPP__EXPLICIT` expands to `explicit` instead of
+ * empty (see `H5Iall.hpp:16-20`), qualifying both the `from-CAPI`
+ * constructor and the `to-CAPI` `operator ::hid_t()`.
+ *
+ * @section conversion_refcount Reference-counting semantics
+ *
+ * The conversion operators are **non-owning** views onto the same
+ * `hid_t`. The wrapper retains exclusive ownership; the conversion
+ * does NOT transfer responsibility:
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Operation</th><th>HDF5 refcount</th><th>Why</th></tr>
+ *   <tr><td><b>From-CAPI ctor</b>: `h5::fd_t fd(raw)`</td>
+ *       <td><b>incremented</b> (via <code>H5Iinc_ref</code>)</td>
+ *       <td>The raw `hid_t` keeps its existing owner. The wrapper takes a second reference so the destructor can independently call `capi_close` without double-freeing.</td></tr>
+ *   <tr><td><b>To-CAPI conversion</b>: `H5Dcreate(fd, ...)`</td>
+ *       <td><b>unchanged</b></td>
+ *       <td>The wrapper retains ownership. The C API call sees the same `hid_t` value; when it returns, the wrapper still holds the only ref, and the destructor will close it.</td></tr>
+ *   <tr><td><b>Brace-init ctor</b>: `h5::fd_t{raw}`</td>
+ *       <td><b>unchanged</b></td>
+ *       <td>Distinct from the from-CAPI ctor — used when the wrapper is **taking ownership** of a raw handle that h5cpp itself produced (e.g., the return value of `H5Fcreate`). No inc_ref because there's no existing C-side owner.</td></tr>
+ *   <tr><td><b>Copy ctor / copy-assign</b></td>
+ *       <td><b>incremented</b></td>
+ *       <td>Both copies refer to the same underlying HDF5 object; each independently closes on destruction.</td></tr>
+ *   <tr><td><b>Move ctor / move-assign</b></td>
+ *       <td><b>unchanged</b>; source invalidated</td>
+ *       <td>Source `handle` set to `H5I_UNINIT`; destructor on the source is a no-op (`H5Iis_valid` check).</td></tr>
+ *   <tr><td><b>Destructor</b></td>
+ *       <td>decremented (via <code>capi_close</code>)</td>
+ *       <td>HDF5's close functions are refcount-aware: `H5Fclose` etc. decrement the ref and only release the underlying resource at refcount 0.</td></tr>
+ * </table>
+ *
+ * The "**DON'T**" pattern this protects against:
+ *
+ * @code
+ * // DON'T: stash a hid_t copy of a temporary wrapper.
+ * hid_t bad = h5::create("file.h5", H5F_ACC_TRUNC);   // wrapper destructs immediately
+ * H5Dcreate(bad, ...);                                // ❌ bad refers to a closed handle
+ *
+ * // DO: capture the wrapper, then convert at call sites where you need it.
+ * auto fd  = h5::create("file.h5", H5F_ACC_TRUNC);    // wrapper lives until block exit
+ * H5Dcreate(fd, "ds", ...);                           // ✔ implicit conversion at the call site
+ * H5Dcreate(static_cast<hid_t>(fd), "ds", ...);       // ✔ explicit cast, same effect
+ * @endcode
+ *
+ * (The full call-site discussion lives in `h5cpp/H5Fcreate.hpp:14-49`
+ * — the docstring on `h5::create` walks through both the DO and DON'T
+ * forms.)
+ *
+ * @section conversion_async Async mode — conversion deleted at the type level
+ *
+ * h5cpp's async surface (`h5::async::create`, `h5::async::open`,
+ * `h5::async::*` factories) returns specialised wrappers that
+ * deliberately disable both conversion directions:
+ *
+ * @code
+ * // h5cpp/H5Iall.hpp:316-319
+ * template <class T, capi_close_t capi_call>
+ * using async_hid_t = detail::hid_t<T, capi_call, false, false, detail::hdf5::any>;
+ *
+ * // h5cpp/H5Iall.hpp:354-357 — the h5::async::* aliases:
+ * using fd_t = impl::async_hid_t<impl::fd_t, H5Fclose>;
+ * using ds_t = impl::async_did_t<impl::ds_t, H5Dclose>;
+ * @endcode
+ *
+ * The template parameters `false, false` (`from_capi`, `to_capi`) select
+ * a specialisation where `operator ::hid_t() const = delete;` is declared
+ * at the type level (see `H5Iall.hpp:155`). Any attempt to pass an async
+ * descriptor to a raw HDF5 call fails to compile with a clear "use of
+ * deleted function" diagnostic:
+ *
+ * @code
+ * h5::async::fd_t afd = h5::async::create("file.h5", H5F_ACC_TRUNC);
+ * H5Dcreate(afd, ...);     // ❌ error: use of deleted function 'operator hid_t()'
+ *                          //    — async descriptors must route through the executor
+ * h5::write(afd, "/ds", v);  // ✔ correct: dispatched through h5::async overloads
+ * @endcode
+ *
+ * The intent: an async descriptor's value is only valid on the
+ * executor thread; passing it to a synchronous C API call would
+ * bypass the executor and access the handle from the wrong thread.
+ * The type-level deletion makes that class of bug impossible.
+ *
+ * Internal code that legitimately needs the raw `hid_t` from an async
+ * wrapper reads `handle` directly (the `protected:` field is exposed
+ * to the executor implementation via friendship); user code goes
+ * through the typed `h5::write` / `h5::read` / `h5::async::*`
+ * overloads that detect the type via `is_async_v<T>` and dispatch
+ * through the FAPL-resolved executor.
+ *
+ * The full list of async-mode wrappers — `h5::async::fd_t`,
+ * `h5::async::ds_t`, `h5::async::gr_t`, `h5::async::at_t`,
+ * `h5::async::ob_t` — is in
+ * @ref handle_ref_async "Handles, Descriptors & Property Lists §
+ * Async-mode handles".
+ *
+ * @section conversion_inventory Which handles use which policy
+ *
+ * The `h5::impl::detail::hid_t` template's 3rd and 4th parameters
+ * (`from_capi`, `to_capi`) select the conversion policy. Across every
+ * public alias h5cpp ships there are only two combinations:
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Policy</th><th>Template parameters</th><th>Covers</th></tr>
+ *   <tr><td><b>Default — both directions enabled</b><br/>
+ *           (governed by `H5CPP__EXPLICIT` as documented in
+ *           @ref conversion_default and @ref conversion_explicit)</td>
+ *       <td>`hid_t<…, true, true, hdf5_class>`</td>
+ *       <td>Every object handle (`h5::fd_t`, `h5::ds_t`, `h5::gr_t`,
+ *           `h5::at_t`, `h5::ob_t`, `h5::sp_t`), the datatype template
+ *           `h5::dt_t<T>`, the reference handle `h5::reference_t`, and
+ *           every property-list wrapper (`h5::fapl_t`, `h5::fcpl_t`,
+ *           `h5::dapl_t`, `h5::dcpl_t`, `h5::dxpl_t`, `h5::lcpl_t`,
+ *           `h5::lapl_t`, `h5::gcpl_t`, `h5::gapl_t`, `h5::tcpl_t`,
+ *           `h5::tapl_t`, `h5::acpl_t`, `h5::ocpl_t`, `h5::ocrl_t`,
+ *           `h5::fmpl_t`, `h5::scpl_t`).</td></tr>
+ *   <tr><td><b>Async — both directions DELETED at type level</b><br/>
+ *           (see @ref conversion_async)</td>
+ *       <td>`hid_t<…, false, false, hdf5_class>`</td>
+ *       <td>`h5::async::fd_t`, `h5::async::ds_t`, `h5::async::gr_t`,
+ *           `h5::async::at_t`, `h5::async::ob_t`</td></tr>
+ * </table>
+ *
+ * For the complete reference — every alias, the HDF5 close function
+ * it calls, its typical factory, plus the shape-descriptor types and
+ * the property-list defaults — see
+ * @ref link_handle_reference "Handles, Descriptors & Property Lists".
+ *
+ * The 5th template parameter (`hdf5_class`) selects a specialisation
+ * that adds class-specific members orthogonal to the conversion
+ * policy (e.g. the `attribute` specialisation carries the parent
+ * dataset's `hid_t` for `ds[name]` subscript access). It does not
+ * affect the conversion direction — see
+ * @ref handle_ref_implementation for the full parameter breakdown.
+ *
+ * @section conversion_use_cases When to override the defaults
+ *
+ * Three concrete scenarios for compiling with one of the opt-out
+ * macros:
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Goal</th><th>Macro</th><th>Trade-off</th></tr>
+ *   <tr><td>Audit a large codebase for raw `hid_t` usage during a migration to h5cpp wrappers</td>
+ *       <td><code>-DH5CPP_CONVERSION_EXPLICIT</code></td>
+ *       <td>Every mixed call site now needs `static_cast<hid_t>(...)`; the compiler flags any that don't have one. Once the audit is done, drop the macro to restore implicit conversions.</td></tr>
+ *   <tr><td>Forbid mixing h5cpp wrappers with the C API entirely (h5cpp-only codebase)</td>
+ *       <td><code>-DH5CPP_CONVERSION_TO_CAPI_DISABLED</code> &nbsp; (with `H5CPP_CONVERSION_EXPLICIT`)</td>
+ *       <td>The wrapper has no `operator ::hid_t` at all; passing a wrapper to a C API call fails to compile. Useful for enforcing a strict h5cpp surface.</td></tr>
+ *   <tr><td>Forbid wrapping raw `hid_t` values that originate outside h5cpp (e.g. third-party C bindings)</td>
+ *       <td><code>-DH5CPP_CONVERSION_FROM_CAPI_DISABLED</code></td>
+ *       <td>The wrapper has no `from-CAPI` constructor; only h5cpp factories can produce wrappers. Useful when integrating with a foreign HDF5 layer that has its own lifetime tracking.</td></tr>
+ * </table>
+ *
+ * @sa h5::fd_t h5::ds_t h5::gr_t h5::at_t
+ *     @ref link_raii_idiom @ref link_handle_reference @ref link_error_handler
  */
 
 /**
  * @page link_raii_idiom RAII Handles
- * All H5CPP resource handles follow the RAII idiom: the HDF5 object is
- * opened (or created) on construction and closed automatically on
- * destruction.  Handles are move-only; copying is disabled to prevent
- * double-close bugs.
  *
- * See also: `h5::fd_t`, `h5::ds_t`, `h5::sp_t`, @ref link_conversion_policy
+ * Every h5cpp resource handle follows the RAII idiom: the HDF5 object
+ * is opened (or created) on construction and closed automatically on
+ * destruction. The handle owns one reference to the underlying
+ * `::hid_t`; copy-construction and copy-assignment increment HDF5's
+ * refcount so the object survives until the last copy goes out of
+ * scope, and move-construction / move-assignment transfer the
+ * reference (the source is invalidated to `H5I_UNINIT`).
+ *
+ * The contract:
+ *
+ * - **Open-on-construction.** The constructor either takes a raw
+ *   `::hid_t` (and calls `H5Iinc_ref` so h5cpp's reference is
+ *   independent of any pre-existing C-side owner) or accepts a brace
+ *   initializer `{handle}` (which takes ownership without
+ *   incrementing — used when h5cpp itself produced the handle).
+ * - **Close-on-destruction.** The destructor calls the type-specific
+ *   close function (`H5Fclose` for `h5::fd_t`, `H5Dclose` for
+ *   `h5::ds_t`, etc.) but only after `H5Iis_valid(handle)` returns
+ *   true, so destroying a moved-from or default-constructed handle is
+ *   a no-op.
+ * - **Copy-aware.** Copy / copy-assign call `H5Iinc_ref`. Both copies
+ *   refer to the same HDF5 object and each independently decrements
+ *   the refcount on destruction.
+ * - **Move-only safety isn't required** because HDF5's refcount keeps
+ *   the underlying resource alive across copies — the RAII wrapper
+ *   doesn't have to forbid copying to avoid double-close.
+ *
+ * Implementation lives in `h5cpp/H5Iall.hpp` template
+ * `h5::impl::detail::hid_t<T, capi_close, from_capi, to_capi, hdf5_class>`.
+ * The full catalog of public handle aliases — file, dataset, group,
+ * attribute, object, dataspace, datatype, property lists, and the
+ * async variants — is in @ref link_handle_reference.
+ *
+ * See also: @ref link_handle_reference, @ref link_conversion_policy
  */
 
 /**
  * @page link_property_lists Property Lists
- * HDF5 property lists control fine-grained behaviour for file, dataset,
- * link, and data-transfer operations.  H5CPP exposes typed wrappers:
- * `h5::fcpl_t`, `h5::fapl_t`, `h5::dcpl_t`, `h5::dapl_t`, `h5::dxpl_t`,
- * `h5::lcpl_t`.  All are optional; omitting them uses HDF5 defaults.
+ *
+ * HDF5 property lists control fine-grained behaviour for file,
+ * dataset, group, attribute, link, and data-transfer operations.
+ * h5cpp exposes one typed wrapper per HDF5 property-list class
+ * (`h5::fapl_t`, `h5::fcpl_t`, `h5::dapl_t`, `h5::dcpl_t`, `h5::dxpl_t`,
+ * `h5::lcpl_t`, etc.); each follows the same RAII contract as the
+ * object handles (@ref link_raii_idiom).
+ *
+ * All property-list arguments are optional. Omitting them uses the
+ * `h5::default_*pl` constants which all evaluate to `H5P_DEFAULT`,
+ * so the underlying HDF5 call resolves to its baseline behaviour:
+ *
+ * @code
+ * h5::fd_t fd = h5::create("file.h5", H5F_ACC_TRUNC);
+ *   // uses default_fcpl + default_fapl
+ *
+ * h5::fd_t fd = h5::create("file.h5", H5F_ACC_TRUNC,
+ *     h5::fcpl_t{...}, h5::fapl_t{...});
+ *   // explicit FCPL + FAPL
+ * @endcode
+ *
+ * Property lists compose via `operator|`: each setter
+ * (e.g. `h5::chunk{...}`, `h5::gzip{4}`, `h5::threads{8}`) returns a
+ * `*pl` wrapper that can be OR-ed into a base list. The full catalog
+ * of all 16 property-list wrappers — plus their `default_*` constants
+ * and which HDF5 property-list class they cover — is in
+ * @ref link_handle_reference.
+ *
+ * See also: @ref link_handle_reference, @ref link_raii_idiom
+ */
+
+/**
+ * @page link_handle_reference Handles, Descriptors & Property Lists
+ *
+ * The single reference for every public h5cpp wrapper type — what it
+ * wraps, what close function it calls, how it's constructed, and where
+ * to find it. Linked from the @ref link_raii_idiom and
+ * @ref link_property_lists overview pages, the @ref link_conversion_policy
+ * page, and the cookbook leaves where the types are used.
+ *
+ * Every entry in the tables below is an `h5::impl::detail::hid_t<…>`
+ * specialisation — same RAII contract, refcount semantics, and
+ * conversion policy across the board. See @ref link_raii_idiom for the
+ * common contract and @ref link_conversion_policy for the conversion
+ * mechanism the wrappers share.
+ *
+ * @section handle_ref_objects Object handles
+ *
+ * First-class HDF5 objects with their own ID space, refcount, and
+ * dedicated close function. RAII-managed; both implicit and explicit
+ * conversion to / from `::hid_t` are enabled by default
+ * (@ref link_conversion_policy). All seven specialise the
+ * `h5::impl::detail::hid_t` template at
+ * `<…, true, true, hdf5_class>`.
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Alias</th><th>HDF5 close</th><th>Wraps</th><th>Typical factory</th></tr>
+ *   <tr><td>`h5::fd_t`</td>           <td>`H5Fclose`</td><td>file descriptor</td>          <td>`h5::open(path, flags)`, `h5::create(path, flags)`</td></tr>
+ *   <tr><td>`h5::ds_t`</td>           <td>`H5Dclose`</td><td>dataset</td>                  <td>`h5::open(fd, name)`, `h5::create<T>(fd, name, …)`</td></tr>
+ *   <tr><td>`h5::gr_t`</td>           <td>`H5Gclose`</td><td>group</td>                    <td>`h5::gopen(fd, name)`, `h5::gcreate(fd, name)`</td></tr>
+ *   <tr><td>`h5::at_t`</td>           <td>`H5Aclose`</td><td>attribute</td>                <td>`h5::acreate`, `ds["name"]` bracket access</td></tr>
+ *   <tr><td>`h5::ob_t`</td>           <td>`H5Oclose`</td><td>generic HDF5 object (file / dataset / group / named-type)</td><td>internal; rarely instantiated directly</td></tr>
+ *   <tr><td>`h5::sp_t`</td>           <td>`H5Sclose`</td><td>dataspace</td>                <td>`h5::get_space(ds)`, `h5::create_simple(...)`</td></tr>
+ *   <tr><td>`h5::dt_t<T>` (template)</td><td>`H5Tclose`</td><td>datatype for `T`</td>      <td>default-constructed: `h5::dt_t<int>{}` looks up the cached HDF5 type for `T`</td></tr>
+ * </table>
+ *
+ * @subsection handle_ref_indexer Attribute bracket syntax
+ *
+ * `h5::ds_t`, `h5::gr_t`, and `h5::ob_t` expose an `operator[](const char*)`
+ * that returns a transient `h5::at_t` carrying the parent handle and the
+ * attribute name. Combined with `at_t::operator=(V)` and the templated
+ * `at_t::operator V() const`, this gives a symmetric Python-dict-like API
+ * for attribute I/O without leaving expression syntax:
+ *
+ * @code
+ * h5::gr_t gr = h5::gopen(fd, "/grid");
+ *
+ * // write
+ * gr["title"]   = std::string{"hello"};
+ * gr["count"]   = 42;
+ * gr["values"]  = std::vector<double>{1.0, 2.0, 3.0};
+ *
+ * // read — implicit conversion picks T from the left-hand side
+ * std::string title  = gr["title"];
+ * int         count  = gr["count"];
+ * @endcode
+ *
+ * The bracket form is sugar over the free-function surface; both write the
+ * same on-disk bytes as `h5::awrite(gr, "title", ...)` and read the same
+ * value as `h5::aread<T>(gr, "title")`. Type `V` follows the same dispatch
+ * matrix as the rest of the I/O API (see @ref link_base_template_types
+ * "Supported Types"). The conversion excludes `::hid_t` so plain
+ * `static_cast<::hid_t>(at_t)` still resolves to the inherited handle accessor.
+ *
+ * Caveats:
+ *   - `auto v = gr["x"]` deduces `at_t`, **not** the attribute value; the
+ *     implicit conversion needs a concrete LHS type to fire.
+ *   - The transient `at_t` only carries `ds` + `name`; if the parent handle
+ *     is closed before the conversion runs, the read throws
+ *     `h5::error::io::attribute::read`.
+ *
+ * @section handle_ref_async Async-mode handles
+ *
+ * Specialisations with both conversion directions deleted at the type
+ * level (`operator ::hid_t() const = delete;`) so a stray pass to a
+ * raw HDF5 C call fails to compile. Used by the FAPL-scoped async
+ * executor (`h5::async::create` / `h5::async::open`); the handle
+ * carries a `std::shared_ptr<executor_t>` so operation overloads can
+ * reach the executor thread without round-tripping through HDF5's
+ * property machinery. See @ref conversion_async for the diagnostic
+ * shape.
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Alias</th><th>HDF5 close</th><th>Wraps</th><th>Constructed by</th></tr>
+ *   <tr><td>`h5::async::fd_t`</td><td>`H5Fclose`</td><td>file descriptor (async-mode)</td><td>`h5::async::create(path, flags)`, `h5::async::open(path, flags)`</td></tr>
+ *   <tr><td>`h5::async::ds_t`</td><td>`H5Dclose`</td><td>dataset (async-mode)</td>        <td>inherited from parent `h5::async::fd_t` via TAD</td></tr>
+ *   <tr><td>`h5::async::gr_t`</td><td>`H5Gclose`</td><td>group (async-mode)</td>          <td>inherited from parent</td></tr>
+ *   <tr><td>`h5::async::at_t`</td><td>`H5Aclose`</td><td>attribute (async-mode)</td>      <td>inherited from parent</td></tr>
+ *   <tr><td>`h5::async::ob_t`</td><td>`H5Oclose`</td><td>generic object (async-mode)</td> <td>inherited from parent</td></tr>
+ * </table>
+ *
+ * @section handle_ref_references Reference handles
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Alias</th><th>Wraps</th><th>Notes</th></tr>
+ *   <tr><td>`h5::reference_t`</td>
+ *       <td>HDF5 `H5R_ref_t` (1.12+) or `hdset_reg_ref_t` (pre-1.12)</td>
+ *       <td>Rule-of-five RAII: `H5Rdestroy` on destruction, `H5Rcopy` on
+ *           copy. The pre-1.12 path stores a value type and needs no
+ *           explicit close. Lives in `h5cpp/H5Tall.hpp`.</td></tr>
+ * </table>
+ *
+ * @section handle_ref_property_lists Property lists
+ *
+ * All wrap an `::hid_t` with `H5Pclose` as the close function. The
+ * `h5::default_*` constants are `H5P_DEFAULT` singletons, so omitting
+ * a property-list argument gives baseline HDF5 behaviour.
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Alias</th><th>HDF5 property class</th><th>Default constant</th><th>Setters / domain</th></tr>
+ *   <tr><td>`h5::fapl_t`</td><td>file access</td>               <td>`h5::default_fapl`</td><td>driver selection, parallel I/O, ROS3, threads, libver bounds</td></tr>
+ *   <tr><td>`h5::fcpl_t`</td><td>file creation</td>             <td>`h5::default_fcpl`</td><td>user block, sizes, sym_k, istore_k, shared messages</td></tr>
+ *   <tr><td>`h5::dapl_t`</td><td>dataset access</td>            <td>(`H5P_DEFAULT`)</td>   <td>chunk cache, virtual-view, efile_prefix</td></tr>
+ *   <tr><td>`h5::dcpl_t`</td><td>dataset creation</td>          <td>`h5::default_dcpl`</td><td>chunk, layout, filters (gzip / szip / shuffle / fletcher32 / nbit), fill value, allocation</td></tr>
+ *   <tr><td>`h5::dxpl_t`</td><td>data transfer</td>             <td>`h5::default_dxpl`</td><td>buffer size, type-conversion callback, MPIO mode</td></tr>
+ *   <tr><td>`h5::lcpl_t`</td><td>link creation</td>             <td>`h5::default_lcpl`</td><td>character set (UTF-8 by default), create-intermediate-groups</td></tr>
+ *   <tr><td>`h5::lapl_t`</td><td>link access</td>               <td>(`H5P_DEFAULT`)</td>   <td>NLINKS bound, ELINK file-cache, ELINK callback</td></tr>
+ *   <tr><td>`h5::gcpl_t`</td><td>group creation</td>            <td>(`H5P_DEFAULT`)</td>   <td>link phase change, estimated num-links</td></tr>
+ *   <tr><td>`h5::gapl_t`</td><td>group access</td>              <td>(`H5P_DEFAULT`)</td>   <td>(no public setters in current h5cpp surface)</td></tr>
+ *   <tr><td>`h5::tcpl_t`</td><td>type (datatype) creation</td>  <td>(`H5P_DEFAULT`)</td>   <td>used internally by `H5Tcreate` paths</td></tr>
+ *   <tr><td>`h5::tapl_t`</td><td>type (datatype) access</td>    <td>(`H5P_DEFAULT`)</td>   <td>used internally by `H5Topen` paths</td></tr>
+ *   <tr><td>`h5::acpl_t`</td><td>attribute creation</td>        <td>`h5::default_acpl`</td><td>character set for attribute names</td></tr>
+ *   <tr><td>`h5::ocpl_t`</td><td>object creation</td>           <td>(`H5P_DEFAULT`)</td>   <td>attr phase change, track times</td></tr>
+ *   <tr><td>`h5::ocrl_t`</td><td>object copy</td>               <td>(`H5P_DEFAULT`)</td>   <td>copy flags (shallow / expand-soft-link / merge-committed-types)</td></tr>
+ *   <tr><td>`h5::fmpl_t`</td><td>file mount</td>                <td>(`H5P_DEFAULT`)</td>   <td>(currently used internally only)</td></tr>
+ *   <tr><td>`h5::scpl_t`</td><td>string creation</td>           <td>(`H5P_DEFAULT`)</td>   <td>(reserved for future use)</td></tr>
+ * </table>
+ *
+ * Property lists compose with `operator|`. Each setter
+ * (e.g. `h5::chunk{N}`, `h5::gzip{level}`, `h5::threads{8}`,
+ * `h5::ros3{...}`) returns the matching property-list wrapper:
+ *
+ * @code
+ * h5::ds_t ds = h5::create<float>(fd, "/big",
+ *     h5::current_dims{1'000'000},
+ *     h5::chunk{1'024} | h5::gzip{4});         // dcpl_t composed from chunk + gzip
+ *
+ * h5::fd_t fd = h5::open("s3://bucket/key.h5", H5F_ACC_RDONLY,
+ *     h5::default_fapl | h5::ros3{region, key, secret});
+ * @endcode
+ *
+ * @section handle_ref_shape Shape descriptors
+ *
+ * Strongly-typed wrappers around HDF5's `hsize_t[H5CPP_MAX_RANK]`
+ * dimension arrays. Not RAII handles (no HDF5 resource to close), but
+ * part of the public API surface and used at every `h5::read` /
+ * `h5::write` / `h5::create` call site.
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>Argument name at the call site</th><th>Meaning</th></tr>
+ *   <tr><td>`h5::current_dims_t`</td><td>`current_dims`</td><td>initial (current) dataset extent at creation</td></tr>
+ *   <tr><td>`h5::max_dims_t`</td>    <td>`max_dims`</td>    <td>maximum dataset extent; `H5S_UNLIMITED` marks extendable</td></tr>
+ *   <tr><td>`h5::dims_t`</td>        <td>(general dims)</td><td>generic dimension descriptor used by helpers</td></tr>
+ *   <tr><td>`h5::chunk_t`</td>       <td>`chunk`</td>       <td>chunk shape for chunked storage</td></tr>
+ *   <tr><td>`h5::offset_t`</td>      <td>`offset`</td>      <td>first-element coordinates of a hyperslab selection</td></tr>
+ *   <tr><td>`h5::stride_t`</td>      <td>`stride`</td>      <td>step between selected elements per dimension</td></tr>
+ *   <tr><td>`h5::count_t`</td>       <td>`count`</td>       <td>number of blocks per dimension</td></tr>
+ *   <tr><td>`h5::block_t`</td>       <td>`block`</td>       <td>block size per dimension</td></tr>
+ * </table>
+ *
+ * All eight are aliases of `h5::impl::array<impl::*_t>` (see
+ * `h5cpp/H5Sall.hpp:102-109`) — a strong-typedef pattern that lets
+ * the same set of integers be tagged with their semantic role,
+ * so `h5::write(fd, "x", v, h5::offset{0,0}, h5::count{4,4})`
+ * couldn't accidentally swap `offset` and `count`.
+ *
+ * @section handle_ref_implementation Implementation
+ *
+ * The core template is in `h5cpp/H5Iall.hpp` —
+ * `h5::impl::detail::hid_t<T, capi_close, from_capi, to_capi, hdf5_class>`.
+ * Public aliases are emitted by the `H5CPP__def{hid,pid,did,aid}_t`
+ * macros in the same file (lines 325-345) which stamp one
+ * `struct impl::T_ final {}` tag per alias to keep the types
+ * distinct at overload-resolution time.
+ *
+ * The five template parameters in summary:
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Parameter</th><th>Role</th></tr>
+ *   <tr><td>`T`</td>          <td>tag type; one empty struct per public alias so `h5::fd_t` and `h5::gr_t` are distinct overload targets</td></tr>
+ *   <tr><td>`capi_close`</td> <td>the HDF5 close function (`H5Fclose`, `H5Dclose`, `H5Pclose`, …)</td></tr>
+ *   <tr><td>`from_capi`</td>  <td>whether `hid_t → wrapper` construction is enabled (@ref link_conversion_policy)</td></tr>
+ *   <tr><td>`to_capi`</td>    <td>whether `wrapper → hid_t` conversion is enabled (@ref link_conversion_policy)</td></tr>
+ *   <tr><td>`hdf5_class`</td> <td>selects a specialisation that adds class-specific members (e.g. the `attribute` specialisation carries the parent dataset's `hid_t` for `ds[name]` subscript access)</td></tr>
+ * </table>
+ *
+ * @sa link_raii_idiom link_property_lists link_conversion_policy link_error_handler
+ *     h5::fd_t h5::ds_t h5::gr_t h5::at_t h5::ob_t h5::sp_t h5::dt_t
+ *     h5::reference_t
+ *     h5::fapl_t h5::fcpl_t h5::dapl_t h5::dcpl_t h5::dxpl_t h5::lcpl_t
+ *     h5::current_dims_t h5::max_dims_t h5::chunk_t h5::offset_t h5::stride_t h5::count_t h5::block_t
  */
 
 /**
  * @page link_linalg_template_types Supported Linear Algebra Types
- * H5CPP supports Armadillo, Eigen, Blitz++, Blaze, DLIB, IT++, and
- * Boost uBLAS containers as first-class template arguments.  The
- * appropriate `h5cpp/H5M*.hpp` header must be included before use.
  *
- * See also: @ref link_stl_template_types
+ * h5cpp recognises dense and sparse linear-algebra containers from eight
+ * upstream libraries as first-class template arguments to `h5::read`,
+ * `h5::write`, and `h5::create`. Each library is opted into the dispatch
+ * by a single mapper header — until the header is included, the dispatch
+ * leaves the library's types out of `storage_representation_v<T>` and
+ * `h5::write(file, "ds", x)` will not compile.
+ *
+ * @section linalg_sparse_layout Sparse storage layout
+ *
+ * Sparse matrices and vectors land in HDF5 as a **group** containing
+ * four datasets and two scalar string attributes. The layout is
+ * canonical **Compressed Sparse Column (CSC)** and is byte-for-byte
+ * compatible with `scipy.sparse.csc_matrix`, Julia's `HDF5.jl` sparse
+ * reader, 10x Genomics' Cell Ranger output, and the Loompy file format.
+ *
+ * ```text
+ * group/
+ *     data      : 1-D dataset, dtype = T,        length nnz
+ *     indices   : 1-D dataset, dtype = uint32,   length nnz       (row indices)
+ *     indptr    : 1-D dataset, dtype = uint32,   length n_cols+1  (column pointers)
+ *     shape     : 1-D dataset, dtype = uint64,   length 2         ([n_rows, n_cols])
+ *   @format = "csc"
+ *   @axis   = "column"
+ * ```
+ *
+ * | Component   | Disk dtype | Length        | Carries                                                                          |
+ * | :---------- | :--------- | :------------ | :------------------------------------------------------------------------------- |
+ * | `data`      | element `T`| `nnz`         | non-zero values in column-major order                                            |
+ * | `indices`   | `uint32`   | `nnz`         | row index of each non-zero                                                       |
+ * | `indptr`    | `uint32`   | `n_cols + 1`  | offset into `data` / `indices` where each column starts; last entry equals `nnz` |
+ * | `shape`     | `uint64`   | 2             | `[n_rows, n_cols]` — the full logical extent                                     |
+ * | `@format`   | string     | scalar attr   | always `"csc"`                                                                   |
+ * | `@axis`     | string     | scalar attr   | always `"column"`                                                                |
+ *
+ * **Index width** is fixed `uint32` on disk regardless of the upstream
+ * library's index type (`arma::uword`, `Eigen::Index`, `std::ptrdiff_t`).
+ * h5cpp converts in or out of `uint32` at the file boundary, preserving
+ * the in-memory precision but matching the 10x/Loompy on-disk convention.
+ * An overflow guard at write time throws `h5::error::io::dataset::write`
+ * when any of `{nnz, n_rows, n_cols}` exceeds `2^32 - 1`.
+ *
+ * **Sparse vectors are promoted to single-column matrices** —
+ * `arma::SpCol<T>` and `Eigen::SparseVector<T,ColMajor,I>` round-trip
+ * as `N×1` CSC matrices; `arma::SpRow<T>` rolls up to a `1×N` CSC
+ * matrix. This keeps cross-tool consumers (scipy, Julia, 10x) on a
+ * single canonical reader path.
+ *
+ * **Precondition** before write:
+ * - Armadillo: `SpMat::sync()` must have completed.
+ * - Eigen: `src.makeCompressed()` must have been called, and the
+ *   matrix must be `ColMajor`. RowMajor sparse triggers a compile-time
+ *   `static_assert`.
+ *
+ * h5cpp does not call `sync()` or `makeCompressed()` implicitly —
+ * either would mutate a `const` matrix and break thread-safety.
+ *
+ * Sparse types are routed by the `h5::meta::is_sparse_v<T>` SFINAE
+ * guard onto a dedicated overload set in `h5cpp/H5Dsparse.hpp` — they
+ * sit outside the `storage_representation_t` enum that dense and STL
+ * paths use, since the on-disk shape is a group rather than a single
+ * dataset. The generic `sparse_traits<T>` accessor contract is declared
+ * in `h5cpp/H5Tsparse.hpp`; per-library specialisations live with each
+ * mapper header (`H5Marma.hpp` for `arma::SpMat`/`SpRow`/`SpCol`,
+ * `H5Meigen.hpp` for `Eigen::SparseMatrix`/`SparseVector`).
+ *
+ * @section linalg_dense_layout Dense storage layout
+ *
+ * Every dense container above is a **contiguous buffer of `T`** with one
+ * pointer (`memptr()`, `data()`, `valuePtr()`, …) into a single heap
+ * allocation. h5cpp passes that pointer straight to `H5Dwrite`/`H5Dread`
+ * with no copy and no transpose, so the on-disk layout matches the
+ * upstream container's in-memory layout byte-for-byte.
+ *
+ * - **Vectors** (rank-1) are layout-orientation invariant — the buffer is
+ *   `N` consecutive elements regardless of `rowVector` / `columnVector`
+ *   labels in the type. Round-trip between any of `arma::Row`,
+ *   `Eigen::VectorXd`, `blaze::DynamicVector`, `ublas::vector`, etc.
+ *   on the same dataset is byte-exact.
+ *
+ * - **Matrices** (rank-2) inherit the container's storage order:
+ *   - **Column-major on disk**: `arma::Mat`, `Eigen::Matrix<…,ColMajor>`
+ *     (default), `blaze::DynamicMatrix<…,columnMajor>`.
+ *   - **Row-major on disk**: `dlib::matrix` (always row-major),
+ *     `Eigen::Matrix<…,RowMajor>`, `blaze::DynamicMatrix<…,rowMajor>`,
+ *     `ublas::matrix` (default), `itpp::Mat`.
+ *   Reading a column-major dataset into a row-major container (or vice
+ *   versa) does not transpose — it reinterprets, producing the
+ *   mathematical transpose. Cross-library reads must match orientation.
+ *
+ * - **Tensors and N-d arrays** (`xt::xarray`, `xt::xtensor`,
+ *   `blitz::Array<T,N>`, `arma::Cube`) follow the upstream library's
+ *   default storage order (xtensor row-major; blitz row-major;
+ *   arma::Cube column-major slice-by-slice).
+ *
+ * All dense linalg containers resolve to
+ * `storage_representation_t::linear_value_dataset` — the same dispatch
+ * path used by `std::vector<T>` and STL sequence containers.
+ *
+ * @section linalg_quick_summary Overview — supported libraries at a glance
+ *
+ * | Library     | Mapper header              | Dense vectors / matrices                                         | Sparse                                       |
+ * | :---------- | :------------------------- | :--------------------------------------------------------------- | :------------------------------------------- |
+ * | Armadillo   | `h5cpp/H5Marma.hpp`        | `h5::arma::rowvec`, `colvec`, `colmat`, `cube`                   | `arma::SpMat`, `SpRow`, `SpCol`              |
+ * | Eigen       | `h5cpp/H5Meigen.hpp`       | `Eigen::Matrix<T,R,C,O>`, `Eigen::Array<T,R,C,O>`                | `Eigen::SparseMatrix`, `SparseVector` (CSC)  |
+ * | Blitz++     | `h5cpp/H5Mblitz.hpp`       | `h5::blitz::array<T,N>` (rank-N)                                 | —                                            |
+ * | Blaze       | `h5cpp/H5Mblaze.hpp`       | `h5::blaze::rowvec`, `colvec`, `rowmat`, `colmat`                | —                                            |
+ * | dlib        | `h5cpp/H5Mdlib.hpp`        | `h5::dlib::rowmat<T>`                                            | —                                            |
+ * | IT++        | `h5cpp/H5Mitpp.hpp`        | `h5::itpp::rowvec`, `rowmat`                                     | —                                            |
+ * | Boost uBLAS | `h5cpp/H5Mublas.hpp`       | `h5::ublas::rowvec`, `rowmat`                                    | —                                            |
+ * | xtensor     | `h5cpp/H5Mxtensor.hpp`     | `xt::xarray<T>`, `xt::xtensor<T,N>`                              | —                                            |
+ *
+ * `std::valarray` is documented under @ref link_base_template_types
+ * § STL sequence containers; its mapper header `h5cpp/H5Mvalarray.hpp`
+ * follows the same opt-in pattern as the linalg mappers above.
+ *
+ * @section linalg_arma Armadillo
+ *
+ * Include `h5cpp/H5Marma.hpp`. The mapper exposes the h5cpp alias names
+ * in `h5::arma::` that pin the upstream `arma::` types:
+ *
+ * | h5cpp alias                | Upstream type        | Rank | Layout            | Notes                                              |
+ * | :------------------------- | :------------------- | :--- | :---------------- | :------------------------------------------------- |
+ * | `h5::arma::rowvec<T>`      | `arma::Row<T>`       | 1    | contiguous        | shape `(N,)` on disk; layout-orientation invariant |
+ * | `h5::arma::colvec<T>`      | `arma::Col<T>`       | 1    | contiguous        | shape `(N,)` on disk; round-trips with rowvec      |
+ * | `h5::arma::colmat<T>`      | `arma::Mat<T>`       | 2    | column-major      | the canonical arma matrix; default elsewhere       |
+ * | `h5::arma::cube<T>`        | `arma::Cube<T>`      | 3    | col-major slices  | shape `(rows, cols, slices)` on disk               |
+ *
+ * Sparse (CSC group layout):
+ *
+ * | Type                | Upstream            | Layout | Notes                                       |
+ * | :------------------ | :------------------ | :----- | :------------------------------------------ |
+ * | `arma::SpMat<T>`    | `arma::SpMat<T>`    | CSC    | native CSC — `values + row_indices + col_ptrs` |
+ * | `arma::SpRow<T>`    | `arma::SpRow<T>`    | CSC    | derives from `SpMat`; serialised as 1×N      |
+ * | `arma::SpCol<T>`    | `arma::SpCol<T>`    | CSC    | derives from `SpMat`; serialised as N×1      |
+ *
+ * **Precondition**: `SpMat::sync()` must have completed before write.
+ * h5cpp does not call `sync()` implicitly — that would require a
+ * `const_cast` on a user-supplied `const SpMat&`. See the arma docs for
+ * direct-access requirements on `values`, `row_indices`, `col_ptrs`.
+ *
+ * @section linalg_eigen Eigen
+ *
+ * Include `h5cpp/H5Meigen.hpp`. Eigen's matrix and array families are
+ * recognised for **any** combination of rows/cols/options (`Dynamic`,
+ * fixed-size, ColMajor or RowMajor):
+ *
+ * | Type                                | Rank | Layout                     | Notes                                                 |
+ * | :---------------------------------- | :--- | :------------------------- | :---------------------------------------------------- |
+ * | `Eigen::Matrix<T,R,C,O>`            | 2    | `O & RowMajorBit` decides  | `MatrixXd`, `Matrix3f`, `RowVectorXf` etc. all covered |
+ * | `Eigen::Array<T,R,C,O>`             | 2    | as above                   | element-wise array variant                            |
+ * | `Eigen::VectorXd`, `RowVectorXd`, … | 1/2  | contiguous                 | aliases for `Matrix<…,Dynamic,1>` / `<…,1,Dynamic>`   |
+ *
+ * Eigen sparse types live in the `<Eigen/SparseCore>` module, **not**
+ * `<Eigen/Core>`. The mapper guards the sparse path on
+ * `EIGEN_SPARSECORE_MODULE_H`, so users who only include `<Eigen/Core>`
+ * don't pay for the sparse trait specialisations.
+ *
+ * | Type                                | Layout | Constraint                              |
+ * | :---------------------------------- | :----- | :-------------------------------------- |
+ * | `Eigen::SparseMatrix<T,ColMajor,I>` | CSC    | RowMajor `static_assert`s at write time |
+ * | `Eigen::SparseVector<T,ColMajor,I>` | CSC    | always a single inner vector            |
+ *
+ * **Precondition**: `src.makeCompressed()` has been called. h5cpp does
+ * not call it implicitly to avoid mutating a `const SparseMatrix&`.
+ * RowMajor sparse triggers a clear compile-time error rather than
+ * silently producing a transposed file.
+ *
+ * @section linalg_blaze Blaze
+ *
+ * Include `h5cpp/H5Mblaze.hpp`. Blaze's `DynamicVector` and
+ * `DynamicMatrix` carry their orientation as a non-type template
+ * parameter, and h5cpp pins both orientations explicitly:
+ *
+ * | h5cpp alias              | Upstream type                                     | Rank | Layout        |
+ * | :----------------------- | :------------------------------------------------ | :--- | :------------ |
+ * | `h5::blaze::rowvec<T>`   | `blaze::DynamicVector<T, blaze::rowVector>`       | 1    | contiguous    |
+ * | `h5::blaze::colvec<T>`   | `blaze::DynamicVector<T, blaze::columnVector>`    | 1    | contiguous    |
+ * | `h5::blaze::rowmat<T>`   | `blaze::DynamicMatrix<T, blaze::rowMajor>`        | 2    | row-major     |
+ * | `h5::blaze::colmat<T>`   | `blaze::DynamicMatrix<T, blaze::columnMajor>`     | 2    | column-major  |
+ *
+ * Blaze's BLAS wrappers conflict with Armadillo's by default; include
+ * `<blaze/Math.h>` with `BLAZE_BLAS_MODE=0` (Blaze's own macro), or
+ * include Blaze before Armadillo so the latter's LAPACK adapters win.
+ *
+ * @section linalg_blitz Blitz++
+ *
+ * Include `h5cpp/H5Mblitz.hpp`. Blitz exposes a single
+ * variable-rank array template; rank is a non-type parameter on the
+ * type, not a runtime quantity.
+ *
+ * | h5cpp alias                  | Upstream type                | Rank | Layout    |
+ * | :--------------------------- | :--------------------------- | :--- | :-------- |
+ * | `h5::blitz::array<T, N>`     | `blitz::Array<T, N>`         | N    | row-major |
+ *
+ * Blitz supports ranks 1–11 (its native limit). Element type `T` must
+ * itself be one of the elementary scalars, strings, or compound types
+ * from @ref link_base_template_types.
+ *
+ * @section linalg_dlib dlib
+ *
+ * Include `h5cpp/H5Mdlib.hpp`. dlib's matrix template carries memory
+ * manager and layout as template parameters; the mapper pins
+ * `row_major_layout` and the default stateless memory manager:
+ *
+ * | h5cpp alias               | Upstream type                                                                                 | Rank | Layout    |
+ * | :------------------------ | :-------------------------------------------------------------------------------------------- | :--- | :-------- |
+ * | `h5::dlib::rowmat<T>`     | `dlib::matrix<T, 0, 0, dlib::memory_manager_stateless_kernel_1<char>, dlib::row_major_layout>` | 2    | row-major |
+ *
+ * dlib matrices declared with `column_major_layout` or a non-default
+ * memory manager are not in the dispatch — they would round-trip
+ * through `h5::dlib::rowmat<T>` (copy at the call site).
+ *
+ * @section linalg_itpp IT++
+ *
+ * Include `h5cpp/H5Mitpp.hpp`. IT++ matrices are row-major by
+ * convention (the name `Mat` does not carry an orientation tag):
+ *
+ * | h5cpp alias              | Upstream type      | Rank | Layout    |
+ * | :----------------------- | :----------------- | :--- | :-------- |
+ * | `h5::itpp::rowvec<T>`    | `itpp::Vec<T>`     | 1    | contiguous |
+ * | `h5::itpp::rowmat<T>`    | `itpp::Mat<T>`     | 2    | row-major  |
+ *
+ * @section linalg_ublas Boost uBLAS
+ *
+ * Include `h5cpp/H5Mublas.hpp`. uBLAS is header-only — see
+ * `boost/numeric/ublas/matrix.hpp` and `vector.hpp`. The default
+ * `matrix<T>` and `vector<T>` types are row-major / contiguous:
+ *
+ * | h5cpp alias               | Upstream type                              | Rank | Layout    |
+ * | :------------------------ | :----------------------------------------- | :--- | :-------- |
+ * | `h5::ublas::rowvec<T>`    | `boost::numeric::ublas::vector<T>`         | 1    | contiguous |
+ * | `h5::ublas::rowmat<T>`    | `boost::numeric::ublas::matrix<T>`         | 2    | row-major  |
+ *
+ * uBLAS's `column_major` matrix variant is not in the dispatch.
+ *
+ * @section linalg_xtensor xtensor
+ *
+ * Include `h5cpp/H5Mxtensor.hpp`. xtensor splits rank into dynamic
+ * (`xarray`, rank decided at runtime by `reshape`) and static
+ * (`xtensor`, rank fixed in the type):
+ *
+ * | Type                       | Rank             | Layout    | Notes                                           |
+ * | :------------------------- | :--------------- | :-------- | :---------------------------------------------- |
+ * | `xt::xarray<T>`            | dynamic          | row-major | rank discovered from the dataset shape on read  |
+ * | `xt::xtensor<T, N>`        | static `N`       | row-major | static rank must match the on-disk rank exactly |
+ *
+ * The xtensor header has no single root `XTENSOR_HPP` guard;
+ * the mapper detects xtensor presence through `<xtensor/xarray.hpp>`,
+ * which is the canonical entry point.
+ *
+ * @section linalg_compatibility Combining libraries
+ *
+ * Multiple mapper headers can be active in the same translation unit.
+ * The dispatches are partitioned by type — `h5::write(fd, "a", arma_x)`
+ * and `h5::write(fd, "b", eigen_y)` co-exist without conflict.
+ *
+ * The historical ABI conflict was Armadillo's LAPACK wrappers vs
+ * Blaze's BLAS path. h5cpp does not pull in either library's LAPACK
+ * adapters; whichever header you include first determines which set of
+ * BLAS/LAPACK symbol names enters the translation unit. For mixed
+ * arma + blaze code, define `BLAZE_BLAS_MODE=0` before including blaze.
+ *
+ * @section linalg_dispatch How dispatch works
+ *
+ * The mapper headers specialise three traits in `h5::meta`:
+ *
+ * 1. `is_contiguous<T>` — declares that `T::memptr()` / `data()` /
+ *    `valuePtr()` returns a pointer to a contiguous buffer of
+ *    `decay<T>::type` elements.
+ * 2. `storage_representation_impl<T>` — pins the value to
+ *    `storage_representation_t::linear_value_dataset` (dense) or
+ *    routes through `is_sparse<T>` for sparse.
+ * 3. `access_traits_t<T>` — exposes the rank, dimensions, and element
+ *    pointer that `H5Dread.hpp` / `H5Dwrite.hpp` consume.
+ *
+ * Once those three are in scope, the type joins the same generic
+ * read/write/create dispatch as `std::vector<T>` — no per-library
+ * special-case at the call site. See the @ref reports_type_system_map
+ * "Type System Architecture Notes" for the design rationale.
+ *
+ * @sa @ref link_base_template_types "Supported Types"
+ * @sa @ref link_handle_reference "Handles, Descriptors, and Property Lists"
+ * @sa @ref link_conversion_policy "Conversion Policy"
+ * @sa @ref example_guide_linalg "Cook book: Linear-Algebra Containers"
+ * @sa @ref example_guide_sparse "Cook book: Sparse Matrices & Vectors"
  */
 
 /**
  * @page link_stl_template_types Supported STL Types
- * `std::vector<T>`, `std::array<T,N>`, and fundamental numeric types
- * are supported without any additional include beyond `h5cpp/all`.
  *
- * See also: @ref link_linalg_template_types
+ * Every STL type h5cpp recognises — `std::vector<T>`, `std::array<T,N>`,
+ * `std::list<T>`, `std::deque<T>`, `std::forward_list<T>`, the
+ * associative containers (`set`/`multiset`/`map`/`multimap` and their
+ * `unordered` variants), `std::pair` / `std::tuple`, `std::string` /
+ * `std::string_view`, `std::complex<T>`, `std::mdspan` (C++23),
+ * `std::unique_ptr<T[]>` / `std::shared_ptr<T[]>` — is catalogued in
+ * @ref link_base_template_types "Supported Types" alongside the
+ * elementary scalars and the linear-algebra containers.
+ *
+ * STL is part of the default surface; no extra include beyond
+ * `h5cpp/all` (or `h5cpp/io` for the I/O subset) is needed.
+ *
+ * See also: @ref link_base_template_types
  */
 
 /**
- * @page link_base_template_types Elementary Template Types
- * The elementary types supported by H5CPP are: `int8_t`, `int16_t`,
- * `int32_t`, `int64_t` and their unsigned counterparts, `float`, `double`,
- * `long double`, and `std::complex<float|double>`.
+ * @page link_base_template_types Supported Types
+ *
+ * Every type h5cpp's `h5::read` / `h5::write` / `h5::create` /
+ * `h5::aread` / `h5::awrite` accepts, organised by category. The
+ * **storage representation** column maps each entry to one of the
+ * `storage_representation_t` cases declared at
+ * `h5cpp/H5Tmeta.hpp:164-170` — that's the value `storage_representation_v<T>`
+ * resolves to at compile time, and what the static-assert stoppers in
+ * `H5Dwrite.hpp` / `H5Dread.hpp` / `H5Awrite.hpp` / `H5Aread.hpp` check
+ * before dispatching.
+ *
+ * The underlying classification mechanism is the Walter Brown
+ * detection idiom: types are recognised by their structural surface
+ * (`value_type`, `iterator`, `size`, `data`, `key_type`,
+ * `mapped_type`, …), not by name. A custom container with the right
+ * shape routes the same way as the matching `std::` counterpart —
+ * see @ref example_guide_container in the Cook book for the canonical
+ * walkthrough.
+ *
+ * @section types_elementary Elementary scalars
+ *
+ * All landed at `storage_representation_t::scalar`. Default-included
+ * via `h5cpp/all` (no extra mapper header required).
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>HDF5 representation</th><th>Notes</th></tr>
+ *   <tr><td>`int8_t` / `int16_t` / `int32_t` / `int64_t`</td>
+ *       <td>`H5T_NATIVE_INT8` … `H5T_NATIVE_INT64`</td>
+ *       <td>signed integer</td></tr>
+ *   <tr><td>`uint8_t` / `uint16_t` / `uint32_t` / `uint64_t`</td>
+ *       <td>`H5T_NATIVE_UINT8` … `H5T_NATIVE_UINT64`</td>
+ *       <td>unsigned integer</td></tr>
+ *   <tr><td>`float`</td><td>`H5T_NATIVE_FLOAT`</td>             <td>IEEE 754 single precision</td></tr>
+ *   <tr><td>`double`</td><td>`H5T_NATIVE_DOUBLE`</td>           <td>IEEE 754 double precision</td></tr>
+ *   <tr><td>`long double`</td><td>`H5T_NATIVE_LDOUBLE`</td>     <td>platform-specific extended precision</td></tr>
+ *   <tr><td>`bool`</td><td>`H5T_NATIVE_HBOOL`</td>              <td>HDF5 boolean (NB: `std::vector<bool>` is NOT supported, see @ref types_unsupported)</td></tr>
+ *   <tr><td>`enum E` (registered)</td><td>`H5T_ENUM` over the underlying integer</td>
+ *       <td>register with `H5CPP_REGISTER_DATATYPE(E, "E", H5Tenum_create(H5T_NATIVE_*), { H5Tenum_insert(...) })`</td></tr>
+ * </table>
+ *
+ * Custom datatypes (n-bit packing, opaque blobs, strong-typedef wrappers)
+ * register through `H5CPP_REGISTER_DATATYPE` — see the macro
+ * documentation at `h5cpp/H5Tall.hpp:514` and the `examples/datatypes/`
+ * cookbook page.
+ *
+ * @section types_strings Strings
+ *
+ * h5cpp routes both fixed-length (`H5T_C_S1` + `H5Tset_size(N)`) and
+ * variable-length (`H5T_VARIABLE`) HDF5 string forms depending on the
+ * C++ type used at the call site.
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>storage_representation_t</th><th>HDF5 representation</th></tr>
+ *   <tr><td>`std::string` / `std::string_view`</td>     <td>`vlen_text_dataset`</td><td>`H5T_VARIABLE` — one `char*` allocated by HDF5 on read</td></tr>
+ *   <tr><td>`char*` / `const char*`</td>                <td>`vlen_text_dataset`</td><td>same variable-length path</td></tr>
+ *   <tr><td>`char[N]`</td>                              <td>`fixed_length_string`</td><td>`H5T_C_S1` + `H5Tset_size(N)`, scalar dataspace</td></tr>
+ *   <tr><td>`std::array<char,N>`</td>                   <td>`fixed_length_string`</td><td>same as `char[N]` — wrapper-equivalent representation</td></tr>
+ *   <tr><td>`std::vector<std::string>`</td>             <td>`vlen_text_dataset`</td><td>rank-1 dataset, each element variable-length</td></tr>
+ *   <tr><td>`std::vector<std::array<char,N>>`</td>      <td>`fls_dataset`</td>      <td>rank-1 dataset of fixed-length strings (no VLEN overhead)</td></tr>
+ * </table>
+ *
+ * On read, fixed-length string attributes are detected via
+ * `H5Aget_type + H5Tis_variable_str` — HDF5 has no fixed↔VLEN
+ * conversion path, so the dispatch must branch (see
+ * `h5cpp/H5Aread.hpp` and `examples/string/` in the cookbook).
+ *
+ * @section types_compound Compound types
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>storage_representation_t</th><th>How it's registered</th></tr>
+ *   <tr><td>POD aggregate registered via `H5CPP_REGISTER_STRUCT(MyStruct);`</td>
+ *       <td>`scalar` (with `H5T_COMPOUND` type)</td>
+ *       <td>macro at file scope; emits `dt_t<MyStruct>` specialisation. See `examples/compound/`.</td></tr>
+ *   <tr><td>Compiler-reflected tier-2 type with `[[h5::*]]` attributes</td>
+ *       <td>`scalar`</td>
+ *       <td>`h5cpp-compiler` tool emits `generated.h`; user `#include`s it. Handles heap-indirection fields (vlen strings, vlen vectors) via the scatter/gather visitor path. See `examples/multi-tu/` and `examples/reflection/`.</td></tr>
+ *   <tr><td>`std::tuple<Ts...>`</td>
+ *       <td>`scalar`</td>
+ *       <td>Packed into an internal C-struct mirror, compound with fields `_0`, `_1`, …; field count = tuple arity.</td></tr>
+ *   <tr><td>`std::pair<K,V>`</td>
+ *       <td>`scalar`</td>
+ *       <td>Compound with fields `first`, `second`.</td></tr>
+ *   <tr><td>`std::complex<float\|double\|long double>`</td>
+ *       <td>`scalar`</td>
+ *       <td>Native `H5T_COMPLEX` on HDF5 ≥ 1.14, compound fallback (`r`, `i`) otherwise.</td></tr>
+ * </table>
+ *
+ * @section types_arrays C arrays and `std::array`
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>storage_representation_t</th><th>HDF5 representation</th></tr>
+ *   <tr><td>`T[N]` (top-level)</td>
+ *       <td>`array_element`</td>
+ *       <td>scalar dataspace + `H5T_ARRAY[N]` over `dt_t<T>`</td></tr>
+ *   <tr><td>`std::array<T,N>` where `T` is non-char</td>
+ *       <td>`array_element`</td>
+ *       <td>same as `T[N]` — wrapper-equivalent</td></tr>
+ *   <tr><td>`T[N][M]` and higher</td>
+ *       <td>`array_element`</td>
+ *       <td>scalar dataspace + nested `H5T_ARRAY`</td></tr>
+ * </table>
+ *
+ * @section types_stl_sequences STL sequence containers
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>storage_representation_t</th><th>Write path</th></tr>
+ *   <tr><td>`std::vector<T>`</td>      <td>`linear_value_dataset`</td><td>Direct `H5Dwrite` (contiguous, has `data()`)</td></tr>
+ *   <tr><td>`std::deque<T>`</td>       <td>`linear_value_dataset`</td><td>Staged into contiguous buffer, then `H5Dwrite`</td></tr>
+ *   <tr><td>`std::list<T>`</td>        <td>`linear_value_dataset`</td><td>Staged into contiguous buffer, then `H5Dwrite`</td></tr>
+ *   <tr><td>`std::forward_list<T>`</td><td>`linear_value_dataset`</td><td>Append-style; pair with `h5::pt_t` extensible dataset</td></tr>
+ *   <tr><td>`std::valarray<T>`</td>    <td>`linear_value_dataset`</td><td>Via `h5cpp/H5Mvalarray.hpp`</td></tr>
+ * </table>
+ *
+ * @section types_stl_associative STL associative containers
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>storage_representation_t</th><th>HDF5 representation</th></tr>
+ *   <tr><td>`std::set<T>` / `std::multiset<T>`</td>                 <td>`linear_value_dataset`</td><td>Rank-1 of `T`, written in iteration order</td></tr>
+ *   <tr><td>`std::unordered_set<T>` / `std::unordered_multiset<T>`</td><td>`linear_value_dataset`</td><td>Same, but iteration order is hash-dependent</td></tr>
+ *   <tr><td>`std::map<K,V>` / `std::multimap<K,V>`</td>             <td>`key_value_dataset`</td>   <td>Rank-1 of compound `{ K key, V value }`</td></tr>
+ *   <tr><td>`std::unordered_map<K,V>` / `std::unordered_multimap<K,V>`</td><td>`key_value_dataset`</td><td>Same compound layout, hash-iteration order</td></tr>
+ * </table>
+ *
+ * Set-like and map-like third-party containers (Abseil `flat_hash_*`,
+ * TSL `robin_*`, Folly `F14*`, Boost `flat_*`, parallel-hashmap) ride
+ * the structural fallback and route the same way — see
+ * @ref example_guide_container for the full third-party coverage matrix.
+ *
+ * @section types_array_of STL `array<T,N>`-of containers
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>storage_representation_t</th><th>HDF5 representation</th></tr>
+ *   <tr><td>`std::vector<std::array<T,N>>` (T non-char)</td>    <td>`array_dataset`</td><td>Rank-1 of `H5T_ARRAY[N]` elements — flat rows × N</td></tr>
+ *   <tr><td>`std::vector<std::array<char,N>>`</td>              <td>`fls_dataset`</td>  <td>Rank-1 of fixed-length strings — vlen-free path</td></tr>
+ *   <tr><td>`std::vector<std::pair<K,V>>`</td>                  <td>`linear_value_dataset`</td><td>Rank-1 of compound `{ first, second }`</td></tr>
+ *   <tr><td>`std::vector<std::tuple<Ts...>>`</td>               <td>`linear_value_dataset`</td><td>Rank-1 of packed compound</td></tr>
+ * </table>
+ *
+ * @section types_ragged Variable-length and ragged shapes
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>storage_representation_t</th><th>HDF5 representation</th></tr>
+ *   <tr><td>`std::vector<std::string>`</td>          <td>`vlen_text_dataset`</td>   <td>`char*` relay array + `H5T_VARIABLE`</td></tr>
+ *   <tr><td>`std::vector<std::vector<T>>`</td>       <td>`ragged_vlen_dataset`</td> <td>`hvl_t` relay array + `H5Tvlen_create`</td></tr>
+ * </table>
+ *
+ * @section types_linalg_dense Linear-algebra dense containers
+ *
+ * All dense linalg containers map to `linear_value_dataset`
+ * (or `array_dataset` for the rank-aware rank-2 / rank-3 cases) and
+ * write directly via the underlying contiguous buffer the linalg
+ * library exposes. Include the matching mapper header before use.
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Library</th><th>Types supported</th><th>Mapper header</th></tr>
+ *   <tr><td>Armadillo</td><td>`arma::Col<T>`, `arma::Row<T>`, `arma::Mat<T>`, `arma::Cube<T>`</td><td>`h5cpp/H5Marma.hpp`</td></tr>
+ *   <tr><td>Eigen</td>    <td>`Eigen::Matrix<T,…>`, `Eigen::Vector<T,…>`, `Eigen::Array<T,…>` (ColMajor)</td><td>`h5cpp/H5Meigen.hpp`</td></tr>
+ *   <tr><td>Blitz++</td>  <td>`blitz::Array<T,N>`</td><td>`h5cpp/H5Mblitz.hpp`</td></tr>
+ *   <tr><td>Blaze</td>    <td>`blaze::DynamicVector<T>`, `blaze::DynamicMatrix<T>`</td><td>`h5cpp/H5Mblaze.hpp`</td></tr>
+ *   <tr><td>dlib</td>     <td>`dlib::matrix<T,…>`</td><td>`h5cpp/H5Mdlib.hpp`</td></tr>
+ *   <tr><td>IT++</td>     <td>`itpp::Vec<T>`, `itpp::Mat<T>`</td><td>`h5cpp/H5Mitpp.hpp`</td></tr>
+ *   <tr><td>Boost uBLAS</td><td>`boost::numeric::ublas::vector<T>`, `boost::numeric::ublas::matrix<T>`</td><td>`h5cpp/H5Mublas.hpp`</td></tr>
+ *   <tr><td>xtensor</td>  <td>`xt::xarray<T>`, `xt::xtensor<T,N>`</td><td>`h5cpp/H5Mxtensor.hpp`</td></tr>
+ * </table>
+ *
+ * See @ref example_guide_linalg for end-to-end examples per library.
+ *
+ * @section types_linalg_sparse Sparse linear algebra
+ *
+ * Sparse matrices and vectors land at a custom storage layout: HDF5
+ * **group** containing four datasets in canonical Compressed Sparse
+ * Column form (`indptr` / `indices` / `data` / `shape` attribute).
+ * `h5::write(...)` returns `h5::gr_t` (not `h5::ds_t`); `h5::read<T>` of
+ * a sparse type reads the four datasets and reconstructs the matrix.
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Library</th><th>Types supported</th><th>Layout</th></tr>
+ *   <tr><td>Armadillo</td><td>`arma::SpMat<T>`, `arma::SpCol<T>`, `arma::SpRow<T>`</td><td>CSC group</td></tr>
+ *   <tr><td>Eigen</td>    <td>`Eigen::SparseMatrix<T>`, `Eigen::SparseVector<T>` (**ColMajor only**; RowMajor `static_assert`s)</td><td>CSC group</td></tr>
+ * </table>
+ *
+ * Files are interoperable with scipy, Julia HDF5.jl, h5sparse,
+ * Loompy, and 10x Genomics. See `examples/sparse/` in the cookbook.
+ *
+ * @section types_mdspan C++23 `std::mdspan`
+ *
+ * `std::mdspan` is a non-owning view over caller-owned storage.
+ * Round-trips through `linear_value_dataset` (rank-1) or
+ * `array_element` (rank-N) depending on the extents. Gated on
+ * `__cpp_lib_mdspan >= 202207L` — requires libstdc++ ≥ 15 or
+ * libc++ ≥ 19; on older toolchains the mdspan example skips
+ * gracefully and the type isn't recognised.
+ *
+ * Write is straightforward (view supplies `data_handle()`). Read into
+ * `mdspan` requires the caller to own the storage:
+ *
+ * @code
+ * std::vector<double> sink(24);
+ * std::mdspan<double, std::dextents<std::size_t, 2>> view(sink.data(), 4, 6);
+ * h5::read<double>(fd, "/matrix/A", view.data_handle(), h5::count{24});
+ * @endcode
+ *
+ * Mapper header: `h5cpp/H5Mmdspan.hpp`. See `examples/mdspan/` in
+ * the cookbook.
+ *
+ * @section types_references Reference handles
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>storage_representation_t</th><th>Notes</th></tr>
+ *   <tr><td>`h5::reference_t`</td>
+ *       <td>`scalar`</td>
+ *       <td>Rule-of-five RAII wrapper around `H5R_ref_t` (HDF5 1.12+) or `hdset_reg_ref_t` (pre-1.12). One reference per call site; round-trip via `h5::reference(fd, path, offset, count)`. See `examples/reference/` and @ref handle_ref_references in the catalog.</td></tr>
+ *   <tr><td>`std::vector<h5::reference_t>`</td>
+ *       <td>`linear_value_dataset`</td>
+ *       <td>Rank-1 dataset of region/object/attribute references; each entry is RAII-managed independently.</td></tr>
+ * </table>
+ *
+ * @section types_smart_ptrs Smart pointers (forwarding overloads)
+ *
+ * h5cpp accepts smart-pointer wrappers around contiguous buffers via
+ * forwarding overloads — the pointer is unwrapped and the underlying
+ * raw `T*` is routed through the regular `h5::write` / `h5::read`
+ * paths. Implementation: `h5cpp/H5Mmemory_io.hpp`.
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>Routes to</th></tr>
+ *   <tr><td>`std::unique_ptr<T[]>`</td><td>raw `T*` with caller-provided `h5::count{N}`</td></tr>
+ *   <tr><td>`std::shared_ptr<T[]>`</td><td>same</td></tr>
+ * </table>
+ *
+ * Caller retains ownership; h5cpp never takes the smart pointer.
+ * See `examples/smart-ptr/` in the cookbook.
+ *
+ * @section types_unsupported NOT supported (intentional stoppers)
+ *
+ * The static-assert stoppers in `H5Dwrite.hpp:737` and friends fire
+ * for these — the diagnostic includes the resolved
+ * `storage_representation_t::unsupported` and the offending type so
+ * the failure is informative.
+ *
+ * <table class="markdownTable">
+ *   <tr><th>Type</th><th>Why not</th></tr>
+ *   <tr><td>`std::vector<bool>`</td>
+ *       <td>Bit-packing specialisation; no real contiguous `bool*`. The standard's allocator-aware proxy reference doesn't survive HDF5's `void*` interface.</td></tr>
+ *   <tr><td>Unregistered POD aggregate</td>
+ *       <td>No `dt_t<T>` specialisation. Register via `H5CPP_REGISTER_STRUCT(T)` or generate via `h5cpp-compiler`.</td></tr>
+ *   <tr><td>Arbitrary nesting: `std::vector<std::list<T>>`, `std::vector<std::set<T>>`, `std::vector<std::map<K,V>>`, …</td>
+ *       <td>HDF5 *can* represent many of these via nested VLEN / compound, but h5cpp deliberately rejects them until the recursive packer/unpacker path is explicit.</td></tr>
+ *   <tr><td>`std::array<std::string, N>` / `std::array<std::vector<T>, N>`</td>
+ *       <td>Fixed-rank array of variable-length elements — would require an explicit policy decision on the inner length.</td></tr>
+ *   <tr><td>Containers without `T(std::size_t)` constructor (iterator-pair-only allocation)</td>
+ *       <td>Read-side structural fallback needs `T(size)` to pre-allocate before the staged copy.</td></tr>
+ * </table>
+ *
+ * @section types_dispatch How dispatch works
+ *
+ * Compile-time only. `storage_representation_v<T>` is evaluated
+ * during template instantiation; the call site's `H5Dwrite` /
+ * `H5Dread` overload is selected by SFINAE against the resolved
+ * value. There is no runtime polymorphism, no `if constexpr` chain at
+ * the call site, and no virtual dispatch.
+ *
+ * The architectural treatment — how storage_representation_t fans out
+ * across the per-container mapper headers (`H5M*.hpp`), where the
+ * detection-idiom fallbacks fire, and how third-party containers
+ * route without registration — is in
+ * @ref reports_type_system_map "Architecture / Type-system architecture notes"
+ * (Project Reports → Architecture).
+ *
+ * @sa link_handle_reference link_raii_idiom link_conversion_policy
+ *     link_stl_template_types link_linalg_template_types
+ *     reports_type_system_map
+ *     example_guide_container example_guide_compound example_guide_linalg
+ *     example_guide_sparse example_guide_mdspan example_guide_string
  */
 
 /** @anchor link_fcpl_l */

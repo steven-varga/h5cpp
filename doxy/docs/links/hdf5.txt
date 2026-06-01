@@ -1,0 +1,18 @@
+##
+## HDF5 C API external links — updated to current HDF Group documentation
+## Root: https://support.hdfgroup.org/documentation/hdf5/latest/
+##
+## Part of the H5CPP Doxygen alias vocabulary. See docs/aliases.md for the
+## catalog, standard docstring template, and contribution rules.
+##
+## The previous implementation here used markdown reference-style links
+## ([name][] + [name]: URL on separate lines) joined by \n. Doxygen
+## substitutes \n as <br/> rather than a true newline, so the markdown
+## parser couldn't pair references with their definitions and the @sa
+## block rendered as literal "[name][]" text plus the URL definitions as
+## visible lines. Rewritten to use inline markdown links ([name](url))
+## so no reference resolution is needed — Doxygen renders the labels as
+## proper hyperlinks unconditionally.
+##
+
+ALIASES += sa_hdf5="@sa [H5Fcreate](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html) [H5Fopen](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html) [H5Fclose](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_f.html) [H5Dopen](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html) [H5Dclose](https://support.hdfgroup.org/documentation/hdf5/latest/group___h5_d.html) [gzip](https://support.hdfgroup.org/documentation/hdf5/latest/group___d_a_p_l.html) [CAPI](https://support.hdfgroup.org/documentation/hdf5/latest/)"

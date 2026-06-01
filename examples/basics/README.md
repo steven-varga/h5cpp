@@ -1,4 +1,4 @@
-# Basic H5CPP Operations
+@page example_guide_basics Basic H5CPP Operations
 
 This example shows the small core of H5CPP: typed descriptors, RAII-managed HDF5 handles, composable property lists, error handling, file creation, and dataset creation. The point is simple: keep the HDF5 C API available, but make the common path look like C++.
 
@@ -199,3 +199,7 @@ C++ type + HDF5 path + dimensions + optional properties -> managed HDF5 dataset
 ```
 
 No manual `H5Tclose`, `H5Sclose`, `H5Pclose`, `H5Dclose`, or `H5Fclose` on the normal path.
+
+## Source
+
+- [`basics.cpp`](basics_8cpp-example.html) — rendered with syntax highlighting

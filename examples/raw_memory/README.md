@@ -1,4 +1,4 @@
-# Raw-Pointer Read / Write
+@page example_guide_raw_memory Raw-Pointer Read / Write
 
 Most h5cpp examples write containers (`arma::mat`, `std::vector<T>`, `Eigen::Matrix`, ...) so the library can deduce shape, element type, and storage layout from per-container access traits. When you only have a bare pointer and a length — embedded code, FFI boundary, scratch buffer — you opt out of that machinery and describe the move yourself:
 
@@ -117,3 +117,7 @@ No external library dependencies.
 - **`examples/optimized/`** — the inner-loop pattern of repeated raw-pointer writes into a chunked dataset.
 - **`examples/packet-table/packet_batches.cpp`** — raw-pointer `h5::append(pt, ptr)` used to stream chunks at maximum throughput.
 - **`h5cpp/H5Dwrite.hpp` / `H5Dread.hpp`** — the pointer overloads invoked by `h5::write<T>(fd, path, T*, ...)` / `h5::read<T>(fd, path, T*, ...)`.
+
+## Source
+
+- [`raw.cpp`](raw_8cpp-example.html) — rendered with syntax highlighting

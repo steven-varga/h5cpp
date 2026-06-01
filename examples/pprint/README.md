@@ -1,4 +1,4 @@
-# Pretty-Print for STL Containers
+@page example_guide_pprint Pretty-Print for STL Containers
 
 h5cpp ships a set of `operator<<` overloads (in `h5cpp/H5Uall.hpp`) that stream any STL-shaped container — and recursively stream its elements — to a `std::ostream`. No HDF5 is involved; this example exists purely to make container debugging painless and to back the diagnostics used throughout the other examples.
 
@@ -136,3 +136,7 @@ No external library dependencies.
 - **`h5cpp/H5Uall.hpp`** — where every `operator<<` lives, along with `H5CPP_CONSOLE_WIDTH` and the Walter Brown detection idiom.
 - **`examples/container/`** — the same detection idiom applied to the *I/O* dispatch surface (Walter Brown for both pretty-print and `h5::write` / `h5::read`).
 - **`examples/datasets/`** — relies on these inserters to verify readbacks.
+
+## Source
+
+- [`pprint.cpp`](pprint_8cpp-example.html) — rendered with syntax highlighting

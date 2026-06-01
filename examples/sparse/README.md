@@ -1,4 +1,4 @@
-# Sparse Matrices & Vectors — CSC Round-Trip
+@page example_guide_sparse Sparse Matrices & Vectors — CSC Round-Trip
 
 A sparse matrix is written as an HDF5 *group* containing four datasets in canonical Compressed Sparse Column form. The call shape is the same as for dense linalg, but it returns `h5::gr_t` instead of `h5::ds_t`:
 
@@ -164,3 +164,8 @@ Both targets also build via the local `Makefile` in this directory (resolves hea
 - **`h5cpp/H5Tsparse.hpp`** — `is_sparse<T>` / `sparse_traits<T>` contract, on-disk name constants.
 - **`h5cpp/H5Dsparse.hpp`** — `h5::write(parent, name, spmat)` returning `h5::gr_t`, plus the symmetric `h5::read<Sparse>`.
 - **`h5cpp/H5Marma.hpp`** / **`h5cpp/H5Meigen.hpp`** — per-library `sparse_traits` specializations.
+
+## Source
+
+- [`arma.cpp`](arma_8cpp-example.html) — rendered with syntax highlighting
+- [`eigen.cpp`](eigen_8cpp-example.html) — rendered with syntax highlighting

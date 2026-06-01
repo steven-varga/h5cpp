@@ -1,0 +1,13 @@
+##
+## C++ standard library external links
+##
+## Part of the H5CPP Doxygen alias vocabulary. See docs/aliases.md for the
+## catalog, standard docstring template, and contribution rules.
+##
+## See docs/links/hdf5.txt for the rationale behind the inline-link form;
+## the markdown reference-style links with \n separators that this file
+## previously used did not pair with their definitions under Doxygen's
+## current rendering.
+##
+
+ALIASES += sa_stl="@sa [RAII](https://en.cppreference.com/cpp/language/raii) [pointers](https://en.cppreference.com/cpp/language/pointer) [static_cast](https://en.cppreference.com/cpp/language/static_cast) [std::runtime_error](https://en.cppreference.com/cpp/error/runtime_error) std::unique_ptr"
