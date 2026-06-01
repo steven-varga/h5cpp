@@ -1,8 +1,8 @@
 # Multithreaded Pipeline (#287)
 
 A throughput harness comparing how the gzip filter chain is scheduled, and a
-direct profile of the per-file **async collector** (`io_collector_t`) write path
-against the sync pipeline.  See `profile-report.md` for numbers.
+profile of the **`-DH5CPP_MULTITHREAD`** build mode (global HDF5 mutex) write
+path against the default build.  See `profile-report.md` for numbers.
 
 ## Policy surface
 
@@ -26,24 +26,25 @@ fileno registry, since `H5Fget_access_plist` strips it off the file id);
 `h5::backpressure{M}` bounds in-flight chunks.  Chunk I/O stays on the caller
 thread; gzip/zstd fan out across the worker pool.
 
-## Async (single per-file HDF5 thread)
+## `-DH5CPP_MULTITHREAD` (global HDF5 mutex)
 
-`h5::async::create` stands up one `io_collector_t` thread per file — the sole
-thread that calls into HDF5 for that file.  Compression still parallelizes across
-the worker pool; chunk I/O and metadata run on the collector.  This makes
-**concurrent writers to one file safe** (Threadsafety-OFF HDF5 never sees two
-threads at once):
+Building with `-DH5CPP_MULTITHREAD` engages one process-global recursive mutex
+that serializes every HDF5 C-API call (the same design as HDF5's own
+`--enable-threadsafe` — a lock, not a dedicated thread).  Compression still
+parallelizes across the worker pool and never touches HDF5, so the lock is
+throughput-neutral on that path.  The lock is a no-op / zero-cost in a classic
+build.  This makes **concurrent writers to one file safe** (a Threadsafety-OFF
+HDF5 never sees two threads inside the C library at once):
 
 ```cpp
-h5::async::fd_t fd = h5::async::create("data.h5", H5F_ACC_TRUNC, h5::default_fcpl, fapl);
+auto fd = h5::create("data.h5", H5F_ACC_TRUNC, h5::default_fcpl, fapl);
 h5::write(fd, "dataset", data,
     h5::current_dims{rows}, h5::chunk{chunk} | h5::gzip{6}, h5::high_throughput);
-// fd closes on the collector thread at scope exit
 ```
 
 Note: for *concurrent* writers, share a pre-built DCPL rather than constructing
 `h5::chunk|h5::gzip` per call (per-call `H5Pcreate`/`H5Pclose` runs on the producer
-thread and races); see `test/H5collector.cpp`.
+thread; the global mutex serializes them but a shared DCPL avoids the churn).
 
 ## Cases (`pipeline.cpp`)
 
@@ -54,7 +55,7 @@ thread and races); see `test/H5collector.cpp`.
 | `hdf5-gzip` | stock HDF5 deflate filter (no h5cpp pool) |
 | `single` | h5cpp `high_throughput`, 1 worker |
 | `multi` | h5cpp `high_throughput`, N workers (sync `pool_pipeline_t`) |
-| `async` | `h5::async::create` + the collector (N workers) |
+| `async` | the `multi` pipeline compiled with `-DH5CPP_MULTITHREAD` (global lock engaged, N workers) |
 
 `H5CPP_BENCH_CASE=H5CPP_BENCH_CASE_<NAME>` builds a single-case executable for
 clean `perf` profiling (`examples-multithreaded-pipeline-<name>`); the default

@@ -53,10 +53,10 @@ namespace h5{
 		H5CPP_CHECK_PROP( fcpl,  h5::error::io::file::create, "invalid file control property list" );
 		H5CPP_CHECK_PROP( fapl,  h5::error::io::file::create, "invalid file access property list" );
 
-        // MT: the file create + fileno derivation + registry attach run on the one
-        // global collector thread — under Threadsafety-OFF HDF5, EVERY C-API call
-        // must come from the same thread (its global free-lists/id-tables corrupt
-        // otherwise, even across sequential calls from different threads).  No-op
+        // MT: the file create + fileno derivation + registry attach run under the
+        // process-global HDF5 lock — under Threadsafety-OFF HDF5, only one thread
+        // may be inside the C-API at a time (its global free-lists/id-tables corrupt
+        // otherwise).  on_collector takes that lock for the whole op.  No-op
         // pass-through in a classic build.
         return h5::impl::on_collector([&]() -> h5::fd_t {
             hid_t fd;

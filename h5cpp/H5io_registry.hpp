@@ -23,14 +23,10 @@
  *   attach() is called once per successful H5Fcreate / H5Fopen; detach()
  *   once per H5Fclose.  The last detach() for a given fileno releases the
  *   shared_ptr<worker_pool_t>, which joins the worker threads.
- *
- * Follow-on issues will add a per-file I/O collector to file_io_t; the
- * struct carries a deliberate comment-stub to leave room for it.
  */
 #pragma once
 
 #include "H5Pthreads.hpp"   // worker_pool_t, resolve_worker_pool, resolve_backpressure
-#include "H5collector.hpp"  // io_collector_t — the single per-file HDF5 thread (async files)
 
 #include <hdf5.h>
 
@@ -111,12 +107,6 @@ struct file_io_t {
     std::shared_ptr<worker_pool_t> pool;  // from h5::threads{N}, resolved on the live FAPL
     unsigned cap  = 0;                    // backpressure cap (in-flight chunk limit)
     unsigned refs = 0;                    // number of live opens referencing this fileno
-
-    // The single per-file HDF5 thread for ASYNC files (h5::async::create/open):
-    // it owns the chunk-write + metadata serialization for the file.  Null for
-    // SYNC files (h5::create/open) — there the caller thread is the collector.
-    // Drained + joined at the last detach (before H5Fclose).
-    std::shared_ptr<io_collector_t> collector;
 };
 
 
@@ -144,27 +134,10 @@ public:
         std::lock_guard<std::mutex> lk(mu_);
         auto it = map_.find(fileno);
         if (it == map_.end()) {
-            map_.emplace(fileno, file_io_t{std::move(pool), cap, 1u, nullptr});
+            map_.emplace(fileno, file_io_t{std::move(pool), cap, 1u});
         } else {
             it->second.refs++;
         }
-    }
-
-    // Register an ASYNC file.  Like attach(), but on the FIRST open of this
-    // fileno it also stands up the per-file io_collector_t (the single HDF5
-    // thread).  Subsequent opens of the same fileno share that one collector
-    // (refs++).  The collector holds a ref to the pool so the pool outlives it.
-    inline std::shared_ptr<io_collector_t>
-    attach_async(unsigned long fileno, std::shared_ptr<worker_pool_t> pool, unsigned cap) {
-        std::lock_guard<std::mutex> lk(mu_);
-        auto it = map_.find(fileno);
-        if (it == map_.end()) {
-            auto collector = std::make_shared<io_collector_t>(pool, cap, fileno);
-            auto res = map_.emplace(fileno, file_io_t{std::move(pool), cap, 1u, collector});
-            return res.first->second.collector;
-        }
-        it->second.refs++;
-        return it->second.collector;   // share the one collector across opens of this file
     }
 
     // Retrieve the worker pool for fileno.  Returns nullptr when no pool
@@ -187,41 +160,28 @@ public:
         return it->second.cap;
     }
 
-    // Retrieve the per-file collector for fileno.  Returns nullptr for sync
-    // files (no collector) or absent entries.  ASYNC dispatch resolves this and
-    // streams chunk-write requests + metadata through it.
-    inline std::shared_ptr<io_collector_t> resolve_collector(unsigned long fileno) {
-        std::lock_guard<std::mutex> lk(mu_);
-        auto it = map_.find(fileno);
-        if (it == map_.end()) return nullptr;
-        return it->second.collector;
-    }
-
     // Decrement the reference count for fileno.  Erases the entry (and
     // releases the pool shared_ptr) when the count reaches zero, which
     // triggers worker_pool_t::~worker_pool_t() → joins all worker threads
     // when no other shared_ptr holder remains.
     inline void detach(unsigned long fileno) {
-        // Extract the dying resources under the lock, but let them DESTRUCT after
-        // unlocking: ~io_collector_t drains + joins the collector thread, and the
-        // pool joins its workers — doing either under mu_ could deadlock against a
-        // concurrent registry call from those threads, and joins are slow to hold a
-        // global lock across.
-        std::shared_ptr<io_collector_t> dying_collector;
-        std::shared_ptr<worker_pool_t>  dying_pool;
+        // Extract the dying pool under the lock, but let it DESTRUCT after
+        // unlocking: the pool joins its workers, and doing that under mu_ could
+        // deadlock against a concurrent registry call from those threads — and a
+        // join is too slow to hold a global lock across.
+        std::shared_ptr<worker_pool_t> dying_pool;
         {
             std::lock_guard<std::mutex> lk(mu_);
             auto it = map_.find(fileno);
             if (it == map_.end()) return;
             if (it->second.refs <= 1u) {
-                dying_collector = std::move(it->second.collector);
-                dying_pool      = std::move(it->second.pool);
+                dying_pool = std::move(it->second.pool);
                 map_.erase(it);
             } else {
                 it->second.refs--;
             }
         }
-        // dying_collector / dying_pool destruct here, outside the registry lock.
+        // dying_pool destructs here, outside the registry lock.
     }
 };
 
@@ -276,35 +236,6 @@ inline unsigned long file_key(::hid_t id_in_file) {
 inline void registry_detach_file(::hid_t handle) {
     if (handle > 0 && H5Iis_valid(handle) && H5Iget_type(handle) == H5I_FILE)
         registry().detach(file_key_of_file(handle));
-}
-
-// ─── registry_close_async — close an ASYNC descriptor on its collector ──────
-//
-// Every HDF5 close on an async descriptor (H5Fclose / H5Dclose / …) must run on
-// the file's single collector thread.  Resolve that collector and submit the
-// close to it; for a FILE id, detach the registry entry afterwards (refs->0
-// drains + joins the collector).
-//
-// FAT-HANDLE close: the async descriptor CARRIES a shared_ptr to its collector,
-// so we never derive the fileno off-thread.  ALL HDF5 (H5Iget_type / H5Iget_ref /
-// the close) runs ON the collector thread via submit_and_wait; the registry
-// detach (when this close drops the file's last id ref) uses the collector's
-// CACHED fileno — a pure map operation, no HDF5.  This removes the option-(c)
-// off-thread race on both the write hot path and the close path.
-inline void close_async(const std::shared_ptr<io_collector_t>& col, ::hid_t handle,
-                        ::herr_t (*capi_close)(::hid_t)) {
-    if (handle <= 0) return;
-    if (!col) {                                   // no collector (shouldn't happen for async)
-        if (H5Iis_valid(handle)) capi_close(handle);
-        return;
-    }
-    bool last_file = false;
-    col->submit_and_wait([&] {
-        if (!H5Iis_valid(handle)) return;
-        last_file = (H5Iget_type(handle) == H5I_FILE) && (H5Iget_ref(handle) <= 1);
-        capi_close(handle);                       // close on the single HDF5 thread
-    });
-    if (last_file) registry().detach(col->fileno());   // registry-only; no HDF5
 }
 
 #ifdef H5CPP_MULTITHREAD

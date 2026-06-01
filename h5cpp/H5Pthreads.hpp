@@ -80,8 +80,8 @@ namespace h5::impl {
 //
 // The pool is deliberately HDF5-agnostic at this layer.  Consumer sites
 // (Phase 1.3 — pt_t, h5::write, h5::read) wrap their HDF5-specific compress
-// logic in a closure and submit() it.  This keeps the pool reusable for
-// Phase II's executor and any future async work.
+// logic in a closure and submit() it.  This keeps the pool reusable for any
+// future parallel-compute work.
 struct worker_pool_t {
     // Pool size is fixed at construction; cannot resize at runtime.
     // n == 0 means "use std::thread::hardware_concurrency()".

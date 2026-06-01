@@ -8,6 +8,7 @@
 #include "H5Tmeta.hpp"
 #include "H5cout.hpp"
 #include "H5io_registry.hpp"
+#include "H5collector.hpp"   // h5::impl::on_collector — global HDF5 lock under MT, no-op classic
 #include <memory>
 #include <string>
 #include <variant>
@@ -165,6 +166,7 @@ h5::pt_t::~pt_t(){
 inline
 void h5::pt_t::init( const h5::ds_t& handle ){
 	try {
+		h5::impl::on_collector([&]{   // open + registry resolve + space/type probing under the global lock (MT)
 		// Re-open with zero HDF5 chunk cache: the default DAPL allocates ~1MB per H5Dopen2
 		// call which accumulates in malloc arenas when pt_t is used in loops, even though
 		// the memory is logically freed on close.
@@ -211,6 +213,7 @@ void h5::pt_t::init( const h5::ds_t& handle ){
 		h5::get_chunk_dims( dcpl, chunk_dims );
 		for(hsize_t i=1; i<rank; i++)
 			current_dims[i] = chunk_dims[i];
+		}); // on_collector
 	} catch ( ... ){
 		throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("CTOR: unable to create handle from dataset..."));
 	}
@@ -221,8 +224,10 @@ void> h5::pt_t::append( const T* ptr ) try {
 	//PTR: write directly chunk size from provided buffer/ptr
 	*offset = *current_dims;
 	*current_dims += *chunk_dims;
-	h5::set_extent(ds, current_dims);
-	visit_pipeline([&](auto& p){ p.write_chunk(offset, block_size, ptr); });
+	h5::impl::on_collector([&]{   // serialize the HDF5 chunk flush under the global lock (MT)
+		h5::set_extent(ds, current_dims);
+		visit_pipeline([&](auto& p){ p.write_chunk(offset, block_size, ptr); });
+	});
 } catch( const std::runtime_error& err ){
 	throw h5::error::io::dataset::append( err.what() );
 }
@@ -232,16 +237,18 @@ inline void h5::pt_t::append( const std::string& ref ) {
 
 	*offset = *current_dims;
 	*current_dims += *chunk_dims;
-	h5::set_extent(ds, current_dims);
+	h5::impl::on_collector([&]{   // serialize the variable-length flush under the global lock (MT)
+		h5::set_extent(ds, current_dims);
 
-	hsize_t block = 1, count = n;
-	h5::sp_t mem_space{H5Screate_simple(static_cast<int>(rank), &count, nullptr )};
-	h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
-	h5::select_all( mem_space );
-	H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, nullptr, &block, &count);
-	
-	H5Dwrite( static_cast<hid_t>( ds ), 
-		dt, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr);
+		hsize_t block = 1, count = n;
+		h5::sp_t mem_space{H5Screate_simple(static_cast<int>(rank), &count, nullptr )};
+		h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
+		h5::select_all( mem_space );
+		H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, nullptr, &block, &count);
+
+		H5Dwrite( static_cast<hid_t>( ds ),
+			dt, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr);
+	});
 	n = 0;
 }
 template <>
@@ -251,16 +258,18 @@ inline void h5::pt_t::append( const char* ref ) {
 
 	*offset = *current_dims;
 	*current_dims += *chunk_dims;
-	h5::set_extent(ds, current_dims);
+	h5::impl::on_collector([&]{   // serialize the variable-length flush under the global lock (MT)
+		h5::set_extent(ds, current_dims);
 
-	hsize_t block = 1, count = n;
-	h5::sp_t mem_space{H5Screate_simple(static_cast<int>(rank), &count, nullptr )};
-	h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
-	h5::select_all( mem_space );
-	H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, NULL, &block, &count);
+		hsize_t block = 1, count = n;
+		h5::sp_t mem_space{H5Screate_simple(static_cast<int>(rank), &count, nullptr )};
+		h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
+		h5::select_all( mem_space );
+		H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, NULL, &block, &count);
 
-	H5Dwrite( static_cast<hid_t>( ds ),
-		dt, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr);
+		H5Dwrite( static_cast<hid_t>( ds ),
+			dt, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr);
+	});
 	n = 0;
 }
 
@@ -274,8 +283,10 @@ void> h5::pt_t::append( const T& ref ) try {
 	n = 0;
 	*offset = *current_dims;
 	*current_dims += *chunk_dims;
-	h5::set_extent(ds, current_dims);
-	visit_pipeline([&](auto& p){ p.write_chunk(offset, block_size, ptr); });
+	h5::impl::on_collector([&]{   // serialize the HDF5 chunk flush under the global lock (MT)
+		h5::set_extent(ds, current_dims);
+		visit_pipeline([&](auto& p){ p.write_chunk(offset, block_size, ptr); });
+	});
 } catch( const std::runtime_error& err ){
 	throw h5::error::io::dataset::append( err.what() );
 }
@@ -294,10 +305,11 @@ void> h5::pt_t::append( const T& ref ) try {
 
 	*offset = *current_dims;
 	*current_dims += 1;
-	h5::set_extent(ds, current_dims);
 	auto ptr_ = meta::data( ref );
 	auto dims_ = meta::size( ref );
 
+	h5::impl::on_collector([&]{   // serialize the HDF5 chunk flush under the global lock (MT)
+	h5::set_extent(ds, current_dims);
 	switch( dims_.size() ){
 		case 1: // vector
 			if( dims[0] * element_size == block_size )
@@ -323,6 +335,7 @@ void> h5::pt_t::append( const T& ref ) try {
 		default:
 			throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("objects with rank > 2 are not supported... "));
 	}
+	}); // on_collector
 	} // end else (non-iterator path)
 } catch( const std::runtime_error& err ){
 	throw h5::error::io::dataset::append( err.what() );
@@ -330,6 +343,10 @@ void> h5::pt_t::append( const T& ref ) try {
 
 inline
 void h5::pt_t::flush(){
+	// Whole flush — the trailing partial-chunk write AND the pool drain (which
+	// issues H5Dwrite_chunk for in-flight compressed chunks) — runs under the
+	// global HDF5 lock when built MT; no-op pass-through in a classic build.
+	h5::impl::on_collector([&]{
 	if( n != 0 ) {
 		*offset = *current_dims;
 		*current_dims += *chunk_dims;
@@ -361,6 +378,7 @@ void h5::pt_t::flush(){
 		if constexpr (std::is_same_v<T, impl::pool_pipeline_t>)
 			p->drain();
 	}, pipeline);
+	});
 }
 
 inline void h5::pt_t::reset() {

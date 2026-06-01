@@ -1081,7 +1081,7 @@ namespace h5 {
 	template<class T, class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>>
 	inline T read( hid_t fd, const std::string& dataset_path, args_t&&... args ){
-		return h5::impl::on_collector([&]() -> T {   // MT: read runs on the one global collector thread
+		return h5::impl::on_collector([&]() -> T {   // MT: read runs under the process-global HDF5 lock
 			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
 			h5::ds_t ds = h5::open(fd, dataset_path, dapl );
 			return ::h5::read<T>(ds, args...);
@@ -1095,7 +1095,7 @@ namespace h5 {
 	template<class T, class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>>
 	inline T read( const h5::fd_t& fd, const std::string& dataset_path, args_t&&... args ){
-		return h5::impl::on_collector([&]() -> T {   // MT: read runs on the one global collector thread
+		return h5::impl::on_collector([&]() -> T {   // MT: read runs under the process-global HDF5 lock
 			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
 			h5::ds_t ds = h5::open(fd, dataset_path, dapl );
 			return ::h5::read<T>(ds, args...);
@@ -1133,7 +1133,7 @@ namespace h5 {
 	template<class T, class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>> // dispatch to above
 	inline T read(const std::string& file_path, const std::string& dataset_path, args_t&&... args ){
-		return h5::impl::on_collector([&]() -> T {   // MT: whole open+read+close on the one collector thread
+		return h5::impl::on_collector([&]() -> T {   // MT: whole open+read+close under the process-global HDF5 lock
 			h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR );
 			return ::h5::read<T>( fd, dataset_path, args...);
 		});

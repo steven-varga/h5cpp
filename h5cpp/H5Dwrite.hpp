@@ -616,7 +616,7 @@ namespace h5 {
 	// generic gateway.
 	template <std::size_t N, class... args_t>
 	inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const char (&ref)[N], args_t&&... args ){
-	  return h5::impl::on_collector([&]() -> h5::ds_t {   // MT: run the whole gateway on the global collector thread
+	  return h5::impl::on_collector([&]() -> h5::ds_t {   // MT: run the whole gateway under the process-global HDF5 lock
 		h5::ds_t ds;
 		h5::mute();
 			bool is_dataset_present = H5Lexists(static_cast<hid_t>(fd), dataset_path.c_str(), H5P_DEFAULT) > 0;
@@ -644,7 +644,7 @@ namespace h5 {
 
 	template <class T, class... args_t>
 	inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T* ptr,  args_t&&... args  ){
-	  return h5::impl::on_collector([&]() -> h5::ds_t {   // MT: run the whole gateway on the global collector thread
+	  return h5::impl::on_collector([&]() -> h5::ds_t {   // MT: run the whole gateway under the process-global HDF5 lock
 		using tcount  = typename arg::tpos<const h5::count_t&, const args_t&...>;
 		static_assert( tcount::present, "h5::count_t{ ... } must be provided to describe T* memory region" );
 		h5::ds_t ds; // initialized to H5I_UNINIT
@@ -721,7 +721,7 @@ namespace h5 {
 			class = std::enable_if_t<!std::is_pointer_v<std::decay_t<T>>
 			                      && !h5::meta::is_sparse_v<std::decay_t<T>>>>
 		inline h5::ds_t write( const h5::fd_t& fd, const std::string& dataset_path, const T& ref,  args_t&&... args  ){
-		  return h5::impl::on_collector([&]() -> h5::ds_t {   // MT: run the whole gateway on the global collector thread
+		  return h5::impl::on_collector([&]() -> h5::ds_t {   // MT: run the whole gateway under the process-global HDF5 lock
 			if constexpr (h5::has_scatter<std::decay_t<T>>::value) {
 				// Scatter path: compiler-generated scatter<T> handles open/create + row append.
 				// Call-site properties (chunk, compress, etc.) are ignored here; the generated
@@ -936,7 +936,7 @@ namespace h5 {
 
 	// (The separate async-fd write overloads are retired: under H5CPP_MULTITHREAD
 	// the single write(fd_t) gateways below are wrapped in h5::impl::on_collector,
-	// so the whole create+write+close runs on the one global collector thread —
+	// so the whole create+write+close runs under the process-global HDF5 lock —
 	// concurrency-safe for distinct datasets, with compression still fanning out to
 	// the worker pool.  In a classic build on_collector is a no-op pass-through.)
 }

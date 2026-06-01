@@ -195,7 +195,6 @@ endfunction()
 # Linalg examples
 # ------------------------------------------------------------------------------
 message( "-- Vendored: dlib library, added to examples" )
-add_h5cpp_example(async-pipeline async-pipeline/async_profile.cpp)
 
 ## multithreaded-pipeline — #287 async-vs-sync profiling harness (per-case execs)
 add_h5cpp_example(multithreaded-pipeline multithreaded-pipeline/pipeline.cpp

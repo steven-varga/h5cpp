@@ -27,7 +27,7 @@ namespace h5{
     inline h5::fd_t open(const std::string& path,  unsigned flags, const h5::fapl_t& fapl = h5::default_fapl ){
 		H5CPP_CHECK_PROP( fapl,  h5::error::io::file::create, "invalid file access property list" );
 
-        // MT: file open + registry attach on the one global collector thread (see
+        // MT: file open + registry attach under the process-global HDF5 lock (see
         // H5Fcreate.hpp).  No-op pass-through in a classic build.
         return h5::impl::on_collector([&]() -> h5::fd_t {
             hid_t fd;

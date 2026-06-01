@@ -103,8 +103,8 @@ add_test_case(H5Zszip)
 add_test_case(H5Zpipeline_parallel_read)
 add_test_case(H5Zgorilla)
 # add_test_case(H5Iall)
-add_test_case(H5async)        # Phase II scaffold lifecycle + submit_and_wait tests
-add_test_case(H5collector)        # #287 async write path + concurrent-writer safety
+add_test_case(H5async)        # #287 handle-conversion invariant + create/open lifecycle
+add_test_case(H5collector)        # #287 global-lock write path + concurrent-writer safety
 
 # ---------------------------------------------------------------------------
 # #286 — per-file worker-pool registry tests (slice D).

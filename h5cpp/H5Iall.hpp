@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 #include <tuple>
-#include <memory>      /* std::shared_ptr — async descriptor exec field */
+#include <memory>      /* std::shared_ptr (used by downstream impl headers) */
 #include <initializer_list>
 #include <mutex>       /* H5CPP_MULTITHREAD global HDF5 lock */
 
@@ -179,7 +179,7 @@ namespace h5::impl::detail {
 
 		// Relinquish the raw id WITHOUT closing it — the destructor becomes a
 		// no-op.  Used to build a non-owning borrowed view of a file id (e.g. to
-		// drive the sync write gateway on the async collector thread).
+		// drive the sync write gateway under the global HDF5 lock).
 		::hid_t release() noexcept { ::hid_t h = handle; handle = H5I_UNINIT; return h; }
 
 		protected:
@@ -188,12 +188,12 @@ namespace h5::impl::detail {
 
 	// Conversion-off backing — the hardened / H5CPP_MULTITHREAD boundary.  Same
 	// ownership semantics as the true,true backing; the ONLY differences are
-	// (1) operator ::hid_t() is *explicit* (no silent decay off the collector) and
-	// (2) under H5CPP_MULTITHREAD every close is routed onto the one global
-	// collector thread.  Layout is identical to the classic handle (a single
-	// ::hid_t) — NO fat member: the collector is a process-global singleton, so
-	// nothing needs to be carried per handle (this is the global-realignment
-	// payoff — the #286 per-file/fileno lookup and the carried shared_ptr are gone).
+	// (1) operator ::hid_t() is *explicit* (no silent decay off the lock) and
+	// (2) under H5CPP_MULTITHREAD every close is routed under the one global
+	// HDF5 lock.  Layout is identical to the classic handle (a single ::hid_t) —
+	// NO fat member: the lock is a process-global singleton, so nothing needs to
+	// be carried per handle (this is the global-realignment payoff — the #286
+	// per-file/fileno lookup and the carried shared_ptr are gone).
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, false,false,hdf5::any> {
 		using hidtype = T;

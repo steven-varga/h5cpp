@@ -52,9 +52,9 @@ namespace h5 { constexpr bool have_ros3_vfd = false; }
 
 // H5CPP_MULTITHREAD implies the conversion-off boundary: no descriptor may
 // implicitly decay to ::hid_t — that decay is exactly how a thread could grab
-// the raw id and call HDF5 directly, bypassing the process-global collector
-// thread.  Disabling TO/FROM-CAPI conversion makes "all HDF5 goes through
-// h5cpp -> through the one collector" a compile-time invariant.  This is why
+// the raw id and call HDF5 directly, bypassing the process-global HDF5 lock.
+// Disabling TO/FROM-CAPI conversion makes "all HDF5 goes through h5cpp ->
+// through the one global lock" a compile-time invariant.  This is why
 // the multithread handle and the hardened conversion-off handle are ONE backing.
 // (There is no contradictory "MT + conversion-on" state to diagnose: conversion
 // -on is merely the absence of these DISABLED macros, which MULTITHREAD defines.)
