@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2018-2020 Steven Varga, Toronto,ON Canada
+ * Copyright (c) 2018-2026 Steven Varga, Toronto,ON Canada
  * Author: Varga, Steven <steven@vargaconsulting.ca>
  */
 #pragma once
 #include "H5Pall.hpp"
+#include "H5io_registry.hpp"   // h5::impl::registry / file_key_of_file / resolve_worker_pool
 #include <string>
 
 /**
@@ -29,6 +30,14 @@ namespace h5{
         hid_t fd;
 	   	H5CPP_CHECK_NZ( (fd = H5Fopen(path.data(), flags,  static_cast<hid_t>(fapl))),
 			   h5::error::io::file::open, h5::error::msg::open_file );
+        // Register per-file worker pool while the original user fapl is still live.
+        // H5Fget_access_plist would return a stripped copy that drops user properties.
+        if (auto pool = h5::impl::resolve_worker_pool(static_cast<::hid_t>(fapl))) {
+            const unsigned cap = h5::impl::resolve_backpressure(
+                    static_cast<::hid_t>(fapl), pool->worker_count());
+            h5::impl::registry().attach(
+                    h5::impl::file_key_of_file(fd), std::move(pool), cap);
+        }
 		return  h5::fd_t{fd};
     }
 }

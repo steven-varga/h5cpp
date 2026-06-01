@@ -847,6 +847,12 @@ jobs:
             '*/examples/*' \
             --ignore-errors unused,mismatch,inconsistent \
             --output-file coverage.info
+          # NOTE: H5Zpipeline_pool.hpp is intentionally NOT excluded here.
+          # Issue #285 temporarily excluded it because the pool dispatch was
+          # unreachable (H5Fget_access_plist strips H5Pinsert2 properties).
+          # Issue #286 fixes activation via the fileno-keyed registry; the
+          # pool_pipeline_t path is now exercised by test-h5io_registry
+          # ([#286-reg-4]) and must appear in coverage reports.
 
           rm coverage.full.info
           lcov --gcov-tool /usr/bin/gcov-14 --list coverage.info

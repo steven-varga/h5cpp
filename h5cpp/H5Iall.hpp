@@ -13,6 +13,20 @@
 #include <memory>      /* std::shared_ptr — async descriptor exec field */
 #include <initializer_list>
 
+// Slice C (#286): forward-declare the registry helpers used by the RAII
+// close path to detach the file-pool entry on H5Fclose.  A direct
+// #include of H5io_registry.hpp here would introduce a cycle:
+//   H5Iall.hpp → H5io_registry.hpp → H5Pthreads.hpp → H5Pall.hpp
+//              → H5Tall.hpp → H5Iall.hpp
+// The aggregator (h5cpp/core, h5cpp/all) includes H5io_registry.hpp
+// after H5Iall.hpp, where the inline definitions are satisfied.
+// registry_detach_file() is a thin free-function shim defined in
+// H5io_registry.hpp; forward-declaring it here avoids requiring the
+// complete type of io_registry_t.
+namespace h5::impl {
+    void registry_detach_file(::hid_t file_id);
+}
+
 #ifdef H5CPP_CONVERSION_IMPLICIT
 	#define H5CPP__EXPLICIT
 #else
@@ -95,8 +109,10 @@ namespace h5::impl::detail {
 		}
 		hid_t& operator =( const hid_t& ref) {
             if (this == &ref) return *this;
-            if( H5Iis_valid( handle ) )
+            if( H5Iis_valid( handle ) ) {
+                h5::impl::registry_detach_file( handle );
                 capi_close( handle );
+            }
 			handle = ref.handle;
 			if( H5Iis_valid( handle ) )
 				H5Iinc_ref( handle );
@@ -104,8 +120,10 @@ namespace h5::impl::detail {
 		}
         hid_t& operator =( hid_t&& ref) {
             if (this == &ref) return *this;
-            if( H5Iis_valid( handle ) )
+            if( H5Iis_valid( handle ) ) {
+                h5::impl::registry_detach_file( handle );
                 capi_close( handle );
+            }
 			handle = ref.handle;
             ref.handle = H5I_UNINIT;
 			return *this;
@@ -116,8 +134,10 @@ namespace h5::impl::detail {
 			ref.handle = H5I_UNINIT;
 		}
 		~hid_t(){
-			if( H5Iis_valid( handle ) )
+			if( H5Iis_valid( handle ) ) {
+                h5::impl::registry_detach_file( handle );
 				capi_close( handle );
+            }
 		}
 		protected:
 		::hid_t handle;

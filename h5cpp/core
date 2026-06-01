@@ -65,6 +65,7 @@
 	#include "H5Zpipeline_basic.hpp"
 	#include "H5Pdapl.hpp"
 	#include "H5Pthreads.hpp"
+	#include "H5io_registry.hpp"
 	#include "H5Zpipeline_pool.hpp"
 	#include "H5executor.hpp"
 	#include "H5Pfapl_async.hpp"
