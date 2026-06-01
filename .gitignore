@@ -159,3 +159,4 @@ data/
 # Documentation build output
 # =============================================================================
 doxy/docs/doxygen/
+doxy/*.log

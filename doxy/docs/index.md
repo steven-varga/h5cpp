@@ -155,9 +155,9 @@ dashboard:
 
 | OS / Compiler | GCC 13 | GCC 14 | Clang 17–20 | Apple Clang | MSVC |
 | :------------ | :----: | :----: | :---------: | :---------: | :--: |
-| Ubuntu 22.04 / 24.04 | ✔ | ✔ | ✔ | — | — |
-| macOS 15 arm64 | — | — | — | ✔ | — |
-| Windows | — | — | — | — | ✔ |
+| Ubuntu 22.04 / 24.04 | ✔ | ✔ | ✔ | ∅ | ∅ |
+| macOS 15 arm64 | ∅ | ∅ | ∅ | ✔ | ∅ |
+| Windows | ∅ | ∅ | ∅ | ∅ | ✔ |
 
 - **Live test dashboard** → <https://my.cdash.org/index.php?project=h5cpp>
 - **Coverage** → <https://app.codecov.io/gh/vargalabs/h5cpp/tree/release>
@@ -223,8 +223,7 @@ material. Topics covered include compiler-assisted reflection, POD introspection
 | **h5cpp-compiler** | <https://github.com/vargalabs/h5cpp-compiler> |
 | **License** | MIT |
 | **Citation** | [Zenodo DOI 10.5281/zenodo.20123216](https://doi.org/10.5281/zenodo.20123216) |
-| **Contact** | Steven Varga &middot; <steven@vargaconsulting.ca> &middot; <https://steven-varga.ca/> |
-| **Contributing** | `CONTRIBUTING.md` in the repository |
+| **Contact** | Steven Varga &middot; <steven@vargalabs.com> &middot; <https://steven-varga.ca/> |
 
 ---
 
