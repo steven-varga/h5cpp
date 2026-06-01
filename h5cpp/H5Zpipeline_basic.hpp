@@ -79,8 +79,17 @@ inline void h5::impl::basic_pipeline_t::read_chunk_impl( const hsize_t* offset, 
 	// After the loop 'src' always points to chunk0 (the decompressed result).
 	void* read_target = (tail % 2 == 1) ? chunk1 : chunk0;
 #if H5_VERSION_GE(2,0,0)
-	size_t buf_size = nbytes;
+	// buf_size is IN (buffer capacity) / OUT (stored chunk bytes).  Pass the real
+	// scratch-bound capacity, NOT nbytes: an EXPANDING filter (e.g. fletcher32 adds a
+	// 4-byte checksum) stores a chunk LARGER than the uncompressed nbytes, and 2.x
+	// H5Dread_chunk2 fails if the declared capacity is smaller than the stored chunk.
+	size_t buf_size = filter::filter_scratch_bound(nbytes);
 	H5Dread_chunk2(static_cast<::hid_t>(ds), dxpl, offset, &filter_mask, read_target, &buf_size);
+	// H5Dread_chunk2 returns the COMPRESSED byte count in buf_size; the reverse
+	// filter must start from that, not the uncompressed `nbytes`.  Pre-2.0 H5Dread_chunk
+	// gave no size and the deflate stream self-terminated, so `nbytes` happened to
+	// work; HDF5 2.x is strict and decodes garbage / fails unless we use buf_size.
+	length = buf_size;
 #else
 	H5Dread_chunk(static_cast<::hid_t>(ds), dxpl, offset, &filter_mask, read_target);
 #endif
@@ -88,11 +97,19 @@ inline void h5::impl::basic_pipeline_t::read_chunk_impl( const hsize_t* offset, 
 	void* src = read_target;
 	void* dst = (read_target == chunk0) ? static_cast<void*>(chunk1) : static_cast<void*>(chunk0);
 
-	// Apply filters in reverse order (highest index first) with H5Z_FLAG_REVERSE
+	// Apply filters in reverse order (highest index first) with H5Z_FLAG_REVERSE.
+	// HONOUR filter_mask: a set bit means HDF5 stored the chunk WITHOUT that filter
+	// (e.g. deflate skipped a chunk where compression didn't pay — HDF5 2.x does this
+	// more readily than 1.x).  Reversing a filter that was never applied corrupts the
+	// data, so for a masked filter we pass the bytes through unchanged (still swapping
+	// to keep the ping-pong parity that lands the result in chunk0).
 	for (hsize_t j = tail; j > 0; --j) {
 		const hsize_t fi = j - 1;
-		length = filter[fi](dst, src, length,
-			flags[fi] | H5Z_FLAG_REVERSE, cd_size[fi], cd_values[fi]);
+		if (filter_mask & (1u << fi))
+			std::memcpy(dst, src, length);
+		else
+			length = filter[fi](dst, src, length,
+				flags[fi] | H5Z_FLAG_REVERSE, cd_size[fi], cd_values[fi]);
 		void* tmp = src; src = dst; dst = tmp;
 	}
 	// src now points to chunk0, which holds the decompressed chunk data
