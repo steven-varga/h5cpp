@@ -226,6 +226,30 @@ if(MSVC)
     target_compile_options(h5cpp INTERFACE /Zc:__cplusplus)
 endif()
 
+# The h5cpp-compiler reflection annotations ([[h5::doc]], [[h5::chunk]],
+# [[h5::compress]], [[h5::name]], [[h5::ignore]], ...) live in the `h5::`
+# attribute namespace. A plain compiler — i.e. one not running the h5cpp-compiler
+# preprocessing pass — does not know that namespace, ignores the attributes, and
+# emits -Wattributes for every annotated struct. Declare the namespace
+# intentional so consumers that annotate their own types build cleanly. Scoped
+# to `h5::` where the compiler supports it (GCC 11+); Clang/older GCC fall back
+# to the broader unknown-attribute switch; MSVC silences C5030.  Guarded by
+# check_cxx_compiler_flag so unsupported toolchains are left untouched. (#291)
+if(MSVC)
+    target_compile_options(h5cpp INTERFACE /wd5030)
+else()
+    include(CheckCXXCompilerFlag)
+    check_cxx_compiler_flag("-Wno-attributes=h5::" H5CPP_HAS_WNO_ATTRIBUTES_NS)
+    if(H5CPP_HAS_WNO_ATTRIBUTES_NS)
+        target_compile_options(h5cpp INTERFACE -Wno-attributes=h5::)
+    else()
+        check_cxx_compiler_flag("-Wno-unknown-attributes" H5CPP_HAS_WNO_UNKNOWN_ATTRIBUTES)
+        if(H5CPP_HAS_WNO_UNKNOWN_ATTRIBUTES)
+            target_compile_options(h5cpp INTERFACE -Wno-unknown-attributes)
+        endif()
+    endif()
+endif()
+
 if(H5CPP_HAVE_ROS3_VFD)
     target_compile_definitions(h5cpp INTERFACE H5CPP_HAVE_ROS3_VFD=1)
 endif()
