@@ -158,6 +158,26 @@ else()
     message(STATUS "H5CPP: ROS3 VFD not found — S3 support disabled")
 endif()
 
+# ─── SWMR (Single-Writer/Multiple-Reader) — issue #267 ────────────────────────────
+# Single-Writer/Multiple-Reader support is Linux-only in this release and requires
+# HDF5 >= 1.12.3 (the patch level mitigates the pre-1.14 dense-attribute SWMR
+# visibility bug; see SWMR.md §8.5).  The runtime feature gate inside the headers
+# keys on the HDF5 feature macros (H5F_ACC_SWMR_WRITE / H5F_ACC_SWMR_READ),
+# mirroring the ROS3-v2 FAPL gating pattern — NOT on H5_VERSION_GE.  CMake's job
+# here is only to (a) hard-fail when the HDF5 floor is too low on a Linux build
+# that pulls SWMR headers, and (b) surface an informational status line.
+set(H5CPP_SWMR_HDF5_FLOOR "1.12.3")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    if(HDF5_VERSION VERSION_LESS ${H5CPP_SWMR_HDF5_FLOOR})
+        message(FATAL_ERROR
+            "h5cpp SWMR (#267) requires HDF5 >= ${H5CPP_SWMR_HDF5_FLOOR}, found ${HDF5_VERSION}")
+    endif()
+    set(H5CPP_HAS_SWMR TRUE)
+    message(STATUS "H5CPP: SWMR support enabled (Linux, HDF5 ${HDF5_VERSION})")
+else()
+    message(STATUS "H5CPP: SWMR support disabled (Linux-only; CMAKE_SYSTEM_NAME=${CMAKE_SYSTEM_NAME})")
+endif()
+
 option(H5CPP_NETWORK_TESTS "Enable network-dependent tests (requires outbound S3 access)" OFF)
 
 # ─── MPI (optional) ───────────────────────────────────────────────────────────────
@@ -252,6 +272,13 @@ endif()
 
 if(H5CPP_HAVE_ROS3_VFD)
     target_compile_definitions(h5cpp INTERFACE H5CPP_HAVE_ROS3_VFD=1)
+endif()
+
+# SWMR build flag (#267) — only set on Linux with a recent-enough HDF5.  The
+# header-only feature gate (H5CPP_HAS_SWMR) additionally keys on the HDF5
+# feature macros, so this define alone does not force the feature on.
+if(H5CPP_HAS_SWMR)
+    target_compile_definitions(h5cpp INTERFACE H5CPP_SWMR_BUILD=1)
 endif()
 
 if(H5CPP_LIBDEFLATE_FOUND)

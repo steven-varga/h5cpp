@@ -72,6 +72,7 @@ namespace h5 {
             this->element_size = pt.element_size;
             this->N = pt.N; this->n = pt.n; this->rank = pt.rank;
             this->ptr = pt.ptr;  this->fill_value = pt.fill_value;
+            this->swmr_write_ = pt.swmr_write_;
 
             pt.ptr = nullptr; pt.fill_value = nullptr;
             pt.N=0; pt.n=0; pt.rank=0;
@@ -89,6 +90,7 @@ namespace h5 {
 		template<class T>
 		friend void append( h5::pt_t& ds, const T* ptr);
 		friend void flush(h5::pt_t&);
+		friend h5::current_dims_t get_extent(const h5::pt_t&);
 		// resets the packet-table dimension tracker so the same pt_t can be reused
 		// for a fresh logical session (e.g. start-of-day re-init in streaming sinks).
 		void reset();
@@ -125,6 +127,12 @@ namespace h5 {
 			chunk_dims[H5CPP_MAX_RANK], count[H5CPP_MAX_RANK];
 		size_t block_size,element_size,N,n,rank;
 		void *ptr, *fill_value;
+
+		// SWMR-write detection (issue #267). When a packet table owns its
+		// dataset the user holds no h5::ds_t to flush, so flush(pt) must issue
+		// the SWMR metadata flush itself. Resolved once in init() from the
+		// file's access intent; gates a single H5Dflush in flush().
+		bool swmr_write_{false};
 
 		// Phase 1.3.3 — chunk dispatch is uniform across all variant
 		// alternatives via visit_pipeline + write_chunk.  pool_pipeline_t
@@ -191,6 +199,16 @@ void h5::pt_t::init( const h5::ds_t& handle ){
 			}
 		}
 
+#if defined(H5F_ACC_SWMR_WRITE) && defined(H5F_ACC_SWMR_READ)
+		// Issue #267: detect SWMR-write once so flush(pt) can make appends
+		// visible without the caller holding a separate ds_t. Non-SWMR packet
+		// tables leave the flag false and pay only a branch in flush().
+		{
+			unsigned intent = 0;
+			if( H5Fget_intent(fid, &intent) >= 0 )
+				swmr_write_ = (intent & H5F_ACC_SWMR_WRITE) != 0;
+		}
+#endif
 		H5Fclose(fid);
 		dt = h5::dt_t<void>{H5Dget_type(static_cast<hid_t>(ds))};
 		h5::sp_t file_space = h5::get_space( handle );
@@ -361,6 +379,32 @@ void h5::pt_t::flush(){
 		if constexpr (std::is_same_v<T, impl::pool_pipeline_t>)
 			p->drain();
 	}, pipeline);
+
+#if defined(H5F_ACC_SWMR_WRITE) && defined(H5F_ACC_SWMR_READ)
+	// Issue #267: when the file is open SWMR-write, make every append since the
+	// last flush visible to readers now. Deliberately outside the n!=0 guard —
+	// append() auto-writes full chunks, which still need the metadata flush.
+	// flush(pt) is thus the complete writer-side SWMR call; no separate
+	// h5::flush(ds) is required (and the packet-table user has no ds_t anyway).
+	//
+	// swmr_write_ latches ON once true: in the create-then-transition idiom the
+	// packet table is constructed BEFORE h5::start_swmr_write(fd), so init() saw
+	// a non-SWMR file. We re-probe intent each flush WHILE still false (SWMR can
+	// be turned on between flushes), and stop the moment it latches true. flush()
+	// is not the per-element hot path (append() is), and H5Fget_intent does no
+	// I/O, so a non-SWMR packet table pays only a cheap intent probe per flush.
+	if( !swmr_write_ && h5::is_valid(ds) ){
+		hid_t fid = H5Iget_file_id(static_cast<hid_t>(ds));
+		if( fid >= 0 ){
+			unsigned intent = 0;
+			if( H5Fget_intent(fid, &intent) >= 0 )
+				swmr_write_ = (intent & H5F_ACC_SWMR_WRITE) != 0;
+			H5Fclose(fid);
+		}
+	}
+	if( swmr_write_ && h5::is_valid(ds) )
+		H5Dflush(static_cast<hid_t>(ds));
+#endif
 }
 
 inline void h5::pt_t::reset() {
@@ -463,6 +507,18 @@ namespace h5 {
 		// for now
 	} catch ( const std::runtime_error& e){
 		throw h5::error::io::dataset::close( e.what() );
+	}
+
+	/**
+	 * @brief Returns the current (committed) extent of the packet table's dataset —
+	 *        the pt_t counterpart of `h5::get_extent(ds)`.
+	 *
+	 * Reports the on-disk dataset extent: full chunks written so far. Records
+	 * buffered since the last full chunk are not counted until `h5::flush(pt)`
+	 * commits them. For a rank-1 stream `h5::get_extent(pt)[0]` is the length.
+	 */
+	inline h5::current_dims_t get_extent(const h5::pt_t& pt) {
+		return h5::get_extent( pt.ds );
 	}
 
 	/**

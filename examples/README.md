@@ -27,6 +27,7 @@ Each h5cpp example ships a `README.md` that explains *why* the code looks the wa
 - @subpage example_guide_optimized — performance-tuned write paths
 - @subpage example_guide_raw_memory — raw pointer overloads
 - @subpage example_guide_packet_table — packet table (append) interface
+- @subpage example_guide_swmr — SWMR single-writer/multiple-reader streaming (Linux-only)
 - @subpage example_guide_custom_pipeline — custom filter pipeline composition
 
 ## Tooling & debugging

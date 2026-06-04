@@ -31,5 +31,13 @@
 	#include "H5Dranges.hpp"
 
 	#include "H5Mmemory_io.hpp"   /* smart_ptr<T[]> forwarding overloads of h5::write / h5::read */
+
+	/* SWMR (Single-Writer/Multiple-Reader) — issue #267.  Linux-only; the
+	 * headers themselves #error on non-Linux, so they are only pulled in under
+	 * __linux__.  Each header further compiles out unless the HDF5 build exposes
+	 * the SWMR feature macros (H5CPP_HAS_SWMR). */
+#ifdef __linux__
+	#include "H5Fswmr.hpp"        /* swmr_write_t / swmr_read_t tags + feature gate */
+#endif
 #endif
 

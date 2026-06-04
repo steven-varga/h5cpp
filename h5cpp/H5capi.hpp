@@ -147,6 +147,14 @@ namespace h5 {
 		H5CPP_CHECK_NZ(
 				H5Dset_extent( static_cast<hid_t>(ds), dims ),std::runtime_error,	 h5::error::msg::set_extent);
 	}
+	/** @brief Returns the current extent (dimensions) of a dataset — the read-side
+	 *  mirror of `h5::set_extent`. For a rank-1 dataset `h5::get_extent(ds)[0]` is the
+	 *  length; `static_cast<hsize_t>(h5::get_extent(ds))` is the total element count. */
+	inline h5::current_dims_t get_extent( const h5::ds_t& ds ){
+		h5::current_dims_t current_dims;
+		h5::get_simple_extent_dims( h5::get_space(ds), current_dims );
+		return current_dims;
+	}
 	template <class T>
 	inline void writeds(const h5::ds_t& ds,
 			const h5::dt_t<T>& file_type, const h5::sp_t& mem_space, const h5::sp_t& file_space,
