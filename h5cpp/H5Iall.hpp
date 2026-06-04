@@ -21,13 +21,6 @@
 //              → H5Tall.hpp → H5Iall.hpp
 // The aggregator (h5cpp/core, h5cpp/all) includes H5io_registry.hpp
 // after H5Iall.hpp, where the inline definitions are satisfied.
-// registry_detach_file() is a thin free-function shim defined in
-// H5io_registry.hpp; forward-declaring it here avoids requiring the
-// complete type of io_registry_t.
-namespace h5::impl {
-    void registry_detach_file(::hid_t file_id);
-}
-
 #ifdef H5CPP_CONVERSION_IMPLICIT
 	#define H5CPP__EXPLICIT
 #else
@@ -134,7 +127,6 @@ namespace h5::impl::detail {
             if (this == &ref) return *this;
             h5::impl::capi_lock _lk;
             if( H5Iis_valid( handle ) ) {
-                h5::impl::registry_detach_file( handle );
                 capi_close( handle );
             }
 			handle = ref.handle;
@@ -146,7 +138,6 @@ namespace h5::impl::detail {
             if (this == &ref) return *this;
             h5::impl::capi_lock _lk;
             if( H5Iis_valid( handle ) ) {
-                h5::impl::registry_detach_file( handle );
                 capi_close( handle );
             }
 			handle = ref.handle;
@@ -161,7 +152,6 @@ namespace h5::impl::detail {
 		~hid_t(){
 			h5::impl::capi_lock _lk;
 			if( H5Iis_valid( handle ) ) {
-                h5::impl::registry_detach_file( handle );
 				capi_close( handle );
             }
 		}
@@ -263,17 +253,14 @@ namespace h5::impl::detail {
 
 	private:
 		// Route the close: under H5CPP_MULTITHREAD through the global HDF5 lock
-		// (close_global also does the #286 registry detach on the last file ref);
-		// otherwise the classic direct close.  The MT branch does H5Iis_valid INSIDE
-		// the lock — never an unlocked C-API call.
+		// (close_global does H5Iis_valid INSIDE the lock — never an unlocked
+		// C-API call); otherwise the classic direct close.
 		void close_() noexcept {
 #ifdef H5CPP_MULTITHREAD
 			if( handle > 0 ) h5::impl::close_global( handle, capi_close );
 #else
-			if( H5Iis_valid( handle ) ) {
-				h5::impl::registry_detach_file( handle );
+			if( H5Iis_valid( handle ) )
 				capi_close( handle );
-			}
 #endif
 		}
 	};

@@ -116,7 +116,6 @@ add_test_case(H5collector)        # #287 global-lock write path + concurrent-wri
 #   4. regression: pool ENGAGES  (write with h5::threads{N}+h5::high_throughput
 #      resolves a non-null pool from the registry at the H5Dwrite dispatch site)
 # ---------------------------------------------------------------------------
-add_test_case(H5io_registry)
 
 # ---------------------------------------------------------------------------
 # #286 — FAPL/DAPL/fileno behaviour probes (plain C, acceptance criteria).

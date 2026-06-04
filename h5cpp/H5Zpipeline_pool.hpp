@@ -126,27 +126,26 @@ inline void pool_pipeline_t::write_chunk_impl(const hsize_t* offset_in,
         // through to the synchronous filter chain identical to
         // basic_pipeline_t::write_chunk_impl.  This branch shouldn't be
         // reached in normal use; it exists to keep the variant safe.
-        size_t length = nbytes;
-        void *in = chunk0, *out = chunk1, *tmp = chunk0;
-        std::uint32_t mask = 0;
-        switch (tail) {
-            case 0:
-                H5Dwrite_chunk(static_cast<::hid_t>(ds), static_cast<::hid_t>(dxpl),
-                               0, offset_in, nbytes, src);
-                return;
-            case 1:
-                length = filter[0](out, src, nbytes, flags[0], cd_size[0], cd_values[0]);
-                if (!length) mask = 1u;
-                [[fallthrough]];
-            default:
-                for (hsize_t j = 1; j < tail; ++j) {
-                    tmp = in; in = out; out = tmp;
-                    length = filter[j](out, in, length, flags[j], cd_size[j], cd_values[j]);
-                    if (!length) mask |= (1u << j);
-                }
-                H5Dwrite_chunk(static_cast<::hid_t>(ds), static_cast<::hid_t>(dxpl),
-                               mask, offset_in, length, out);
+        if (tail == 0) {
+            H5Dwrite_chunk(static_cast<::hid_t>(ds), static_cast<::hid_t>(dxpl),
+                           0, offset_in, nbytes, src);
+            return;
         }
+        // Skip-aware ping-pong (see basic_pipeline_t::write_chunk_impl, #287): a
+        // filter returning 0 keeps the data + length, sets its mask bit.
+        if (src != chunk0) std::memcpy(chunk0, src, nbytes);
+        void*         bufs[2] = { chunk0, chunk1 };
+        int           cur = 0;
+        std::size_t   length = nbytes;
+        std::uint32_t mask = 0;
+        for (hsize_t j = 0; j < tail; ++j) {
+            int nxt = cur ^ 1;
+            std::size_t n = filter[j](bufs[nxt], bufs[cur], length, flags[j], cd_size[j], cd_values[j]);
+            if (n == 0) mask |= (1u << j);
+            else { cur = nxt; length = n; }
+        }
+        H5Dwrite_chunk(static_cast<::hid_t>(ds), static_cast<::hid_t>(dxpl),
+                       mask, offset_in, length, bufs[cur]);
         return;
     }
 
@@ -188,24 +187,26 @@ inline void pool_pipeline_t::write_chunk_impl(const hsize_t* offset_in,
             auto wbuf0 = std::make_unique<std::byte[]>(scratch);
             auto wbuf1 = std::make_unique<std::byte[]>(scratch);
 
-            std::size_t   length = nbytes;
-            std::uint32_t mask   = 0;
-
-            length = fc.filter[0](wbuf0.get(), raw.get(), length,
-                                  fc.flags[0], fc.cd_size[0], fc.cd_values[0]);
-            if (!length) mask |= 1u;
-
-            void* in_buf  = wbuf0.get();
-            void* out_buf = wbuf1.get();
-            for (hsize_t j = 1; j < fc.tail; ++j) {
-                length = fc.filter[j](out_buf, in_buf, length,
-                                      fc.flags[j], fc.cd_size[j], fc.cd_values[j]);
-                if (!length) mask |= (1u << j);
-                std::swap(in_buf, out_buf);
+            std::uint32_t mask = 0;
+            // A filter returning 0 (e.g. deflate on incompressible data) is SKIPPED:
+            // its mask bit is set and the data passes through UNCHANGED, so the
+            // running buffer + length must stay put rather than collapse to a
+            // 0-length chunk (which reads back as garbage).  Mirrors
+            // basic_pipeline_t::write_chunk_impl.  #287.
+            std::memcpy(wbuf0.get(), raw.get(), nbytes);
+            std::byte*  bufs[2] = { wbuf0.get(), wbuf1.get() };
+            int         cur = 0;
+            std::size_t length = nbytes;
+            for (hsize_t j = 0; j < fc.tail; ++j) {
+                int nxt = cur ^ 1;
+                std::size_t n = fc.filter[j](bufs[nxt], bufs[cur], length,
+                                             fc.flags[j], fc.cd_size[j], fc.cd_values[j]);
+                if (n == 0) mask |= (1u << j);
+                else { cur = nxt; length = n; }
             }
 
             out.data = std::make_unique<std::byte[]>(length);
-            std::memcpy(out.data.get(), in_buf, length);
+            std::memcpy(out.data.get(), bufs[cur], length);
             out.nbytes = length;
             out.mask   = mask;
             return out;

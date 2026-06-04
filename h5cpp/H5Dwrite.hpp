@@ -87,48 +87,85 @@ namespace h5 {
 
 		int rank = h5::get_simple_extent_ndims( file_space );
 		hsize_t n_elements = static_cast<hsize_t>(count);
-		hid_t dapl = h5::get_access_plist( ds );
+		// Resolve threads{N} from the dataset's REAL access plist, not ds.dapl — that
+		// member caches the open-time hid_t, which dangles once a temporary dapl
+		// (h5::open(fd, name, h5::threads{N})) is destroyed.  See H5Dread.hpp.  #287.
+		hid_t dapl = H5Dget_access_plist( static_cast<hid_t>(ds) );
+		const unsigned dapl_threads = h5::impl::resolve_dataset_threads(dapl);
+		const unsigned dapl_cap = dapl_threads
+			? h5::impl::resolve_dataset_backpressure(dapl, dapl_threads) : 0u;
+		if (dapl >= 0) H5Pclose(dapl);
 		herr_t err = 0;
 
-		// The high_throughput pipeline uses H5Dwrite_chunk, which requires a
-		// chunked dataset layout. Guard on H5D_CHUNKED so a DAPL with the flag
-		// applied to a contiguous/compact dataset falls through to standard
-		// H5Dwrite rather than triggering "not a chunked dataset" errors
-		// (which manifest as a SegFault on Windows MSVC, see #242 follow-up).
-		const bool use_pipeline = [&]() {
-			if (!H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGHPUT)) return false;
+		// ── Write-path dispatch (3 options) ──────────────────────────────────
+		//   1. CAPI hyperslab — h5::offset/stride/block present (COMPILE-TIME),
+		//      or a non-chunked dataset: HDF5's own chunk processor + filters.
+		//   2. direct chunk (DEFAULT) — no hyperslab, chunked, no h5::threads{N}:
+		//      basic_pipeline_t → H5Dwrite_chunk with h5cpp's filter chain.
+		//   3. parallel — no hyperslab, chunked, h5::threads{N} on the dataset's
+		//      DAPL: pool_pipeline_t fans compression across the global pool.
+		// Options 2/3 need H5D_CHUNKED (H5Dwrite_chunk); contiguous/compact falls
+		// to option 1 (also dodges the #242 MSVC SegFault).  Whether a hyperslab
+		// is selected is a COMPILE-TIME fact (tag presence), so a hyperslab write
+		// can never reach the pool — the exclusion is structural, no runtime guard.
+		constexpr bool hyperslab = toffset::present || tstride::present || tblock::present;
+		bool direct_chunk = false;
+		if constexpr (!hyperslab) {
 			hid_t dcpl_id = H5Dget_create_plist(static_cast<hid_t>(ds));
-			if (dcpl_id < 0) return false;
-			H5D_layout_t layout = H5Pget_layout(dcpl_id);
-			H5Pclose(dcpl_id);
-			return layout == H5D_CHUNKED;
-		}();
-		if( use_pipeline ){
-			const h5::block_t& block = arg::get( h5::default_block, args...);
+			if (dcpl_id >= 0) {
+				if (H5Pget_layout(dcpl_id) == H5D_CHUNKED) {
+					// Options 2/3 apply the filter chain in-process.  NBIT and
+					// SCALEOFFSET are HDF5-internal transforms h5cpp passes through
+					// (it relies on the C library to apply them); direct-chunk would
+					// write them UNFILTERED, so fall back to the CAPI path (option 1).
+					direct_chunk = true;
+					int nf = H5Pget_nfilters(dcpl_id);
+					for (int fi = 0; fi < nf; ++fi) {
+						size_t ne = 0; unsigned fl = 0, cfg = 0;
+						H5Z_filter_t id = H5Pget_filter2(dcpl_id, static_cast<unsigned>(fi),
+							&fl, &ne, nullptr, 0, nullptr, &cfg);
+						if (id == H5Z_FILTER_NBIT || id == H5Z_FILTER_SCALEOFFSET) {
+							direct_chunk = false; break;
+						}
+					}
+				}
+				H5Pclose(dcpl_id);
+			}
+		}
+		if( direct_chunk ){
+			const h5::block_t&  block  = arg::get( h5::default_block,  args...);
 			const h5::offset_t& offset = arg::get( h5::default_offset, args...);
 			const h5::stride_t& stride = arg::get( h5::default_stride, args...);
-
-			// Phase 1.3.3 / slice C (#286) — H5Fget_access_plist strips
-			// user properties, so resolve_worker_pool on a reconstructed
-			// FAPL always returns nullptr.  Look up the pool directly in
-			// the per-file registry, keyed by H5Fget_fileno.
-			const unsigned long fileno = h5::impl::file_key(static_cast<::hid_t>(ds));
-			auto pool = h5::impl::registry().resolve_pool(fileno);
-			if (pool) {
-				const unsigned cap = h5::impl::registry().resolve_cap(fileno);
-				h5::impl::pool_pipeline_t pipe(std::move(pool), cap);
-				// set_cache populates the filter chain from the dataset's DCPL.
-				h5::dcpl_t dcpl{H5Dget_create_plist(static_cast<hid_t>(ds))};
-				hid_t type_id  = H5Dget_type(static_cast<hid_t>(ds));
-				size_t elem_sz = H5Tget_size(type_id);
-				H5Tclose(type_id);
+			// A 1-D container written to an N-D chunked dataset arrives with a
+			// rank-1 count, but the buffer is a flat image of the full dataset —
+			// tile by the dataset's actual N-D dimensions so the chunk decomposition
+			// is correct (the stock CAPI path reshaped via the dataspace; the
+			// direct-chunk pipeline must be told the real dims).
+			h5::count_t eff_count = count;
+			if (count.rank < static_cast<unsigned>(rank)) {
+				hsize_t fd_dims[H5CPP_MAX_RANK];
+				H5Sget_simple_extent_dims(static_cast<hid_t>(file_space), fd_dims, nullptr);
+				eff_count.rank = static_cast<unsigned>(rank);
+				for (int i = 0; i < rank; i++) eff_count[i] = fd_dims[i];
+			}
+			// set_cache populates the filter chain from the dataset's DCPL — both
+			// pipelines need it before write() (the old DAPL pipeline had it
+			// cached at dataset-open; an inline one does not).
+			h5::dcpl_t dcpl{H5Dget_create_plist(static_cast<hid_t>(ds))};
+			hid_t type_id  = H5Dget_type(static_cast<hid_t>(ds));
+			size_t elem_sz = H5Tget_size(type_id);
+			H5Tclose(type_id);
+			// threads{N} lives on the dataset's DAPL — resolved up front from the real
+			// access plist (no #286 registry).
+			if (dapl_threads > 0) {                        // OPTION 3 — parallel
+				h5::impl::pool_pipeline_t pipe(h5::impl::global_pool_ptr(), dapl_cap);
 				pipe.set_cache(dcpl, elem_sz);
-				pipe.write(ds, offset, stride, block, count, dxpl, ptr);
-				// pipe destructor drains in_flight before pool refcount drop.
-			} else {
-				h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
-				H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
-				filters->write(ds, offset, stride, block, count, dxpl, ptr);
+				pipe.write(ds, offset, stride, block, eff_count, dxpl, ptr);
+				// pipe destructor drains in_flight before returning.
+			} else {                                       // OPTION 2 — direct chunk (default)
+				h5::impl::pipeline_t<impl::basic_pipeline_t> pipe;
+				pipe.set_cache(dcpl, elem_sz);
+				pipe.write(ds, offset, stride, block, eff_count, dxpl, ptr);
 			}
 		} else {
 			// Scalar dataspaces don't support hyperslab selection; H5Sselect_all

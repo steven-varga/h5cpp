@@ -42,19 +42,25 @@ inline void h5::impl::basic_pipeline_t::write_chunk_impl( const hsize_t* offset,
 		return;
 	}
 
-	// Ping-pong path for filters that require separate buffers.
-	void *in = chunk0, *out = chunk1, *tmp = chunk0;
-	length = filter[0](out, data, nbytes, flags[0], cd_size[0], cd_values[0]);
-	if( !length )
-		mask = 1 << 0;
-	for(hsize_t j=1; j<tail; j++){ // invariant: out == buffer holding final result
-		tmp = in, in = out, out = tmp;
-		length = filter[j](out, in, length, flags[j], cd_size[j], cd_values[j]);
-		if( !length )
-			mask |= 1 << j;
+	// Ping-pong path for filters that require separate buffers.  A filter that
+	// returns 0 (e.g. deflate on incompressible data that won't shrink, common
+	// for tiny chunks) is SKIPPED: its mask bit is set and the data passes through
+	// UNCHANGED.  The running buffer + length must therefore stay put — NOT collapse
+	// to a 0-length chunk (which writes an empty chunk that reads back as garbage).
+	// HDF5 honours the per-chunk mask on read and skips that filter's inverse.  #287.
+	if (data != chunk0) std::memcpy(chunk0, data, nbytes);
+	void* buf[2] = { chunk0, chunk1 };
+	int cur = 0;
+	length = nbytes;
+	for (hsize_t j = 0; j < tail; ++j) {
+		int nxt = cur ^ 1;
+		size_t n = filter[j](buf[nxt], buf[cur], length, flags[j], cd_size[j], cd_values[j]);
+		if (n == 0)
+			mask |= 1u << j;                    // skip — buffer + length unchanged
+		else { cur = nxt; length = n; }
 	}
 	// direct write available from > 1.10.4
-	H5Dwrite_chunk(static_cast<::hid_t>(ds), dxpl, mask, offset, length, out);
+	H5Dwrite_chunk(static_cast<::hid_t>(ds), dxpl, mask, offset, length, buf[cur]);
 }
 
 

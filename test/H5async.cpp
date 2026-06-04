@@ -99,41 +99,7 @@ TEST_CASE("[#287] h5::open round-trip on existing file") {
     std::remove(path);
 }
 
-TEST_CASE("[#287] file with h5::threads{N} FAPL round-trips") {
-    const char* path = "test-287-threads.h5";
-    std::remove(path);
-    {
-        h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC,
-                                 h5::default_fcpl,
-                                 h5::fapl_t{h5::threads{4}});
-        CHECK(H5Iis_valid(static_cast<::hid_t>(fd)));
-    }
-    std::remove(path);
-}
-
-// ===========================================================================
-// [#252 2.5] HDF5 1.10.9 regression doc — user FAPL properties don't survive
-// H5Fget_access_plist.  This documents *why* the worker pool is resolved from
-// the fileno registry rather than retrieved from the file's FAPL.
-// ===========================================================================
-
-TEST_CASE("[#252] HDF5 strips user-inserted FAPL properties on H5Fget_access_plist") {
-    // Build a FAPL with a user-inserted property (the worker pool property uses
-    // the same H5Pinsert2 mechanism).
-    h5::fapl_t fapl_in = h5::threads{4};
-    REQUIRE(H5Pexist(static_cast<::hid_t>(fapl_in), "h5cpp_fapl_worker_pool") > 0);
-
-    const char* path = "test-252-fapl-strip.h5";
-    std::remove(path);
-    {
-        h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC, h5::default_fcpl, fapl_in);
-        ::hid_t fapl_out = H5Fget_access_plist(static_cast<::hid_t>(fd));
-        REQUIRE(fapl_out >= 0);
-
-        // Documents the HDF5 behavior worked around by resolving the pool from
-        // the fileno registry instead of the file's FAPL:
-        CHECK(H5Pexist(fapl_out, "h5cpp_fapl_worker_pool") == 0);
-        H5Pclose(fapl_out);
-    }
-    std::remove(path);
-}
+// (Retired with #287's write-path cleanup: the FAPL worker-pool round-trip and
+// the FAPL-property-stripping rationale are gone — parallelism is now a DAPL
+// property (h5::threads{N} on the dataset), which survives H5Dget_access_plist,
+// so there is no fileno registry to document a workaround for.)

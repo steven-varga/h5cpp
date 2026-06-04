@@ -1,72 +1,57 @@
 # Multithreaded Pipeline (#287)
 
-A throughput harness comparing how the gzip filter chain is scheduled, and a
-profile of the **`-DH5CPP_MULTITHREAD`** build mode (global HDF5 mutex) write
-path against the default build.  See `profile-report.md` for numbers.
+Two examples around the h5cpp **worker-pool pipeline**, both reporting throughput:
+`pipeline-write` writes a **block of random floats** to a chunked, gzip dataset, and
+`pipeline-read` reads it back through the **parallel reader**.
 
-## Policy surface
+## What it shows
 
-The worker pool is a **file-level** policy (FAPL); the parallel pipeline is a
-**per-dataset** opt-in (DAPL):
-
-```cpp
-// FAPL — "is there a pool, how many workers, how deep the in-flight window"
-h5::fapl_t fapl = h5::threads{hw} | h5::backpressure{32};
-
-auto fd = h5::create("data.h5", H5F_ACC_TRUNC, h5::default_fcpl, fapl);
-
-// h5::high_throughput (DAPL) is what actually engages pool_pipeline_t — without
-// it the write falls back to stock single-threaded HDF5 filters.
-h5::write(fd, "dataset", data,
-    h5::current_dims{rows}, h5::chunk{chunk} | h5::gzip{6}, h5::high_throughput);
-```
-
-`h5::threads{N}` creates the shared worker pool (resolved per-file via the #286
-fileno registry, since `H5Fget_access_plist` strips it off the file id);
-`h5::backpressure{M}` bounds in-flight chunks.  Chunk I/O stays on the caller
-thread; gzip/zstd fan out across the worker pool.
-
-## `-DH5CPP_MULTITHREAD` (global HDF5 mutex)
-
-Building with `-DH5CPP_MULTITHREAD` engages one process-global recursive mutex
-that serializes every HDF5 C-API call (the same design as HDF5's own
-`--enable-threadsafe` — a lock, not a dedicated thread).  Compression still
-parallelizes across the worker pool and never touches HDF5, so the lock is
-throughput-neutral on that path.  The lock is a no-op / zero-cost in a classic
-build.  This makes **concurrent writers to one file safe** (a Threadsafety-OFF
-HDF5 never sees two threads inside the C library at once):
+A plain chunked write already uses h5cpp's **direct-chunk** pipeline by default;
+one per-dataset **DAPL** tag turns on the parallel stage:
 
 ```cpp
-auto fd = h5::create("data.h5", H5F_ACC_TRUNC, h5::default_fcpl, fapl);
-h5::write(fd, "dataset", data,
-    h5::current_dims{rows}, h5::chunk{chunk} | h5::gzip{6}, h5::high_throughput);
+auto fd = h5::create("out.h5", H5F_ACC_TRUNC);
+
+h5::write(fd, "data", data,                                // a std::vector<float>
+    h5::current_dims{n},
+    h5::chunk{C} | h5::gzip{6},                            // chunked + deflate
+    h5::threads{N});                                       // per-dataset DAPL → pool_pipeline_t
 ```
 
-Note: for *concurrent* writers, share a pre-built DCPL rather than constructing
-`h5::chunk|h5::gzip` per call (per-call `H5Pcreate`/`H5Pclose` runs on the producer
-thread; the global mutex serializes them but a shared DCPL avoids the churn).
+- A no-hyperslab chunked write goes through `basic_pipeline_t` → `H5Dwrite_chunk`
+  (h5cpp's filter chain) **by default** — no opt-in.
+- **`h5::threads{N}`** (a per-dataset **DAPL** property; `h5::threads{}` = hardware_concurrency)
+  fans the gzip stage out across the **process-global worker pool** (`pool_pipeline_t`). A
+  DAPL property survives the `H5Dget_access_plist` round-trip, so it's read back at the write
+  site directly — no fileno registry. `h5::backpressure{M}` bounds in-flight chunks.
+- `H5Dwrite_chunk` stays on the caller thread; only compression is parallel.
+- **Read** (`pipeline-read`): `h5::open(fd, "data", h5::threads{N})` puts the same DAPL tag on
+  the read handle, so `h5::read` routes through `pool_pipeline_t::read` — `H5Dread_chunk` on the
+  caller, gzip **inflate** fanned across the pool. (`H5Dread_chunk` also bypasses HDF5's chunk
+  cache, so a direct-chunk write + read on one handle does not leak it.) The read parallelises
+  too — inflate is cheaper than deflate, so it saturates at fewer workers / needs more chunks,
+  but it scales (479 → 3.2 GB/s at 16 workers with 256 chunks). See [`profile-report.md`](profile-report.md).
 
-## Cases (`pipeline.cpp`)
+Building with **`-DH5CPP_MULTITHREAD`** additionally engages one process-global recursive
+mutex around every HDF5 C-API call (HDF5-threadsafe-style — a lock, not a thread), making
+concurrent writers to one file safe. Compression never touches HDF5, so the lock is
+throughput-neutral on that path; it is a no-op in a classic build.
 
-| Case | What it measures |
-| ---- | ---------------- |
-| `raw` | `H5Dwrite_chunk`, no filter — the chunk-I/O ceiling |
-| `direct-gzip` | hand-rolled libdeflate compress + `H5Dwrite_chunk` (tightest single-thread gzip) |
-| `hdf5-gzip` | stock HDF5 deflate filter (no h5cpp pool) |
-| `single` | h5cpp `high_throughput`, 1 worker |
-| `multi` | h5cpp `high_throughput`, N workers (sync `pool_pipeline_t`) |
-| `async` | the `multi` pipeline compiled with `-DH5CPP_MULTITHREAD` (global lock engaged, N workers) |
-
-`H5CPP_BENCH_CASE=H5CPP_BENCH_CASE_<NAME>` builds a single-case executable for
-clean `perf` profiling (`examples-multithreaded-pipeline-<name>`); the default
-target runs all cases and prints the comparison table.
-
-Env knobs: `H5CPP_BENCH_{GZIP_LEVEL,THREADS,CHUNK,N,FILTERS,DIR}`.
-
-## Build
+## Run
 
 ```sh
-cmake --build <build> --target examples-multithreaded-pipeline   # all-cases table
-# per-case: examples-multithreaded-pipeline-{raw,direct-gzip,hdf5-gzip,single,multi,async}
+cmake --build <build> --target examples-multithreaded-pipeline-write examples-multithreaded-pipeline-read
+./examples-multithreaded-pipeline-write     # writes multithreaded-pipeline.h5
+./examples-multithreaded-pipeline-read      # reads it back (run write first)
 ```
-Links `Threads::Threads`; the direct-gzip baseline uses the vendored libdeflate.
+
+Each prints `done: <s>  <MiB/s>  <Mfloat/s>`. `H5CPP_BENCH_THREADS` sizes the worker pool
+(write: compression fan-out; read: inflate fan-out).
+
+Env knobs (all optional): write `H5CPP_BENCH_{N, THREADS, CHUNK, GZIP}`; read `H5CPP_BENCH_THREADS`.
+
+Links `Threads::Threads`.
+
+---
+*See [`profile-report.md`](profile-report.md) for the full throughput profile and the
+HDF5-2.1.1 / global-mutex / `exp-vyukov` analysis, refreshed against this example.*
