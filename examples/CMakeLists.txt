@@ -483,4 +483,20 @@ add_h5cpp_example(cout cout/cout.cpp)
 add_h5cpp_example(mdspan mdspan/mdspan.cpp)
 target_compile_features(examples-mdspan PRIVATE cxx_std_23)
 
+## swmr — Single-Writer/Multiple-Reader (#267) ###
+# LINUX-ONLY: SWMR is gated to Linux this release (matches the CMAKE_SYSTEM_NAME
+# gate around the SWMR headers and the #ifndef __linux__ guard in the sources).
+# Two standalone programs — run examples-swmr-write in one terminal and
+# examples-swmr-read in another. Skipped on non-Linux: the symbols don't exist.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	message("-- SWMR examples added (Linux-only)")
+	add_h5cpp_example(swmr-write swmr/swmr-write.cpp)
+	add_h5cpp_example(swmr-read  swmr/swmr-read.cpp)
+	# swmr-view uses h5::view (C++20 ranges streaming view; #if __cplusplus >= 202002L)
+	add_h5cpp_example(swmr-view  swmr/swmr-view.cpp)
+	target_compile_features(examples-swmr-view PRIVATE cxx_std_20)
+else()
+	message("-- SWMR examples skipped: Linux-only feature (#267)")
+endif()
+
 add_subdirectory(s3)

@@ -96,7 +96,6 @@ throughput — become the limit past 8 workers.  With finer chunks the read scal
 | pool scaling, gzip-4, 8 cores | 7.4× (~93% efficiency) |
 | global-lock cost | −0.5..−1.0% (free) |
 | live queue op (mutex + std::queue) | 28 ns |
-| Vyukov MPSC op (isolated) | 12.5 ns |
 | full per-task dispatch cost | ~500 ns |
 
 ---
@@ -130,16 +129,7 @@ filter pipeline is still single-threaded; every advanced VFD is MPI-bound or OFF
 
 ---
 
-## 5. The `exp-vyukov` question — dispatch cost
-
-The pool's `mutex + std::queue` op costs **28 ns**; an isolated bounded **Vyukov MPSC** op is
-**12.5 ns**; full per-task dispatch is **~500 ns**. Swapping the queue therefore saves ~15 ns
-of ~500 ns — **predicted ≤3% of dispatch, i.e. invisible end-to-end**. `exp-vyukov` exists to
-measure whether reality matches that prediction.
-
----
-
-## 6. Reproduce
+## 5. Reproduce
 
 ```sh
 cmake --build <build> --target examples-multithreaded-pipeline-write examples-multithreaded-pipeline-read

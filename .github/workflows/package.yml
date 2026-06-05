@@ -9,6 +9,11 @@ on:
 permissions:
   contents: write
 
+env:
+  HDF5_SERIES: "1.12"
+  HDF5_VERSION: 1.12.3
+  HDF5_CACHE_VERSION: v5
+
 concurrency:
   group: package-${{ github.ref }}
   cancel-in-progress: true
@@ -38,7 +43,12 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
-            libhdf5-dev rpm
+            cmake ninja-build wget rpm
+
+      - name: Install HDF5 ${{ env.HDF5_VERSION }} from source
+        uses: ./.github/actions/install-hdf5
+        with:
+          cache-key-suffix: -pkg-${{ matrix.arch }}
 
       - name: Configure
         run: |
@@ -46,6 +56,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=/usr \
             -DCPACK_PACKAGING_INSTALL_PREFIX=/usr \
+            -DHDF5_ROOT="$HDF5_ROOT" \
             -DH5CPP_BUILD_EXAMPLES=OFF \
             -DH5CPP_BUILD_TESTS=OFF \
             -DH5CPP_BUILD_BENCH=OFF \
@@ -125,10 +136,7 @@ jobs:
   # cached between runs.
   package-windows:
     name: windows / x64 / NSIS
-    runs-on: windows-latest
-    env:
-      HDF5_VERSION: 1.12.2
-      HDF5_CACHE_VERSION: v3
+    runs-on: windows-2025-vs2026
 
     steps:
       - uses: actions/checkout@v4
@@ -168,7 +176,7 @@ jobs:
           tar -xzf $zlib_archive -C $env:RUNNER_TEMP
 
           cmake -S $zlib_source -B $zlib_build `
-            -G "Visual Studio 17 2022" -A x64 `
+            -G "Visual Studio 18 2026" -A x64 `
             -DCMAKE_INSTALL_PREFIX="$zlib_prefix"
           cmake --build $zlib_build --parallel --config Release
           cmake --install $zlib_build --config Release
@@ -178,7 +186,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ${{ runner.temp }}\hdf5-${{ env.HDF5_VERSION }}-install
-          key: hdf5-windows-vs2022-${{ env.HDF5_VERSION }}-pkg-${{ env.HDF5_CACHE_VERSION }}
+          key: hdf5-${{ runner.os }}-pkg-${{ env.HDF5_VERSION }}-${{ env.HDF5_CACHE_VERSION }}
 
       - name: Build HDF5 from source
         if: steps.cache-hdf5.outputs.cache-hit != 'true'
@@ -197,7 +205,7 @@ jobs:
           tar -xzf $hdf5_archive -C $env:RUNNER_TEMP
 
           cmake -S $hdf5_source -B $hdf5_build `
-            -G "Visual Studio 17 2022" -A x64 `
+            -G "Visual Studio 18 2026" -A x64 `
             -DCMAKE_INSTALL_PREFIX="$hdf5_prefix" `
             -DHDF_CFG_NAME=Release `
             -DBUILD_SHARED_LIBS=ON `

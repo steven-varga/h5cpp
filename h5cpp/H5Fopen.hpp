@@ -11,7 +11,7 @@
  * @namespace h5
  * @brief public namespace
  */
-namespace h5{
+namespace h5 {
 	/** @ingroup file-io 
 	 * opens an existing HDF5 file, the returned h5::fd_t descriptor automatically closes backed resource when leaving code block
 	 * The h5::fd_t is a thin hid_t size object with std::unique_ptr like properties.
@@ -24,7 +24,7 @@ namespace h5{
 	 * }                                                      // underlying hid_t is closed when leaving code block 
 	 * @endcode
 	 */ 
-    inline h5::fd_t open(const std::string& path,  unsigned flags, const h5::fapl_t& fapl = h5::default_fapl ){
+    inline h5::fd_t open(const std::string& path,  unsigned flags, const h5::fapl_t& fapl = h5::default_fapl ) {
 		H5CPP_CHECK_PROP( fapl,  h5::error::io::file::create, "invalid file access property list" );
 
         // MT: file open under the process-global HDF5 lock (see H5Fcreate.hpp).

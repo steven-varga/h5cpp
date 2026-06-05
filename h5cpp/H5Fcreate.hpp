@@ -53,6 +53,20 @@ namespace h5{
 		H5CPP_CHECK_PROP( fcpl,  h5::error::io::file::create, "invalid file control property list" );
 		H5CPP_CHECK_PROP( fapl,  h5::error::io::file::create, "invalid file access property list" );
 
+#if defined(H5F_ACC_SWMR_WRITE)
+		// Raw-CAPI SWMR request: the caller passed H5F_ACC_SWMR_WRITE in the flags.
+		// H5Fcreate cannot enable SWMR at create time — no datasets exist yet, so
+		// SWMR is activated later via h5::start_swmr_write(fd); passing the flag
+		// straight to H5Fcreate is the silent mode-confusion bug. So drop the
+		// open-only bits, force (LATEST,LATEST) bounds that SWMR requires, and
+		// create a normal latest-format file.
+		if( flags & H5F_ACC_SWMR_WRITE ){
+			unsigned cflags = flags & ~( H5F_ACC_SWMR_WRITE | H5F_ACC_RDWR );
+			if( !(cflags & (H5F_ACC_TRUNC | H5F_ACC_EXCL)) ) cflags |= H5F_ACC_TRUNC;
+			return h5::create( path, cflags, fcpl, static_cast<h5::fapl_t>( h5::latest_version ) );
+		}
+#endif
+
         // MT: the file create + fileno derivation + registry attach run under the
         // process-global HDF5 lock — under Threadsafety-OFF HDF5, only one thread
         // may be inside the C-API at a time (its global free-lists/id-tables corrupt

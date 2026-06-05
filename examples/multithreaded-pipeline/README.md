@@ -54,4 +54,4 @@ Links `Threads::Threads`.
 
 ---
 *See [`profile-report.md`](profile-report.md) for the full throughput profile and the
-HDF5-2.1.1 / global-mutex / `exp-vyukov` analysis, refreshed against this example.*
+HDF5-2.1.1 / global-mutex analysis, refreshed against this example.*
