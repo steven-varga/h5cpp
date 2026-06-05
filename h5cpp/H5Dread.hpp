@@ -83,38 +83,54 @@ namespace h5 {
 		if( rank != count.rank ) throw h5::error::io::dataset::read( H5CPP_ERROR_MSG( h5::error::msg::rank_mismatch ));
 		using element_t = typename impl::decay<T>::type;
 		h5::meta::resolved_type_t<element_t> mem_type;
-		hid_t dapl = h5::get_access_plist( ds );
-		// See H5Dwrite.hpp for the rationale: pipeline path uses H5Dread_chunk,
-		// which only works on chunked datasets. Guard on H5D_CHUNKED so DAPLs
-		// with the flag applied to contiguous datasets fall through to H5Dread.
+		// Resolve the parallel-read tag from the dataset's REAL access plist
+		// (H5Dget_access_plist), NOT ds.dapl: that member caches the open-time hid_t,
+		// which dangles once a temporary dapl — e.g. h5::open(fd, name, h5::threads{N})
+		// — is destroyed, so the tag would be silently lost and every read would fall
+		// back to the serial path.  #287.
+		hid_t dapl = H5Dget_access_plist( static_cast<hid_t>(ds) );
+		// Read dispatch mirrors the write path: direct-chunk (H5Dread_chunk, which
+		// bypasses HDF5's raw-data chunk cache — and so does NOT leak it after a
+		// direct-chunk write on the same handle) by default for chunked datasets
+		// with h5cpp-applied filters; parallel decompression when h5::threads{N} is
+		// on the dataset's DAPL; stock H5Dread for a hyperslab selection (the
+		// direct-chunk path reads whole chunks, not a sub-region), contiguous, or
+		// NBIT / SCALEOFFSET.
+		using toffset = typename arg::tpos<const h5::offset_t&, const args_t&...>;
+		using tstride = typename arg::tpos<const h5::stride_t&, const args_t&...>;
+		using tblock  = typename arg::tpos<const h5::block_t&,  const args_t&...>;
+		constexpr bool hyperslab = toffset::present || tstride::present || tblock::present;
+		const unsigned read_threads = h5::impl::resolve_dataset_threads(dapl);
+		const unsigned read_cap = read_threads
+			? h5::impl::resolve_dataset_backpressure(dapl, read_threads) : 0u;
+		if (dapl >= 0) H5Pclose(dapl);           // owned copy from H5Dget_access_plist
 		const bool use_pipeline = [&]() {
-			if (!H5Pexist(dapl, H5CPP_DAPL_HIGH_THROUGHPUT)) return false;
+			if constexpr (hyperslab) return false;   // hyperslab read → stock H5Dread
 			hid_t dcpl_id = H5Dget_create_plist(static_cast<hid_t>(ds));
 			if (dcpl_id < 0) return false;
-			H5D_layout_t layout = H5Pget_layout(dcpl_id);
+			bool ok = (H5Pget_layout(dcpl_id) == H5D_CHUNKED);
+			for (int fi = 0, nf = H5Pget_nfilters(dcpl_id); ok && fi < nf; ++fi) {
+				size_t ne = 0; unsigned fl = 0, cfg = 0;
+				H5Z_filter_t id = H5Pget_filter2(dcpl_id, static_cast<unsigned>(fi),
+					&fl, &ne, nullptr, 0, nullptr, &cfg);
+				if (id == H5Z_FILTER_NBIT || id == H5Z_FILTER_SCALEOFFSET) ok = false;
+			}
 			H5Pclose(dcpl_id);
-			return layout == H5D_CHUNKED;
+			return ok;
 		}();
 		if( use_pipeline ){
-			// Phase 1.3.3 / slice C (#286) — H5Fget_access_plist strips
-			// user properties, so resolve_worker_pool on a reconstructed
-			// FAPL always returns nullptr.  Look up the pool directly in
-			// the per-file registry, keyed by H5Fget_fileno.
-			const unsigned long fileno = h5::impl::file_key(static_cast<::hid_t>(ds));
-			auto pool = h5::impl::registry().resolve_pool(fileno);
-			if (pool) {
-				const unsigned cap = h5::impl::registry().resolve_cap(fileno);
-				h5::impl::pool_pipeline_t pipe(std::move(pool), cap);
-				h5::dcpl_t dcpl{H5Dget_create_plist(static_cast<hid_t>(ds))};
-				hid_t type_id  = H5Dget_type(static_cast<hid_t>(ds));
-				size_t elem_sz = H5Tget_size(type_id);
-				H5Tclose(type_id);
+			h5::dcpl_t dcpl{H5Dget_create_plist(static_cast<hid_t>(ds))};
+			hid_t type_id  = H5Dget_type(static_cast<hid_t>(ds));
+			size_t elem_sz = H5Tget_size(type_id);
+			H5Tclose(type_id);
+			if (read_threads > 0) {                          // parallel decompression
+				h5::impl::pool_pipeline_t pipe(h5::impl::global_pool_ptr(), read_cap);
 				pipe.set_cache(dcpl, elem_sz);
 				pipe.read(ds, offset, stride, block, count, dxpl, ptr);
-			} else {
-				h5::impl::pipeline_t<impl::basic_pipeline_t>* filters;
-				H5Pget(dapl, H5CPP_DAPL_HIGH_THROUGHPUT, &filters);
-				filters->read(ds, offset, stride, block, count, dxpl, ptr);
+			} else {                                         // direct-chunk read (default)
+				h5::impl::pipeline_t<impl::basic_pipeline_t> pipe;
+				pipe.set_cache(dcpl, elem_sz);
+				pipe.read(ds, offset, stride, block, count, dxpl, ptr);
 			}
 		}else{
 			// Scalar dataspaces don't support hyperslab selection; H5Sselect_all
@@ -337,7 +353,7 @@ namespace h5 {
 			const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
 			h5::sp_t mem_space = h5::create_simple(outer);
 			h5::select_all(mem_space);
-			H5Sselect_all(file_space);
+			H5Sselect_all(static_cast<hid_t>(file_space));
 			// Vector: direct buffer. List/set/etc.: read into scratch, then assign.
 			if constexpr (h5::meta::has_data_pointer<std::remove_cv_t<std::remove_reference_t<T>>>::value) {
 				ref.resize(static_cast<std::size_t>(outer));
@@ -371,7 +387,7 @@ namespace h5 {
 			const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
 			h5::sp_t mem_space = h5::create_simple(outer);
 			h5::select_all(mem_space);
-			H5Sselect_all(file_space);
+			H5Sselect_all(static_cast<hid_t>(file_space));
 			if constexpr (h5::meta::has_data_pointer<std::remove_cv_t<std::remove_reference_t<T>>>::value) {
 				ref.resize(static_cast<std::size_t>(outer));
 				H5CPP_CHECK_NZ(
@@ -628,7 +644,7 @@ namespace h5 {
 		void read( const h5::fd_t& fd,  const std::string& dataset_path, T& ref, args_t&&... args ){
 		if constexpr (h5::has_scatter<std::decay_t<T>>::value) {
 			// Gather path: compiler-generated gather<T> handles open + row read.
-			h5::gather<std::decay_t<T>>(fd, dataset_path, ref);
+			h5::gather<std::decay_t<T>>(static_cast<hid_t>(fd), dataset_path, ref);
 		} else {
 			// Stopper: mirror the ds-dispatch overload's unsupported-storage guard so
 			// the gateway path fails at compile time too. (Scatter types are handled
@@ -1081,10 +1097,25 @@ namespace h5 {
 	template<class T, class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>>
 	inline T read( hid_t fd, const std::string& dataset_path, args_t&&... args ){
+		return h5::impl::on_collector([&]() -> T {   // MT: read runs under the process-global HDF5 lock
+			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+			h5::ds_t ds = h5::open(fd, dataset_path, dapl );
+			return ::h5::read<T>(ds, args...);
+		});
+	}
 
-		const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
-		h5::ds_t ds = h5::open(fd, dataset_path, dapl );
-		return ::h5::read<T>(ds, args...);
+	// Value-returning read by FILE handle.  Mirrors the hid_t overload above but
+	// takes h5::fd_t directly: required under the conversion-off / H5CPP_MULTITHREAD
+	// boundary (where fd_t has no implicit ::hid_t decay), and the preferred exact
+	// match in classic mode — the read-side parallel of the write(fd_t) gateway.
+	template<class T, class... args_t,
+		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>>
+	inline T read( const h5::fd_t& fd, const std::string& dataset_path, args_t&&... args ){
+		return h5::impl::on_collector([&]() -> T {   // MT: read runs under the process-global HDF5 lock
+			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);
+			h5::ds_t ds = h5::open(fd, dataset_path, dapl );
+			return ::h5::read<T>(ds, args...);
+		});
 	}
  	/**
  	 * \func_read_hdr
@@ -1118,7 +1149,9 @@ namespace h5 {
 	template<class T, class... args_t,
 		class = std::enable_if_t<!h5::meta::is_sparse_v<std::decay_t<T>>>> // dispatch to above
 	inline T read(const std::string& file_path, const std::string& dataset_path, args_t&&... args ){
-		h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR );
-		return ::h5::read<T>( fd, dataset_path, args...);
+		return h5::impl::on_collector([&]() -> T {   // MT: whole open+read+close under the process-global HDF5 lock
+			h5::fd_t fd = h5::open( file_path, H5F_ACC_RDWR );
+			return ::h5::read<T>( fd, dataset_path, args...);
+		});
 	}
 }

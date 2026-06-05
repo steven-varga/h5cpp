@@ -4,48 +4,26 @@
  */
 #pragma once
 
-// FAPL-scoped worker pool — opt-in via h5::threads{N}.
+// Worker pool for the parallel filter stage + the per-dataset DAPL parallelism
+// tags (h5::threads{N} / h5::backpressure{M}).
 //
-// User-facing API:
+//     h5::write(fd, "ds", data, h5::chunk{C} | h5::gzip{6}, h5::threads{8});
+//     h5::create<float>(fd, "ds", h5::chunk{C}, h5::threads{});   // hw_concurrency
 //
-//     h5::fd_t fd = h5::create("data.h5", H5F_ACC_TRUNC, h5::threads{8});
-//     h5::fd_t fd = h5::create("data.h5", H5F_ACC_TRUNC, h5::threads{});   // hw_concurrency
-//
-// Per-dataset opt-in is the orthogonal h5::high_throughput DAPL flag
-// (existing).  This FAPL property controls "is there a pool, how many
-// workers"; whether any given dataset uses it is the DAPL's call.
-//
-// Storage mechanism mirrors h5::high_throughput (H5Pdapl.hpp):
-//
-//     - H5Pinsert2 stores a pointer to a worker_pool_slot_t in the FAPL
-//       skip list.
-//     - The slot owns a std::shared_ptr<worker_pool_t>.
-//     - HDF5 internally copies the FAPL during H5Fopen/H5Fcreate; the
-//       copy callback allocates a fresh slot aliasing the same pool
-//       (shared_ptr refcount++).  Every FAPL copy shares the pool.
-//     - The close callback drops the slot.  Pool is destroyed when the
-//       last live FAPL copy releases its slot, at which point worker
-//       std::jthreads receive request_stop() and join cleanly.
-//
-// This is the shared-ownership variant of the H5Pinsert2 + slot pattern.
-// Compare with H5Pdapl.hpp's fresh-allocation-per-copy semantics used by
-// the high_throughput pipeline property: that pattern allocates a fresh
-// pipeline scratch buffer per copy because pipelines are per-write
-// scratch state; this pattern shares one live resource across all
-// copies because workers ARE the resource we want shared.  See
-// tasks/h5cpp-fapl-multithreading-workplan.md §2-§3.
-//
-// PHASE 1.1 STATUS: lifecycle scaffolding only.  worker_pool_t owns N
-// std::jthreads whose only job today is to honor std::stop_token on
-// shutdown.  Phase 1.2 extends with bounded MPMC queues, compress_sync /
-// compress_async API, and integration with the filter pipeline.  Phase
-// 1.3 wires pt_t / h5::write / h5::read consumer sites.
+// Parallelism is a per-DATASET concern, so it lives on the DAPL — which, unlike a
+// FAPL property, survives the H5Dget_access_plist round-trip and is read back
+// directly at the write/read site (no #286 fileno registry).  One process-global
+// worker_pool_t (global_pool(), below) backs every dataset's filter fan-out:
+// HDF5 (threadsafety-OFF / under the global recursive mutex) funnels all library
+// calls through one thread, so datasets are written sequentially and never
+// contend for the pool — a per-file pool would only oversubscribe.
 
 #include "H5Pall.hpp"
 #include "H5Zall.hpp"   // filter::warm_dispatch — resolve vendored CPU-dispatch single-threaded
 #include "detail/doorbell.hpp"
 #include "detail/stoppable_thread.hpp"
 #include <atomic>
+#include <cstdlib>
 #include <chrono>
 #include <functional>
 #include <future>
@@ -57,8 +35,6 @@
 #include <utility>
 #include <vector>
 
-#define H5CPP_FAPL_WORKER_POOL  "h5cpp_fapl_worker_pool"
-#define H5CPP_FAPL_BACKPRESSURE "h5cpp_fapl_backpressure"
 
 // Default in-flight chunk cap when h5::threads{N} is set without an
 // accompanying h5::backpressure{N}.  Resolves to 8 × worker_count, which
@@ -80,8 +56,8 @@ namespace h5::impl {
 //
 // The pool is deliberately HDF5-agnostic at this layer.  Consumer sites
 // (Phase 1.3 — pt_t, h5::write, h5::read) wrap their HDF5-specific compress
-// logic in a closure and submit() it.  This keeps the pool reusable for
-// Phase II's executor and any future async work.
+// logic in a closure and submit() it.  This keeps the pool reusable for any
+// future parallel-compute work.
 struct worker_pool_t {
     // Pool size is fixed at construction; cannot resize at runtime.
     // n == 0 means "use std::thread::hardware_concurrency()".
@@ -194,114 +170,102 @@ private:
     std::vector<h5::detail::stoppable_thread_t> workers_;
 };
 
-// ─── FAPL slot + lifecycle callbacks ─────────────────────────────────────────
-
-// The heap-allocated holder whose pointer lives in the FAPL skip-list
-// value slot.  Indirection is necessary because H5Pinsert2 stores raw
-// bytes — it cannot run shared_ptr's constructor/destructor for us.
-struct worker_pool_slot_t {
-    std::shared_ptr<worker_pool_t> pool;
-};
-
-// Copy callback: HDF5 cloned the property bytes (the slot pointer was
-// memcpy'd into the destination's value slot).  Allocate a NEW slot whose
-// shared_ptr aliases the same pool — refcount++ via shared_ptr copy.
+// ─── Global worker pool ──────────────────────────────────────────────────────
 //
-// This is the contract that makes "every FAPL copy shares one pool" work.
-inline herr_t fapl_pool_copy_cb(const char* /*name*/, size_t /*size*/, void* value) {
-    auto** slot_loc = static_cast<worker_pool_slot_t**>(value);
-    *slot_loc = new worker_pool_slot_t{(*slot_loc)->pool};
-    return 0;
+// One process-wide pool backs every dataset's parallel filter stage. Justified
+// by the single-producer model: HDF5 (threadsafety-OFF, or the global recursive
+// mutex) funnels all library calls through one thread, so datasets are written
+// sequentially and never contend for the pool — a per-file pool would only
+// oversubscribe. Lazily constructed, hardware-sized; size is overridable BEFORE
+// first use via set_pool_size() or the H5CPP_THREADS env var. Lives until program
+// exit (the function-local static's jthreads join at static teardown; the pool
+// owns no HDF5 handles, so teardown order is irrelevant).
+inline unsigned& global_pool_size_override() noexcept { static unsigned n = 0; return n; }
+
+// Set the global pool size; no-op once the pool has been constructed.
+inline void set_pool_size(unsigned n) noexcept { global_pool_size_override() = n; }
+
+inline worker_pool_t& global_pool() {
+    static worker_pool_t pool([]() -> unsigned {
+        unsigned n = global_pool_size_override();
+        if (!n) if (const char* e = std::getenv("H5CPP_THREADS"))
+            n = static_cast<unsigned>(std::strtoul(e, nullptr, 10));
+        return n;   // 0 → worker_pool_t maps to hardware_concurrency
+    }());
+    return pool;
 }
 
-// Close callback: drop one slot.  shared_ptr inside the slot releases its
-// reference; worker_pool_t destructor runs when the last slot is freed
-// (refcount reaches 0), which stops and joins the jthreads.
-inline herr_t fapl_pool_close_cb(const char* /*name*/, size_t /*size*/, void* ptr) {
-    delete *static_cast<worker_pool_slot_t**>(ptr);
-    return 0;
+// Non-owning shared_ptr alias to the global pool, for consumers (pool_pipeline_t,
+// pt_t) whose interface takes a shared_ptr.  The global pool outlives every
+// pipeline, so the deleter is a no-op — nothing here owns the pool.
+inline std::shared_ptr<worker_pool_t> global_pool_ptr() {
+    return std::shared_ptr<worker_pool_t>(&global_pool(), [](worker_pool_t*){});
 }
 
-// Setter invoked when the user applies h5::threads{N} to an FAPL.
-// Idempotent — if a pool property is already installed, leaves it untouched.
+// ─── DAPL parallelism properties (the cleanup target) ────────────────────────
 //
-// n == 0 maps to std::thread::hardware_concurrency() inside worker_pool_t.
-inline herr_t fapl_threads_set(::hid_t fapl, unsigned n) {
-    if (H5Pexist(fapl, H5CPP_FAPL_WORKER_POOL)) return 0;
-    auto* slot = new worker_pool_slot_t{
-        std::make_shared<worker_pool_t>(n)
-    };
-    return H5Pinsert2(fapl, H5CPP_FAPL_WORKER_POOL,
-        sizeof(worker_pool_slot_t*), &slot,
-        nullptr,             // set
-        nullptr,             // get
-        nullptr,             // prp_del
-        fapl_pool_copy_cb,
-        nullptr,             // compare
-        fapl_pool_close_cb);
+// threads{N} / backpressure{M} become per-DATASET DAPL properties: parallelism
+// is a dataset-IO concern, and — unlike a FAPL property — a DAPL user property
+// SURVIVES the H5Dget_access_plist round-trip, so it is read back directly at
+// the write site with no #286 registry. Both are plain trivially-copyable
+// unsigned values (HDF5's default memcpy copy is correct; no callbacks).
+#define H5CPP_DAPL_THREADS      "h5cpp_dapl_threads"
+#define H5CPP_DAPL_BACKPRESSURE "h5cpp_dapl_backpressure"
+
+inline herr_t dapl_threads_set(::hid_t dapl, unsigned n) {
+    if (H5Pexist(dapl, H5CPP_DAPL_THREADS)) return 0;
+    // threads{} (n==0) means "fan out across the whole pool" — store the resolved
+    // worker count so a stored value of 0 unambiguously means "property absent /
+    // no pool" at the read site (resolve_dataset_threads).
+    if (n == 0) n = std::max(1u, std::thread::hardware_concurrency());
+    return H5Pinsert2(dapl, H5CPP_DAPL_THREADS, sizeof(unsigned), &n,
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+}
+inline herr_t dapl_backpressure_set(::hid_t dapl, unsigned cap) {
+    if (H5Pexist(dapl, H5CPP_DAPL_BACKPRESSURE)) return 0;
+    return H5Pinsert2(dapl, H5CPP_DAPL_BACKPRESSURE, sizeof(unsigned), &cap,
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 }
 
-// Consumer-site helper: given a FAPL id, retrieve the worker pool shared_ptr
-// if one is installed.  Returns nullptr (= no pool, fall back to synchronous
-// pipeline) if the property is absent.  Used by pt_t, h5::write, h5::read
-// in Phase 1.3.
-inline std::shared_ptr<worker_pool_t> resolve_worker_pool(::hid_t fapl_id) noexcept {
-    if (fapl_id < 0 || H5Iis_valid(fapl_id) <= 0) return nullptr;
-    if (!H5Pexist(fapl_id, H5CPP_FAPL_WORKER_POOL)) return nullptr;
-    worker_pool_slot_t* slot = nullptr;
-    H5Pget(fapl_id, H5CPP_FAPL_WORKER_POOL, &slot);
-    return slot ? slot->pool : nullptr;
+// N for this dataset (0 = not requested → no pool / synchronous filters).
+inline unsigned resolve_dataset_threads(::hid_t dapl_id) noexcept {
+    if (dapl_id < 0 || H5Iis_valid(dapl_id) <= 0) return 0;
+    if (!H5Pexist(dapl_id, H5CPP_DAPL_THREADS)) return 0;
+    unsigned n = 0;
+    H5Pget(dapl_id, H5CPP_DAPL_THREADS, &n);
+    return n;
 }
 
-// ─── Back-pressure cap (separate FAPL property) ──────────────────────────────
-
-// Setter invoked when the user applies h5::backpressure{N} to an FAPL.
-// Stores a plain unsigned by memcpy semantics — no lifecycle callbacks
-// needed since the value is trivially copyable and owns no heap.
-//
-// The cap is consumed by pt_t (and Phase 1.3's h5::write/read) when
-// queueing work to the pool: write_chunk blocks on drain_completed
-// once the in-flight deque reaches the cap.
-inline herr_t fapl_backpressure_set(::hid_t fapl, unsigned cap) {
-    if (H5Pexist(fapl, H5CPP_FAPL_BACKPRESSURE)) return 0;
-    return H5Pinsert2(fapl, H5CPP_FAPL_BACKPRESSURE,
-        sizeof(unsigned), &cap,
-        nullptr, nullptr, nullptr,
-        nullptr,            // copy: memcpy is correct for POD
-        nullptr,
-        nullptr);           // close: nothing to release
-}
-
-// Consumer-site helper: returns the user-set back-pressure cap, or computes
-// the default (H5CPP_FAPL_BACKPRESSURE_DEFAULT_FACTOR × worker_count) when
-// no h5::backpressure{N} was applied.  Returns 0 only when no pool is
-// installed either — caller should already have bailed in that case.
-inline unsigned resolve_backpressure(::hid_t fapl_id,
-                                     unsigned worker_count) noexcept {
-    if (fapl_id < 0 || H5Iis_valid(fapl_id) <= 0) return 0;
-    if (H5Pexist(fapl_id, H5CPP_FAPL_BACKPRESSURE)) {
+// In-flight chunk cap for this dataset: explicit backpressure{M}, else the
+// default factor × the dataset's requested concurrency N.
+inline unsigned resolve_dataset_backpressure(::hid_t dapl_id, unsigned n) noexcept {
+    if (dapl_id >= 0 && H5Iis_valid(dapl_id) > 0
+            && H5Pexist(dapl_id, H5CPP_DAPL_BACKPRESSURE)) {
         unsigned cap = 0;
-        H5Pget(fapl_id, H5CPP_FAPL_BACKPRESSURE, &cap);
+        H5Pget(dapl_id, H5CPP_DAPL_BACKPRESSURE, &cap);
         if (cap > 0) return cap;
     }
-    return H5CPP_FAPL_BACKPRESSURE_DEFAULT_FACTOR * worker_count;
+    return H5CPP_FAPL_BACKPRESSURE_DEFAULT_FACTOR * (n ? n : global_pool().worker_count());
 }
 
 } // namespace h5::impl
 
 namespace h5 {
-// User-facing tags.  Applied to a fapl_t via the property-chain mechanism.
+// User-facing tags.  Parallelism is a per-DATASET concern, so these are DAPL
+// properties applied alongside the dataset's other access/create properties:
 //
-//     h5::create("data.h5", H5F_ACC_TRUNC, h5::threads{8})
-//     h5::create("data.h5", H5F_ACC_TRUNC, h5::threads{})              // hw_concurrency
-//     h5::create("data.h5", H5F_ACC_TRUNC, h5::threads{8}
-//                                          | h5::backpressure{32})    // 8 workers, 32-chunk cap
+//     h5::write (fd, "ds", data, h5::chunk{C} | h5::gzip{6}, h5::threads{8});
+//     h5::create<float>(fd, "ds", h5::chunk{C}, h5::threads{8} | h5::backpressure{32});
+//     h5::pt_t pt = h5::create<float>(fd, "ds", h5::chunk{C}, h5::threads{8});
 //
-// h5::backpressure{N} without h5::threads{N} is silently a no-op:
-// without a pool, there is no queue to bound.  Document at user-facing
-// level; do not warn at runtime.
-using threads      = impl::fapl_call<impl::fapl_args<hid_t, unsigned>,
-                                     impl::fapl_threads_set>;
-using backpressure = impl::fapl_call<impl::fapl_args<hid_t, unsigned>,
-                                     impl::fapl_backpressure_set>;
+// h5::threads{N} marks this dataset to fan its filter stage out across N workers
+// of the process-global pool; h5::threads{} uses hardware_concurrency.
+// h5::backpressure{M} bounds in-flight chunks; without h5::threads{N} it is
+// silently a no-op (no pool → no queue to bound).  Unlike the old FAPL pool, a
+// DAPL property survives the H5Dget_access_plist round-trip, so it is read back
+// directly at the write site — no #286 registry.
+using threads      = impl::dapl_call<impl::dapl_args<hid_t, unsigned>,
+                                     impl::dapl_threads_set>;
+using backpressure = impl::dapl_call<impl::dapl_args<hid_t, unsigned>,
+                                     impl::dapl_backpressure_set>;
 }

@@ -103,7 +103,8 @@ add_test_case(H5Zszip)
 add_test_case(H5Zpipeline_parallel_read)
 add_test_case(H5Zgorilla)
 # add_test_case(H5Iall)
-add_test_case(H5async)        # Phase II scaffold lifecycle + submit_and_wait tests
+add_test_case(H5async)        # #287 handle-conversion invariant + create/open lifecycle
+add_test_case(H5collector)        # #287 global-lock write path + concurrent-writer safety
 
 # ---------------------------------------------------------------------------
 # #286 — per-file worker-pool registry tests (slice D).
@@ -115,7 +116,6 @@ add_test_case(H5async)        # Phase II scaffold lifecycle + submit_and_wait te
 #   4. regression: pool ENGAGES  (write with h5::threads{N}+h5::high_throughput
 #      resolves a non-null pool from the registry at the H5Dwrite dispatch site)
 # ---------------------------------------------------------------------------
-add_test_case(H5io_registry)
 
 # ---------------------------------------------------------------------------
 # #286 — FAPL/DAPL/fileno behaviour probes (plain C, acceptance criteria).

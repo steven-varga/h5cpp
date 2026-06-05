@@ -195,7 +195,12 @@ endfunction()
 # Linalg examples
 # ------------------------------------------------------------------------------
 message( "-- Vendored: dlib library, added to examples" )
-add_h5cpp_example(dlib linalg/dlib.cpp LIBRARIES libdlib)
+
+## multithreaded-pipeline — #287 worker-pool gzip write + read demos
+add_h5cpp_example(multithreaded-pipeline-write multithreaded-pipeline/pipeline-write.cpp
+	LIBRARIES Threads::Threads)
+add_h5cpp_example(multithreaded-pipeline-read multithreaded-pipeline/pipeline-read.cpp
+	LIBRARIES Threads::Threads)
 
 message( "-- Vendored: eigen3 added to examples" )
 add_h5cpp_example(eigen3 linalg/eigen3.cpp LIBRARIES Eigen3::Eigen)

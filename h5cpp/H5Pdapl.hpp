@@ -61,6 +61,10 @@ namespace h5 {
 	namespace flag {
 		using high_throughput  = impl::dapl_call< impl::dapl_args<hid_t>,impl::dapl_pipeline_set>;
 	}
+	// Deprecated: direct-chunk is now the DEFAULT for chunked writes (no opt-in
+	// needed), so this tag is a no-op affirmation kept only so existing call sites
+	// keep compiling.  Removed in v2.x.y.
+	[[deprecated("h5::high_throughput is the default for chunked writes now; the tag is a no-op, removed in v2.x.y")]]
 	const static flag::high_throughput high_throughput;
 
 	namespace impl {

@@ -5,7 +5,7 @@
 
 #pragma once
 #include "H5Pall.hpp"
-#include "H5io_registry.hpp"   // h5::impl::registry / file_key_of_file / resolve_worker_pool
+#include "H5io_registry.hpp"   // h5::impl::close_global (MT close path; #286 registry retired)
 #include <string>
 
 /**
@@ -53,18 +53,17 @@ namespace h5{
 		H5CPP_CHECK_PROP( fcpl,  h5::error::io::file::create, "invalid file control property list" );
 		H5CPP_CHECK_PROP( fapl,  h5::error::io::file::create, "invalid file access property list" );
 
-        hid_t fd;
-	   	H5CPP_CHECK_NZ(
-					(fd = H5Fcreate(path.data(), flags, static_cast<hid_t>( fcpl ), static_cast<hid_t>( fapl ) )),
-					h5::error::io::file::create,	h5::error::msg::create_file);
-        // Register per-file worker pool while the original user fapl is still live.
-        // H5Fget_access_plist would return a stripped copy that drops user properties.
-        if (auto pool = h5::impl::resolve_worker_pool(static_cast<::hid_t>(fapl))) {
-            const unsigned cap = h5::impl::resolve_backpressure(
-                    static_cast<::hid_t>(fapl), pool->worker_count());
-            h5::impl::registry().attach(
-                    h5::impl::file_key_of_file(fd), std::move(pool), cap);
-        }
-        return fd_t{fd};
+        // MT: the file create + fileno derivation + registry attach run under the
+        // process-global HDF5 lock — under Threadsafety-OFF HDF5, only one thread
+        // may be inside the C-API at a time (its global free-lists/id-tables corrupt
+        // otherwise).  on_collector takes that lock for the whole op.  No-op
+        // pass-through in a classic build.
+        return h5::impl::on_collector([&]() -> h5::fd_t {
+            hid_t fd;
+            H5CPP_CHECK_NZ(
+                        (fd = H5Fcreate(path.data(), flags, static_cast<hid_t>( fcpl ), static_cast<hid_t>( fapl ) )),
+                        h5::error::io::file::create,	h5::error::msg::create_file);
+            return fd_t{fd};
+        });
     }
 }

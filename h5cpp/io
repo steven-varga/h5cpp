@@ -12,8 +12,6 @@
 	#include "H5Gcreate.hpp"
 	#include "H5Gopen.hpp"
 
-	#include "H5async.hpp"     /* h5::async::create / h5::async::open factories */
-
 	#include "H5Dcreate.hpp"
 	#include "H5Dopen.hpp"
 	#include "H5Rall.hpp"

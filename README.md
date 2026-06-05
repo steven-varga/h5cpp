@@ -91,8 +91,8 @@ cmake --install build
 - **`std::float16_t`** (C++23 IEEE 754 half-precision)
 - **Rank-7** array support
 - **Expanded attribute** type coverage
-- **FAPL-scoped worker pool** — `h5::create(..., h5::threads{N} | h5::backpressure{M})` opts the file into parallel filter compression; all chunked datasets opened on that file (and pt_t built from them) inherit the pool with async-pipelined dispatch
-- **Async-mode scaffold** — `h5::async::fd_t fd = h5::async::create(...)` returns a descriptor whose `operator ::hid_t()` is `= delete`'d so accidental raw-C-API calls fail at compile time; per-fd executor thread serializes HDF5 calls.  Operation overloads land in the next PR.
+- **FAPL-scoped worker pool** — `h5::create(..., h5::threads{N} | h5::backpressure{M})` opts the file into parallel filter compression; all chunked datasets opened on that file (and pt_t built from them) inherit the pool. The pool only parallelizes gzip/zstd and never touches the HDF5 C-API, so it is throughput-neutral versus the classic single-threaded build.
+- **`-DH5CPP_MULTITHREAD` build mode** — a compile-time option that serializes every h5cpp→HDF5 C-API call behind one process-global recursive mutex, taken once at the outermost boundary via a thread-local recursion depth (mirroring HDF5's own `--enable-threadsafe` design: a lock, not a dedicated thread). This makes concurrent writers into one file safe even on a Threadsafety-OFF HDF5, and compiles to a zero-cost no-op in a classic build. Verified green on HDF5 1.12.3 and 2.1.1 (62/62 ctest, 40/40 concurrent-writer stress, TSan-clean under Clang 20).
 - **HDF5 1.12.2 ceiling** — tested and verified; `H5Dvlen_reclaim` / reference API compatibility
 - **Windows MSVC** in the CI matrix
 - **ASan + UBSan + TSan** clean on Clang 20

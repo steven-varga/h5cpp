@@ -208,29 +208,23 @@ TEST_CASE("[#239] h5::reset zeroes packet table dimension tracker") {
 // [#250 1.3.2] pt_t resolves FAPL pool + backpressure at init
 // =====================================================================
 
-TEST_CASE("[#250 1.3.2] pt_t picks up worker pool + cap from file's FAPL") {
-    // Construct a file with h5::threads{4} | h5::backpressure{16} on its FAPL.
-    // The fixture's default file_fixture_t opens without these properties;
-    // we make a custom one inline here.
+TEST_CASE("[#250 1.3.2] pt_t picks up worker pool + cap from the dataset DAPL") {
     const char* path = "test-pt-1.3.2-pool-resolve.h5";
     std::remove(path);
     {
-        h5::fapl_t fapl = h5::threads{4} | h5::backpressure{16};
-        h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC, h5::default_fcpl, fapl);
+        h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC);
 
+        // Parallelism is a per-dataset DAPL concern now; it survives the
+        // H5Dget_access_plist round-trip, so pt_t reads it off the dataset.
         h5::ds_t ds = h5::create<int>(fd, "ds", h5::current_dims_t{0},
-            h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{32});
+            h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{32},
+            h5::threads{4} | h5::backpressure{16});
 
         h5::pt_t pt(ds);
-        // pt_t::pool_ and ::backpressure_cap_ are private; the visible
-        // contract is that operations on this pt_t SHOULD use the pool
-        // (Phase 1.3.3).  In this commit we just verify the pt_t was
-        // constructed without error and the file FAPL has the pool.
-        auto pool_check = h5::impl::resolve_worker_pool(static_cast<hid_t>(fapl));
-        REQUIRE(pool_check);
-        CHECK(pool_check->worker_count() == 4);
-        CHECK(h5::impl::resolve_backpressure(
-                  static_cast<hid_t>(fapl), pool_check->worker_count()) == 16u);
+        hid_t dapl = H5Dget_access_plist(static_cast<hid_t>(ds));
+        REQUIRE(h5::impl::resolve_dataset_threads(dapl) == 4);
+        CHECK(h5::impl::resolve_dataset_backpressure(dapl, 4) == 16u);
+        H5Pclose(dapl);
     }
     std::remove(path);
 }
@@ -264,12 +258,12 @@ TEST_CASE("[#250 1.3.2] pt_t with FAPL pool — gzip round-trip equivalence vs s
 
     // Helper: write N ints through a pt_t built from a given fapl,
     // read back, return the content.
-    auto write_and_read = [&](const char* path, h5::fapl_t fapl) {
+    auto write_and_read = [&](const char* path, h5::dapl_t dapl) {
         std::remove(path);
         {
-            h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC, h5::default_fcpl, fapl);
+            h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC);
             h5::ds_t ds = h5::create<int>(fd, "ds", h5::current_dims_t{0},
-                h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{32} | h5::gzip{6});
+                h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{32} | h5::gzip{6}, dapl);
             h5::pt_t pt(ds);
             for (int v : expected) h5::append(pt, v);
             h5::flush(pt);
@@ -279,19 +273,19 @@ TEST_CASE("[#250 1.3.2] pt_t with FAPL pool — gzip round-trip equivalence vs s
     };
 
     // 1) Default FAPL: synchronous path
-    auto sync_data = write_and_read("test-pt-1.3.2-sync.h5", h5::default_fapl);
+    auto sync_data = write_and_read("test-pt-1.3.2-sync.h5", h5::default_dapl);
     REQUIRE(sync_data.size() == expected.size());
     CHECK(sync_data == expected);
 
-    // 2) Pool FAPL with 4 workers, default backpressure
-    h5::fapl_t pool_fapl = h5::threads{4};
-    auto pool_data = write_and_read("test-pt-1.3.2-pool.h5", pool_fapl);
+    // 2) Pool DAPL with 4 workers, default backpressure
+    h5::dapl_t pool_dapl = h5::threads{4};
+    auto pool_data = write_and_read("test-pt-1.3.2-pool.h5", pool_dapl);
     REQUIRE(pool_data.size() == expected.size());
     CHECK(pool_data == expected);
 
     // 3) Pool with explicit backpressure
-    h5::fapl_t bp_fapl = h5::threads{4} | h5::backpressure{8};
-    auto bp_data = write_and_read("test-pt-1.3.2-bp.h5", bp_fapl);
+    h5::dapl_t bp_dapl = h5::threads{4} | h5::backpressure{8};
+    auto bp_data = write_and_read("test-pt-1.3.2-bp.h5", bp_dapl);
     REQUIRE(bp_data.size() == expected.size());
     CHECK(bp_data == expected);
 
@@ -311,10 +305,10 @@ TEST_CASE("[#250 1.3.2] pt_t pool path — back-pressure bounds in-flight") {
     const char* path = "test-pt-1.3.2-tight-bp.h5";
     std::remove(path);
     {
-        h5::fapl_t fapl = h5::threads{2} | h5::backpressure{2};
-        h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC, h5::default_fcpl, fapl);
+        h5::fd_t fd = h5::create(path, H5F_ACC_TRUNC);
         h5::ds_t ds = h5::create<int>(fd, "ds", h5::current_dims_t{0},
-            h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{8} | h5::gzip{1});
+            h5::max_dims_t{H5S_UNLIMITED}, h5::chunk{8} | h5::gzip{1},
+            h5::threads{2} | h5::backpressure{2});
         h5::pt_t pt(ds);
         for (int i = 0; i < N; ++i) h5::append(pt, i);
         h5::flush(pt);

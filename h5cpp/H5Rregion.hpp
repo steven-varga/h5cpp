@@ -19,7 +19,7 @@ namespace h5 {
         if constexpr (toffset::present) {
 
             h5::ds_t ds = h5::open(fd, dataset_path);
-            h5::sp_t sp{H5Dget_space(ds)};
+            h5::sp_t sp{H5Dget_space(static_cast<hid_t>(ds))};
             int rank = h5::get_simple_extent_ndims(sp);
             herr_t err = 0;
 
@@ -29,15 +29,15 @@ namespace h5 {
             const h5::stride_t& stride = arg::get( h5::default_stride, args...);
             if constexpr( tblock::present ){ // we have to normalise `count` such that `size[i] = count[i] * block[i]` holds
                 for(hsize_t i=0; i < rank; i++) count[i] /= block[i];
-                err = H5Sselect_hyperslab(sp, H5S_SELECT_SET, *offset, *stride, *count, *block);
+                err = H5Sselect_hyperslab(static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, *stride, *count, *block);
             } else { // we have to convert h5::count_t{..} to h5::block{..} and initiate a single block transfer
                 h5::block_t block_ = static_cast<h5::block_t>(count);
                 block_.rank = rank;
-                err = H5Sselect_hyperslab(sp, H5S_SELECT_SET, *offset, *stride, *h5::default_count, *block_);
+                err = H5Sselect_hyperslab(static_cast<hid_t>(sp), H5S_SELECT_SET, *offset, *stride, *h5::default_count, *block_);
             }
             H5CPP_CHECK_NZ(err, h5::error::io::dataset::misc, h5::error::msg::select_hyperslab);
             reference_t ref;
-            err = h5::impl::reference::create_region(ref, fd, dataset_path.data(), sp);
+            err = h5::impl::reference::create_region(ref, static_cast<hid_t>(fd), dataset_path.data(), static_cast<hid_t>(sp));
             H5CPP_CHECK_NZ(err, h5::error::io::dataset::misc, "couldn't create reference to dataset...");
             return ref;
         } else { // TODO: object reference
@@ -77,12 +77,12 @@ namespace h5::exp {
 
         h5::dt_t<element_t> mem_type;
         h5::count_t start, stop, block;
-        start.rank = stop.rank = block.rank = H5Sget_simple_extent_ndims(file_space);
-        H5Sget_select_bounds(file_space, *start, *stop);
+        start.rank = stop.rank = block.rank = H5Sget_simple_extent_ndims(static_cast<hid_t>(file_space));
+        H5Sget_select_bounds(static_cast<hid_t>(file_space), *start, *stop);
         for (auto i=0; i < block.rank; i++)
             block[i] = stop[i] - start[i]+1;
         T object = impl::get<T>::ctor(block);
-        H5Sselect_hyperslab(file_space, H5S_SELECT_SET,
+        H5Sselect_hyperslab(static_cast<hid_t>(file_space), H5S_SELECT_SET,
             *start, nullptr, *h5::default_count, *block);
 		element_t *ptr = impl::data(object);
         h5::sp_t mem_space = h5::create_simple(block);
@@ -90,7 +90,7 @@ namespace h5::exp {
         const h5::dxpl_t& dxpl = arg::get(h5::default_dxpl, args...);
 
         H5CPP_CHECK_NZ(
-        H5Dread(ds_, mem_type, mem_space, file_space, dxpl, ptr ),
+        H5Dread(static_cast<hid_t>(ds_), mem_type, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), dxpl, ptr ),
             h5::error::io::dataset::read, h5::error::msg::read_dataset);
         return object;
 
@@ -107,18 +107,18 @@ namespace h5::exp {
         h5::sp_t file_space = h5::impl::reference::open_region(ds, reference);
         h5::count_t start, stop, block;
 
-        start.rank = stop.rank = block.rank = H5Sget_simple_extent_ndims(file_space);
-        H5Sget_select_bounds(file_space, *start, *stop);
+        start.rank = stop.rank = block.rank = H5Sget_simple_extent_ndims(static_cast<hid_t>(file_space));
+        H5Sget_select_bounds(static_cast<hid_t>(file_space), *start, *stop);
         for (auto i=0; i < block.rank; i++)
             block[i] = stop[i] - start[i]+1;
-        H5Sselect_hyperslab(file_space, H5S_SELECT_SET,
+        H5Sselect_hyperslab(static_cast<hid_t>(file_space), H5S_SELECT_SET,
             *start, nullptr, *h5::default_count, *block);
 
         h5::sp_t mem_space = h5::create_simple(block);
         h5::select_all(mem_space);
 
 		H5CPP_CHECK_NZ(
-			H5Dwrite(ds_, mem_type, mem_space, file_space, dxpl, ptr),
+			H5Dwrite(static_cast<hid_t>(ds_), mem_type, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), dxpl, ptr),
 				h5::error::io::dataset::write, h5::error::msg::write_dataset);
 		return ds;
 	} catch ( const std::exception& err ){
@@ -132,7 +132,7 @@ namespace h5::exp {
 		h5::ds_t ds; // initialized to H5I_UNINIT
 
 		h5::mute(); // find out if we have to create the dataset
-			bool is_dataset_present = H5Lexists(fd, dataset_path.c_str(), H5P_DEFAULT) > 0;
+			bool is_dataset_present = H5Lexists(static_cast<hid_t>(fd), dataset_path.c_str(), H5P_DEFAULT) > 0;
 		h5::unmute(); // <- make sure not to mute error handling longer than needed
 		if (is_dataset_present) {
 			const h5::dapl_t& dapl = arg::get(h5::default_dapl, args...);

@@ -25,7 +25,7 @@ inline void h5::impl::basic_pipeline_t::write_chunk_impl( const hsize_t* offset,
 
 	if (tail == 0) {
 		// no filters, ( if blocking ) -> data == chunk0 otherwise directly from container
-		H5Dwrite_chunk(ds, dxpl, 0x0, offset, nbytes, data);
+		H5Dwrite_chunk(static_cast<::hid_t>(ds), dxpl, 0x0, offset, nbytes, data);
 		return;
 	}
 
@@ -38,23 +38,29 @@ inline void h5::impl::basic_pipeline_t::write_chunk_impl( const hsize_t* offset,
 			if (!length)
 				mask |= 1u << j;
 		}
-		H5Dwrite_chunk(ds, dxpl, mask, offset, length, buf);
+		H5Dwrite_chunk(static_cast<::hid_t>(ds), dxpl, mask, offset, length, buf);
 		return;
 	}
 
-	// Ping-pong path for filters that require separate buffers.
-	void *in = chunk0, *out = chunk1, *tmp = chunk0;
-	length = filter[0](out, data, nbytes, flags[0], cd_size[0], cd_values[0]);
-	if( !length )
-		mask = 1 << 0;
-	for(hsize_t j=1; j<tail; j++){ // invariant: out == buffer holding final result
-		tmp = in, in = out, out = tmp;
-		length = filter[j](out, in, length, flags[j], cd_size[j], cd_values[j]);
-		if( !length )
-			mask |= 1 << j;
+	// Ping-pong path for filters that require separate buffers.  A filter that
+	// returns 0 (e.g. deflate on incompressible data that won't shrink, common
+	// for tiny chunks) is SKIPPED: its mask bit is set and the data passes through
+	// UNCHANGED.  The running buffer + length must therefore stay put — NOT collapse
+	// to a 0-length chunk (which writes an empty chunk that reads back as garbage).
+	// HDF5 honours the per-chunk mask on read and skips that filter's inverse.  #287.
+	if (data != chunk0) std::memcpy(chunk0, data, nbytes);
+	void* buf[2] = { chunk0, chunk1 };
+	int cur = 0;
+	length = nbytes;
+	for (hsize_t j = 0; j < tail; ++j) {
+		int nxt = cur ^ 1;
+		size_t n = filter[j](buf[nxt], buf[cur], length, flags[j], cd_size[j], cd_values[j]);
+		if (n == 0)
+			mask |= 1u << j;                    // skip — buffer + length unchanged
+		else { cur = nxt; length = n; }
 	}
 	// direct write available from > 1.10.4
-	H5Dwrite_chunk(ds, dxpl, mask, offset, length, out);
+	H5Dwrite_chunk(static_cast<::hid_t>(ds), dxpl, mask, offset, length, buf[cur]);
 }
 
 
@@ -67,9 +73,9 @@ inline void h5::impl::basic_pipeline_t::read_chunk_impl( const hsize_t* offset, 
 		// No filters: read decompressed chunk directly into chunk0
 #if H5_VERSION_GE(2,0,0)
 		size_t buf_size = nbytes;
-		H5Dread_chunk2(ds, dxpl, offset, &filter_mask, chunk0, &buf_size);
+		H5Dread_chunk2(static_cast<::hid_t>(ds), dxpl, offset, &filter_mask, chunk0, &buf_size);
 #else
-		H5Dread_chunk(ds, dxpl, offset, &filter_mask, chunk0);
+		H5Dread_chunk(static_cast<::hid_t>(ds), dxpl, offset, &filter_mask, chunk0);
 #endif
 		return;
 	}
@@ -79,20 +85,37 @@ inline void h5::impl::basic_pipeline_t::read_chunk_impl( const hsize_t* offset, 
 	// After the loop 'src' always points to chunk0 (the decompressed result).
 	void* read_target = (tail % 2 == 1) ? chunk1 : chunk0;
 #if H5_VERSION_GE(2,0,0)
-	size_t buf_size = nbytes;
-	H5Dread_chunk2(ds, dxpl, offset, &filter_mask, read_target, &buf_size);
+	// buf_size is IN (buffer capacity) / OUT (stored chunk bytes).  Pass the real
+	// scratch-bound capacity, NOT nbytes: an EXPANDING filter (e.g. fletcher32 adds a
+	// 4-byte checksum) stores a chunk LARGER than the uncompressed nbytes, and 2.x
+	// H5Dread_chunk2 fails if the declared capacity is smaller than the stored chunk.
+	size_t buf_size = filter::filter_scratch_bound(nbytes);
+	H5Dread_chunk2(static_cast<::hid_t>(ds), dxpl, offset, &filter_mask, read_target, &buf_size);
+	// H5Dread_chunk2 returns the COMPRESSED byte count in buf_size; the reverse
+	// filter must start from that, not the uncompressed `nbytes`.  Pre-2.0 H5Dread_chunk
+	// gave no size and the deflate stream self-terminated, so `nbytes` happened to
+	// work; HDF5 2.x is strict and decodes garbage / fails unless we use buf_size.
+	length = buf_size;
 #else
-	H5Dread_chunk(ds, dxpl, offset, &filter_mask, read_target);
+	H5Dread_chunk(static_cast<::hid_t>(ds), dxpl, offset, &filter_mask, read_target);
 #endif
 
 	void* src = read_target;
 	void* dst = (read_target == chunk0) ? static_cast<void*>(chunk1) : static_cast<void*>(chunk0);
 
-	// Apply filters in reverse order (highest index first) with H5Z_FLAG_REVERSE
+	// Apply filters in reverse order (highest index first) with H5Z_FLAG_REVERSE.
+	// HONOUR filter_mask: a set bit means HDF5 stored the chunk WITHOUT that filter
+	// (e.g. deflate skipped a chunk where compression didn't pay — HDF5 2.x does this
+	// more readily than 1.x).  Reversing a filter that was never applied corrupts the
+	// data, so for a masked filter we pass the bytes through unchanged (still swapping
+	// to keep the ping-pong parity that lands the result in chunk0).
 	for (hsize_t j = tail; j > 0; --j) {
 		const hsize_t fi = j - 1;
-		length = filter[fi](dst, src, length,
-			flags[fi] | H5Z_FLAG_REVERSE, cd_size[fi], cd_values[fi]);
+		if (filter_mask & (1u << fi))
+			std::memcpy(dst, src, length);
+		else
+			length = filter[fi](dst, src, length,
+				flags[fi] | H5Z_FLAG_REVERSE, cd_size[fi], cd_values[fi]);
 		void* tmp = src; src = dst; dst = tmp;
 	}
 	// src now points to chunk0, which holds the decompressed chunk data

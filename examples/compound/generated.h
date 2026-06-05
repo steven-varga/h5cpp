@@ -117,7 +117,7 @@ namespace h5 {
             ds = h5::createds(fd, path, compound_type(), h5::sp_t{space},
                 h5::default_lcpl, dcpl, h5::default_dapl);
         } else ds = h5::open(fd, path, h5::default_dapl);
-        hsize_t row = h5::detail::next_row(ds);
+        hsize_t row = h5::detail::next_row(static_cast<hid_t>(ds));
         hsize_t tag_len = obj.tag.size();
         const char* tag_ptr = obj.tag.c_str();
         hsize_t readings_len = obj.readings.size();
@@ -127,7 +127,7 @@ namespace h5 {
             (char*)tag_ptr,
             hvl_t{readings_len, (void*)readings_ptr}
         };
-        herr_t err = h5::detail::write_one_row(ds, compound_type(), row, &r);
+        herr_t err = h5::detail::write_one_row(static_cast<hid_t>(ds), compound_type(), row, &r);
         (void)err;
         return ds;
     }
@@ -138,10 +138,10 @@ namespace h5 {
         hid_t fd, const std::string& path, sn::sensor::timeseries_t& obj) {
         using namespace ::h5::generated::sn__sensor__timeseries_t_;
         h5::ds_t ds = h5::open(fd, path, h5::default_dapl);
-        hsize_t nrows = h5::detail::next_row(ds);
+        hsize_t nrows = h5::detail::next_row(static_cast<hid_t>(ds));
         if (nrows == 0) return;
         row_t r{};
-        herr_t err = h5::detail::read_one_row(ds, compound_type(), nrows - 1, &r);
+        herr_t err = h5::detail::read_one_row(static_cast<hid_t>(ds), compound_type(), nrows - 1, &r);
         (void)err;
         obj.timestamp_ns = r.timestamp_ns;
         if (r.tag) obj.tag.assign(r.tag);
