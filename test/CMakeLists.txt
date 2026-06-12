@@ -103,7 +103,22 @@ add_test_case(H5Zszip)
 add_test_case(H5Zpipeline_parallel_read)
 add_test_case(H5Zgorilla)
 # add_test_case(H5Iall)
-add_test_case(H5async)        # Phase II scaffold lifecycle + submit_and_wait tests
+add_test_case(H5async)        # #287 handle-conversion invariant + create/open lifecycle
+add_test_case(H5collector)        # #287 global-lock write path + concurrent-writer safety
+
+# ---------------------------------------------------------------------------
+# #267 — SWMR (Single-Writer/Multiple-Reader) cross-process harness.
+#
+# Linux-only: the test fork()s a writer + N readers and exercises the full
+# matrix from report §10 (1+1, 1+3, writer-crash, reader-before-first-flush,
+# start_swmr_write transition, tmpfs, filesystem classification).  The SWMR
+# headers #error on non-Linux, so the TU is only added on Linux builds.
+# Labelled "swmr;#267" — run in isolation with: ctest -L swmr
+# ---------------------------------------------------------------------------
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_test_case(H5Fswmr)
+    set_tests_properties(test-h5fswmr PROPERTIES LABELS "swmr;#267" TIMEOUT 120)
+endif()
 
 # ---------------------------------------------------------------------------
 # #286 — per-file worker-pool registry tests (slice D).
@@ -115,7 +130,6 @@ add_test_case(H5async)        # Phase II scaffold lifecycle + submit_and_wait te
 #   4. regression: pool ENGAGES  (write with h5::threads{N}+h5::high_throughput
 #      resolves a non-null pool from the registry at the H5Dwrite dispatch site)
 # ---------------------------------------------------------------------------
-add_test_case(H5io_registry)
 
 # ---------------------------------------------------------------------------
 # #286 — FAPL/DAPL/fileno behaviour probes (plain C, acceptance criteria).

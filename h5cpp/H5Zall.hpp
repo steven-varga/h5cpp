@@ -193,7 +193,14 @@ namespace h5::impl::filter {
 	inline size_t deflate( void* dst, const void* src, size_t size, unsigned flags, size_t n, const unsigned params[]){
 		if (flags & H5Z_FLAG_REVERSE)
 			return zlib_deflate_decode(dst, src, size, decompressed_size_hint(size, n, params));
-		return zlib_deflate_encode(dst, src, size, compression_level(n, params));
+		size_t out = zlib_deflate_encode(dst, src, size, compression_level(n, params));
+		// H5Z convention: return 0 to SKIP this filter for a chunk that compression
+		// does not shrink (tiny / incompressible chunks can EXPAND).  The pipeline
+		// then stores the chunk uncompressed and sets its filter-mask bit, which the
+		// read honours — avoiding an expanded "compressed" chunk that the size-less
+		// pre-2.0 H5Dread_chunk cannot decode (manifested only with library builds
+		// whose deflate_bound admits the expansion).  #287.
+		return (out && out < size) ? out : 0;
 	}
 	// H5Z_FILTER_SCALEOFFSET (id=6): quantised float/int pre-processing.
 	// Intentional passthrough: the HDF5 C library registers and applies this filter
@@ -435,7 +442,8 @@ namespace h5::impl::filter {
 			const int out = LZ4_compress_default(
 				static_cast<const char*>(src), static_cast<char*>(dst),
 				static_cast<int>(size), static_cast<int>(lz4_bound(size)));
-			return out > 0 ? static_cast<size_t>(out) : 0;
+			// skip (return 0) when compression didn't shrink the chunk — see deflate() #287
+			return (out > 0 && static_cast<size_t>(out) < size) ? static_cast<size_t>(out) : 0;
 		}
 #else
 		memcpy(dst, src, size);
@@ -456,7 +464,8 @@ namespace h5::impl::filter {
 			const size_t out = ZSTD_compress(
 				dst, zstd_bound(size), src, size,
 				static_cast<int>(compression_level(n, params)));
-			return ZSTD_isError(out) ? 0 : out;
+			// skip (return 0) when compression didn't shrink the chunk — see deflate() #287
+			return (!ZSTD_isError(out) && out < size) ? out : 0;
 		}
 #else
 		memcpy(dst, src, size);

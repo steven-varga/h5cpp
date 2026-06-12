@@ -10,8 +10,9 @@
 #include <string>
 #include <vector>
 #include <tuple>
-#include <memory>      /* std::shared_ptr — async descriptor exec field */
+#include <memory>      /* std::shared_ptr (used by downstream impl headers) */
 #include <initializer_list>
+#include <mutex>       /* H5CPP_MULTITHREAD global HDF5 lock */
 
 // Slice C (#286): forward-declare the registry helpers used by the RAII
 // close path to detach the file-pool entry on H5Fclose.  A direct
@@ -20,13 +21,6 @@
 //              → H5Tall.hpp → H5Iall.hpp
 // The aggregator (h5cpp/core, h5cpp/all) includes H5io_registry.hpp
 // after H5Iall.hpp, where the inline definitions are satisfied.
-// registry_detach_file() is a thin free-function shim defined in
-// H5io_registry.hpp; forward-declaring it here avoids requiring the
-// complete type of io_registry_t.
-namespace h5::impl {
-    void registry_detach_file(::hid_t file_id);
-}
-
 #ifdef H5CPP_CONVERSION_IMPLICIT
 	#define H5CPP__EXPLICIT
 #else
@@ -48,17 +42,37 @@ namespace h5::impl {
 	//forward declarations
 	struct at_t;
 
-	// Phase II — async descriptors carry a shared_ptr<executor_t> field
-	// directly on the wrapper.  Why direct storage and not the FAPL slot
-	// pattern from Phase I:  HDF5 1.10.9's H5Fget_access_plist returns a
-	// synthetic FAPL reconstructed from standard properties only; user
-	// properties installed via H5Pinsert2 are dropped.  Storing the
-	// executor inside the wrapper class lets operation overloads in
-	// Phase II PR-B reach it as `fd.exec` without round-tripping through
-	// HDF5's property machinery.  std::shared_ptr's type-erased deleter
-	// makes the forward declaration sufficient — the complete type is
-	// only needed at h5::async::create / open (defined in H5async.hpp).
-	struct executor_t;
+	// ── process-global HDF5 lock (H5CPP_MULTITHREAD) ─────────────────────────────
+	// HDF5 built Threadsafety-OFF keeps its allocator state global and lock-free —
+	// the H5FL free-lists and the H5CX API-context — so EVERY C-API call must be
+	// mutually exclusive (entering from a second thread, even sequentially, corrupts
+	// those lists: ASan shows a free-list block allocated on one thread, double-freed
+	// by H5_term_library on another).  This is exactly what HDF5's own
+	// --enable-threadsafe build does: ONE global lock around the C-API.
+	//
+	// Efficiency: take a single process-global mutex ONCE at the outermost h5cpp→HDF5
+	// boundary on each thread; nested h5cpp calls just bump a thread-local depth (no
+	// re-lock), so a top-level op costs one lock/unlock regardless of how many C-API
+	// calls it makes.  In a classic build capi_lock is an empty no-op (zero cost).
+	// All C++17 (thread_local + std::mutex) — no version branching needed.
+#ifdef H5CPP_MULTITHREAD
+	inline std::mutex& hdf5_mutex() noexcept { static std::mutex m; return m; }
+	inline thread_local unsigned hdf5_lock_depth = 0u;
+	struct capi_lock {
+		bool top_;
+		capi_lock() noexcept : top_(hdf5_lock_depth++ == 0u) { if (top_) hdf5_mutex().lock(); }
+		~capi_lock() { if (top_) hdf5_mutex().unlock(); --hdf5_lock_depth; }
+		capi_lock(const capi_lock&) = delete;
+		capi_lock& operator=(const capi_lock&) = delete;
+	};
+	// Close a conversion-off descriptor under the global lock (+ #286 registry
+	// detach on the last file ref).  Defined in H5io_registry.hpp (needs the
+	// complete registry); forward-declared here to avoid the include cycle
+	// H5io_registry → H5Pthreads → H5Pall → H5Tall → H5Iall.
+	void close_global(::hid_t handle, capi_close_t capi_close);
+#else
+	struct capi_lock { capi_lock() = default; };   // classic build: no-op, zero cost
+#endif
 }
 
 namespace h5::impl::detail {
@@ -91,6 +105,7 @@ namespace h5::impl::detail {
 		using hidtype = T;
 		// from CAPI
 		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
+			h5::impl::capi_lock _lk;   // MT: H5I refcount / property-list close touch HDF5 global state
 			if( H5Iis_valid( handle_ ) )
 				H5Iinc_ref( handle_ );
 		}
@@ -104,13 +119,14 @@ namespace h5::impl::detail {
 		hid_t() : handle(H5I_UNINIT){};
 		hid_t( const hid_t& ref) {
 			this->handle = ref.handle;
+			h5::impl::capi_lock _lk;
 			if( H5Iis_valid( handle ) )
 				H5Iinc_ref( handle );
 		}
 		hid_t& operator =( const hid_t& ref) {
             if (this == &ref) return *this;
+            h5::impl::capi_lock _lk;
             if( H5Iis_valid( handle ) ) {
-                h5::impl::registry_detach_file( handle );
                 capi_close( handle );
             }
 			handle = ref.handle;
@@ -120,8 +136,8 @@ namespace h5::impl::detail {
 		}
         hid_t& operator =( hid_t&& ref) {
             if (this == &ref) return *this;
+            h5::impl::capi_lock _lk;
             if( H5Iis_valid( handle ) ) {
-                h5::impl::registry_detach_file( handle );
                 capi_close( handle );
             }
 			handle = ref.handle;
@@ -134,8 +150,8 @@ namespace h5::impl::detail {
 			ref.handle = H5I_UNINIT;
 		}
 		~hid_t(){
+			h5::impl::capi_lock _lk;
 			if( H5Iis_valid( handle ) ) {
-                h5::impl::registry_detach_file( handle );
 				capi_close( handle );
             }
 		}
@@ -151,94 +167,102 @@ namespace h5::impl::detail {
 		 */
 		at_t operator[]( const char arg[] );
 
+		// Relinquish the raw id WITHOUT closing it — the destructor becomes a
+		// no-op.  Used to build a non-owning borrowed view of a file id (e.g. to
+		// drive the sync write gateway under the global HDF5 lock).
+		::hid_t release() noexcept { ::hid_t h = handle; handle = H5I_UNINIT; return h; }
+
 		protected:
 		::hid_t handle;
 	};
 
-	// Phase II async-mode specialization — operator ::hid_t() is = delete'd so
-	// user code that accidentally hands an async descriptor to a raw HDF5 C
-	// API fails to compile with a clear "use of deleted function" diagnostic.
-	// h5cpp internal code reaches the raw handle via the public `handle`
-	// field (see workplan §4.4); user code routes through h5::write / h5::read
-	// / etc. which detect the type via is_async_v<> and dispatch through the
-	// FAPL-resolved executor.
+	// Conversion-off backing — the hardened / H5CPP_MULTITHREAD boundary.  Same
+	// ownership semantics as the true,true backing; the ONLY differences are
+	// (1) operator ::hid_t() is *explicit* (no silent decay off the lock) and
+	// (2) under H5CPP_MULTITHREAD every close is routed under the one global
+	// HDF5 lock.  Layout is identical to the classic handle (a single ::hid_t) —
+	// NO fat member: the lock is a process-global singleton, so nothing needs to
+	// be carried per handle (this is the global-realignment payoff — the #286
+	// per-file/fileno lookup and the carried shared_ptr are gone).
 	template<class T, capi_close_t capi_close>
 	struct hid_t<T,capi_close, false,false,hdf5::any> {
 		using hidtype = T;
 
-		// from CAPI — mirrors the true,true ctor; explicit so an accidental
-		// implicit promotion from ::hid_t doesn't slip an async wrapper in.
+		// from CAPI — wrapping a raw id into an OWNING handle is NOT a collector
+		// bypass (the wrapped handle still routes its close through the collector),
+		// so this stays implicit like the classic backing; only the TO-CAPI decay is
+		// hardened.  Internal code relies on it, e.g. read(hid_t fd,…) → h5::open(fd).
 		H5CPP__EXPLICIT hid_t( ::hid_t handle_ ) : handle( handle_ ){
+			h5::impl::capi_lock _lk;   // H5Iis_valid/H5Iinc_ref touch the global H5I table
 			if( H5Iis_valid( handle_ ) )
 				H5Iinc_ref( handle_ );
 		}
 
-		// Factory ctor — h5::async::create / open construct the executor
-		// during file creation and inject it here so operation overloads
-		// (Phase II PR-B) can reach it via `fd.exec`.  Used by mode-
-		// transitive factories too (ds_t inherits parent fd's executor).
-		hid_t( ::hid_t handle_, std::shared_ptr<h5::impl::executor_t> e ) noexcept
-			: handle( handle_ ), exec( std::move(e) ) {}
+		// TO CAPI — EXPLICIT only.  Implicit decay (the silent path a thread could
+		// use to call raw HDF5 off the collector) is killed; a deliberate
+		// static_cast<hid_t>(x) still works — the visible, on-collector escape
+		// h5cpp internals (H5capi.hpp et al.) use.
+		explicit operator ::hid_t() const { return handle; }
 
-		// TO CAPI — DELETED.  Async descriptors must not be implicitly
-		// converted back to ::hid_t; doing so would let user code call
-		// HDF5 directly and bypass the executor thread.  Internal code
-		// reads the raw value from `handle` directly.
-		operator ::hid_t() const = delete;
-
-		// direct-initialization ctor; matches the classic shape — does not
-		// increment the refcount (caller owns the handle).
+		// direct-initialization (borrowed view): does not inc_ref.
 		hid_t( std::initializer_list<::hid_t> fd ) : handle( *fd.begin() ){}
 
 		hid_t() : handle(H5I_UNINIT) {}
 
 		hid_t( const hid_t& ref ){
 			handle = ref.handle;
+			h5::impl::capi_lock _lk;
 			if( H5Iis_valid( handle ) )
 				H5Iinc_ref( handle );
-			exec = ref.exec;             // shared_ptr copy bumps refcount
 		}
 		hid_t& operator=( const hid_t& ref ){
 			if( this == &ref ) return *this;
-			if( H5Iis_valid( handle ) )
-				capi_close( handle );
+			close_();
 			handle = ref.handle;
+			h5::impl::capi_lock _lk;
 			if( H5Iis_valid( handle ) )
 				H5Iinc_ref( handle );
-			exec = ref.exec;
 			return *this;
 		}
 		hid_t( hid_t&& ref ) noexcept {
 			handle = ref.handle;
 			ref.handle = H5I_UNINIT;
-			exec = std::move(ref.exec);
 		}
 		hid_t& operator=( hid_t&& ref ) noexcept {
 			if( this == &ref ) return *this;
-			if( H5Iis_valid( handle ) )
-				capi_close( handle );
+			close_();
 			handle = ref.handle;
 			ref.handle = H5I_UNINIT;
-			exec = std::move(ref.exec);
 			return *this;
 		}
-		~hid_t(){
-			if( H5Iis_valid( handle ) )
-				capi_close( handle );
-		}
+		~hid_t(){ close_(); }
 
-		// Public so internal h5cpp code (the executor, dispatch lambdas)
-		// can read the raw id without invoking the deleted conversion.
-		// User code is expected to use h5::write / h5::read / h5::async::*
-		// factories rather than touch this field directly.
+		// Relinquish the raw id WITHOUT closing it — the destructor becomes a
+		// no-op.  Mirrors the true,true backing; used to build a non-owning
+		// borrowed view of a handle to drive a gateway on the collector thread.
+		::hid_t release() noexcept { ::hid_t h = handle; handle = H5I_UNINIT; return h; }
+
+		// Attribute subscript — mirrors the true,true `any` backing so ob_t["name"]
+		// resolves (the out-of-line defs live in H5Awrite.hpp).
+		using at_t = hid_t<h5::impl::at_t,H5Aclose,false,false,hdf5::attribute>;
+		at_t operator[]( const char arg[] );
+
+		// Public so internal h5cpp code reads the raw id directly.  User code
+		// routes through h5::write / h5::read / etc.
 		::hid_t handle;
 
-		// Phase II — shared_ptr to the executor that owns this descriptor's
-		// HDF5 lifetime.  Populated by h5::async::create / open at the
-		// file-level, then propagated to derived descriptors (async ds,
-		// async at, etc.) by mode-transitive factories.  May be null on
-		// default-constructed async wrappers (un-initialized state).
-		std::shared_ptr<h5::impl::executor_t> exec;
+	private:
+		// Route the close: under H5CPP_MULTITHREAD through the global HDF5 lock
+		// (close_global does H5Iis_valid INSIDE the lock — never an unlocked
+		// C-API call); otherwise the classic direct close.
+		void close_() noexcept {
+#ifdef H5CPP_MULTITHREAD
+			if( handle > 0 ) h5::impl::close_global( handle, capi_close );
+#else
+			if( H5Iis_valid( handle ) )
+				capi_close( handle );
+#endif
+		}
 	};
 
 	// Phase II — async dataset id.  Mirrors hdf5::dataset (line above) but
@@ -288,6 +312,8 @@ namespace h5::impl::detail {
 
 		template <class V> at_t operator=( V arg );
 		template <class V> at_t operator=( const std::initializer_list<V> args ){ return at_t{H5I_UNINIT}; }
+		// gr_t["name"] subscript — mirrors the true,true attribute backing.
+		at_t operator[]( const char arg[] );
 
 		::hid_t ds;
 		std::string name;
@@ -372,19 +398,27 @@ namespace h5::impl::detail {
 }
 
 namespace h5::impl {
-	// redefine ::hid_t<..,from_capi,to_capi,...> to disable conversion, default setting: hid_t::<.., true,true,..>
-	template <class T, capi_close_t capi_call> using aid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::attribute>;
-	template <class T, capi_close_t capi_call> using hid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::any>;
+	// Conversion-policy → backing selection.  detail::hid_t provides two diagonal
+	// backings: <true,true> (full conversion, the classic handle) and <false,false>
+	// (operator ::hid_t() *explicit* — the hardened / H5CPP_MULTITHREAD boundary).
+	// H5CPP_CONVERSION_TO_CAPI_DISABLED (which H5CPP_MULTITHREAD force-defines, see
+	// H5config.hpp) flips the public OBJECT-id facade to the conversion-off backing.
+	// One facade, two backings, picked at compile time — there is no separate
+	// `async::` type set anymore; multithread IS the build mode.
+	// Property-list ids (pid_t) stay classic true,true: there is no false,false
+	// `property` backing, and plists are constructed/consumed locally, never
+	// carried across the collector.
+#if defined(H5CPP_CONVERSION_TO_CAPI_DISABLED) || defined(H5CPP_CONVERSION_FROM_CAPI_DISABLED)
+	inline constexpr bool from_capi_v = false;
+	inline constexpr bool to_capi_v   = false;
+#else
+	inline constexpr bool from_capi_v = true;
+	inline constexpr bool to_capi_v   = true;
+#endif
+	template <class T, capi_close_t capi_call> using aid_t = detail::hid_t<T,capi_call, from_capi_v,to_capi_v,detail::hdf5::attribute>;
+	template <class T, capi_close_t capi_call> using hid_t = detail::hid_t<T,capi_call, from_capi_v,to_capi_v,detail::hdf5::any>;
 	template <class T, capi_close_t capi_call> using pid_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::property>;
-	template <class T, capi_close_t capi_call> using did_t = detail::hid_t<T,capi_call, true,true,detail::hdf5::dataset>;
-
-	// Phase II — async-mode variants.  Same shape as the classic aliases
-	// above but with operator ::hid_t() = delete'd at the type level.
-	// Users opt in by calling h5::async::create / h5::async::open; everything
-	// downstream deduces these types through TAD.
-	template <class T, capi_close_t capi_call> using async_aid_t = detail::hid_t<T,capi_call, false,false,detail::hdf5::attribute>;
-	template <class T, capi_close_t capi_call> using async_hid_t = detail::hid_t<T,capi_call, false,false,detail::hdf5::any>;
-	template <class T, capi_close_t capi_call> using async_did_t = detail::hid_t<T,capi_call, false,false,detail::hdf5::dataset>;
+	template <class T, capi_close_t capi_call> using did_t = detail::hid_t<T,capi_call, from_capi_v,to_capi_v,detail::hdf5::dataset>;
 }
 
 /*hide gory details, and stamp out descriptors */
@@ -413,28 +447,8 @@ namespace h5 {
 	#undef H5CPP__defpid_t
 	#undef H5CPP__defhid_t
 
-	// Phase II — async-mode descriptor type aliases.  Parallel to the
-	// classic h5::fd_t / h5::ds_t / h5::gr_t / h5::at_t above; the
-	// underlying class template is the false,false specialization of
-	// impl::hid_t so any attempt to pass one of these to a raw HDF5
-	// C-API call fails with "use of deleted function".
-	namespace async {
-		using fd_t   = impl::async_hid_t<impl::fd_t,  H5Fclose>;
-		using ds_t   = impl::async_did_t<impl::ds_t,  H5Dclose>;
-		using at_t   = impl::async_aid_t<impl::at_t,  H5Aclose>;
-		using gr_t   = impl::async_aid_t<impl::gr_t,  H5Gclose>;
-		using ob_t   = impl::async_hid_t<impl::ob_t,  H5Oclose>;
-	}
-
-	// Phase II type-trait: is_async_v<T> answers "is T one of the
-	// h5::async::* descriptors?".  Used by concept-constrained operation
-	// overloads (Phase II PR-B) to pick the executor dispatch branch.
-	template <class T>
-	struct is_async : std::false_type {};
-
-	template <class T, impl::capi_close_t C, int K>
-	struct is_async< impl::detail::hid_t<T,C,false,false,K> > : std::true_type {};
-
-	template <class T>
-	inline constexpr bool is_async_v = is_async<std::decay_t<T>>::value;
+	// (The former h5::async:: descriptor namespace and is_async_v<> trait are
+	// retired: multithread is now a compile-time build mode — h5::fd_t IS the
+	// conversion-off handle under H5CPP_MULTITHREAD — so there is no second type
+	// set to distinguish and dispatch is by the macro, not a runtime trait.)
 }

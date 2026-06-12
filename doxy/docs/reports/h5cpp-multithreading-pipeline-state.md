@@ -19,8 +19,7 @@ h5cpp v1.12.7 is architected around a multithreaded filter pipeline built on thr
 
 The implementation is **pure C++20 standard library** — `std::jthread`, `std::future`,
 `std::packaged_task`, `std::deque`, `std::shared_ptr`, `std::atomic::wait` / `notify_one`.
-No third-party concurrency dependency. No lock-free queue work was needed for the
-target latency profile.
+No third-party concurrency dependency.
 
 Two distinct consumer paths exist today:
 

@@ -126,27 +126,26 @@ inline void pool_pipeline_t::write_chunk_impl(const hsize_t* offset_in,
         // through to the synchronous filter chain identical to
         // basic_pipeline_t::write_chunk_impl.  This branch shouldn't be
         // reached in normal use; it exists to keep the variant safe.
-        size_t length = nbytes;
-        void *in = chunk0, *out = chunk1, *tmp = chunk0;
-        std::uint32_t mask = 0;
-        switch (tail) {
-            case 0:
-                H5Dwrite_chunk(static_cast<::hid_t>(ds), static_cast<::hid_t>(dxpl),
-                               0, offset_in, nbytes, src);
-                return;
-            case 1:
-                length = filter[0](out, src, nbytes, flags[0], cd_size[0], cd_values[0]);
-                if (!length) mask = 1u;
-                [[fallthrough]];
-            default:
-                for (hsize_t j = 1; j < tail; ++j) {
-                    tmp = in; in = out; out = tmp;
-                    length = filter[j](out, in, length, flags[j], cd_size[j], cd_values[j]);
-                    if (!length) mask |= (1u << j);
-                }
-                H5Dwrite_chunk(static_cast<::hid_t>(ds), static_cast<::hid_t>(dxpl),
-                               mask, offset_in, length, out);
+        if (tail == 0) {
+            H5Dwrite_chunk(static_cast<::hid_t>(ds), static_cast<::hid_t>(dxpl),
+                           0, offset_in, nbytes, src);
+            return;
         }
+        // Skip-aware ping-pong (see basic_pipeline_t::write_chunk_impl, #287): a
+        // filter returning 0 keeps the data + length, sets its mask bit.
+        if (src != chunk0) std::memcpy(chunk0, src, nbytes);
+        void*         bufs[2] = { chunk0, chunk1 };
+        int           cur = 0;
+        std::size_t   length = nbytes;
+        std::uint32_t mask = 0;
+        for (hsize_t j = 0; j < tail; ++j) {
+            int nxt = cur ^ 1;
+            std::size_t n = filter[j](bufs[nxt], bufs[cur], length, flags[j], cd_size[j], cd_values[j]);
+            if (n == 0) mask |= (1u << j);
+            else { cur = nxt; length = n; }
+        }
+        H5Dwrite_chunk(static_cast<::hid_t>(ds), static_cast<::hid_t>(dxpl),
+                       mask, offset_in, length, bufs[cur]);
         return;
     }
 
@@ -188,24 +187,26 @@ inline void pool_pipeline_t::write_chunk_impl(const hsize_t* offset_in,
             auto wbuf0 = std::make_unique<std::byte[]>(scratch);
             auto wbuf1 = std::make_unique<std::byte[]>(scratch);
 
-            std::size_t   length = nbytes;
-            std::uint32_t mask   = 0;
-
-            length = fc.filter[0](wbuf0.get(), raw.get(), length,
-                                  fc.flags[0], fc.cd_size[0], fc.cd_values[0]);
-            if (!length) mask |= 1u;
-
-            void* in_buf  = wbuf0.get();
-            void* out_buf = wbuf1.get();
-            for (hsize_t j = 1; j < fc.tail; ++j) {
-                length = fc.filter[j](out_buf, in_buf, length,
-                                      fc.flags[j], fc.cd_size[j], fc.cd_values[j]);
-                if (!length) mask |= (1u << j);
-                std::swap(in_buf, out_buf);
+            std::uint32_t mask = 0;
+            // A filter returning 0 (e.g. deflate on incompressible data) is SKIPPED:
+            // its mask bit is set and the data passes through UNCHANGED, so the
+            // running buffer + length must stay put rather than collapse to a
+            // 0-length chunk (which reads back as garbage).  Mirrors
+            // basic_pipeline_t::write_chunk_impl.  #287.
+            std::memcpy(wbuf0.get(), raw.get(), nbytes);
+            std::byte*  bufs[2] = { wbuf0.get(), wbuf1.get() };
+            int         cur = 0;
+            std::size_t length = nbytes;
+            for (hsize_t j = 0; j < fc.tail; ++j) {
+                int nxt = cur ^ 1;
+                std::size_t n = fc.filter[j](bufs[nxt], bufs[cur], length,
+                                             fc.flags[j], fc.cd_size[j], fc.cd_values[j]);
+                if (n == 0) mask |= (1u << j);
+                else { cur = nxt; length = n; }
             }
 
             out.data = std::make_unique<std::byte[]>(length);
-            std::memcpy(out.data.get(), in_buf, length);
+            std::memcpy(out.data.get(), bufs[cur], length);
             out.nbytes = length;
             out.mask   = mask;
             return out;
@@ -302,10 +303,11 @@ inline void pool_pipeline_t::read(const h5::ds_t& ds, const h5::offset_t& offset
         auto compressed = std::make_unique<std::byte[]>(scratch);
         std::uint32_t filter_mask = 0;
         hsize_t C[1] = {chunk_offset};
+        std::size_t compressed_size = block_sz;   // pre-2.0 default (deflate stream self-terminates)
 #if H5_VERSION_GE(2,0,0)
-        std::size_t buf_size = scratch;
+        compressed_size = scratch;
         H5Dread_chunk2(static_cast<::hid_t>(ds), static_cast<::hid_t>(dxpl),
-                       C, &filter_mask, compressed.get(), &buf_size);
+                       C, &filter_mask, compressed.get(), &compressed_size);   // -> actual compressed bytes
 #else
         H5Dread_chunk(static_cast<::hid_t>(ds), static_cast<::hid_t>(dxpl),
                       C, &filter_mask, compressed.get());
@@ -314,7 +316,7 @@ inline void pool_pipeline_t::read(const h5::ds_t& ds, const h5::offset_t& offset
         // Submit decompression to the worker pool.
         auto fut = pool_->submit([
             compressed = std::move(compressed), block_sz, copy_size,
-            dst_offset, scratch, fc
+            dst_offset, scratch, fc, compressed_size, filter_mask
         ]() mutable -> read_result_t {
             read_result_t result;
             result.copy_size  = copy_size;
@@ -329,13 +331,17 @@ inline void pool_pipeline_t::read(const h5::ds_t& ds, const h5::offset_t& offset
             auto work_buf = std::make_unique<std::byte[]>(scratch);
             void* src = compressed.get();
             void* dst_buf = work_buf.get();
-            std::size_t length = block_sz;
+            std::size_t length = compressed_size;   // compressed input length for the first reverse filter
+            (void)block_sz;
 
             for (hsize_t fi = fc.tail; fi > 0; --fi) {
                 const hsize_t idx = fi - 1;
-                length = fc.filter[idx](dst_buf, src, length,
-                                        fc.flags[idx] | H5Z_FLAG_REVERSE,
-                                        fc.cd_size[idx], fc.cd_values[idx]);
+                if (filter_mask & (1u << idx))     // chunk stored without this filter — pass through
+                    std::memcpy(dst_buf, src, length);
+                else
+                    length = fc.filter[idx](dst_buf, src, length,
+                                            fc.flags[idx] | H5Z_FLAG_REVERSE,
+                                            fc.cd_size[idx], fc.cd_values[idx]);
                 std::swap(src, dst_buf);
             }
 
@@ -370,19 +376,20 @@ inline void pool_pipeline_t::read_chunk_impl(const hsize_t* offset_in,
     if (tail == 0) {
 #if H5_VERSION_GE(2,0,0)
         std::size_t buf_size = nbytes;
-        H5Dread_chunk2(ds, dxpl, offset_in, &filter_mask, chunk0, &buf_size);
+        H5Dread_chunk2(static_cast<::hid_t>(ds), dxpl, offset_in, &filter_mask, chunk0, &buf_size);
 #else
-        H5Dread_chunk(ds, dxpl, offset_in, &filter_mask, chunk0);
+        H5Dread_chunk(static_cast<::hid_t>(ds), dxpl, offset_in, &filter_mask, chunk0);
 #endif
         return;
     }
 
     void* read_target = (tail % 2 == 1) ? chunk1 : chunk0;
 #if H5_VERSION_GE(2,0,0)
-    std::size_t buf_size = nbytes;
-    H5Dread_chunk2(ds, dxpl, offset_in, &filter_mask, read_target, &buf_size);
+    std::size_t buf_size = filter::filter_scratch_bound(nbytes);   // buffer capacity (expanding filters); see H5Zpipeline_basic.hpp
+    H5Dread_chunk2(static_cast<::hid_t>(ds), dxpl, offset_in, &filter_mask, read_target, &buf_size);
+    length = buf_size;   // OUT: stored chunk bytes — the reverse-filter input size
 #else
-    H5Dread_chunk(ds, dxpl, offset_in, &filter_mask, read_target);
+    H5Dread_chunk(static_cast<::hid_t>(ds), dxpl, offset_in, &filter_mask, read_target);
 #endif
 
     void* src = read_target;
@@ -390,9 +397,12 @@ inline void pool_pipeline_t::read_chunk_impl(const hsize_t* offset_in,
                                         : static_cast<void*>(chunk0);
     for (hsize_t j = tail; j > 0; --j) {
         const hsize_t fi = j - 1;
-        length = filter[fi](dst, src, length,
-                            flags[fi] | H5Z_FLAG_REVERSE,
-                            cd_size[fi], cd_values[fi]);
+        if (filter_mask & (1u << fi))      // chunk stored without this filter — pass through
+            std::memcpy(dst, src, length);
+        else
+            length = filter[fi](dst, src, length,
+                                flags[fi] | H5Z_FLAG_REVERSE,
+                                cd_size[fi], cd_values[fi]);
         std::swap(src, dst);
     }
 }

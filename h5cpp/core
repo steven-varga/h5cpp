@@ -57,18 +57,14 @@
 	#include "H5Iall.hpp" /* base hid_t type definitions */
 	#include "H5Tall.hpp"
 	#include "H5Zall.hpp"
-#if __cplusplus >= 202002L
-	#include "H5Qall.hpp"
-#endif
 	#include "H5Pall.hpp"
 	#include "H5Zpipeline.hpp"
 	#include "H5Zpipeline_basic.hpp"
 	#include "H5Pdapl.hpp"
 	#include "H5Pthreads.hpp"
 	#include "H5io_registry.hpp"
+	#include "H5collector.hpp"
 	#include "H5Zpipeline_pool.hpp"
-	#include "H5executor.hpp"
-	#include "H5Pfapl_async.hpp"
 
 	#include "H5Ialgorithm.hpp"
 	#include "H5capi.hpp"

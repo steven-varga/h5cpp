@@ -8,6 +8,7 @@
 #include "H5Tmeta.hpp"
 #include "H5cout.hpp"
 #include "H5io_registry.hpp"
+#include "H5collector.hpp"   // h5::impl::on_collector — global HDF5 lock under MT, no-op classic
 #include <memory>
 #include <string>
 #include <variant>
@@ -59,7 +60,7 @@ namespace h5 {
 		pt_t& operator=( h5::pt_t&& pt ){
             // prevent self assign
             if (this == &pt) return *this;
-            if(H5Iis_valid(this->ds)){ // flush and close dataset
+            if(H5Iis_valid(static_cast<hid_t>(this->ds))){ // flush and close dataset
                 this->flush();
                 free(this->fill_value);
             }
@@ -72,6 +73,7 @@ namespace h5 {
             this->element_size = pt.element_size;
             this->N = pt.N; this->n = pt.n; this->rank = pt.rank;
             this->ptr = pt.ptr;  this->fill_value = pt.fill_value;
+            this->swmr_write_ = pt.swmr_write_;
 
             pt.ptr = nullptr; pt.fill_value = nullptr;
             pt.N=0; pt.n=0; pt.rank=0;
@@ -89,6 +91,7 @@ namespace h5 {
 		template<class T>
 		friend void append( h5::pt_t& ds, const T* ptr);
 		friend void flush(h5::pt_t&);
+		friend h5::current_dims_t get_extent(const h5::pt_t&);
 		// resets the packet-table dimension tracker so the same pt_t can be reused
 		// for a fresh logical session (e.g. start-of-day re-init in streaming sinks).
 		void reset();
@@ -125,6 +128,12 @@ namespace h5 {
 			chunk_dims[H5CPP_MAX_RANK], count[H5CPP_MAX_RANK];
 		size_t block_size,element_size,N,n,rank;
 		void *ptr, *fill_value;
+
+		// SWMR-write detection (issue #267). When a packet table owns its
+		// dataset the user holds no h5::ds_t to flush, so flush(pt) must issue
+		// the SWMR metadata flush itself. Resolved once in init() from the
+		// file's access intent; gates a single H5Dflush in flush().
+		bool swmr_write_{false};
 
 		// Phase 1.3.3 — chunk dispatch is uniform across all variant
 		// alternatives via visit_pipeline + write_chunk.  pool_pipeline_t
@@ -165,6 +174,7 @@ h5::pt_t::~pt_t(){
 inline
 void h5::pt_t::init( const h5::ds_t& handle ){
 	try {
+		h5::impl::on_collector([&]{   // open + registry resolve + space/type probing under the global lock (MT)
 		// Re-open with zero HDF5 chunk cache: the default DAPL allocates ~1MB per H5Dopen2
 		// call which accumulates in malloc arenas when pt_t is used in loops, even though
 		// the memory is logically freed on close.
@@ -178,19 +188,32 @@ void h5::pt_t::init( const h5::ds_t& handle ){
 		ds = h5::ds_t{H5Dopen2(fid, dname.data(), dapl)};
 		H5Pclose(dapl);
 
-		// Phase 1.3.3 / slice C (#286) — H5Fget_access_plist strips user
-		// properties, so resolve_worker_pool on a reconstructed FAPL
-		// always returns nullptr.  Look up the pool in the per-file
-		// registry instead, keyed by H5Fget_fileno.
+		// threads{N} lives on the dataset's DAPL — it survives the
+		// H5Dget_access_plist round-trip (unlike a FAPL property), so read it
+		// from the original handle (the re-open above used a fresh zero-cache
+		// DAPL) and fan this dataset out across the global pool.
 		{
-			const unsigned long fileno = impl::file_key_of_file(fid);
-			if (auto pool = impl::registry().resolve_pool(fileno)) {
-				const unsigned cap = impl::registry().resolve_cap(fileno);
+			hid_t orig_dapl = H5Dget_access_plist(static_cast<hid_t>(handle));
+			const unsigned n = (orig_dapl >= 0)
+				? impl::resolve_dataset_threads(orig_dapl) : 0u;
+			if (n > 0) {
+				const unsigned cap = impl::resolve_dataset_backpressure(orig_dapl, n);
 				pipeline.emplace<std::unique_ptr<impl::pool_pipeline_t>>(
-					std::make_unique<impl::pool_pipeline_t>(std::move(pool), cap));
+					std::make_unique<impl::pool_pipeline_t>(impl::global_pool_ptr(), cap));
 			}
+			if (orig_dapl >= 0) H5Pclose(orig_dapl);
 		}
 
+#if defined(H5F_ACC_SWMR_WRITE) && defined(H5F_ACC_SWMR_READ)
+		// Issue #267: detect SWMR-write once so flush(pt) can make appends
+		// visible without the caller holding a separate ds_t. Non-SWMR packet
+		// tables leave the flag false and pay only a branch in flush().
+		{
+			unsigned intent = 0;
+			if( H5Fget_intent(fid, &intent) >= 0 )
+				swmr_write_ = (intent & H5F_ACC_SWMR_WRITE) != 0;
+		}
+#endif
 		H5Fclose(fid);
 		dt = h5::dt_t<void>{H5Dget_type(static_cast<hid_t>(ds))};
 		h5::sp_t file_space = h5::get_space( handle );
@@ -209,8 +232,13 @@ void h5::pt_t::init( const h5::ds_t& handle ){
 			p.ds = ds; p.dxpl = dxpl;
 		});
 		h5::get_chunk_dims( dcpl, chunk_dims );
-		for(hsize_t i=1; i<rank; i++)
-			current_dims[i] = chunk_dims[i];
+		// NB: `this->current_dims` is REQUIRED — unqualified `current_dims[ax]` at a
+		// statement start is parsed by MSVC as a declaration ('current_dims' resolves
+		// to the h5::current_dims property-tag TYPE, not the member), giving
+		// C2371/C3694.  The explicit member access forces an expression.  #287.
+		for(hsize_t ax = 1; ax < rank; ++ax)
+			this->current_dims[ax] = chunk_dims[ax];
+		}); // on_collector
 	} catch ( ... ){
 		throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("CTOR: unable to create handle from dataset..."));
 	}
@@ -221,8 +249,10 @@ void> h5::pt_t::append( const T* ptr ) try {
 	//PTR: write directly chunk size from provided buffer/ptr
 	*offset = *current_dims;
 	*current_dims += *chunk_dims;
-	h5::set_extent(ds, current_dims);
-	visit_pipeline([&](auto& p){ p.write_chunk(offset, block_size, ptr); });
+	h5::impl::on_collector([&]{   // serialize the HDF5 chunk flush under the global lock (MT)
+		h5::set_extent(ds, current_dims);
+		visit_pipeline([&](auto& p){ p.write_chunk(offset, block_size, ptr); });
+	});
 } catch( const std::runtime_error& err ){
 	throw h5::error::io::dataset::append( err.what() );
 }
@@ -232,16 +262,18 @@ inline void h5::pt_t::append( const std::string& ref ) {
 
 	*offset = *current_dims;
 	*current_dims += *chunk_dims;
-	h5::set_extent(ds, current_dims);
+	h5::impl::on_collector([&]{   // serialize the variable-length flush under the global lock (MT)
+		h5::set_extent(ds, current_dims);
 
-	hsize_t block = 1, count = n;
-	h5::sp_t mem_space{H5Screate_simple(static_cast<int>(rank), &count, nullptr )};
-	h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
-	h5::select_all( mem_space );
-	H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, nullptr, &block, &count);
-	
-	H5Dwrite( static_cast<hid_t>( ds ), 
-		dt, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
+		hsize_t block = 1, count = n;
+		h5::sp_t mem_space{H5Screate_simple(static_cast<int>(rank), &count, nullptr )};
+		h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
+		h5::select_all( mem_space );
+		H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, nullptr, &block, &count);
+
+		H5Dwrite( static_cast<hid_t>( ds ),
+			dt, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr);
+	});
 	n = 0;
 }
 template <>
@@ -251,16 +283,18 @@ inline void h5::pt_t::append( const char* ref ) {
 
 	*offset = *current_dims;
 	*current_dims += *chunk_dims;
-	h5::set_extent(ds, current_dims);
+	h5::impl::on_collector([&]{   // serialize the variable-length flush under the global lock (MT)
+		h5::set_extent(ds, current_dims);
 
-	hsize_t block = 1, count = n;
-	h5::sp_t mem_space{H5Screate_simple(static_cast<int>(rank), &count, nullptr )};
-	h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
-	h5::select_all( mem_space );
-	H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, NULL, &block, &count);
+		hsize_t block = 1, count = n;
+		h5::sp_t mem_space{H5Screate_simple(static_cast<int>(rank), &count, nullptr )};
+		h5::sp_t file_space{H5Dget_space( static_cast<::hid_t>(ds) )};
+		h5::select_all( mem_space );
+		H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, NULL, &block, &count);
 
-	H5Dwrite( static_cast<hid_t>( ds ),
-		dt, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
+		H5Dwrite( static_cast<hid_t>( ds ),
+			dt, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr);
+	});
 	n = 0;
 }
 
@@ -274,8 +308,10 @@ void> h5::pt_t::append( const T& ref ) try {
 	n = 0;
 	*offset = *current_dims;
 	*current_dims += *chunk_dims;
-	h5::set_extent(ds, current_dims);
-	visit_pipeline([&](auto& p){ p.write_chunk(offset, block_size, ptr); });
+	h5::impl::on_collector([&]{   // serialize the HDF5 chunk flush under the global lock (MT)
+		h5::set_extent(ds, current_dims);
+		visit_pipeline([&](auto& p){ p.write_chunk(offset, block_size, ptr); });
+	});
 } catch( const std::runtime_error& err ){
 	throw h5::error::io::dataset::append( err.what() );
 }
@@ -294,10 +330,11 @@ void> h5::pt_t::append( const T& ref ) try {
 
 	*offset = *current_dims;
 	*current_dims += 1;
-	h5::set_extent(ds, current_dims);
 	auto ptr_ = meta::data( ref );
 	auto dims_ = meta::size( ref );
 
+	h5::impl::on_collector([&]{   // serialize the HDF5 chunk flush under the global lock (MT)
+	h5::set_extent(ds, current_dims);
 	switch( dims_.size() ){
 		case 1: // vector
 			if( dims[0] * element_size == block_size )
@@ -323,6 +360,7 @@ void> h5::pt_t::append( const T& ref ) try {
 		default:
 			throw h5::error::io::packet_table::misc( H5CPP_ERROR_MSG("objects with rank > 2 are not supported... "));
 	}
+	}); // on_collector
 	} // end else (non-iterator path)
 } catch( const std::runtime_error& err ){
 	throw h5::error::io::dataset::append( err.what() );
@@ -330,6 +368,10 @@ void> h5::pt_t::append( const T& ref ) try {
 
 inline
 void h5::pt_t::flush(){
+	// Whole flush — the trailing partial-chunk write AND the pool drain (which
+	// issues H5Dwrite_chunk for in-flight compressed chunks) — runs under the
+	// global HDF5 lock when built MT; no-op pass-through in a classic build.
+	h5::impl::on_collector([&]{
 	if( n != 0 ) {
 		*offset = *current_dims;
 		*current_dims += *chunk_dims;
@@ -343,7 +385,7 @@ void h5::pt_t::flush(){
 			H5Sselect_hyperslab( static_cast<hid_t>(file_space), H5S_SELECT_SET, offset, nullptr, &block, &count);
 
 			H5Dwrite( static_cast<hid_t>( ds ),
-				dt, mem_space, file_space, static_cast<hid_t>(dxpl), ptr);
+				dt, static_cast<hid_t>(mem_space), static_cast<hid_t>(file_space), static_cast<hid_t>(dxpl), ptr);
 		} else {
 			// the remainder of last chunk must be set to fill_value; arbitrary type size supported
 			for(hsize_t i=0; i<(N-n); i++)
@@ -361,6 +403,36 @@ void h5::pt_t::flush(){
 		if constexpr (std::is_same_v<T, impl::pool_pipeline_t>)
 			p->drain();
 	}, pipeline);
+
+#if defined(H5F_ACC_SWMR_WRITE) && defined(H5F_ACC_SWMR_READ)
+	// Issue #267: when the file is open SWMR-write, make every append since the
+	// last flush visible to readers now. Deliberately outside the n!=0 guard —
+	// append() auto-writes full chunks, which still need the metadata flush.
+	// flush(pt) is thus the complete writer-side SWMR call; no separate
+	// h5::flush(ds) is required (and the packet-table user has no ds_t anyway).
+	//
+	// swmr_write_ latches ON once true: in the create-then-transition idiom the
+	// packet table is constructed BEFORE h5::start_swmr_write(fd), so init() saw
+	// a non-SWMR file. We re-probe intent each flush WHILE still false (SWMR can
+	// be turned on between flushes), and stop the moment it latches true. flush()
+	// is not the per-element hot path (append() is), and H5Fget_intent does no
+	// I/O, so a non-SWMR packet table pays only a cheap intent probe per flush.
+	//
+	// Runs inside on_collector's lock scope (with the drain above): H5Iget_file_id/
+	// H5Fget_intent/H5Dflush are CAPI calls that must hold the global HDF5 lock too.
+	if( !swmr_write_ && h5::is_valid(ds) ){
+		hid_t fid = H5Iget_file_id(static_cast<hid_t>(ds));
+		if( fid >= 0 ){
+			unsigned intent = 0;
+			if( H5Fget_intent(fid, &intent) >= 0 )
+				swmr_write_ = (intent & H5F_ACC_SWMR_WRITE) != 0;
+			H5Fclose(fid);
+		}
+	}
+	if( swmr_write_ && h5::is_valid(ds) )
+		H5Dflush(static_cast<hid_t>(ds));
+#endif
+	});
 }
 
 inline void h5::pt_t::reset() {
@@ -466,6 +538,18 @@ namespace h5 {
 	}
 
 	/**
+	 * @brief Returns the current (committed) extent of the packet table's dataset —
+	 *        the pt_t counterpart of `h5::get_extent(ds)`.
+	 *
+	 * Reports the on-disk dataset extent: full chunks written so far. Records
+	 * buffered since the last full chunk are not counted until `h5::flush(pt)`
+	 * commits them. For a rank-1 stream `h5::get_extent(pt)[0]` is the length.
+	 */
+	inline h5::current_dims_t get_extent(const h5::pt_t& pt) {
+		return h5::get_extent( pt.ds );
+	}
+
+	/**
 	 * \func_append_hdr
 	 * @brief Reset the packet table's dimension tracker for reuse.
 	 *
@@ -493,7 +577,7 @@ inline std::ostream& operator<<(std::ostream &os, const h5::pt_t& pt) {
     os << std::dec;
 	os <<"packet table:\n"
 		 "------------------------------------------\n";
-    if( !H5Iis_valid(pt.ds)) {
+    if( !H5Iis_valid(static_cast<hid_t>(pt.ds))) {
         os << "ds: H5I_UNINIT" <<std::endl;
         return os;
     }

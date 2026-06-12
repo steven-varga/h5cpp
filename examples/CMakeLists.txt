@@ -195,7 +195,12 @@ endfunction()
 # Linalg examples
 # ------------------------------------------------------------------------------
 message( "-- Vendored: dlib library, added to examples" )
-add_h5cpp_example(dlib linalg/dlib.cpp LIBRARIES libdlib)
+
+## multithreaded-pipeline — #287 worker-pool gzip write + read demos
+add_h5cpp_example(multithreaded-pipeline-write multithreaded-pipeline/pipeline-write.cpp
+	LIBRARIES Threads::Threads)
+add_h5cpp_example(multithreaded-pipeline-read multithreaded-pipeline/pipeline-read.cpp
+	LIBRARIES Threads::Threads)
 
 message( "-- Vendored: eigen3 added to examples" )
 add_h5cpp_example(eigen3 linalg/eigen3.cpp LIBRARIES Eigen3::Eigen)
@@ -477,5 +482,21 @@ add_h5cpp_example(cout cout/cout.cpp)
 ## mdspan — std::mdspan round-trip (C++23; inert on libstdc++ < 15)
 add_h5cpp_example(mdspan mdspan/mdspan.cpp)
 target_compile_features(examples-mdspan PRIVATE cxx_std_23)
+
+## swmr — Single-Writer/Multiple-Reader (#267) ###
+# LINUX-ONLY: SWMR is gated to Linux this release (matches the CMAKE_SYSTEM_NAME
+# gate around the SWMR headers and the #ifndef __linux__ guard in the sources).
+# Two standalone programs — run examples-swmr-write in one terminal and
+# examples-swmr-read in another. Skipped on non-Linux: the symbols don't exist.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+	message("-- SWMR examples added (Linux-only)")
+	add_h5cpp_example(swmr-write swmr/swmr-write.cpp)
+	add_h5cpp_example(swmr-read  swmr/swmr-read.cpp)
+	# swmr-view uses h5::view (C++20 ranges streaming view; #if __cplusplus >= 202002L)
+	add_h5cpp_example(swmr-view  swmr/swmr-view.cpp)
+	target_compile_features(examples-swmr-view PRIVATE cxx_std_20)
+else()
+	message("-- SWMR examples skipped: Linux-only feature (#267)")
+endif()
 
 add_subdirectory(s3)
